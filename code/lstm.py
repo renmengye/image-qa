@@ -13,27 +13,7 @@ class LSTM:
 
         if needInit:
             np.random.seed(initSeed)
-            Wxi = np.random.rand(self.memoryDim, self.inputDim) * initRange
-            Wxf = np.random.rand(self.memoryDim, self.inputDim) * initRange
-            Wxc = np.random.rand(self.memoryDim, self.inputDim) * initRange
-            Wxo = np.random.rand(self.memoryDim, self.inputDim) * initRange
-            Wyi = np.random.rand(self.memoryDim, self.memoryDim) * initRange
-            Wyf = np.random.rand(self.memoryDim, self.memoryDim) * initRange
-            Wyc = np.random.rand(self.memoryDim, self.memoryDim) * initRange
-            Wyo = np.random.rand(self.memoryDim, self.memoryDim) * initRange
-            Wci = np.random.rand(self.memoryDim, self.memoryDim) * initRange
-            Wcf = np.random.rand(self.memoryDim, self.memoryDim) * initRange
-            Wco = np.random.rand(self.memoryDim, self.memoryDim) * initRange
-            Wbi = np.random.rand(self.memoryDim, 1) * initRange
-            Wbf = np.random.rand(self.memoryDim, 1) * initRange
-            Wbc = np.random.rand(self.memoryDim, 1) * initRange
-            Wbo = np.random.rand(self.memoryDim, 1) * initRange
-
-            Wi = np.concatenate((Wxi, Wyi, Wci, Wbi), axis=1)
-            Wf = np.concatenate((Wxf, Wyf, Wcf, Wbf), axis=1)
-            Wc = np.concatenate((Wxc, Wyc, Wbc), axis=1)
-            Wo = np.concatenate((Wxo, Wyo, Wco, Wbo), axis=1)
-            self.W = np.concatenate((Wi, Wf, Wc, Wo), axis = 1)
+            self.W = np.random.rand(self.memoryDim, self.inputDim * 4 + self.memoryDim * 7 + 4) * initRange - initRange / 2.0
         else:
             self.W = W
 
@@ -82,6 +62,9 @@ class LSTM:
         # Train loop through epochs
         for epoch in range(0, numEpoch):
             E = 0
+            rate = 0
+            VE = 0
+            Vrate = 0
             correct = 0
             total = 0
             n = 0
@@ -93,10 +76,12 @@ class LSTM:
                     E += Etmp / float(N)
                     self.W = self.W - lr * dEdW + mom * lastdW
                     lastdW = -lr * dEdW
+
                     if calcError:
                         Yfinal = decisionFn(Y)
                         correct += np.sum(Yfinal == trainTarget[n, :, 0])
                         total += Yfinal.size
+
             # Mini-batch (using for-loop now, so need to differentiate)
             else:
                 while n < N:
@@ -108,7 +93,6 @@ class LSTM:
                     self.W = self.W - lr * dEdW + mom * lastdW
                     lastdW = -lr * dEdW
 
-                    # not usable right now, this is still simple sum!!
                     if calcError:
                         Yfinal = decisionFn(Y)
                         correct += np.sum(Yfinal == trainTarget[n:batchEnd, :, 0])
@@ -117,15 +101,19 @@ class LSTM:
                     n += bat
 
             # Store train statistics
+            if calcError:
+                rate = correct / float(total)
+                Rtotal[epoch] = 1 - rate
             Etotal[epoch] = E
-            rate = correct / float(total)
-            Rtotal[epoch] = 1 - rate
 
             # Run validation
             if needValid:
                 VY, VE, dVEdW = self.runAndBackAll(validInput, validTarget, combineFnDeriv)
                 VE = np.mean(VE)
-                Vrate = self.calcRate(validTarget, VY, decisionFn)
+                VEtotal[epoch] = VE
+                if calcError:
+                    Vrate = self.calcRate(validTarget, VY, decisionFn)
+                    VRtotal[epoch] = Vrate
 
             # Adjust learning rate
             lr = lr * lrDecay
@@ -347,54 +335,3 @@ def simpleSumDeriv(T, Y):
 
 def simpleSumDecision(Y):
     return (simpleSum(Y) > 0.5).astype(int)
-
-def getData(trainSize, testSize, length):
-    trainInput = np.zeros((trainSize, length, 1), float)
-    trainTarget = np.zeros((trainSize, length, 1), float)
-    testInput = np.zeros((testSize, length, 1), float)
-    testTarget = np.zeros((testSize, length, 1), float)
-    for i in range(0, trainSize):
-        for j in range(0, length):
-            trainInput[i, j, :] = np.round(np.random.rand(1))
-            if j >= 3:
-                trainTarget[i, j, :] = trainInput[i, j - 3, :]
-    for i in range(0, testSize):
-        for j in range(0, length):
-            testInput[i, j, :] = np.round(np.random.rand(1))
-            if j >= 3:
-                testTarget[i, j, :] = testInput[i, j - 3, :]
-    return trainInput, trainTarget, testInput, testTarget
-
-if __name__ == '__main__':
-    lstm = LSTM(
-        inputDim=1,
-        memoryDim=3,
-        initRange=0.01,
-        initSeed=2)
-
-    trainOpt = {
-        'learningRate': 0.5,
-        'numEpoch': 600,
-        'momentum': 0.0,
-        'batchSize': 1,
-        'learningRateDecay': 1.0,
-        'momentumEnd': 0.0,
-        'needValid': True,
-        'name': 'lstm_delay3_train',
-        'plotFigs': True,
-        'combineFnDeriv': simpleSumDeriv,
-        'calcError': True,
-        'decisionFn': simpleSumDecision
-    }
-
-    np.random.seed(2)
-    trainSize = 40
-    testSize = 1000
-    length = 8
-    trainInput, trainTarget, testInput, testTarget = getData(trainSize, testSize, length)
-    lstm.train(trainInput, trainTarget, trainOpt)
-
-    print 'TR: %.4f' % lstm.testRate(testInput, testTarget, simpleSumDecision)
-    lstm.save('lstm_delay3')
-    raw_input('Press Enter to continue.')
-    pass
