@@ -1,3 +1,4 @@
+import time
 import numpy as np
 from scipy import special
 
@@ -46,18 +47,28 @@ class LSTM:
         lr = trainOpt['learningRate']
         lrDecay = trainOpt['learningRateDecay']
         mom = trainOpt['momentum']
-        bat = trainOpt['batchSize']
         combineFnDeriv = trainOpt['combineFnDeriv']
         decisionFn = trainOpt['decisionFn']
         calcError = trainOpt['calcError']
-        lastdW = np.zeros(self.W.shape, float)
+        bat = trainOpt['batchSize']
         N = trainInput.shape[0]
+        lastdW = np.zeros(self.W.shape, float)
         dMom = (mom - trainOpt['momentumEnd']) / float(numEpoch)
 
         Etotal = np.zeros(numEpoch, float)
         VEtotal = np.zeros(numEpoch, float)
         Rtotal = np.zeros(numEpoch, float)
         VRtotal = np.zeros(numEpoch, float)
+
+        startTime = time.time()
+
+        # Make num ex the second dimension for minibatch.
+        if bat > 1:
+            trainInputPerm = np.transpose(trainInput, (1, 0, 2))
+            trainTargetPerm = np.transpose(trainTarget, (1, 0, 2))
+        if needValid:
+            validInputPerm = np.transpose(validInput, (1, 0, 2))
+            validTargetPerm = np.transpose(validTarget, (1, 0, 2))
 
         # Train loop through epochs
         for epoch in range(0, numEpoch):
@@ -72,32 +83,34 @@ class LSTM:
             # Stochastic
             if bat == 1:
                 for n in range(0, N):
-                    Y, Etmp, dEdW = self.runAndBackOnce(trainInput[n, :, :], trainTarget[n, :, :], combineFnDeriv)
+                    X = trainInput[n, :, :]
+                    T = trainTarget[n, :, :]
+                    Y, Etmp, dEdW = self.runAndBackOnce(X, T, combineFnDeriv)
                     E += Etmp / float(N)
                     self.W = self.W - lr * dEdW + mom * lastdW
                     lastdW = -lr * dEdW
-
                     if calcError:
-                        Yfinal = decisionFn(Y)
-                        correct += np.sum(Yfinal == trainTarget[n, :, 0])
-                        total += Yfinal.size
+                        rate_, correct_, total_ = self.calcRate(T, Y, decisionFn)
+                        correct += correct_
+                        total += total_
 
             # Mini-batch (using for-loop now, so need to differentiate)
             else:
                 while n < N:
                     batchEnd = min(N, n + bat)
                     numEx = batchEnd - n
-                    Y, Etmp, dEdW = self.runAndBackAll(trainInput[n:batchEnd, :, :], trainTarget[n:batchEnd, :, :], combineFnDeriv)
+                    X = trainInputPerm[:, n:batchEnd, :]
+                    T = trainTargetPerm[:, n:batchEnd, :]
+                    Y, Etmp, dEdW = self.runAndBackAll(X, T, combineFnDeriv)
+
                     E += np.sum(Etmp) / float(N)
                     dEdW = np.sum(dEdW, axis=0) / float(numEx)
                     self.W = self.W - lr * dEdW + mom * lastdW
                     lastdW = -lr * dEdW
-
                     if calcError:
-                        Yfinal = decisionFn(Y)
-                        correct += np.sum(Yfinal == trainTarget[n:batchEnd, :, 0])
-                        total += Yfinal.size
-
+                        rate_, correct_, total_ = self.calcRate(T, Y, decisionFn)
+                        correct += correct_
+                        total += total_
                     n += bat
 
             # Store train statistics
@@ -108,19 +121,26 @@ class LSTM:
 
             # Run validation
             if needValid:
-                VY, VE, dVEdW = self.runAndBackAll(validInput, validTarget, combineFnDeriv)
+                VY, VE, dVEdW = self.runAndBackAll(validInputPerm, validTargetPerm, combineFnDeriv)
                 VE = np.mean(VE)
                 VEtotal[epoch] = VE
                 if calcError:
-                    Vrate = self.calcRate(validTarget, VY, decisionFn)
-                    VRtotal[epoch] = Vrate
+                    Vrate, correct, total = self.calcRate(validTargetPerm, VY, decisionFn)
+                    VRtotal[epoch] = 1 - Vrate
 
             # Adjust learning rate
             lr = lr * lrDecay
             mom -= dMom
 
             # Print statistics
-            print "EP: %5d LR: %4f M: %4f E: %.4f R: %.4f VE: %.4f VR: %.4f" % (epoch, lr, mom, E, rate, VE, Vrate)
+            print "EP: %4d LR: %.2f M: %.2f E: %.4f R: %.4f VE: %.4f VR: %.4f TM: %4d" % \
+                  (epoch, lr, mom, E, rate, VE, Vrate, (time.time() - startTime))
+
+            if trainOpt['stoppingR'] - rate < 1e-3 and \
+               trainOpt['stoppingR'] - Vrate < 1e-3 and \
+               E < trainOpt['stoppingE'] and \
+               VE < trainOpt['stoppingE']:
+                break
 
         if trainOpt['plotFigs']:
             plt.figure(1);
@@ -147,20 +167,124 @@ class LSTM:
                 plt.savefig(trainOpt['name'] + '_err.png')
         pass
 
-    def runAndBackAll(self, X, T, combineFnDeriv):
-        numEx = X.shape[0]
-        timespan = X.shape[1]
-        Y = np.zeros((numEx, timespan, self.memoryDim), float)
+    def runAndBackAllLoop(self, X, T, combineFnDeriv):
+        timespan = X.shape[0]
+        numEx = X.shape[1]
+        Y = np.zeros((timespan, numEx, self.memoryDim), float)
         E = np.zeros(numEx, float)
-        dEdW = np.zeros((X.shape[0], self.W.shape[0], self.W.shape[1]), float)
-        for n in range(0, X.shape[0]):
-            Y[n, :, :], E[n], dEdW[n, :, :] = self.runAndBackOnce(X[n, :, :], T[n, :, :], combineFnDeriv)
+        dEdW = np.zeros((self.W.shape[0], self.W.shape[1], numEx), float)
+        for n in range(0, numEx):
+            Y[:, n, :], E[n], dEdW[:, :, n] = self.runAndBackOnce(X[:, n, :], T[:, n, :], combineFnDeriv)
+        dEdW = np.sum(dEdW, axis=2)
+        return Y, E, dEdW
+
+    def runAndBackAll(self, X, T, combineFnDeriv):
+        Y, C, Z, Gi, Gf, Go = self.forwardPassAll(X)
+        E, dEdW = self.backPropagateAll(T, Y, C, Z, Gi, Gf, Go, X, combineFnDeriv)
         return Y, E, dEdW
 
     def runAndBackOnce(self, X, T, combineFnDeriv):
         Y, C, Z, Gi, Gf, Go = self.forwardPass(X)
         E, dEdW = self.backPropagate(T, Y, C, Z, Gi, Gf, Go, X, combineFnDeriv)
         return Y, E, dEdW
+
+    def forwardPassAll(self, X):
+        timespan = X.shape[0]
+        numEx = X.shape[1]
+        Y = np.zeros((timespan, numEx, self.memoryDim), float)
+        C = np.zeros((timespan, numEx, self.memoryDim), float)
+        Z = np.zeros((timespan, numEx, self.memoryDim), float)
+        Gi = np.zeros((timespan, numEx, self.memoryDim), float)
+        Gf = np.zeros((timespan, numEx, self.memoryDim), float)
+        Go = np.zeros((timespan, numEx, self.memoryDim), float)
+        Wi, Wf, Wc, Wo = self.sliceWeights(self.inputDim, self.memoryDim, self.W)
+
+        for t in range(0, timespan):
+            # In forward pass initial stage -1 is empty, equivalent to zero.
+            # Need to explicitly pass zero in backward pass.
+            states1 = np.concatenate((X[t, :, :], Y[t-1, :, :], C[t-1, :, :], np.ones((numEx, 1), float)), axis=-1)
+            states2 = np.concatenate((X[t, :, :], Y[t-1, :, :], np.ones((numEx, 1), float)), axis=-1)
+            Gi[t, :, :] = special.expit(np.inner(states1, Wi))
+            Gf[t, :, :] = special.expit(np.inner(states1, Wf))
+            Z[t, :, :] = np.tanh(np.inner(states2, Wc))
+            C[t, :, :] = Gf[t, :, :] * C[t-1, :, :] + Gi[t, :, :] * Z[t, :, :]
+            states3 = np.concatenate((X[t, :, :], Y[t-1, :, :], C[t, :, :], np.ones((numEx, 1), float)), axis=-1)
+            Go[t, :, :] = special.expit(np.inner(states3, Wo))
+            Y[t, :, :] = Go[t, :, :] * np.tanh(C[t, :, :])
+
+        return Y, C, Z, Gi, Gf, Go
+
+    def backPropagateAll(self, T, Y, C, Z, Gi, Gf, Go, X, combineFnDeriv):
+        timespan = Y.shape[0]
+        numEx = Y.shape[1]
+        E, dEdY = combineFnDeriv(T, Y)
+        dYdW = np.zeros((timespan, self.memoryDim, self.inputDim * 4 + self.memoryDim * 7 + 4, numEx, self.memoryDim), float)
+        dCdW = np.zeros((timespan, self.memoryDim, self.inputDim * 4 + self.memoryDim * 7 + 4, numEx, self.memoryDim), float)
+
+        Wi, Wf, Wc, Wo = self.sliceWeights(self.inputDim, self.memoryDim, self.W)
+        Wyi = Wi[:, self.inputDim : self.inputDim + self.memoryDim]
+        Wci = Wi[:, self.inputDim + self.memoryDim : self.inputDim + self.memoryDim + self.memoryDim]
+        Wyf = Wf[:, self.inputDim : self.inputDim + self.memoryDim]
+        Wcf = Wf[:, self.inputDim + self.memoryDim : self.inputDim + self.memoryDim + self.memoryDim]
+        Wyc = Wc[:, self.inputDim : self.inputDim + self.memoryDim]
+        Wyo = Wo[:, self.inputDim : self.inputDim + self.memoryDim]
+        Wco = Wo[:, self.inputDim + self.memoryDim : self.inputDim + self.memoryDim + self.memoryDim]
+
+        for t in range(0, timespan):
+            if t == 0:
+                Yt1 = np.zeros((numEx, self.memoryDim), float)
+                Ct1 = np.zeros((numEx, self.memoryDim), float)
+            else:
+                Yt1 = Y[t-1, :, :]
+                Ct1 = C[t-1, :, :]
+            states1 = np.concatenate((X[t, :, :], Yt1, Ct1, np.ones((numEx, 1), float)), axis=1)
+            states2 = np.concatenate((X[t, :, :], Yt1, np.ones((numEx, 1), float)), axis=1)
+            states3 = np.concatenate((X[t, :, :], Yt1, C[t, :, :], np.ones((numEx, 1), float)), axis=1)
+
+            # W
+            dGi_i__dW_kl = np.inner(dYdW[t-1, :, :, :, :], Wyi) + \
+                           np.inner(dCdW[t-1, :, :, :, :], Wci)
+            dGi_i__dW_kl += np.eye(self.memoryDim).reshape(self.memoryDim, 1, 1, self.memoryDim) * \
+                            np.concatenate((
+                            states1.transpose().reshape(1, states1.shape[-1], numEx, 1),
+                            np.zeros((1, states1.shape[-1] + states2.shape[-1] + states3.shape[-1], numEx,  1), float)),
+                            axis=1)
+            dGi_i__dW_kl *= Gi[t, :, :] * (1 - Gi[t, :, :])
+            dGf_i__dW_kl = np.inner(dYdW[t-1, :, :, :, :], Wyf) + \
+                           np.inner(dCdW[t-1, :, :, :, :], Wcf)
+            dGf_i__dW_kl += np.eye(self.memoryDim).reshape(self.memoryDim, 1, 1, self.memoryDim) * \
+                            np.concatenate((
+                            np.zeros((1, states1.shape[-1], numEx, 1), float),
+                            states1.transpose().reshape(1, states1.shape[-1], numEx, 1),
+                            np.zeros((1, states2.shape[-1] + states3.shape[1], numEx, 1), float)),
+                            axis=1)
+            dGf_i__dW_kl *= Gf[t, :, :] * (1 - Gf[t, :, :])
+            dZ_i__dW_kl = np.inner(dYdW[t-1, :, :, :, :], Wyc)
+            dZ_i__dW_kl += np.eye(self.memoryDim).reshape(self.memoryDim, 1, 1, self.memoryDim) * \
+                           np.concatenate((
+                           np.zeros((1, states1.shape[-1] * 2, numEx, 1), float),
+                           states2.transpose().reshape(1, states2.shape[-1], numEx, 1),
+                           np.zeros((1, states3.shape[-1], numEx, 1), float)),
+                           axis=1)
+            dZ_i__dW_kl *= 1 - np.power(Z[t, :, :], 2)
+            dCdW[t, :, :, :] = dGf_i__dW_kl * Ct1 + \
+                               Gf[t, :, :] * dCdW[t-1, :, :, :, :] + \
+                               dGi_i__dW_kl * Z[t, :, :] + \
+                               Gi[t, :, :] * dZ_i__dW_kl
+            dGo_i__dW_kl = np.inner(dYdW[t-1, :, :, :, :], Wyo) + \
+                           np.inner(dCdW[t, :, :, :, :], Wco)
+            dGo_i__dW_kl += np.eye(self.memoryDim).reshape(self.memoryDim, 1, 1, self.memoryDim) * \
+                            np.concatenate((
+                            np.zeros((1, states1.shape[-1] * 2 + states2.shape[-1], numEx, 1), float),
+                            states3.transpose().reshape(1, states3.shape[-1], numEx, 1)),
+                            axis=1)
+            dGo_i__dW_kl *= Go[t, :, :] * (1 - Go[t, :, :])
+            U = np.tanh(C[t, :, :])
+            dYdW[t, :, :, :, :] = dGo_i__dW_kl * U + \
+                                  Go[t, :, :] * (1 - np.power(U, 2)) * dCdW[t, :, :, :, :]
+
+        dEdW = np.tensordot(dYdW, dEdY, axes=([4, 3, 0], [2, 1, 0]))
+        return E, dEdW
 
     def forwardPass(self, X):
         # Online training for now
@@ -259,19 +383,29 @@ class LSTM:
         dEdW = np.tensordot(dYdW, dEdY, axes=([3, 0], [1, 0]))
         return E, dEdW
 
-    def testRate(self, X, T, decisionFn):
-        numEx = X.shape[0]
-        timespan = X.shape[1]
-        Y = np.zeros((numEx, timespan, self.memoryDim), float)
-        for n in range(0, X.shape[0]):
-            Y[n, :, :], C, Z, Gi, Gf, Go = self.forwardPass(X[n, :, :])
-        return self.calcRate(T, Y, decisionFn)
+    def testRate(self, X, T, decisionFn, printEx=False):
+        Y, C, Z, Gi, Gf, Go = self.forwardPassAll(X.transpose((1, 0, 2)))
+        if printEx:
+            for n in range(0, min(X.shape[0], 10)):
+                for j in range(0, X.shape[2]):
+                    print "X:",
+                    print X[n, :, j]
+                for j in range(0, T.shape[2]):
+                    print "T:",
+                    print T[n, :, j]
+                Yfinal = decisionFn(Y)
+                print "Y:",
+                print Yfinal[:, n].astype(float)
+
+        return self.calcRate(T.transpose((1, 0, 2)), Y, decisionFn)
 
     @staticmethod
     def calcRate(T, Y, decisionFn):
         Yfinal = decisionFn(Y)
-        rate = np.sum(Yfinal.reshape(Yfinal.size) == T.reshape(T.size)) / float(Yfinal.size)
-        return rate
+        correct = np.sum(Yfinal.reshape(Yfinal.size) == T.reshape(T.size))
+        total = Yfinal.size
+        rate = correct / float(total)
+        return rate, correct, total
 
     @staticmethod
     def splitData(trainInput, trainTarget):
@@ -327,10 +461,15 @@ def simpleSum(Y):
     return np.sum(Y, axis=-1)
 
 def simpleSumDeriv(T, Y):
-    diff = simpleSum(Y) - np.reshape(T, T.size)
+    Yout = simpleSum(Y)
+    diff =  Yout - T.reshape(Yout.shape)
     timespan = Y.shape[0]
-    E = 0.5 * np.sum(np.dot(np.transpose(diff), diff)) / float(timespan)
-    dEdY = np.repeat(np.reshape(diff, (diff.size, 1)), Y.shape[1], axis=1) / float(timespan)
+    E = 0.5 * np.sum(np.power(diff, 2), axis=0) / float(timespan)
+
+    if len(Y.shape) == 2:
+        dEdY = np.repeat(diff.reshape(diff.shape[0], 1), Y.shape[1], axis=1) / float(timespan)
+    elif len(Y.shape) == 3:
+        dEdY = np.repeat(diff.reshape(diff.shape[0], diff.shape[1], 1), Y.shape[2], axis=2) / float(timespan)
     return E, dEdY
 
 def simpleSumDecision(Y):
