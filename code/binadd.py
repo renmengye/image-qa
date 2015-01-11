@@ -1,6 +1,10 @@
 from lstm import *
+from simplesum import *
+from pipeline import *
+from util_func import *
 
-def getData(size, length):
+def getData(size, length, seed=2):
+    np.random.seed(seed)
     input_ = np.zeros((size, length, 2), float)
     target_ = np.zeros((size, length, 1), float)
     for i in range(0, size):
@@ -16,47 +20,47 @@ def getData(size, length):
             else:
                 carry = 0
                 target_[i, j, 0] = s
-        # if i < 10:
-        #     print input_[i, :, 0]
-        #     print input_[i, :, 1]
-        #     print target_[i, :, 0]
-        #     print
     return input_, target_
 
 if __name__ == '__main__':
-    lstm = LSTM(
+    pipeline = Pipeline(
+        name='binadd',
+        costFn=meanSqErr,
+        decisionFn=hardLimit)
+
+    pipeline.addStage(LSTM(
         inputDim=2,
         memoryDim=3,
         initRange=0.01,
-        initSeed=2)
+        initSeed=2))
+
+    pipeline.addStage(SimpleSum())
 
     trainOpt = {
         'learningRate': 0.8,
         'numEpoch': 2000,
+        'heldOutRatio': 0.5,
         'momentum': 0.9,
         'batchSize': 1,
         'learningRateDecay': 1.0,
         'momentumEnd': 0.9,
         'needValid': True,
-        'name': 'binadd_train',
         'plotFigs': True,
-        'combineFnDeriv': simpleSumDeriv,
         'calcError': True,
-        'decisionFn': simpleSumDecision,
-        'stoppingE': 0.002,
-        'stoppingR': 1.0
+        'stopE': 0.006
     }
 
-    np.random.seed(2)
-    trainSize = 40
-    testSize = 1000
-    length = 8
-    trainInput, trainTarget = getData(trainSize, length)
-    testInput, testTarget = getData(testSize, length)
-    lstm.train(trainInput, trainTarget, trainOpt)
-    rate, correct, total = lstm.testRate(testInput, testTarget, simpleSumDecision, printEx=True)
+    trainInput, trainTarget = getData(
+        size=40,
+        length=8,
+        seed=2)
 
-    print 'TR: %.4f' % rate
-    lstm.save('binadd.npy')
-    raw_input('Press Enter to continue.')
+    testInput, testTarget = getData(
+        size=1000,
+        length=8,
+        seed=2)
+
+    pipeline.train(trainInput, trainTarget, trainOpt)
+    pipeline.testRate(testInput, testTarget)
+    pipeline.save()
     pass
