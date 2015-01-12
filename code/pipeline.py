@@ -21,6 +21,7 @@ class Pipeline:
 
     def addStage(self, stage):
         self.stages.append(stage)
+        stage.lastdW = 0
         pass
 
     def train(self, trainInput, trainTarget, trainOpt):
@@ -47,7 +48,6 @@ class Pipeline:
         VRtotal = np.zeros(numEpoch, float)
 
         startTime = time.time()
-        lastdW = 0
 
         # Train loop through epochs
         for epoch in range(0, numEpoch):
@@ -70,9 +70,30 @@ class Pipeline:
                         total += total_
 
                     for stage in reversed(self.stages):
-                        dEdW, dEdY = stage.backPropagate(dEdY)
-                        stage.W = stage.W - lr * dEdW + mom * lastdW
-                        lastdW = -lr * dEdW
+                        dEdW, dEdY = stage.backPropagate(dEdY,
+                                                         outputdEdX=(stage!=self.stages[0]))
+                        stage.W = stage.W - lr * dEdW + mom * stage.lastdW
+                        stage.lastdW = -lr * dEdW
+            else:
+                batchStart = 0
+                while batchStart < N:
+                    batchEnd = min(N, batchStart + bat)
+                    numEx = batchEnd - batchStart
+                    Y_bat = self.forwardPass(X[:, batchStart:batchEnd, :])
+                    Etmp, dEdY = self.costFn(Y_bat, T[:, batchStart:batchEnd, :])
+                    E += np.sum(Etmp) * numEx / float(N)
+
+                    for stage in reversed(self.stages):
+                       dEdW, dEdY = stage.backPropagate(dEdY,
+                                                        outputdEdX=(stage!=self.stages[0]))
+                       stage.W = stage.W - lr * dEdW + mom * stage.lastdW
+                       stage.lastdW = -lr * dEdW
+
+                    if calcError:
+                        rate_, correct_, total_ = self.calcRate(Y_bat, T[:, batchStart:batchEnd, :])
+                        correct += correct_
+                        total += total_
+                    batchStart += bat
 
             # Store train statistics
             if calcError:
@@ -82,9 +103,9 @@ class Pipeline:
 
             # Run validation
             if needValid:
-                VY = self.forwardPassAll(VX)
+                VY = self.forwardPass(VX)
                 VE, dVE = self.costFn(VY, VT)
-                VE = np.mean(VE)
+                VE = np.sum(VE)
                 VEtotal[epoch] = VE
                 if calcError:
                     Vrate, correct, total = self.calcRate(VY, VT)
@@ -134,16 +155,10 @@ class Pipeline:
             X1 = stage.forwardPass(X1)
         return X1
 
-    def forwardPassAll(self, X):
-        X1 = X
-        for stage in self.stages:
-            X1 = stage.forwardPassAll(X1)
-        return X1
-
-    def testRate(self, X, T, printEx=False):
+    def test(self, X, T, printEx=False):
         X = X.transpose((1, 0, 2))
         T = T.transpose((1, 0, 2))
-        Y = self.forwardPassAll(X)
+        Y = self.forwardPass(X)
         if printEx:
             for n in range(0, min(X.shape[0], 10)):
                 for j in range(0, X.shape[2]):

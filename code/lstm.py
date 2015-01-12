@@ -2,7 +2,13 @@ from scipy import special
 from util_func import *
 
 class LSTM:
-    def __init__(self, inputDim, memoryDim, initRange=1.0, initSeed=2, needInit=True, W=0):
+    def __init__(self,
+                 inputDim,
+                 memoryDim,
+                 initRange=1.0,
+                 initSeed=2,
+                 needInit=True,
+                 W=0):
         self.inputDim = inputDim
         self.memoryDim = memoryDim
 
@@ -19,10 +25,11 @@ class LSTM:
         self.Gi = 0
         self.Gf = 0
         self.Go = 0
+        pass
 
     def chkgrd(self):
-        X = np.array([[0.1], [1], [0.2], [1], [0.3], [1], [-0.1], [1]])
-        T = np.array([[0], [0], [0], [1], [1], [1], [0], [1]])
+        X = np.array([[[0.1]], [[1]], [[0.2]], [[1]], [[0.3]], [[1]], [[-0.1]], [[1]]])
+        T = np.array([[[0]], [[0]], [[0]], [[1]], [[1]], [[1]], [[0]], [[1]]])
         Y = self.forwardPass(X)
         E, dEdY = simpleSumDeriv(T, Y)
         dEdW, dEdX = self.backPropagate(dEdY)
@@ -41,130 +48,26 @@ class LSTM:
 
                 dEdWTmp[i,j] = (Etmp1 - Etmp2) / 2.0 / eps
                 self.W[i,j] += eps
-        for i in range(0, X.shape[0]):
-            for j in range(0, X.shape[1]):
-                X[i, j] += eps
-                Y = self.forwardPass(X)
-                Etmp1, d1 = simpleSumDeriv(T, Y)
+        for t in range(0, X.shape[0]):
+            for n in range(0, X.shape[1]):
+                for j in range(0, X.shape[2]):
+                    X[t, n, j] += eps
+                    Y = self.forwardPass(X)
+                    Etmp1, d1 = simpleSumDeriv(T, Y)
 
-                X[i, j] -= 2 * eps
-                Y = self.forwardPass(X)
-                Etmp2, d2 = simpleSumDeriv(T, Y)
+                    X[t, n, j] -= 2 * eps
+                    Y = self.forwardPass(X)
+                    Etmp2, d2 = simpleSumDeriv(T, Y)
 
-                dEdXTmp[i, j] = (Etmp1 - Etmp2) / 2.0 / eps
-                X[i, j] += eps
+                    dEdXTmp[t, n, j] = (Etmp1 - Etmp2) / 2.0 / eps
+                    X[t, n, j] += eps
 
         print "haha"
         pass
 
-    def forwardPassAll(self, X):
-        # X[t, n, i] -> t: time, n: example, i: input dimension
-        timespan = X.shape[0]
-        numEx = X.shape[1]
-        Y = np.zeros((timespan, numEx, self.memoryDim), float)
-        C = np.zeros((timespan, numEx, self.memoryDim), float)
-        Z = np.zeros((timespan, numEx, self.memoryDim), float)
-        Gi = np.zeros((timespan, numEx, self.memoryDim), float)
-        Gf = np.zeros((timespan, numEx, self.memoryDim), float)
-        Go = np.zeros((timespan, numEx, self.memoryDim), float)
-        Wi, Wf, Wc, Wo = self.sliceWeights(self.inputDim, self.memoryDim, self.W)
-
-        for t in range(0, timespan):
-            # In forward pass initial stage -1 is empty, equivalent to zero.
-            # Need to explicitly pass zero in backward pass.
-            states1 = np.concatenate((X[t, :, :], Y[t-1, :, :], C[t-1, :, :], np.ones((numEx, 1), float)), axis=-1)
-            states2 = np.concatenate((X[t, :, :], Y[t-1, :, :], np.ones((numEx, 1), float)), axis=-1)
-            Gi[t, :, :] = special.expit(np.inner(states1, Wi))
-            Gf[t, :, :] = special.expit(np.inner(states1, Wf))
-            Z[t, :, :] = np.tanh(np.inner(states2, Wc))
-            C[t, :, :] = Gf[t, :, :] * C[t-1, :, :] + Gi[t, :, :] * Z[t, :, :]
-            states3 = np.concatenate((X[t, :, :], Y[t-1, :, :], C[t, :, :], np.ones((numEx, 1), float)), axis=-1)
-            Go[t, :, :] = special.expit(np.inner(states3, Wo))
-            Y[t, :, :] = Go[t, :, :] * np.tanh(C[t, :, :])
-
-        self.X = X
-        self.Y = Y
-        self.C = C
-        self.Z = Z
-        self.Gi = Gi
-        self.Gf = Gf
-        self.Go = Go
-
-        return Y
-
-    # def backPropagateAll(self, T, Y, C, Z, Gi, Gf, Go, X, combineFnDeriv):
-    #     timespan = Y.shape[0]
-    #     numEx = Y.shape[1]
-    #     E, dEdY = combineFnDeriv(T, Y)
-    #     dYdW = np.zeros((timespan, self.memoryDim, self.inputDim * 4 + self.memoryDim * 7 + 4, numEx, self.memoryDim), float)
-    #     dCdW = np.zeros((timespan, self.memoryDim, self.inputDim * 4 + self.memoryDim * 7 + 4, numEx, self.memoryDim), float)
-    #
-    #     Wi, Wf, Wc, Wo = self.sliceWeights(self.inputDim, self.memoryDim, self.W)
-    #     Wyi = Wi[:, self.inputDim : self.inputDim + self.memoryDim]
-    #     Wci = Wi[:, self.inputDim + self.memoryDim : self.inputDim + self.memoryDim + self.memoryDim]
-    #     Wyf = Wf[:, self.inputDim : self.inputDim + self.memoryDim]
-    #     Wcf = Wf[:, self.inputDim + self.memoryDim : self.inputDim + self.memoryDim + self.memoryDim]
-    #     Wyc = Wc[:, self.inputDim : self.inputDim + self.memoryDim]
-    #     Wyo = Wo[:, self.inputDim : self.inputDim + self.memoryDim]
-    #     Wco = Wo[:, self.inputDim + self.memoryDim : self.inputDim + self.memoryDim + self.memoryDim]
-    #
-    #     for t in range(0, timespan):
-    #         if t == 0:
-    #             Yt1 = np.zeros((numEx, self.memoryDim), float)
-    #             Ct1 = np.zeros((numEx, self.memoryDim), float)
-    #         else:
-    #             Yt1 = Y[t-1, :, :]
-    #             Ct1 = C[t-1, :, :]
-    #         states1 = np.concatenate((X[t, :, :], Yt1, Ct1, np.ones((numEx, 1), float)), axis=1)
-    #         states2 = np.concatenate((X[t, :, :], Yt1, np.ones((numEx, 1), float)), axis=1)
-    #         states3 = np.concatenate((X[t, :, :], Yt1, C[t, :, :], np.ones((numEx, 1), float)), axis=1)
-    #
-    #         # W
-    #         dGi_i__dW_kl = np.inner(dYdW[t-1, :, :, :, :], Wyi) + \
-    #                        np.inner(dCdW[t-1, :, :, :, :], Wci)
-    #         dGi_i__dW_kl += np.eye(self.memoryDim).reshape(self.memoryDim, 1, 1, self.memoryDim) * \
-    #                         np.concatenate((
-    #                         states1.transpose().reshape(1, states1.shape[-1], numEx, 1),
-    #                         np.zeros((1, states1.shape[-1] + states2.shape[-1] + states3.shape[-1], numEx,  1), float)),
-    #                         axis=1)
-    #         dGi_i__dW_kl *= Gi[t, :, :] * (1 - Gi[t, :, :])
-    #         dGf_i__dW_kl = np.inner(dYdW[t-1, :, :, :, :], Wyf) + \
-    #                        np.inner(dCdW[t-1, :, :, :, :], Wcf)
-    #         dGf_i__dW_kl += np.eye(self.memoryDim).reshape(self.memoryDim, 1, 1, self.memoryDim) * \
-    #                         np.concatenate((
-    #                         np.zeros((1, states1.shape[-1], numEx, 1), float),
-    #                         states1.transpose().reshape(1, states1.shape[-1], numEx, 1),
-    #                         np.zeros((1, states2.shape[-1] + states3.shape[1], numEx, 1), float)),
-    #                         axis=1)
-    #         dGf_i__dW_kl *= Gf[t, :, :] * (1 - Gf[t, :, :])
-    #         dZ_i__dW_kl = np.inner(dYdW[t-1, :, :, :, :], Wyc)
-    #         dZ_i__dW_kl += np.eye(self.memoryDim).reshape(self.memoryDim, 1, 1, self.memoryDim) * \
-    #                        np.concatenate((
-    #                        np.zeros((1, states1.shape[-1] * 2, numEx, 1), float),
-    #                        states2.transpose().reshape(1, states2.shape[-1], numEx, 1),
-    #                        np.zeros((1, states3.shape[-1], numEx, 1), float)),
-    #                        axis=1)
-    #         dZ_i__dW_kl *= 1 - np.power(Z[t, :, :], 2)
-    #         dCdW[t, :, :, :] = dGf_i__dW_kl * Ct1 + \
-    #                            Gf[t, :, :] * dCdW[t-1, :, :, :, :] + \
-    #                            dGi_i__dW_kl * Z[t, :, :] + \
-    #                            Gi[t, :, :] * dZ_i__dW_kl
-    #         dGo_i__dW_kl = np.inner(dYdW[t-1, :, :, :, :], Wyo) + \
-    #                        np.inner(dCdW[t, :, :, :, :], Wco)
-    #         dGo_i__dW_kl += np.eye(self.memoryDim).reshape(self.memoryDim, 1, 1, self.memoryDim) * \
-    #                         np.concatenate((
-    #                         np.zeros((1, states1.shape[-1] * 2 + states2.shape[-1], numEx, 1), float),
-    #                         states3.transpose().reshape(1, states3.shape[-1], numEx, 1)),
-    #                         axis=1)
-    #         dGo_i__dW_kl *= Go[t, :, :] * (1 - Go[t, :, :])
-    #         U = np.tanh(C[t, :, :])
-    #         dYdW[t, :, :, :, :] = dGo_i__dW_kl * U + \
-    #                               Go[t, :, :] * (1 - np.power(U, 2)) * dCdW[t, :, :, :, :]
-    #
-    #     dEdW = np.tensordot(dYdW, dEdY, axes=([4, 3, 0], [2, 1, 0]))
-    #     return E, dEdW
-
     def forwardPass(self, X):
+        if len(X.shape) == 3:
+            return self.forwardPassAll(X)
         timespan = X.shape[0]
         Y = np.zeros((timespan, self.memoryDim), float)
         C = np.zeros((timespan, self.memoryDim), float)
@@ -197,7 +100,9 @@ class LSTM:
 
         return Y
 
-    def backPropagate(self, dEdY):
+    def backPropagate(self, dEdY, outputdEdX=True):
+        if len(self.X.shape) == 3:
+            return self.backPropagateAll(dEdY, outputdEdX)
         X = self.X
         Y = self.Y
         C = self.C
@@ -280,41 +185,208 @@ class LSTM:
 
         # Calculate dEdX
         # dY_ti__dXtau_j -> (t, tau, j, i)
-        dYdX = np.zeros((timespan, timespan, self.inputDim, self.memoryDim), float)
-        dCdX = np.zeros((timespan, timespan, self.inputDim, self.memoryDim), float)
+        if outputdEdX:
+            dYdX = np.zeros((timespan, timespan, self.inputDim, self.memoryDim), float)
+            dCdX = np.zeros((timespan, timespan, self.inputDim, self.memoryDim), float)
+
+            for t in range(0, timespan):
+                if t == 0:
+                    Ct1 = np.zeros(self.memoryDim, float)
+                else:
+                    Ct1 = C[t-1, :]
+
+                dGi_i__dX_tj = np.inner(dYdX[t-1, :, :, :], Wyi) + \
+                               np.inner(dCdX[t-1, :, :, :], Wci)
+                dGi_i__dX_tj[t, :, :] += np.transpose(Wxi)
+                dGi_i__dX_tj *= Gi[t, :] * (1 - Gi[t, :])
+                dGf_i__dX_tj = np.inner(dYdX[t-1, :, :, :], Wyf) + \
+                               np.inner(dCdX[t-1, :, :, :], Wcf)
+                dGf_i__dX_tj[t, :, :] += np.transpose(Wxf)
+                dGf_i__dX_tj *= Gf[t, :] * (1 - Gf[t, :])
+                dZ_i__dX_tj = np.inner(dYdX[t-1, :, :, :], Wyc)
+                dZ_i__dX_tj[t, :, :] += np.transpose(Wxc)
+                dZ_i__dX_tj *= 1 - np.power(Z[t, :], 2)
+                dCdX[t, :, :, :] = dGf_i__dX_tj * Ct1 + \
+                                   Gf[t, :] * dCdX[t-1, :, :, :] + \
+                                   dGi_i__dX_tj * Z[t, :] + \
+                                   Gi[t, :] * dZ_i__dX_tj
+                dGo_i__dX_tj = np.inner(dYdX[t-1, :, :, :], Wyo) + \
+                               np.inner(dCdX[t, :, :, :], Wco)
+                dGo_i__dX_tj[t, :, :] += np.transpose(Wxo)
+                dGo_i__dX_tj *= Go[t, :] * (1 - Go[t, :])
+
+                U = np.tanh(C[t, :])
+                dYdX[t, :, :, :] = dGo_i__dX_tj * U + \
+                                   Go[t, :] * (1 - np.power(U, 2)) * dCdX[t, :, :, :]
+
+            dEdX = np.tensordot(dYdX, dEdY, axes=([3, 0], [1, 0]))
+        else:
+            dEdX = 0
+
+        return dEdW, dEdX
+
+    def forwardPassAll(self, X):
+        # X[t, n, i] -> t: time, n: example, i: input dimension
+        timespan = X.shape[0]
+        numEx = X.shape[1]
+        Y = np.zeros((timespan, numEx, self.memoryDim), float)
+        C = np.zeros((timespan, numEx, self.memoryDim), float)
+        Z = np.zeros((timespan, numEx, self.memoryDim), float)
+        Gi = np.zeros((timespan, numEx, self.memoryDim), float)
+        Gf = np.zeros((timespan, numEx, self.memoryDim), float)
+        Go = np.zeros((timespan, numEx, self.memoryDim), float)
+        Wi, Wf, Wc, Wo = self.sliceWeights(self.inputDim, self.memoryDim, self.W)
+
+        for t in range(0, timespan):
+            # In forward pass initial stage -1 is empty, equivalent to zero.
+            # Need to explicitly pass zero in backward pass.
+            states1 = np.concatenate((X[t, :, :], Y[t-1, :, :], C[t-1, :, :], np.ones((numEx, 1), float)), axis=-1)
+            states2 = np.concatenate((X[t, :, :], Y[t-1, :, :], np.ones((numEx, 1), float)), axis=-1)
+            Gi[t, :, :] = special.expit(np.inner(states1, Wi))
+            Gf[t, :, :] = special.expit(np.inner(states1, Wf))
+            Z[t, :, :] = np.tanh(np.inner(states2, Wc))
+            C[t, :, :] = Gf[t, :, :] * C[t-1, :, :] + Gi[t, :, :] * Z[t, :, :]
+            states3 = np.concatenate((X[t, :, :], Y[t-1, :, :], C[t, :, :], np.ones((numEx, 1), float)), axis=-1)
+            Go[t, :, :] = special.expit(np.inner(states3, Wo))
+            Y[t, :, :] = Go[t, :, :] * np.tanh(C[t, :, :])
+
+        self.X = X
+        self.Y = Y
+        self.C = C
+        self.Z = Z
+        self.Gi = Gi
+        self.Gf = Gf
+        self.Go = Go
+
+        return Y
+
+    def backPropagateAll(self, dEdY, outputdEdX=True):
+        X = self.X
+        Y = self.Y
+        C = self.C
+        Z = self.Z
+        Gi = self.Gi
+        Gf = self.Gf
+        Go = self.Go
+        timespan = Y.shape[0]
+        numEx = Y.shape[1]
+
+        # (t, k, l, n, i)
+        dYdW = np.zeros((timespan, self.memoryDim, self.inputDim * 4 + self.memoryDim * 7 + 4, numEx, self.memoryDim), float)
+        dCdW = np.zeros((timespan, self.memoryDim, self.inputDim * 4 + self.memoryDim * 7 + 4, numEx, self.memoryDim), float)
+
+        Wi, Wf, Wc, Wo = self.sliceWeights(self.inputDim, self.memoryDim, self.W)
+        Wxi = Wi[:, 0 : self.inputDim]
+        Wyi = Wi[:, self.inputDim : self.inputDim + self.memoryDim]
+        Wci = Wi[:, self.inputDim + self.memoryDim : self.inputDim + self.memoryDim + self.memoryDim]
+        Wxf = Wf[:, 0 : self.inputDim]
+        Wyf = Wf[:, self.inputDim : self.inputDim + self.memoryDim]
+        Wcf = Wf[:, self.inputDim + self.memoryDim : self.inputDim + self.memoryDim + self.memoryDim]
+        Wxc = Wc[:, 0 : self.inputDim]
+        Wyc = Wc[:, self.inputDim : self.inputDim + self.memoryDim]
+        Wxo = Wo[:, 0 : self.inputDim]
+        Wyo = Wo[:, self.inputDim : self.inputDim + self.memoryDim]
+        Wco = Wo[:, self.inputDim + self.memoryDim : self.inputDim + self.memoryDim + self.memoryDim]
 
         for t in range(0, timespan):
             if t == 0:
-                Ct1 = np.zeros(self.memoryDim, float)
+                Yt1 = np.zeros((numEx, self.memoryDim), float)
+                Ct1 = np.zeros((numEx, self.memoryDim), float)
             else:
-                Ct1 = C[t-1, :]
+                Yt1 = Y[t-1, :, :]
+                Ct1 = C[t-1, :, :]
+            states1 = np.concatenate((X[t, :, :], Yt1, Ct1, np.ones((numEx, 1), float)), axis=1)
+            states2 = np.concatenate((X[t, :, :], Yt1, np.ones((numEx, 1), float)), axis=1)
+            states3 = np.concatenate((X[t, :, :], Yt1, C[t, :, :], np.ones((numEx, 1), float)), axis=1)
 
-            dGi_i__dX_tj = np.inner(dYdX[t-1, :, :, :], Wyi) + \
-                           np.inner(dCdX[t-1, :, :, :], Wci)
-            dGi_i__dX_tj[t, :, :] += np.transpose(Wxi)
-            dGi_i__dX_tj *= Gi[t, :] * (1 - Gi[t, :])
-            dGf_i__dX_tj = np.inner(dYdX[t-1, :, :, :], Wyf) + \
-                           np.inner(dCdX[t-1, :, :, :], Wcf)
-            dGf_i__dX_tj[t, :, :] += np.transpose(Wxf)
-            dGf_i__dX_tj *= Gf[t, :] * (1 - Gf[t, :])
-            dZ_i__dX_tj = np.inner(dYdX[t-1, :, :, :], Wyc)
-            dZ_i__dX_tj[t, :, :] += np.transpose(Wxc)
-            dZ_i__dX_tj *= 1 - np.power(Z[t, :], 2)
-            dCdX[t, :, :, :] = dGf_i__dX_tj * Ct1 + \
-                               Gf[t, :] * dCdX[t-1, :, :, :] + \
-                               dGi_i__dX_tj * Z[t, :] + \
-                               Gi[t, :] * dZ_i__dX_tj
-            dGo_i__dX_tj = np.inner(dYdX[t-1, :, :, :], Wyo) + \
-                           np.inner(dCdX[t, :, :, :], Wco)
-            dGo_i__dX_tj[t, :, :] += np.transpose(Wxo)
-            dGo_i__dX_tj *= Go[t, :] * (1 - Go[t, :])
+            # W
+            dGi_i__dW_kl = np.inner(dYdW[t-1, :, :, :, :], Wyi) + \
+                           np.inner(dCdW[t-1, :, :, :, :], Wci)
+            dGi_i__dW_kl += np.eye(self.memoryDim).reshape(self.memoryDim, 1, 1, self.memoryDim) * \
+                            np.concatenate((
+                            states1.transpose().reshape(1, states1.shape[-1], numEx, 1),
+                            np.zeros((1, states1.shape[-1] + states2.shape[-1] + states3.shape[-1], numEx,  1), float)),
+                            axis=1)
+            dGi_i__dW_kl *= Gi[t, :, :] * (1 - Gi[t, :, :])
+            dGf_i__dW_kl = np.inner(dYdW[t-1, :, :, :, :], Wyf) + \
+                           np.inner(dCdW[t-1, :, :, :, :], Wcf)
+            dGf_i__dW_kl += np.eye(self.memoryDim).reshape(self.memoryDim, 1, 1, self.memoryDim) * \
+                            np.concatenate((
+                            np.zeros((1, states1.shape[-1], numEx, 1), float),
+                            states1.transpose().reshape(1, states1.shape[-1], numEx, 1),
+                            np.zeros((1, states2.shape[-1] + states3.shape[1], numEx, 1), float)),
+                            axis=1)
+            dGf_i__dW_kl *= Gf[t, :, :] * (1 - Gf[t, :, :])
+            dZ_i__dW_kl = np.inner(dYdW[t-1, :, :, :, :], Wyc)
+            dZ_i__dW_kl += np.eye(self.memoryDim).reshape(self.memoryDim, 1, 1, self.memoryDim) * \
+                           np.concatenate((
+                           np.zeros((1, states1.shape[-1] * 2, numEx, 1), float),
+                           states2.transpose().reshape(1, states2.shape[-1], numEx, 1),
+                           np.zeros((1, states3.shape[-1], numEx, 1), float)),
+                           axis=1)
+            dZ_i__dW_kl *= 1 - np.power(Z[t, :, :], 2)
+            dCdW[t, :, :, :] = dGf_i__dW_kl * Ct1 + \
+                               Gf[t, :, :] * dCdW[t-1, :, :, :, :] + \
+                               dGi_i__dW_kl * Z[t, :, :] + \
+                               Gi[t, :, :] * dZ_i__dW_kl
+            dGo_i__dW_kl = np.inner(dYdW[t-1, :, :, :, :], Wyo) + \
+                           np.inner(dCdW[t, :, :, :, :], Wco)
+            dGo_i__dW_kl += np.eye(self.memoryDim).reshape(self.memoryDim, 1, 1, self.memoryDim) * \
+                            np.concatenate((
+                            np.zeros((1, states1.shape[-1] * 2 + states2.shape[-1], numEx, 1), float),
+                            states3.transpose().reshape(1, states3.shape[-1], numEx, 1)),
+                            axis=1)
+            dGo_i__dW_kl *= Go[t, :, :] * (1 - Go[t, :, :])
+            U = np.tanh(C[t, :, :])
+            dYdW[t, :, :, :, :] = dGo_i__dW_kl * U + \
+                                  Go[t, :, :] * (1 - np.power(U, 2)) * dCdW[t, :, :, :, :]
 
-            U = np.tanh(C[t, :])
-            dYdX[t, :, :, :] = dGo_i__dX_tj * U + \
-                               Go[t, :] * (1 - np.power(U, 2)) * dCdX[t, :, :, :]
+        dEdW = np.tensordot(dYdW, dEdY, axes=([4, 3, 0], [2, 1, 0]))
 
-        dEdX = np.tensordot(dYdX, dEdY, axes=([3, 0], [1, 0]))
 
+        # Calculate dEdX
+        if outputdEdX:
+            # (t, tau, n, j, i)
+            dYdX = np.zeros((timespan, timespan, numEx, self.inputDim, self.memoryDim), float)
+            dCdX = np.zeros((timespan, timespan, numEx, self.inputDim, self.memoryDim), float)
+
+            for t in range(0, timespan):
+                if t == 0:
+                    Ct1 = np.zeros(self.memoryDim, float)
+                else:
+                    Ct1 = C[t-1, :]
+
+                dGi_i__dX_tj = np.inner(dYdX[t-1, :, :, :, :], Wyi) + \
+                               np.inner(dCdX[t-1, :, :, :, ], Wci)
+                dGi_i__dX_tj[t, :, :] += np.transpose(Wxi)
+                dGi_i__dX_tj *= Gi[t, :] * (1 - Gi[t, :])
+                dGf_i__dX_tj = np.inner(dYdX[t-1, :, :, :, :], Wyf) + \
+                               np.inner(dCdX[t-1, :, :, :, :], Wcf)
+                dGf_i__dX_tj[t, :, :] += np.transpose(Wxf)
+                dGf_i__dX_tj *= Gf[t, :] * (1 - Gf[t, :])
+                dZ_i__dX_tj = np.inner(dYdX[t-1, :, :, :, :], Wyc)
+                dZ_i__dX_tj[t, :, :] += np.transpose(Wxc)
+                dZ_i__dX_tj *= 1 - np.power(Z[t, :], 2)
+                dCdX[t, :, :, :, :] = dGf_i__dX_tj * Ct1 + \
+                                      Gf[t, :] * dCdX[t-1, :, :, :, :] + \
+                                      dGi_i__dX_tj * Z[t, :] + \
+                                      Gi[t, :] * dZ_i__dX_tj
+                dGo_i__dX_tj = np.inner(dYdX[t-1, :, :, :, :], Wyo) + \
+                               np.inner(dCdX[t, :, :, :, :], Wco)
+                dGo_i__dX_tj[t, :, :] += np.transpose(Wxo)
+                dGo_i__dX_tj *= Go[t, :] * (1 - Go[t, :])
+
+                U = np.tanh(C[t, :])
+                dYdX[t, :, :, :, :] = dGo_i__dX_tj * U + \
+                                      Go[t, :] * (1 - np.power(U, 2)) * dCdX[t, :, :, :, :]
+
+            # dYdX -> (t, tau, n, j, i) * dEdY -> (t, n, i) -> (tau, n, j, n)
+            dEdX = np.diagonal(np.tensordot(dYdX, dEdY, axes=([4, 0], [1, 0])), axis1=1, axis2=3).transpose((0, 2, 1))
+        else:
+            dEdX = 0
+
+        # dEdW -> (k, l)
+        # dEdX -> (tau, n, j)
         return dEdW, dEdX
 
     @staticmethod

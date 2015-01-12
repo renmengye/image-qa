@@ -1,5 +1,8 @@
 from lstm import *
 from simplesum import *
+from softmax import *
+from time_unfold import *
+from time_fold import *
 from pipeline import *
 from util_func import *
 
@@ -23,21 +26,37 @@ def getData(size, length, seed=2):
     return input_, target_
 
 if __name__ == '__main__':
+    # pipeline = Pipeline(
+    #     name='binadd',
+    #     costFn=meanSqErr,
+    #     decisionFn=hardLimit)
+    # pipeline.addStage(LSTM(
+    #     inputDim=2,
+    #     memoryDim=3,
+    #     initRange=0.01,
+    #     initSeed=2))
+    # pipeline.addStage(SimpleSum())
+
     pipeline = Pipeline(
         name='binadd',
-        costFn=meanSqErr,
-        decisionFn=hardLimit)
-
+        costFn=crossEntIdx,
+        decisionFn=argmax)
     pipeline.addStage(LSTM(
         inputDim=2,
         memoryDim=3,
         initRange=0.01,
         initSeed=2))
-
-    pipeline.addStage(SimpleSum())
+    pipeline.addStage(TimeUnfold())
+    pipeline.addStage(Softmax(
+        inputDim=3,
+        outputDim=2,
+        initRange=0.01,
+        initSeed=3))
+    pipeline.addStage(TimeFold(
+        timespan=8))
 
     trainOpt = {
-        'learningRate': 0.8,
+        'learningRate': 0.1,
         'numEpoch': 2000,
         'heldOutRatio': 0.5,
         'momentum': 0.9,
@@ -54,13 +73,12 @@ if __name__ == '__main__':
         size=40,
         length=8,
         seed=2)
-
     testInput, testTarget = getData(
         size=1000,
         length=8,
-        seed=2)
+        seed=3)
 
     pipeline.train(trainInput, trainTarget, trainOpt)
-    pipeline.testRate(testInput, testTarget)
+    pipeline.test(testInput, testTarget)
     pipeline.save()
     pass

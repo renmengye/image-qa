@@ -1,0 +1,35 @@
+import numpy as np
+
+class TimeSelection:
+    def __init__(self, time):
+        self.t = time
+        self.W = 0
+        self.X = 0
+        self.Y = 0
+        pass
+    def forwardPass(self, X):
+        Y = X[self.t, :]
+        self.X = X
+        self.Y = Y
+        return Y
+
+    def forwardPassAll(self, X):
+        # X(t, n, i)
+        Y = X[self.t, :, :]
+        self.X = X
+        self.Y = Y
+        return Y
+
+    def backPropagate(self, dEdY, outputdEdX=True):
+        dEdW = 0
+        if outputdEdX:
+            dEdX = np.zeros(self.X.shape)
+            dEdX[self.t, :] = dEdY
+        return dEdW, dEdX
+
+    def backPropagateAll(self, dEdY, outputdEdX=True):
+        dEdW = 0
+        if outputdEdX:
+            dEdX = np.zeros(self.X.shape)
+            dEdX[self.t, :, :] = dEdY
+        return dEdW, dEdX

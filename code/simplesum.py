@@ -8,16 +8,16 @@ class SimpleSum:
     def forwardPass(self, X):
         self.X = X
         Y = np.sum(X, axis=-1)
-        Y = Y.reshape(Y.shape[0], 1)
+        Yshape = np.concatenate((Y.shape, np.ones(1)))
+        Y = Y.reshape(Yshape)
         return Y
 
-    def forwardPassAll(self, X):
-        self.X = X
-        Y = np.sum(X, axis=-1)
-        Y = Y.reshape(Y.shape[0], Y.shape[1], 1)
-        return Y
-
-    def backPropagate(self, dEdY):
+    def backPropagate(self, dEdY, outputdEdX=True):
         dEdW = 0
-        dEdX = dEdY.reshape(dEdY.shape[0], 1).repeat(self.X.shape[-1], axis=-1)
+        if outputdEdX:
+            #dEdYshape = np.concatenate((dEdY.shape, np.ones(1)))
+            #dEdX = dEdY.reshape(dEdYshape).repeat(self.X.shape[-1], axis=-1)
+            dEdX = dEdY.repeat(self.X.shape[-1], axis=-1)
+        else:
+            dEdX = 0
         return dEdW, dEdX

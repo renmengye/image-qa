@@ -3,12 +3,50 @@ import numpy as np
 def meanSqErr(Y, T):
     diff =  Y - T.reshape(Y.shape)
     timespan = Y.shape[0]
-    E = 0.5 * np.sum(np.power(diff, 2), axis=0) / float(timespan)
-    dEdY = diff / float(timespan)
+    N = 1
+    if len(Y.shape) > 2:
+        N = Y.shape[1]
+    E = 0.5 * np.sum(np.power(diff, 2), axis=0) / float(timespan) / float(N)
+    dEdY = diff / float(timespan) / float(N)
     return E, dEdY
 
 def hardLimit(Y):
     return (Y > 0.5).astype(int)
+
+def crossEntIdx(Y, T):
+    if len(Y.shape) == 1:
+        E = -np.log(Y[T])
+        dEdY = np.zeros(Y.shape)
+        dEdY[T] = -1 / Y[T]
+    elif len(Y.shape) == 2:
+        T = T.reshape(T.size)
+        N = Y.shape[0]
+        E = 0.0
+        for n in range(0, N):
+            E  += -np.log(Y[n, T[n]])
+        E /= float(N)
+        dEdY = np.zeros(Y.shape)
+        for n in range(0, N):
+            dEdY[n, T[n]] = -1 / Y[n, T[n]]
+        dEdY /= float(N)
+    elif len(Y.shape) == 3:
+        T = T.reshape(T.shape[0], T.shape[1])
+        timespan = Y.shape[0]
+        N = Y.shape[1]
+        E = np.zeros(N)
+        for n in range(0, N):
+            for t in range(0, timespan):
+                E[n] += -np.log(Y[t, n, T[t, n]])
+        E /= float(N) * float(timespan)
+        dEdY = np.zeros(Y.shape, float)
+        for n in range(0, N):
+            for t in range(0, timespan):
+                dEdY[t, n, T[t, n]] += -1 / Y[t, n, T[t, n]]
+        dEdY /= float(N) * float(timespan)
+    return E, dEdY
+
+def argmax(Y):
+    return np.argmax(Y, axis=-1)
 
 def simpleSum(Y):
     return np.sum(Y, axis=-1)
