@@ -92,10 +92,7 @@ class LSTM:
 
     def forwardPass(self, X):
         if len(X.shape) == 3:
-            #return self.forwardPassAll(X)
-            Y = np.zeros()
-            for n in range(X.shape[1]):
-
+            return self.forwardPassAll(X)
         timespan = X.shape[0]
         Y = np.zeros((timespan, self.memoryDim), float)
         C = np.zeros((timespan, self.memoryDim), float)
