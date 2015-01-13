@@ -6,7 +6,7 @@ def meanSqErr(Y, T):
     N = 1
     if len(Y.shape) > 2:
         N = Y.shape[1]
-    E = 0.5 * np.sum(np.power(diff, 2), axis=0) / float(timespan) / float(N)
+    E = 0.5 * np.sum(np.power(diff, 2)) / float(timespan) / float(N)
     dEdY = diff / float(timespan) / float(N)
     return E, dEdY
 

@@ -1,6 +1,6 @@
 from util_func import *
 
-class LinearMap:
+class LinearDict:
     def __init__(self,
                  inputDim,
                  outputDim,
@@ -14,6 +14,7 @@ class LinearMap:
         if needInit:
             np.random.seed(initSeed)
             self.W = np.random.rand(outputDim, inputDim) * initRange - initRange / 2.0
+            self.W[:, 0] = 0
         else:
             self.W = W
         self.X = 0
@@ -21,14 +22,13 @@ class LinearMap:
         pass
 
     def chkgrd(self):
-        X = np.array([0.1, 0.5])
-        T = np.array([0])
+        X = np.array([3])
+        T = np.array([0.1, 0.3])
         Y = self.forwardPass(X)
         E, dEdY = meanSqErr(Y, T)
         dEdW, dEdX = self.backPropagate(dEdY)
         eps = 1e-3
         dEdWTmp = np.zeros(self.W.shape)
-        dEdXTmp = np.zeros(X.shape[-1])
         for i in range(0, self.W.shape[0]):
             for j in range(0, self.W.shape[1]):
                 self.W[i,j] += eps
@@ -41,25 +41,13 @@ class LinearMap:
 
                 dEdWTmp[i,j] = (Etmp1 - Etmp2) / 2.0 / eps
                 self.W[i,j] += eps
-        for j in range(0, X.shape[-1]):
-            X[j] += eps
-            Y = self.forwardPass(X)
-            Etmp1, d1 = meanSqErr(Y, T)
 
-            X[j] -= 2 * eps
-            Y = self.forwardPass(X)
-            Etmp2, d2 = meanSqErr(Y, T)
-
-            dEdXTmp[j] += (Etmp1 - Etmp2) / 2.0 / eps
-            X[j] += eps
-
-        X = np.array([[0.1, 0.5], [0.2, 0.4], [0.3, -0.3], [-0.1, -0.1]])
-        T = np.array([[0], [1], [0], [1]])
+        X = np.array([3, 4, 1, 0])
+        T = np.array([[0.1, 0.4], [-1.2, 1.5], [3.3, -1.1], [2.0, 0.01]])
         Y = self.forwardPass(X)
         E, dEdY = meanSqErr(Y, T)
         dEdW, dEdX = self.backPropagate(dEdY)
         dEdWTmp = np.zeros(self.W.shape)
-        dEdXTmp = np.zeros(X.shape)
         for i in range(0, self.W.shape[0]):
             for j in range(0, self.W.shape[1]):
                 self.W[i,j] += eps
@@ -72,59 +60,37 @@ class LinearMap:
 
                 dEdWTmp[i,j] = (Etmp1 - Etmp2) / 2.0 / eps
                 self.W[i,j] += eps
-        for t in range(0, X.shape[0]):
-            for k in range(0, X.shape[-1]):
-                X[t, k] += eps
-                Y = self.forwardPass(X)
-                Etmp1, d1 = meanSqErr(Y, T)
-
-                X[t, k] -= 2 * eps
-                Y = self.forwardPass(X)
-                Etmp2, d2 = meanSqErr(Y, T)
-
-                dEdXTmp[t, k] += (Etmp1 - Etmp2) / 2.0 / eps
-                X[t, k] += eps
 
         print "haha"
         pass
 
     def forwardPass(self, X):
-        Y = np.inner(X, self.W)
+        if X.size > 1:
+            X = X.reshape(X.size)
+            Y = np.zeros((X.shape[0], self.outputDim))
+            for n in range(0, X.shape[0]):
+                Y[n, :] = self.W[:, X[n]]
+        else:
+            Y = self.W[:, X]
         self.X = X
         self.Y = Y
         return Y
 
     def backPropagate(self, dEdY, outputdEdX=True):
-        if len(dEdY.shape) == 2:
-            return self.backPropagateAll(dEdY, outputdEdX)
         X = self.X
-        # (1, k) * (j, 1) = (j, k)
-        dEdW = X.reshape(1, self.inputDim) * dEdY.reshape(dEdY.shape[0], 1)
-
-        if outputdEdX:
-            # (j) * (j, k)
-            dEdX = np.dot(dEdY, self.W)
+        dEdW = np.zeros(self.W.shape)
+        if X.size > 1:
+            for t in range(0, X.shape[0]):
+                dEdW[:, X[t]] += dEdY[t, :]
         else:
-            dEdX = 0
-        return dEdW, dEdX
-
-    def backPropagateAll(self, dEdY, outputdEdX=True):
-        X = self.X
-        # (j, t) * (t, k) = (j, k)
-        dEdW = np.dot(dEdY.transpose(), X)
-
-        if outputdEdX:
-            # (t, j) * (j, k) = (t, k)
-            dEdX = np.dot(dEdY, self.W)
-        else:
-            dEdX = 0
-
+            dEdW[:, X] = dEdY
+        dEdX = 0
         return dEdW, dEdX
 
 if __name__ == '__main__':
-    softmax = LinearMap(
-        inputDim=2,
-        outputDim=1,
+    softmax = LinearDict(
+        inputDim=5,
+        outputDim=2,
         initRange=0.01,
         initSeed=2)
     softmax.chkgrd()

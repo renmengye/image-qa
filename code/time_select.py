@@ -1,6 +1,6 @@
 import numpy as np
 
-class TimeSelection:
+class TimeSelect:
     def __init__(self, time):
         self.t = time
         self.W = 0
@@ -8,6 +8,8 @@ class TimeSelection:
         self.Y = 0
         pass
     def forwardPass(self, X):
+        if len(X.shape) == 3:
+            return self.forwardPassAll(X)
         Y = X[self.t, :]
         self.X = X
         self.Y = Y
@@ -21,6 +23,8 @@ class TimeSelection:
         return Y
 
     def backPropagate(self, dEdY, outputdEdX=True):
+        if len(self.X.shape) == 3:
+            return self.backPropagateAll(dEdY, outputdEdX)
         dEdW = 0
         if outputdEdX:
             dEdX = np.zeros(self.X.shape)

@@ -14,7 +14,32 @@ class LSTM:
 
         if needInit:
             np.random.seed(initSeed)
-            self.W = np.random.rand(self.memoryDim, self.inputDim * 4 + self.memoryDim * 7 + 4) * initRange - initRange / 2.0
+            Wxi = np.random.rand(self.memoryDim, self.inputDim) * initRange
+            Wxf = np.random.rand(self.memoryDim, self.inputDim) * initRange
+            Wxc = np.random.rand(self.memoryDim, self.inputDim) * initRange
+            Wxo = np.random.rand(self.memoryDim, self.inputDim) * initRange
+            Wyi = np.random.rand(self.memoryDim, self.memoryDim) * initRange
+            Wyf = np.random.rand(self.memoryDim, self.memoryDim) * initRange
+            Wyc = np.random.rand(self.memoryDim, self.memoryDim) * initRange
+            Wyo = np.random.rand(self.memoryDim, self.memoryDim) * initRange
+            Wci = np.random.rand(self.memoryDim, self.memoryDim) * initRange
+            Wcf = np.random.rand(self.memoryDim, self.memoryDim) * initRange
+            Wco = np.random.rand(self.memoryDim, self.memoryDim) * initRange
+            # Wbi = np.random.rand(self.memoryDim, 1) * initRange
+            # Wbf = np.random.rand(self.memoryDim, 1) * initRange
+            # Wbc = np.random.rand(self.memoryDim, 1) * initRange
+            # Wbo = np.random.rand(self.memoryDim, 1) * initRange
+            Wbi = np.ones((self.memoryDim, 1), float)
+            Wbf = np.zeros((self.memoryDim, 1), float)
+            Wbc = np.zeros((self.memoryDim, 1), float)
+            Wbo = np.ones((self.memoryDim, 1), float)
+
+            Wi = np.concatenate((Wxi, Wyi, Wci, Wbi), axis=1)
+            Wf = np.concatenate((Wxf, Wyf, Wcf, Wbf), axis=1)
+            Wc = np.concatenate((Wxc, Wyc, Wbc), axis=1)
+            Wo = np.concatenate((Wxo, Wyo, Wco, Wbo), axis=1)
+            self.W = np.concatenate((Wi, Wf, Wc, Wo), axis = 1)
+            #self.W = np.random.rand(self.memoryDim, self.inputDim * 4 + self.memoryDim * 7 + 4) * initRange - initRange / 2.0
         else:
             self.W = W
 
@@ -67,7 +92,10 @@ class LSTM:
 
     def forwardPass(self, X):
         if len(X.shape) == 3:
-            return self.forwardPassAll(X)
+            #return self.forwardPassAll(X)
+            Y = np.zeros()
+            for n in range(X.shape[1]):
+
         timespan = X.shape[0]
         Y = np.zeros((timespan, self.memoryDim), float)
         C = np.zeros((timespan, self.memoryDim), float)
@@ -347,8 +375,9 @@ class LSTM:
         # Calculate dEdX
         if outputdEdX:
             # (t, tau, n, j, i)
-            dYdX = np.zeros((timespan, timespan, numEx, self.inputDim, self.memoryDim), float)
-            dCdX = np.zeros((timespan, timespan, numEx, self.inputDim, self.memoryDim), float)
+            # (t, tau, j, n, i)
+            dYdX = np.zeros((timespan, timespan, self.inputDim, numEx, self.memoryDim), float)
+            dCdX = np.zeros((timespan, timespan, self.inputDim, numEx, self.memoryDim), float)
 
             for t in range(0, timespan):
                 if t == 0:
@@ -358,30 +387,30 @@ class LSTM:
 
                 dGi_i__dX_tj = np.inner(dYdX[t-1, :, :, :, :], Wyi) + \
                                np.inner(dCdX[t-1, :, :, :, ], Wci)
-                dGi_i__dX_tj[t, :, :] += np.transpose(Wxi)
-                dGi_i__dX_tj *= Gi[t, :] * (1 - Gi[t, :])
+                dGi_i__dX_tj[t, :, :] += np.transpose(Wxi).reshape(self.inputDim, 1, self.memoryDim)
+                dGi_i__dX_tj *= Gi[t, :, :] * (1 - Gi[t, :, :])
                 dGf_i__dX_tj = np.inner(dYdX[t-1, :, :, :, :], Wyf) + \
                                np.inner(dCdX[t-1, :, :, :, :], Wcf)
-                dGf_i__dX_tj[t, :, :] += np.transpose(Wxf)
-                dGf_i__dX_tj *= Gf[t, :] * (1 - Gf[t, :])
+                dGf_i__dX_tj[t, :, :] += np.transpose(Wxf).reshape(self.inputDim, 1, self.memoryDim)
+                dGf_i__dX_tj *= Gf[t, :, :] * (1 - Gf[t, :, :])
                 dZ_i__dX_tj = np.inner(dYdX[t-1, :, :, :, :], Wyc)
-                dZ_i__dX_tj[t, :, :] += np.transpose(Wxc)
-                dZ_i__dX_tj *= 1 - np.power(Z[t, :], 2)
+                dZ_i__dX_tj[t, :, :] += np.transpose(Wxc).reshape(self.inputDim, 1, self.memoryDim)
+                dZ_i__dX_tj *= 1 - np.power(Z[t, :, :], 2)
                 dCdX[t, :, :, :, :] = dGf_i__dX_tj * Ct1 + \
                                       Gf[t, :] * dCdX[t-1, :, :, :, :] + \
                                       dGi_i__dX_tj * Z[t, :] + \
                                       Gi[t, :] * dZ_i__dX_tj
                 dGo_i__dX_tj = np.inner(dYdX[t-1, :, :, :, :], Wyo) + \
                                np.inner(dCdX[t, :, :, :, :], Wco)
-                dGo_i__dX_tj[t, :, :] += np.transpose(Wxo)
-                dGo_i__dX_tj *= Go[t, :] * (1 - Go[t, :])
+                dGo_i__dX_tj[t, :, :] += np.transpose(Wxo).reshape(self.inputDim, 1, self.memoryDim)
+                dGo_i__dX_tj *= Go[t, :, :] * (1 - Go[t, :, :])
 
                 U = np.tanh(C[t, :])
                 dYdX[t, :, :, :, :] = dGo_i__dX_tj * U + \
                                       Go[t, :] * (1 - np.power(U, 2)) * dCdX[t, :, :, :, :]
 
-            # dYdX -> (t, tau, n, j, i) * dEdY -> (t, n, i) -> (tau, n, j, n)
-            dEdX = np.diagonal(np.tensordot(dYdX, dEdY, axes=([4, 0], [1, 0])), axis1=1, axis2=3).transpose((0, 2, 1))
+            # dYdX -> (t, tau, j, n, i) * dEdY -> (t, n, i) -> (tau, j, n, n)
+            dEdX = np.diagonal(np.tensordot(dYdX, dEdY, axes=([4, 0], [2, 0])), axis1=2, axis2=3).transpose((0, 2, 1))
         else:
             dEdX = 0
 
