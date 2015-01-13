@@ -90,9 +90,9 @@ class LSTM:
         print "haha"
         pass
 
-    def forwardPass(self, X):
+    def forwardPass_(self, X):
         if len(X.shape) == 3:
-            return self.forwardPassAll(X)
+            return self.forwardPassN(X)
         timespan = X.shape[0]
         Y = np.zeros((timespan, self.memoryDim), float)
         C = np.zeros((timespan, self.memoryDim), float)
@@ -103,6 +103,14 @@ class LSTM:
         Wi, Wf, Wc, Wo = self.sliceWeights(self.inputDim, self.memoryDim, self.W)
 
         for t in range(0, timespan):
+            cont = False
+            for i in range(0, X.shape[1]):
+                if X[t, i] != 0.0:
+                    cont = True
+            if not cont:
+                for t1 in range(t, timespan):
+                    Y[t1, :] = Y[t1-1, :]
+                break
             # In forward pass initial stage -1 is empty, equivalent to zero.
             # Need to explicitly pass zero in backward pass.
             states1 = np.concatenate((X[t, :], Y[t-1, :], C[t-1, :], np.ones(1, float)))
@@ -123,7 +131,11 @@ class LSTM:
         self.Gf = Gf
         self.Go = Go
 
-        return Y
+        return Y, C, Z, Gi, Gf, Go
+
+    def forwardPass(self, X):
+        self.forwardPass_(X)
+        return self.Y
 
     def backPropagate(self, dEdY, outputdEdX=True):
         if len(self.X.shape) == 3:
@@ -155,6 +167,12 @@ class LSTM:
         dCdW = np.zeros((timespan, self.memoryDim, self.inputDim * 4 + self.memoryDim * 7 + 4, self.memoryDim), float)
 
         for t in range(0, timespan):
+            cont = False
+            for i in range(0, X.shape[1]):
+                if X[t, i] != 0.0:
+                    cont = True
+            if not cont:
+                break
             if t == 0:
                 Yt1 = np.zeros(self.memoryDim, float)
                 Ct1 = np.zeros(self.memoryDim, float)
@@ -249,6 +267,32 @@ class LSTM:
             dEdX = 0
 
         return dEdW, dEdX
+
+    def forwardPassN(self, X):
+        # X[t, n, i] -> t: time, n: example, i: input dimension
+        timespan = X.shape[0]
+        numEx = X.shape[1]
+        Y = np.zeros((timespan, numEx, self.memoryDim), float)
+        C = np.zeros((timespan, numEx, self.memoryDim), float)
+        Z = np.zeros((timespan, numEx, self.memoryDim), float)
+        Gi = np.zeros((timespan, numEx, self.memoryDim), float)
+        Gf = np.zeros((timespan, numEx, self.memoryDim), float)
+        Go = np.zeros((timespan, numEx, self.memoryDim), float)
+        Wi, Wf, Wc, Wo = self.sliceWeights(self.inputDim, self.memoryDim, self.W)
+
+        for n in range(0, numEx):
+            Y[:, n, :], C[:, n, :], Z[:, n, :], \
+            Gi[:, n, :], Gf[:, n, :], Go[:, n, :] = self.forwardPass_(X[:, n, :])
+
+        self.X = X
+        self.Y = Y
+        self.C = C
+        self.Z = Z
+        self.Gi = Gi
+        self.Gf = Gf
+        self.Go = Go
+
+        return Y
 
     def forwardPassAll(self, X):
         # X[t, n, i] -> t: time, n: example, i: input dimension
