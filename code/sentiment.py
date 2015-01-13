@@ -85,7 +85,7 @@ if __name__ == '__main__':
         initRange=1,
         initSeed=4))
     trainOpt = {
-        'learningRate': 0.3,
+        'learningRate': 0.8,
         'numEpoch': 2000,
         'heldOutRatio': 0.8,
         'momentum': 0.9,
