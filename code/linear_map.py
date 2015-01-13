@@ -122,9 +122,9 @@ class LinearMap:
         return dEdW, dEdX
 
 if __name__ == '__main__':
-    softmax = LinearMap(
+    map_ = LinearMap(
         inputDim=2,
         outputDim=1,
         initRange=0.01,
         initSeed=2)
-    softmax.chkgrd()
+    map_.chkgrd()

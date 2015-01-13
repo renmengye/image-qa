@@ -7,6 +7,7 @@ class TimeSelect:
         self.X = 0
         self.Y = 0
         pass
+
     def forwardPass(self, X):
         if len(X.shape) == 3:
             return self.forwardPassAll(X)

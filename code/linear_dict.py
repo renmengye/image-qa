@@ -88,9 +88,9 @@ class LinearDict:
         return dEdW, dEdX
 
 if __name__ == '__main__':
-    softmax = LinearDict(
+    dict = LinearDict(
         inputDim=5,
         outputDim=2,
         initRange=0.01,
         initSeed=2)
-    softmax.chkgrd()
+    dict.chkgrd()
