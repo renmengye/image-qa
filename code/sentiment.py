@@ -75,26 +75,26 @@ if __name__ == '__main__':
         pipeline.addStage(LinearDict(
             inputDim=np.max(trainInput)+1,
             outputDim=20,
-            initRange=0.008,
+            initRange=1,
             initSeed=2),
-            learningRate=5.0)
+            learningRate=10.0)
         pipeline.addStage(TimeFold(
             timespan=timespan))
         pipeline.addStage(LSTM(
             inputDim=20,
             memoryDim=10,
-            initRange=0.064,
+            initRange=0.1,
             initSeed=3,
             cutOffZeroEnd=True),
-            learningRate=0.6)
+            learningRate=1.0)
         pipeline.addStage(TimeSelect(
             time=-1))
         pipeline.addStage(Softmax(
             inputDim=10,
             outputDim=2,
-            initRange=0.08,
+            initRange=0.05,
             initSeed=4),
-            learningRate=0.09)
+            learningRate=0.5)
 
     trainOpt = {
         'learningRate': 100.0,
