@@ -53,7 +53,8 @@ def getTestData():
 if __name__ == '__main__':
     trainInput, trainTarget = getTrainData()          # 2250 records
     #testInput = getTestData()                                   # 11548 records
-    subset = np.arange(0, 129 * 2)
+    #subset = np.arange(0, 129 * 2)
+    subset = np.arange(0, 522)
     subset = np.random.permutation(subset)
     #subset = np.random.permutation(subset)[0:20]
     trainInput = trainInput[subset]
@@ -85,7 +86,7 @@ if __name__ == '__main__':
         initRange=1,
         initSeed=4))
     trainOpt = {
-        'learningRate': 0.8,
+        'learningRate': 100.0,
         'numEpoch': 2000,
         'heldOutRatio': 0.8,
         'momentum': 0.9,

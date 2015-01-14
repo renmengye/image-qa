@@ -278,7 +278,6 @@ class LSTM:
         Gi = np.zeros((timespan, numEx, self.memoryDim), float)
         Gf = np.zeros((timespan, numEx, self.memoryDim), float)
         Go = np.zeros((timespan, numEx, self.memoryDim), float)
-        Wi, Wf, Wc, Wo = self.sliceWeights(self.inputDim, self.memoryDim, self.W)
 
         for n in range(0, numEx):
             Y[:, n, :], C[:, n, :], Z[:, n, :], \

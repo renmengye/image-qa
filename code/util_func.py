@@ -14,10 +14,11 @@ def hardLimit(Y):
     return (Y > 0.5).astype(int)
 
 def crossEntIdx(Y, T):
+    eps = 1e-5
     if len(Y.shape) == 1:
         E = -np.log(Y[T])
         dEdY = np.zeros(Y.shape)
-        dEdY[T] = -1 / Y[T]
+        dEdY[T] = -1 / (Y[T] + eps)
     elif len(Y.shape) == 2:
         T = T.reshape(T.size)
         N = Y.shape[0]
@@ -27,7 +28,7 @@ def crossEntIdx(Y, T):
         E /= float(N)
         dEdY = np.zeros(Y.shape)
         for n in range(0, N):
-            dEdY[n, T[n]] = -1 / Y[n, T[n]]
+            dEdY[n, T[n]] = -1 / (Y[n, T[n]] + eps)
         dEdY /= float(N)
     elif len(Y.shape) == 3:
         T = T.reshape(T.shape[0], T.shape[1])
@@ -41,7 +42,7 @@ def crossEntIdx(Y, T):
         dEdY = np.zeros(Y.shape, float)
         for n in range(0, N):
             for t in range(0, timespan):
-                dEdY[t, n, T[t, n]] += -1 / Y[t, n, T[t, n]]
+                dEdY[t, n, T[t, n]] += -1 / (Y[t, n, T[t, n]] + eps)
         dEdY /= float(N) * float(timespan)
     return E, dEdY
 
