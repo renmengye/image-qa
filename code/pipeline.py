@@ -19,9 +19,10 @@ class Pipeline:
         self.stages = []
         pass
 
-    def addStage(self, stage):
+    def addStage(self, stage, learningRate=0.1):
         self.stages.append(stage)
         stage.lastdW = 0
+        stage.learningRate = learningRate
         pass
 
     def train(self, trainInput, trainTarget, trainOpt):
@@ -42,7 +43,7 @@ class Pipeline:
             T = trainTarget
             VT = validTarget
         numEpoch = trainOpt['numEpoch']
-        lr = trainOpt['learningRate']
+        #lr = trainOpt['learningRate']
         lrDecay = trainOpt['learningRateDecay']
         mom = trainOpt['momentum']
         calcError = trainOpt['calcError']
@@ -84,11 +85,7 @@ class Pipeline:
                     for stage in reversed(self.stages):
                         dEdW, dEdY = stage.backPropagate(dEdY,
                                                          outputdEdX=(stage!=self.stages[0]))
-                        # if np.sum(dEdW) != 0 and np.min(dEdW) != 0:
-                        #     lr = 1e-3 / np.min(dEdW)
-                        # else:
-                        #     lr = trainOpt['learningRate']
-                        stage.lastdW = -lr * dEdW + mom * stage.lastdW
+                        stage.lastdW = -stage.learningRate * dEdW + mom * stage.lastdW
                         stage.W = stage.W + stage.lastdW
             else:
                 batchStart = 0
@@ -106,7 +103,7 @@ class Pipeline:
                     for stage in reversed(self.stages):
                         dEdW, dEdY = stage.backPropagate(dEdY,
                                                         outputdEdX=(stage!=self.stages[0]))
-                        stage.lastdW = -lr * dEdW + mom * stage.lastdW
+                        stage.lastdW = -stage.learningRate * dEdW + mom * stage.lastdW
                         stage.W = stage.W + stage.lastdW
 
                     if calcError:
@@ -132,15 +129,18 @@ class Pipeline:
                     VRtotal[epoch] = 1 - Vrate
 
             # Adjust learning rate
-            lr = lr * lrDecay
+            #lr = lr * lrDecay
             mom -= dMom
 
             # Print statistics
-            stats = 'EP: %4d LR: %.2f M: %.2f E: %.4f R: %.4f VE: %.4f VR: %.4f TM: %4d' % \
-                    (epoch, lr, mom, E, rate, VE, Vrate, (time.time() - startTime))
+            timeElapsed = time.time() - startTime
+            stats = 'EP: %4d E: %.4f R: %.4f VE: %.4f VR: %.4f T: %4d' % \
+                    (epoch, E, rate, VE, Vrate, timeElapsed)
+            stats2 = '%d,%.4f,%.4f,%.4f,%.4f,%d' % \
+                    (epoch, E, rate, VE, Vrate, timeElapsed)
             print stats
             with open(self.name + '.txt', 'a+') as f:
-                f.write('%s\n' % stats)
+                f.write('%s\n' % stats2)
 
             # Save pipeline
             self.save()

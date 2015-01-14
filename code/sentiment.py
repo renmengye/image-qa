@@ -55,6 +55,7 @@ if __name__ == '__main__':
     trainInput, trainTarget = getTrainData()          # 2250 records
     #testInput = getTestData()                                   # 11548 records
     #subset = np.arange(0, 129 * 2)
+    np.random.seed(1)
     subset = np.arange(0, 522)
     subset = np.random.permutation(subset)
     #subset = np.random.permutation(subset)[0:20]
@@ -74,23 +75,26 @@ if __name__ == '__main__':
         pipeline.addStage(LinearDict(
             inputDim=np.max(trainInput)+1,
             outputDim=20,
-            initRange=1,
-            initSeed=2))
+            initRange=0.008,
+            initSeed=2),
+            learningRate=5.0)
         pipeline.addStage(TimeFold(
             timespan=timespan))
         pipeline.addStage(LSTM(
             inputDim=20,
             memoryDim=10,
-            initRange=0.01,
+            initRange=0.064,
             initSeed=3,
-            cutOffZeroEnd=True))
+            cutOffZeroEnd=True),
+            learningRate=0.6)
         pipeline.addStage(TimeSelect(
             time=-1))
         pipeline.addStage(Softmax(
             inputDim=10,
             outputDim=2,
-            initRange=1,
-            initSeed=4))
+            initRange=0.08,
+            initSeed=4),
+            learningRate=0.09)
 
     trainOpt = {
         'learningRate': 100.0,
