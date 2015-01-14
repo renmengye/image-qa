@@ -37,6 +37,19 @@ if __name__ == '__main__':
     #     initSeed=2))
     # pipeline.addStage(SimpleSum())
 
+    # trainOpt = {
+    #     'learningRate': 0.3,
+    #     'numEpoch': 2000,
+    #     'heldOutRatio': 0.5,
+    #     'momentum': 0.9,
+    #     'batchSize': 1,
+    #     'learningRateDecay': 1.0,
+    #     'momentumEnd': 0.9,
+    #     'needValid': True,
+    #     'plotFigs': True,
+    #     'calcError': True,
+    #     'stopE': 0.006
+    # }
     pipeline = Pipeline(
         name='binadd',
         costFn=crossEntIdx,
@@ -59,10 +72,10 @@ if __name__ == '__main__':
         'learningRate': 0.1,
         'numEpoch': 2000,
         'heldOutRatio': 0.5,
-        'momentum': 0.9,
+        'momentum': 0.5,
         'batchSize': 1,
         'learningRateDecay': 1.0,
-        'momentumEnd': 0.9,
+        'momentumEnd': 0.5,
         'needValid': True,
         'plotFigs': True,
         'calcError': True,

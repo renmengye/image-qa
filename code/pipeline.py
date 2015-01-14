@@ -88,8 +88,8 @@ class Pipeline:
                         #     lr = 1e-3 / np.min(dEdW)
                         # else:
                         #     lr = trainOpt['learningRate']
-                        stage.W = stage.W - lr * dEdW + mom * stage.lastdW
-                        stage.lastdW = -lr * dEdW
+                        stage.lastdW = -lr * dEdW + mom * stage.lastdW
+                        stage.W = stage.W + stage.lastdW
             else:
                 batchStart = 0
                 while batchStart < N:
@@ -104,10 +104,10 @@ class Pipeline:
                     E += np.sum(Etmp) * numEx / float(N)
 
                     for stage in reversed(self.stages):
-                       dEdW, dEdY = stage.backPropagate(dEdY,
+                        dEdW, dEdY = stage.backPropagate(dEdY,
                                                         outputdEdX=(stage!=self.stages[0]))
-                       stage.W = stage.W - lr * dEdW + mom * stage.lastdW
-                       stage.lastdW = -lr * dEdW
+                        stage.lastdW = -lr * dEdW + mom * stage.lastdW
+                        stage.W = stage.W + stage.lastdW
 
                     if calcError:
                         rate_, correct_, total_ = self.calcRate(Y_bat, T_bat)

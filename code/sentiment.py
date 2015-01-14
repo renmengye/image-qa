@@ -82,7 +82,8 @@ if __name__ == '__main__':
             inputDim=20,
             memoryDim=10,
             initRange=0.01,
-            initSeed=3))
+            initSeed=3,
+            cutOffZeroEnd=True))
         pipeline.addStage(TimeSelect(
             time=-1))
         pipeline.addStage(Softmax(
@@ -90,7 +91,7 @@ if __name__ == '__main__':
             outputDim=2,
             initRange=1,
             initSeed=4))
-    
+
     trainOpt = {
         'learningRate': 100.0,
         'numEpoch': 2000,

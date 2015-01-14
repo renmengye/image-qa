@@ -8,9 +8,11 @@ class LSTM:
                  initRange=1.0,
                  initSeed=2,
                  needInit=True,
-                 W=0):
+                 W=0,
+                 cutOffZeroEnd=False):
         self.inputDim = inputDim
         self.memoryDim = memoryDim
+        self.cutOffZeroEnd = cutOffZeroEnd
 
         if needInit:
             np.random.seed(initSeed)
@@ -90,6 +92,14 @@ class LSTM:
         print "haha"
         pass
 
+    @staticmethod
+    def needCutOff(X, t):
+        cut = True
+        for i in range(0, X.shape[1]):
+            if X[t, i] != 0.0:
+                cut = False
+        return cut
+
     def forwardPass_(self, X):
         if len(X.shape) == 3:
             return self.forwardPassN(X)
@@ -103,14 +113,11 @@ class LSTM:
         Wi, Wf, Wc, Wo = self.sliceWeights(self.inputDim, self.memoryDim, self.W)
 
         for t in range(0, timespan):
-            cont = False
-            for i in range(0, X.shape[1]):
-                if X[t, i] != 0.0:
-                    cont = True
-            if not cont:
+            if self.cutOffZeroEnd and self.needCutOff(X, t):
                 for t1 in range(t, timespan):
                     Y[t1, :] = Y[t1-1, :]
                 break
+
             # In forward pass initial stage -1 is empty, equivalent to zero.
             # Need to explicitly pass zero in backward pass.
             states1 = np.concatenate((X[t, :], Y[t-1, :], C[t-1, :], np.ones(1, float)))
@@ -167,11 +174,7 @@ class LSTM:
         dCdW = np.zeros((timespan, self.memoryDim, self.inputDim * 4 + self.memoryDim * 7 + 4, self.memoryDim), float)
 
         for t in range(0, timespan):
-            cont = False
-            for i in range(0, X.shape[1]):
-                if X[t, i] != 0.0:
-                    cont = True
-            if not cont:
+            if self.cutOffZeroEnd and self.needCutOff(X, t):
                 break
             if t == 0:
                 Yt1 = np.zeros(self.memoryDim, float)
@@ -233,6 +236,8 @@ class LSTM:
             dCdX = np.zeros((timespan, timespan, self.inputDim, self.memoryDim), float)
 
             for t in range(0, timespan):
+                if self.cutOffZeroEnd and self.needCutOff(X, t):
+                    break
                 if t == 0:
                     Ct1 = np.zeros(self.memoryDim, float)
                 else:

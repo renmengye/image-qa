@@ -47,14 +47,14 @@ if __name__ == '__main__':
         timespan=8))
 
     trainOpt = {
-        'learningRate': 0.8,
+        'learningRate': 0.1,
         'numEpoch': 1200,
         'needValid': True,
         'heldOutRatio': 0.5,
-        'momentum': 0.9,
+        'momentum': 0.5,
         'batchSize': 2,
         'learningRateDecay': 1.0,
-        'momentumEnd': 0.9,
+        'momentumEnd': 0.5,
         'plotFigs': True,
         'calcError': True,
         'stopE': 0.015
