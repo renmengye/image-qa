@@ -142,6 +142,9 @@ class Pipeline:
             with open(self.name + '.txt', 'a+') as f:
                 f.write('%s\n' % stats)
 
+            # Save pipeline
+            self.save()
+
             # Check stopping criterion
             if E < trainOpt['stopE'] and VE < trainOpt['stopE']:
                 break
@@ -170,6 +173,7 @@ class Pipeline:
                 plt.title('Train/Valid Error Curve')
                 plt.draw()
                 plt.savefig(self.name + '_err.png')
+
         pass
 
     def forwardPass(self, X):

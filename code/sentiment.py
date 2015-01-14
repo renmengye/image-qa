@@ -8,6 +8,7 @@ from linear_map import *
 from linear_dict import *
 from pipeline import *
 from util_func import *
+import sys
 
 def getTrainData():
     with open('../data/sentiment/train2.txt') as f:
@@ -61,30 +62,35 @@ if __name__ == '__main__':
     trainInput = trainInput.reshape(trainInput.shape[0], trainInput.shape[1], 1)
     trainTarget = trainTarget[subset]
     timespan = trainInput.shape[1]
-    pipeline = Pipeline(
-        name='sentiment',
-        costFn=crossEntIdx,
-        decisionFn=argmax)
-    pipeline.addStage(TimeUnfold())
-    pipeline.addStage(LinearDict(
-        inputDim=np.max(trainInput)+1,
-        outputDim=20,
-        initRange=1,
-        initSeed=2))
-    pipeline.addStage(TimeFold(
-        timespan=timespan))
-    pipeline.addStage(LSTM(
-        inputDim=20,
-        memoryDim=10,
-        initRange=0.01,
-        initSeed=3))
-    pipeline.addStage(TimeSelect(
-        time=-1))
-    pipeline.addStage(Softmax(
-        inputDim=10,
-        outputDim=2,
-        initRange=1,
-        initSeed=4))
+
+    if len(sys.argv) > 1:
+        pipeline = pickle.load(sys.argv[1] + '.pip')
+    else:
+        pipeline = Pipeline(
+            name='sentiment',
+            costFn=crossEntIdx,
+            decisionFn=argmax)
+        pipeline.addStage(TimeUnfold())
+        pipeline.addStage(LinearDict(
+            inputDim=np.max(trainInput)+1,
+            outputDim=20,
+            initRange=1,
+            initSeed=2))
+        pipeline.addStage(TimeFold(
+            timespan=timespan))
+        pipeline.addStage(LSTM(
+            inputDim=20,
+            memoryDim=10,
+            initRange=0.01,
+            initSeed=3))
+        pipeline.addStage(TimeSelect(
+            time=-1))
+        pipeline.addStage(Softmax(
+            inputDim=10,
+            outputDim=2,
+            initRange=1,
+            initSeed=4))
+    
     trainOpt = {
         'learningRate': 100.0,
         'numEpoch': 2000,
@@ -101,5 +107,5 @@ if __name__ == '__main__':
 
     pipeline.train(trainInput, trainTarget, trainOpt)
     #testOutput = pipeline.forwardPass(testInput)
-    pipeline.save()
+    #pipeline.save()
     pass
