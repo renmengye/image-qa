@@ -10,7 +10,7 @@ plt.ion()
 class Pipeline:
     def __init__(self, name, costFn, decisionFn=None):
         self.stages = []
-        self.name = name
+        self.name = name + time.strftime("-%Y%m%d-%H%M%S")
         self.costFn = costFn
         self.decisionFn = decisionFn
         pass
@@ -136,8 +136,11 @@ class Pipeline:
             mom -= dMom
 
             # Print statistics
-            print "EP: %4d LR: %.2f M: %.2f E: %.4f R: %.4f VE: %.4f VR: %.4f TM: %4d" % \
-                  (epoch, lr, mom, E, rate, VE, Vrate, (time.time() - startTime))
+            stats = 'EP: %4d LR: %.2f M: %.2f E: %.4f R: %.4f VE: %.4f VR: %.4f TM: %4d' % \
+                    (epoch, lr, mom, E, rate, VE, Vrate, (time.time() - startTime))
+            print stats
+            with open(self.name + '.txt', 'a+') as f:
+                f.write('%s\n' % stats)
 
             # Check stopping criterion
             if E < trainOpt['stopE'] and VE < trainOpt['stopE']:
