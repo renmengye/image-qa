@@ -23,9 +23,9 @@ class Sigmoid:
 
     def chkgrd(self):
         X = np.array([0.1, 0.5])
-        T = 0
+        T = np.array([0])
         Y = self.forwardPass(X)
-        E, dEdY = crossEntIdx(Y, T)
+        E, dEdY = crossEntOne(Y, T)
         dEdW, dEdX = self.backPropagate(dEdY)
         eps = 1e-3
         dEdWTmp = np.zeros(self.W.shape)
@@ -57,7 +57,7 @@ class Sigmoid:
         X = np.array([[0.1, 0.5], [0.2, 0.4], [0.3, -0.3], [-0.1, -0.1]])
         T = np.array([[0], [1], [0], [1]])
         Y = self.forwardPass(X)
-        E, dEdY = crossEntIdx(Y, T)
+        E, dEdY = crossEntOne(Y, T)
         dEdW, dEdX = self.backPropagate(dEdY)
         dEdWTmp = np.zeros(self.W.shape)
         dEdXTmp = np.zeros(X.shape)
@@ -90,8 +90,14 @@ class Sigmoid:
         pass
 
     def forwardPass(self, X):
-        Y = np.inner(X, self.W)
+        if len(X.shape) == 2:
+            X2 = np.concatenate((X, np.ones((X.shape[0], 1), float)), axis=1)
+        else:
+            X2 = np.concatenate((X, np.ones(1)))
+        Y = np.inner(X2, self.W)
         Y = special.expit(Y)
+        self.X = X
+        self.Y = Y
         return Y
 
     def backPropagate(self, dEdY, outputdEdX=True):
@@ -102,7 +108,7 @@ class Sigmoid:
         X = self.X
 
         dY_i__dZ_i = Y * (1 - Y).reshape(self.outputDim, 1)
-        dY_i__dW_ij = dY_i__dZ_i * np.concatenate((X.reshape(1, self.inputDim), np.ones(1, 1)), axis=1)
+        dY_i__dW_ij = dY_i__dZ_i * np.concatenate((X.reshape(1, self.inputDim), np.ones((1, 1), float)), axis=1)
         dEdW = np.dot(dEdY, dY_i__dW_ij)
 
         if outputdEdX:
@@ -115,21 +121,22 @@ class Sigmoid:
         Y = self.Y
         X = self.X
         numEx = X.shape[0]
-        dY_ni__dZ_i = Y * (1 - Y).reshape(numEx, self.outputDim, 1)
-        dZ_ni__dW_ij = X.reshape(numEx, 1, self.inputDim) + np.ones((numEx, 1, 1))
+        dY_ni__dZ_i = (Y * (1 - Y)).reshape(numEx, self.outputDim, 1)
+        dZ_ni__dW_ij = np.concatenate((X.reshape(numEx, 1, self.inputDim),np.ones((numEx, 1, 1))), axis=2)
         dY_ni__dW_ij = dY_ni__dZ_i * dZ_ni__dW_ij
-        dZ_ni__dX_j = self.W[:, 0:-1].reshape(1, self.outputDim, self.inputDim)
-        dY_ni__dX_j = dY_ni__dZ_i * dZ_ni__dX_j
+        dEdW = np.diagonal(dEdY.transpose().dot(dY_ni__dW_ij.transpose((1, 0, 2))), axis1=0, axis2=1).transpose()
 
-        dEdW = np.diagonal(dEdY.dot(dY_ni__dW_ij.transpose((1, 0, 2))), axis1=0, axis2=1).transpose()
-        dEdX = np.diagonal(dEdY.dot(dY_ni__dX_j), axis1=0, axis2=1).transpose()
+        if outputdEdX:
+            dZ_ni__dX_j = self.W[:, 0:-1].reshape(1, self.outputDim, self.inputDim)
+            dY_ni__dX_j = dY_ni__dZ_i * dZ_ni__dX_j
+            dEdX = np.diagonal(dEdY.dot(dY_ni__dX_j), axis1=0, axis2=1).transpose()
 
         return dEdW, dEdX
 
 if __name__ == '__main__':
     sigmoid = Sigmoid(
         inputDim=2,
-        outputDim=2,
+        outputDim=1,
         initRange=0.01,
         initSeed=2)
     sigmoid.chkgrd()
