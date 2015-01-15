@@ -146,7 +146,7 @@ class LSTM:
 
     def backPropagate(self, dEdY, outputdEdX=True):
         if len(self.X.shape) == 3:
-            return self.backPropagateAll(dEdY, outputdEdX)
+            return self.backPropagateN(dEdY, outputdEdX)
         X = self.X
         Y = self.Y
         C = self.C
@@ -297,6 +297,31 @@ class LSTM:
         self.Go = Go
 
         return Y
+
+    def backPropagateN(self, dEdY, outputdEdX):
+        timespan = self.X.shape[0]
+        numEx = self.X.shape[1]
+        dEdW = np.zeros((self.memoryDim, self.inputDim * 4 + self.memoryDim * 7 + 4), float)
+        dEdX = np.zeros((timespan, numEx, self.inputDim), float)
+        X = self.X
+        Y = self.Y
+        C = self.C
+        Z = self.Z
+        Gi = self.Gi
+        Gf = self.Gf
+        Go = self.Go
+        for n in range(0, numEx):
+            self.X = X[:, n, :]
+            self.Y = Y[:, n, :]
+            self.C = C[:, n, :]
+            self.Z = Z[:, n, :]
+            self.Gi = Gi[:, n, :]
+            self.Gf = Gf[:, n, :]
+            self.Go = Go[:, n, :]
+            dEdWtmp, dEdX[:, n, :] = self.backPropagate(dEdY[:, n, :], outputdEdX)
+            dEdW += dEdWtmp
+
+        return dEdW, dEdX
 
     def forwardPassAll(self, X):
         # X[t, n, i] -> t: time, n: example, i: input dimension

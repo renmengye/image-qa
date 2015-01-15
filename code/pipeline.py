@@ -50,6 +50,9 @@ class Pipeline:
         bat = trainOpt['batchSize']
         N = trainInput.shape[0]
         dMom = (mom - trainOpt['momentumEnd']) / float(numEpoch)
+        writeRecord = trainOpt['writeRecord']
+        everyEpoch = trainOpt['everyEpoch']
+        plotFigs = trainOpt['plotFigs']
 
         Etotal = np.zeros(numEpoch, float)
         VEtotal = np.zeros(numEpoch, float)
@@ -66,6 +69,11 @@ class Pipeline:
             Vrate = 0
             correct = 0
             total = 0
+
+            shuffle = np.arange(0, X.shape[1])
+            shuffle = np.random.permutation(shuffle)
+            X = X[:, shuffle]
+            T = T[shuffle]
 
             # Stochastic only for now
             if bat == 1:
@@ -134,46 +142,60 @@ class Pipeline:
 
             # Print statistics
             timeElapsed = time.time() - startTime
-            stats = 'EP: %4d E: %.4f R: %.4f VE: %.4f VR: %.4f T: %4d' % \
+            stats = 'EP: %4d E: %.4f R: %.4f VE: %.4f VR: %.4f T:%4d' % \
                     (epoch, E, rate, VE, Vrate, timeElapsed)
-            stats2 = '%d,%.4f,%.4f,%.4f,%.4f,%d' % \
-                    (epoch, E, rate, VE, Vrate, timeElapsed)
+            stats2 = '%d,%.4f,%.4f,%.4f,%.4f' % \
+                    (epoch, E, rate, VE, Vrate)
             print stats
-            with open(self.name + '.txt', 'a+') as f:
-                f.write('%s\n' % stats2)
+            if writeRecord:
+                if everyEpoch:
+                    with open(self.name + '.csv', 'a+') as f:
+                        f.write('%s\n' % stats2)
 
             # Save pipeline
-            self.save()
+            if everyEpoch or epoch == numEpoch-1:
+                self.save()
 
             # Check stopping criterion
             if E < trainOpt['stopE'] and VE < trainOpt['stopE']:
                 break
 
-        # Plot train curves
-        if trainOpt['plotFigs']:
-            plt.figure(1);
-            plt.clf()
-            plt.plot(np.arange(numEpoch), Etotal, 'b-x')
-            plt.plot(np.arange(numEpoch), VEtotal, 'g-o')
-            plt.legend(['Train', 'Valid'])
-            plt.xlabel('Epoch')
-            plt.ylabel('Loss')
-            plt.title('Train/Valid Loss Curve')
-            plt.draw()
-            plt.savefig(self.name + '_loss.png')
-
-            if calcError:
-                plt.figure(2);
+            # Plot train curves
+            if plotFigs and (everyEpoch or epoch == numEpoch-1):
+                plt.figure(1);
                 plt.clf()
-                plt.plot(np.arange(numEpoch), Rtotal, 'b-x')
-                plt.plot(np.arange(numEpoch), VRtotal, 'g-o')
+                plt.plot(np.arange(epoch+1), Etotal[0:epoch+1], 'b-x')
+                plt.plot(np.arange(epoch+1), VEtotal[0:epoch+1], 'g-o')
                 plt.legend(['Train', 'Valid'])
                 plt.xlabel('Epoch')
-                plt.ylabel('Prediction Error')
-                plt.title('Train/Valid Error Curve')
+                plt.ylabel('Loss')
+                plt.title('Train/Valid Loss Curve')
                 plt.draw()
-                plt.savefig(self.name + '_err.png')
+                plt.savefig(self.name + '_loss.png')
 
+                if calcError:
+                    plt.figure(2);
+                    plt.clf()
+                    plt.plot(np.arange(epoch+1), Rtotal[0:epoch+1], 'b-x')
+                    plt.plot(np.arange(epoch+1), VRtotal[0:epoch+1], 'g-o')
+                    plt.legend(['Train', 'Valid'])
+                    plt.xlabel('Epoch')
+                    plt.ylabel('Prediction Error')
+                    plt.title('Train/Valid Error Curve')
+                    plt.draw()
+                    plt.savefig(self.name + '_err.png')
+
+
+        if writeRecord and not everyEpoch:
+            with open(self.name + '.csv', 'w+') as f:
+                for epoch in range(0, numEpoch):
+                    stats2 = '%d,%.4f,%.4f,%.4f,%.4f' % \
+                            (epoch,
+                             Etotal[epoch],
+                             1 - Rtotal[epoch],
+                             VEtotal[epoch],
+                             1 - VRtotal[epoch])
+                    f.write('%s\n' % stats2)
         pass
 
     def forwardPass(self, X):

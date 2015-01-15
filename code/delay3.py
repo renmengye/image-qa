@@ -68,7 +68,9 @@ if __name__ == '__main__':
         'learningRateDecay': 1.0,
         'momentumEnd': 0.5,
         'needValid': True,
+        'writeRecord': False,
         'plotFigs': True,
+        'everyEpoch': False,
         'calcError': True,
         'stopE': 0.01
     }

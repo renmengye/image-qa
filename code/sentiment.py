@@ -101,11 +101,13 @@ if __name__ == '__main__':
         'numEpoch': 2000,
         'heldOutRatio': 0.8,
         'momentum': 0.9,
-        'batchSize': 1,
+        'batchSize': 10,
         'learningRateDecay': 1.0,
         'momentumEnd': 0.9,
         'needValid': True,
+        'writeRecord': True,
         'plotFigs': True,
+        'everyEpoch': True,
         'calcError': True,
         'stopE': 0.01
     }
