@@ -72,7 +72,7 @@ if __name__ == '__main__':
         'numEpoch': 2000,
         'heldOutRatio': 0.2,
         'momentum': 0.9,
-        'batchSize': 20,
+        'batchSize': 5,
         'learningRateDecay': 1.0,
         'momentumEnd': 0.9,
         'shuffle': True,
@@ -99,7 +99,7 @@ if __name__ == '__main__':
             outputDim=20,
             initRange=0.03,
             initSeed=2),
-            learningRate=1.0)
+            learningRate=0.5)
         pipeline.addStage(TimeFold(
             timespan=timespan))
         pipeline.addStage(LSTM(
@@ -108,7 +108,7 @@ if __name__ == '__main__':
             initRange=0.22,
             initSeed=3,
             cutOffZeroEnd=True),
-            learningRate=0.14)
+            learningRate=0.07)
         pipeline.addStage(TimeSelect(
             time=-1))
         # pipeline.addStage(Softmax(
@@ -122,7 +122,7 @@ if __name__ == '__main__':
             outputDim=1,
             initRange=0.3,
             initSeed=4),
-            learningRate=0.1)
+            learningRate=0.05)
 
     if len(sys.argv) > 1:
         with open(sys.argv[1] + '.pip') as pipf:
