@@ -104,6 +104,7 @@ if __name__ == '__main__':
         'batchSize': 10,
         'learningRateDecay': 1.0,
         'momentumEnd': 0.9,
+        'shuffle': True,
         'needValid': True,
         'writeRecord': True,
         'plotFigs': True,

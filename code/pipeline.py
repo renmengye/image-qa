@@ -70,10 +70,14 @@ class Pipeline:
             correct = 0
             total = 0
 
-            shuffle = np.arange(0, X.shape[1])
-            shuffle = np.random.permutation(shuffle)
-            X = X[:, shuffle]
-            T = T[shuffle]
+            if trainOpt['shuffle']:
+                shuffle = np.arange(0, X.shape[1])
+                shuffle = np.random.permutation(shuffle)
+                X = X[:, shuffle]
+                if len(T.shape)==3:
+                    T = T[:, shuffle]
+                else:
+                    T = T[shuffle]
 
             # Stochastic only for now
             if bat == 1:
