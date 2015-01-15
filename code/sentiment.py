@@ -69,9 +69,9 @@ if __name__ == '__main__':
 
     trainOpt = {
         'numEpoch': 2000,
-        'heldOutRatio': 0.8,
+        'heldOutRatio': 0.2,
         'momentum': 0.9,
-        'batchSize': 10,
+        'batchSize': 5,
         'learningRateDecay': 1.0,
         'momentumEnd': 0.9,
         'shuffle': True,

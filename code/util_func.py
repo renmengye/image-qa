@@ -46,6 +46,17 @@ def crossEntIdx(Y, T):
         dEdY /= float(N) * float(timespan)
     return E, dEdY
 
+def crossEntOne(Y, T):
+    eps = 1e-5
+    if len(Y.shape) == 0:
+        E = T * np.log(1 - Y) + (1 - T) * np.log(1 - Y)
+        dEdY = T / (1 - Y + eps) + (1 - T) / (1 - Y + eps)
+    elif len(Y.shape) == 1:
+        E = np.sum(T * np.log(1 - Y) + (1 - T) * np.log(1 - Y))
+        dEdY = T / (1 - Y + eps) + (1 - T) / (1 - Y + eps)
+
+    return E, dEdY
+
 def argmax(Y):
     return np.argmax(Y, axis=-1)
 

@@ -58,24 +58,25 @@ if __name__ == '__main__':
         inputDim=2,
         memoryDim=3,
         initRange=0.01,
-        initSeed=2))
+        initSeed=2),
+        learningRate=0.1)
     pipeline.addStage(TimeUnfold())
     pipeline.addStage(Softmax(
         inputDim=3,
         outputDim=2,
         initRange=0.01,
-        initSeed=3))
+        initSeed=3),
+        learningRate=0.1)
     pipeline.addStage(TimeFold(
         timespan=8))
 
     trainOpt = {
-        'learningRate': 0.1,
         'numEpoch': 2000,
         'heldOutRatio': 0.5,
-        'momentum': 0.5,
+        'momentum': 0.3,
         'batchSize': 1,
         'learningRateDecay': 1.0,
-        'momentumEnd': 0.5,
+        'momentumEnd': 0.3,
         'shuffle': False,
         'needValid': True,
         'writeRecord': False,

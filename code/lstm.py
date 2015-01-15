@@ -32,7 +32,7 @@ class LSTM:
             # Wbc = np.random.rand(self.memoryDim, 1) * initRange
             # Wbo = np.random.rand(self.memoryDim, 1) * initRange
             Wbi = np.ones((self.memoryDim, 1), float)
-            Wbf = np.zeros((self.memoryDim, 1), float)
+            Wbf = np.ones((self.memoryDim, 1), float)
             Wbc = np.zeros((self.memoryDim, 1), float)
             Wbo = np.ones((self.memoryDim, 1), float)
 
