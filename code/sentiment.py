@@ -127,10 +127,10 @@ if __name__ == '__main__':
             pipeline = pickle.load(pipf)
         if len(sys.argv) > 2:
             if sys.argv[2] == '-test':
-                trainOutput = pipeline.forwardPass(trainInput.transpose((1, 0, 2)))
+                trainOutput = pipeline.forwardPass(trainInput.transpose((1, 0, 2)), dropout=False)
                 with open('sentiment_result.txt', 'w+') as f:
                     for n in range(trainOutput.shape[0]):
-                        sentence = '%d ' % argmax(trainOutput[n])
+                        sentence = '%d ' % hardLimit(trainOutput[n])
                         for t in range(trainInput[n].shape[0]):
                             if trainInput[n, t] == 0 or trainInput[n, t] == '\n':
                                 break
