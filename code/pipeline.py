@@ -142,7 +142,7 @@ class Pipeline:
 
             # Run validation
             if needValid:
-                VY = self.forwardPass(VX)
+                VY = self.forwardPass(VX, dropout=False)
                 VE, dVE = self.costFn(VY, VT)
                 VE = np.sum(VE)
                 VEtotal[epoch] = VE
