@@ -87,6 +87,7 @@ class Pipeline:
                     # Progress bar
                     while n/float(N) > progress / float(80):
                         sys.stdout.write('.')
+                        sys.stdout.flush()
                         progress += 1
                     Y_n = self.forwardPass(X[:, n], dropout=True)
                     if len(T.shape) == 3:
@@ -111,6 +112,7 @@ class Pipeline:
                     # Progress bar
                     while batchStart/float(N) > progress / float(80):
                         sys.stdout.write('.')
+                        sys.stdout.flush()
                         progress += 1
                     batchEnd = min(N, batchStart + bat)
                     numEx = batchEnd - batchStart
