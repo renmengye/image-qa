@@ -1,6 +1,7 @@
 from lstm import *
 from simplesum import *
 from softmax import *
+from sigmoid import *
 from time_unfold import *
 from time_fold import *
 from pipeline import *
@@ -42,27 +43,38 @@ if __name__ == '__main__':
     #     'stopE': 0.005
     # }
 
+    # pipeline = Pipeline(
+    #     name='delay3',
+    #     costFn=crossEntIdx,
+    #     decisionFn=argmax)
     pipeline = Pipeline(
         name='delay3',
-        costFn=crossEntIdx,
-        decisionFn=argmax)
+        costFn=crossEntOne,
+        decisionFn=hardLimit)
     pipeline.addStage(LSTM(
         inputDim=1,
-        memoryDim=3,
+        memoryDim=5,
         initRange=0.01,
-        initSeed=2))
+        initSeed=2),
+        learningRate=0.5)
     pipeline.addStage(TimeUnfold())
-    pipeline.addStage(Softmax(
-        inputDim=3,
-        outputDim=2,
+    # pipeline.addStage(Softmax(
+    #     inputDim=3,
+    #     outputDim=2,
+    #     initRange=0.01,
+    #     initSeed=3))
+    pipeline.addStage(Sigmoid(
+        inputDim=5,
+        outputDim=1,
         initRange=0.01,
-        initSeed=3))
+        initSeed=3),
+        learningRate=0.5)
     pipeline.addStage(TimeFold(
         timespan=8))
     trainOpt = {
         'learningRate': 0.1,
         'numEpoch': 2000,
-        'heldOutRatio': 0.5,
+        'heldOutRatio': 0.2,
         'momentum': 0.5,
         'batchSize': 5,
         'learningRateDecay': 1.0,
@@ -77,7 +89,7 @@ if __name__ == '__main__':
     }
 
     trainInput, trainTarget = getData(
-        size=20,
+        size=40,
         length=8,
         seed=2)
     testInput, testTarget = getData(

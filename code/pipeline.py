@@ -1,6 +1,7 @@
 import numpy as np
 import time
 import pickle
+import sys
 
 import matplotlib
 matplotlib.use('Agg')
@@ -69,6 +70,7 @@ class Pipeline:
             Vrate = 0
             correct = 0
             total = 0
+            progress = 0
 
             if trainOpt['shuffle']:
                 shuffle = np.arange(0, X.shape[1])
@@ -82,7 +84,11 @@ class Pipeline:
             # Stochastic only for now
             if bat == 1:
                 for n in range(0, N):
-                    Y_n = self.forwardPass(X[:, n])
+                    # Progress bar
+                    while n/float(N) > progress / float(80):
+                        sys.stdout.write('.')
+                        progress += 1
+                    Y_n = self.forwardPass(X[:, n], dropout=True)
                     if len(T.shape) == 3:
                         T_n = T[:, n, :]
                     else:
@@ -102,9 +108,13 @@ class Pipeline:
             else:
                 batchStart = 0
                 while batchStart < N:
+                    # Progress bar
+                    while batchStart/float(N) > progress / float(80):
+                        sys.stdout.write('.')
+                        progress += 1
                     batchEnd = min(N, batchStart + bat)
                     numEx = batchEnd - batchStart
-                    Y_bat = self.forwardPass(X[:, batchStart:batchEnd])
+                    Y_bat = self.forwardPass(X[:, batchStart:batchEnd], dropout=True)
                     if len(T.shape) == 3:
                         T_bat = T[:, batchStart:batchEnd, :]
                     else:
@@ -202,17 +212,20 @@ class Pipeline:
                     f.write('%s\n' % stats2)
         pass
 
-    def forwardPass(self, X):
+    def forwardPass(self, X, dropout):
         X1 = X
         for stage in self.stages:
-            X1 = stage.forwardPass(X1)
+            if hasattr(stage, 'dropout'):
+                X1 = stage.forwardPass(X1, dropout)
+            else:
+                X1 = stage.forwardPass(X1)
         return X1
 
     def test(self, X, T, printEx=False):
         X = X.transpose((1, 0, 2))
         if len(T.shape) == 3:
             T = T.transpose((1, 0, 2))
-        Y = self.forwardPass(X)
+        Y = self.forwardPass(X, dropout=False)
         if printEx:
             for n in range(0, min(X.shape[0], 10)):
                 for j in range(0, X.shape[-1]):

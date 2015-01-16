@@ -1,6 +1,7 @@
 from lstm import *
 from simplesum import *
 from softmax import *
+from sigmoid import *
 from time_unfold import *
 from time_fold import *
 from pipeline import *
@@ -50,10 +51,14 @@ if __name__ == '__main__':
     #     'calcError': True,
     #     'stopE': 0.006
     # }
+    # pipeline = Pipeline(
+    #     name='binadd',
+    #     costFn=crossEntIdx,
+    #     decisionFn=argmax)
     pipeline = Pipeline(
         name='binadd',
-        costFn=crossEntIdx,
-        decisionFn=argmax)
+        costFn=crossEntOne,
+        decisionFn=hardLimit)
     pipeline.addStage(LSTM(
         inputDim=2,
         memoryDim=3,
@@ -61,9 +66,15 @@ if __name__ == '__main__':
         initSeed=2),
         learningRate=0.1)
     pipeline.addStage(TimeUnfold())
-    pipeline.addStage(Softmax(
+    # pipeline.addStage(Softmax(
+    #     inputDim=3,
+    #     outputDim=2,
+    #     initRange=0.01,
+    #     initSeed=3),
+    #     learningRate=0.1)
+    pipeline.addStage(Sigmoid(
         inputDim=3,
-        outputDim=2,
+        outputDim=1,
         initRange=0.01,
         initSeed=3),
         learningRate=0.1)
@@ -87,7 +98,7 @@ if __name__ == '__main__':
     }
 
     trainInput, trainTarget = getData(
-        size=40,
+        size=20,
         length=8,
         seed=2)
     testInput, testTarget = getData(

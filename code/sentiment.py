@@ -27,7 +27,7 @@ def getTrainData():
                 sentence_dict[lines[i]] = 1
                 line_numbers.append(i)
                 words = lines[i].split(' ')
-                for j in range(1, len(words)):
+                for j in range(1, len(words) - 1):
                     if len(words) - 1 > line_max:
                         line_max = len(words) - 1
                     if not word_dict.has_key(words[j]):
@@ -45,7 +45,7 @@ def getTrainData():
             else:
                 target_[count, 0] = 0
             words = lines[i].split(' ')
-            for j in range(1, len(words)):
+            for j in range(1, len(words) - 1):
                 input_[count, j - 1] = word_dict[words[j]]
                 #input_[count, j - 1, word_dict[words[j]]] = 1.0
             count += 1
@@ -59,10 +59,9 @@ if __name__ == '__main__':
     trainInput, trainTarget = getTrainData()          # 2250 records
 
     np.random.seed(1)
-    subset = np.arange(0, 129 * 2) # 522
+    subset = np.arange(0, 129 * 2)                    # 522 records, 129 positive
     if len(sys.argv) < 3:
         subset = np.random.permutation(subset)
-    #subset = np.random.permutation(subset)[0:20]
     trainInput = trainInput[subset]
     trainInput = trainInput.reshape(trainInput.shape[0], trainInput.shape[1], 1)
     trainTarget = trainTarget[subset]
@@ -70,9 +69,9 @@ if __name__ == '__main__':
 
     trainOpt = {
         'numEpoch': 2000,
-        'heldOutRatio': 0.2,
+        'heldOutRatio': 0.1,
         'momentum': 0.9,
-        'batchSize': 5,
+        'batchSize': 1,
         'learningRateDecay': 1.0,
         'momentumEnd': 0.9,
         'shuffle': True,
@@ -85,10 +84,6 @@ if __name__ == '__main__':
     }
 
     if len(sys.argv) <= 1:
-        # pipeline = Pipeline(
-        #     name='sentiment',
-        #     costFn=crossEntIdx,
-        #     decisionFn=argmax)
         pipeline = Pipeline(
             name='sentiment',
             costFn=crossEntOne,
@@ -97,32 +92,35 @@ if __name__ == '__main__':
         pipeline.addStage(LinearDict(
             inputDim=np.max(trainInput)+1,
             outputDim=20,
-            initRange=0.03,
+            initRange=0.001,
             initSeed=2),
-            learningRate=0.5)
+            learningRate=.5)
         pipeline.addStage(TimeFold(
             timespan=timespan))
         pipeline.addStage(LSTM(
             inputDim=20,
             memoryDim=10,
-            initRange=0.22,
+            initRange=0.01,
             initSeed=3,
-            cutOffZeroEnd=True),
-            learningRate=0.07)
+            cutOffZeroEnd=True,
+            dropoutRate=0.5),
+            learningRate=.1)
+        pipeline.addStage(LSTM(
+            inputDim=10,
+            memoryDim=10,
+            initRange=0.01,
+            initSeed=3,
+            cutOffZeroEnd=True,
+            dropoutRate=0.5),
+            learningRate=.05)
         pipeline.addStage(TimeSelect(
             time=-1))
-        # pipeline.addStage(Softmax(
-        #     inputDim=10,
-        #     outputDim=2,
-        #     initRange=0.05,
-        #     initSeed=4),
-        #     learningRate=0.05)
         pipeline.addStage(Sigmoid(
             inputDim=10,
             outputDim=1,
-            initRange=0.3,
+            initRange=0.01,
             initSeed=4),
-            learningRate=0.05)
+            learningRate=.05)
 
     if len(sys.argv) > 1:
         with open(sys.argv[1] + '.pip') as pipf:

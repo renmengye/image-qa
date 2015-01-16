@@ -15,6 +15,7 @@ class Sigmoid:
         if needInit:
             np.random.seed(initSeed)
             self.W = np.random.rand(outputDim, inputDim + 1) * initRange - initRange / 2.0
+            self.W[:, -1] = 0
         else:
             self.W = W
         self.X = 0
@@ -110,6 +111,7 @@ class Sigmoid:
         dY_i__dZ_i = Y * (1 - Y).reshape(self.outputDim, 1)
         dY_i__dW_ij = dY_i__dZ_i * np.concatenate((X.reshape(1, self.inputDim), np.ones((1, 1), float)), axis=1)
         dEdW = np.dot(dEdY, dY_i__dW_ij)
+        #dEdW[:, -1] = 0
 
         if outputdEdX:
             dY_i__dX_j = dY_i__dZ_i * self.W[:, 0:-1]
@@ -125,6 +127,7 @@ class Sigmoid:
         dZ_ni__dW_ij = np.concatenate((X.reshape(numEx, 1, self.inputDim),np.ones((numEx, 1, 1))), axis=2)
         dY_ni__dW_ij = dY_ni__dZ_i * dZ_ni__dW_ij
         dEdW = np.diagonal(dEdY.transpose().dot(dY_ni__dW_ij.transpose((1, 0, 2))), axis1=0, axis2=1).transpose()
+        #dEdW[:, -1] = 0
 
         if outputdEdX:
             dZ_ni__dX_j = self.W[:, 0:-1].reshape(1, self.outputDim, self.inputDim)

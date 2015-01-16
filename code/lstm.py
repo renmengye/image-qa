@@ -9,10 +9,12 @@ class LSTM:
                  initSeed=2,
                  needInit=True,
                  W=0,
-                 cutOffZeroEnd=False):
+                 cutOffZeroEnd=False,
+                 dropoutRate=0.0):
         self.inputDim = inputDim
         self.memoryDim = memoryDim
         self.cutOffZeroEnd = cutOffZeroEnd
+        self.dropoutRate = dropoutRate
 
         if needInit:
             np.random.seed(initSeed)
@@ -52,6 +54,8 @@ class LSTM:
         self.Gi = 0
         self.Gf = 0
         self.Go = 0
+        self.dropoutVec = 0
+        self.dropout = False
         pass
 
     def chkgrd(self):
@@ -100,9 +104,9 @@ class LSTM:
                 cut = False
         return cut
 
-    def forwardPass_(self, X):
+    def forwardPass_(self, X, dropout, initDropout):
         if len(X.shape) == 3:
-            return self.forwardPassN(X)
+            return self.forwardPassN(X, dropout)
         timespan = X.shape[0]
         Y = np.zeros((timespan, self.memoryDim), float)
         C = np.zeros((timespan, self.memoryDim), float)
@@ -111,6 +115,14 @@ class LSTM:
         Gf = np.zeros((timespan, self.memoryDim), float)
         Go = np.zeros((timespan, self.memoryDim), float)
         Wi, Wf, Wc, Wo = self.sliceWeights(self.inputDim, self.memoryDim, self.W)
+
+        # Dropout
+        if self.dropoutRate > 0.0 and dropout:
+            if initDropout:
+                self.dropoutVec = (np.random.rand(self.memoryDim) > self.dropoutRate)
+            for i in range(0, self.memoryDim):
+                if self.dropoutVec[i]:
+                    Wc[i, :] = 0
 
         for t in range(0, timespan):
             if self.cutOffZeroEnd and self.needCutOff(X, t):
@@ -137,11 +149,12 @@ class LSTM:
         self.Gi = Gi
         self.Gf = Gf
         self.Go = Go
+        self.dropout = dropout
 
         return Y, C, Z, Gi, Gf, Go
 
-    def forwardPass(self, X):
-        self.forwardPass_(X)
+    def forwardPass(self, X, dropout=False):
+        self.forwardPass_(X, dropout, initDropout=True)
         return self.Y
 
     def backPropagate(self, dEdY, outputdEdX=True):
@@ -156,6 +169,13 @@ class LSTM:
         Go = self.Go
         timespan = Y.shape[0]
         Wi, Wf, Wc, Wo = self.sliceWeights(self.inputDim, self.memoryDim, self.W)
+
+        # Dropout
+        if self.dropoutRate > 0.0 and self.dropout:
+            for i in range(0, self.memoryDim):
+                if self.dropoutVec[i]:
+                    Wc[i, :] = 0
+
         Wxi = Wi[:, 0 : self.inputDim]
         Wyi = Wi[:, self.inputDim : self.inputDim + self.memoryDim]
         Wci = Wi[:, self.inputDim + self.memoryDim : self.inputDim + self.memoryDim + self.memoryDim]
@@ -273,7 +293,7 @@ class LSTM:
 
         return dEdW, dEdX
 
-    def forwardPassN(self, X):
+    def forwardPassN(self, X, dropout):
         # X[t, n, i] -> t: time, n: example, i: input dimension
         timespan = X.shape[0]
         numEx = X.shape[1]
@@ -284,9 +304,13 @@ class LSTM:
         Gf = np.zeros((timespan, numEx, self.memoryDim), float)
         Go = np.zeros((timespan, numEx, self.memoryDim), float)
 
+        # Dropout
+        if self.dropoutRate > 0.0 and dropout:
+            self.dropoutVec = (np.random.rand(self.memoryDim) > self.dropoutRate)
+
         for n in range(0, numEx):
             Y[:, n, :], C[:, n, :], Z[:, n, :], \
-            Gi[:, n, :], Gf[:, n, :], Go[:, n, :] = self.forwardPass_(X[:, n, :])
+            Gi[:, n, :], Gf[:, n, :], Go[:, n, :] = self.forwardPass_(X[:, n, :], dropout=True, initDropout=False)
 
         self.X = X
         self.Y = Y
@@ -295,6 +319,7 @@ class LSTM:
         self.Gi = Gi
         self.Gf = Gf
         self.Go = Go
+        self.dropout = dropout
 
         return Y
 
@@ -323,7 +348,7 @@ class LSTM:
 
         return dEdW, dEdX
 
-    def forwardPassAll(self, X):
+    def forwardPassAll(self, X, dropout):
         # X[t, n, i] -> t: time, n: example, i: input dimension
         timespan = X.shape[0]
         numEx = X.shape[1]
@@ -334,6 +359,12 @@ class LSTM:
         Gf = np.zeros((timespan, numEx, self.memoryDim), float)
         Go = np.zeros((timespan, numEx, self.memoryDim), float)
         Wi, Wf, Wc, Wo = self.sliceWeights(self.inputDim, self.memoryDim, self.W)
+
+        if self.dropoutRate > 0.0 and dropout:
+            self.dropoutVec = (np.random.rand(self.memoryDim) > self.dropoutRate)
+            for i in range(0, self.memoryDim):
+                if self.dropoutVec[i]:
+                    Wc[i, :] = 0
 
         for t in range(0, timespan):
             # In forward pass initial stage -1 is empty, equivalent to zero.
@@ -358,7 +389,7 @@ class LSTM:
 
         return Y
 
-    def backPropagateAll(self, dEdY, outputdEdX=True):
+    def backPropagateAll(self, dEdY, outputdEdX):
         X = self.X
         Y = self.Y
         C = self.C
@@ -374,6 +405,13 @@ class LSTM:
         dCdW = np.zeros((timespan, self.memoryDim, self.inputDim * 4 + self.memoryDim * 7 + 4, numEx, self.memoryDim), float)
 
         Wi, Wf, Wc, Wo = self.sliceWeights(self.inputDim, self.memoryDim, self.W)
+
+        # Dropout
+        if self.dropoutRate > 0.0 and self.dropout:
+            for i in range(0, self.memoryDim):
+                if self.dropoutVec[i]:
+                    Wc[i, :] = 0
+
         Wxi = Wi[:, 0 : self.inputDim]
         Wyi = Wi[:, self.inputDim : self.inputDim + self.memoryDim]
         Wci = Wi[:, self.inputDim + self.memoryDim : self.inputDim + self.memoryDim + self.memoryDim]
@@ -440,7 +478,6 @@ class LSTM:
                                   Go[t, :, :] * (1 - np.power(U, 2)) * dCdW[t, :, :, :, :]
 
         dEdW = np.tensordot(dYdW, dEdY, axes=([4, 3, 0], [2, 1, 0]))
-
 
         # Calculate dEdX
         if outputdEdX:
