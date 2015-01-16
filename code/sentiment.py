@@ -95,7 +95,7 @@ if __name__ == '__main__':
             outputDim=20,
             initRange=0.1,
             initSeed=2),
-            learningRate=.1)
+            learningRate=.1 * 10)
         pipeline.addStage(TimeFold(
             timespan=timespan))
         pipeline.addStage(LSTM(
@@ -105,7 +105,7 @@ if __name__ == '__main__':
             initSeed=3,
             cutOffZeroEnd=True,
             dropoutRate=0.5),
-            learningRate=.03)
+            learningRate=.03 * 10)
         # pipeline.addStage(LSTM(
         #     inputDim=10,
         #     memoryDim=10,
@@ -121,7 +121,7 @@ if __name__ == '__main__':
             outputDim=1,
             initRange=0.1,
             initSeed=4),
-            learningRate=.01)
+            learningRate=.01 * 10)
 
     if len(sys.argv) > 1:
         with open(sys.argv[1] + '.pip') as pipf:
