@@ -104,7 +104,7 @@ if __name__ == '__main__':
             initRange=1,
             initSeed=3,
             cutOffZeroEnd=True,
-            dropoutRate=0.0),
+            dropoutRate=0.5),
             learningRate=.03)
         # pipeline.addStage(LSTM(
         #     inputDim=10,
