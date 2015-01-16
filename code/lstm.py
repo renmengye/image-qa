@@ -127,7 +127,7 @@ class LSTM:
         for t in range(0, timespan):
             if self.cutOffZeroEnd and self.needCutOff(X, t):
                 for t1 in range(t, timespan):
-                    Y[t1, :] = Y[t1-1, :]
+                    Y[t1, :] = Y[t1 - 1, :]
                 break
 
             # In forward pass initial stage -1 is empty, equivalent to zero.
@@ -195,6 +195,8 @@ class LSTM:
 
         for t in range(0, timespan):
             if self.cutOffZeroEnd and self.needCutOff(X, t):
+                for t1 in range(t, timespan):
+                    dYdW[t1] = dYdW[t1 - 1]
                 break
             if t == 0:
                 Yt1 = np.zeros(self.memoryDim, float)
@@ -263,6 +265,8 @@ class LSTM:
 
             for t in range(0, timespan):
                 if self.cutOffZeroEnd and self.needCutOff(X, t):
+                    for t1 in range(t, timespan):
+                        dYdX[t1] = dYdX[t1 - 1]
                     break
                 if t == 0:
                     Ct1 = np.zeros(self.memoryDim, float)

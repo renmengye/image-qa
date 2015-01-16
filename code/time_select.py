@@ -30,6 +30,7 @@ class TimeSelect:
         if outputdEdX:
             dEdX = np.zeros(self.X.shape)
             dEdX[self.t, :] = dEdY
+            #dEdX[:, :] = dEdY
         return dEdW, dEdX
 
     def backPropagateAll(self, dEdY, outputdEdX=True):
@@ -37,4 +38,5 @@ class TimeSelect:
         if outputdEdX:
             dEdX = np.zeros(self.X.shape)
             dEdX[self.t, :, :] = dEdY
+            #dEdX[:, :] = dEdY
         return dEdW, dEdX
