@@ -89,7 +89,7 @@ class Pipeline:
                         sys.stdout.write('.')
                         sys.stdout.flush()
                         progress += 1
-                    Y_n = self.forwardPass(X[:, n], dropout=True)
+                    Y_n = self.forwardPass(X[:, n], dropout=trainOpt['dropout'])
                     if len(T.shape) == 3:
                         T_n = T[:, n, :]
                     else:
@@ -116,7 +116,7 @@ class Pipeline:
                         progress += 1
                     batchEnd = min(N, batchStart + bat)
                     numEx = batchEnd - batchStart
-                    Y_bat = self.forwardPass(X[:, batchStart:batchEnd], dropout=True)
+                    Y_bat = self.forwardPass(X[:, batchStart:batchEnd], dropout=trainOpt['dropout'])
                     if len(T.shape) == 3:
                         T_bat = T[:, batchStart:batchEnd, :]
                     else:

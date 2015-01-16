@@ -74,6 +74,7 @@ if __name__ == '__main__':
         'batchSize': 1,
         'learningRateDecay': 1.0,
         'momentumEnd': 0.9,
+        'dropout': True,
         'shuffle': True,
         'needValid': True,
         'writeRecord': True,
@@ -94,7 +95,7 @@ if __name__ == '__main__':
             outputDim=20,
             initRange=0.1,
             initSeed=2),
-            learningRate=.01)
+            learningRate=.1)
         pipeline.addStage(TimeFold(
             timespan=timespan))
         pipeline.addStage(LSTM(
@@ -104,7 +105,7 @@ if __name__ == '__main__':
             initSeed=3,
             cutOffZeroEnd=True,
             dropoutRate=0.0),
-            learningRate=.001)
+            learningRate=.03)
         # pipeline.addStage(LSTM(
         #     inputDim=10,
         #     memoryDim=10,
@@ -120,7 +121,7 @@ if __name__ == '__main__':
             outputDim=1,
             initRange=0.1,
             initSeed=4),
-            learningRate=.0005)
+            learningRate=.01)
 
     if len(sys.argv) > 1:
         with open(sys.argv[1] + '.pip') as pipf:
