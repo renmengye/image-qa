@@ -92,35 +92,35 @@ if __name__ == '__main__':
         pipeline.addStage(LinearDict(
             inputDim=np.max(trainInput)+1,
             outputDim=20,
-            initRange=0.001,
+            initRange=0.1,
             initSeed=2),
-            learningRate=.1)
+            learningRate=.01)
         pipeline.addStage(TimeFold(
             timespan=timespan))
         pipeline.addStage(LSTM(
             inputDim=20,
             memoryDim=10,
-            initRange=0.01,
+            initRange=1,
             initSeed=3,
             cutOffZeroEnd=True,
-            dropoutRate=0.5),
-            learningRate=.1)
-        pipeline.addStage(LSTM(
-            inputDim=10,
-            memoryDim=10,
-            initRange=0.01,
-            initSeed=3,
-            cutOffZeroEnd=True,
-            dropoutRate=0.5),
-            learningRate=.05)
+            dropoutRate=0.0),
+            learningRate=.001)
+        # pipeline.addStage(LSTM(
+        #     inputDim=10,
+        #     memoryDim=10,
+        #     initRange=0.01,
+        #     initSeed=3,
+        #     cutOffZeroEnd=True,
+        #     dropoutRate=0.5),
+        #     learningRate=.05)
         pipeline.addStage(TimeSelect(
             time=-1))
         pipeline.addStage(Sigmoid(
             inputDim=10,
             outputDim=1,
-            initRange=0.01,
+            initRange=0.1,
             initSeed=4),
-            learningRate=.005)
+            learningRate=.0005)
 
     if len(sys.argv) > 1:
         with open(sys.argv[1] + '.pip') as pipf:

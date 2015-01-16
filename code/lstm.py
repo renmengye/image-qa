@@ -249,6 +249,12 @@ class LSTM:
 
         dEdW = np.tensordot(dYdW, dEdY, axes=([3, 0], [1, 0]))
 
+        # Dropout
+        if self.dropoutRate > 0.0 and self.dropout:
+            for i in range(0, self.memoryDim):
+                if self.dropoutVec[i]:
+                    dEdW[i, 2 * self.inputDim + 4 * self.memoryDim + 2 : 3 * self.inputDim + 5 * self.memoryDim + 3] = 0
+
         # Calculate dEdX
         # dY_ti__dXtau_j -> (t, tau, j, i)
         if outputdEdX:
@@ -478,6 +484,12 @@ class LSTM:
                                   Go[t, :, :] * (1 - np.power(U, 2)) * dCdW[t, :, :, :, :]
 
         dEdW = np.tensordot(dYdW, dEdY, axes=([4, 3, 0], [2, 1, 0]))
+
+        # Dropout
+        if self.dropoutRate > 0.0 and self.dropout:
+            for i in range(0, self.memoryDim):
+                if self.dropoutVec[i]:
+                    dEdW[i, 2 * self.inputDim + 4 * self.memoryDim + 2 : 3 * self.inputDim + 5 * self.memoryDim + 3] = 0
 
         # Calculate dEdX
         if outputdEdX:
