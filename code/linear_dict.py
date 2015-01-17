@@ -13,7 +13,7 @@ class LinearDict:
 
         if needInit:
             np.random.seed(initSeed)
-            self.W = np.random.rand(outputDim, inputDim) * initRange - initRange / 2.0
+            self.W = np.random.rand(outputDim, inputDim,) * initRange - initRange / 2.0
             self.W[:, 0] = 0
         else:
             self.W = W

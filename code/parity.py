@@ -1,6 +1,7 @@
 from lstm import *
 from simplesum import *
 from softmax import *
+from sigmoid import *
 from time_unfold import *
 from time_fold import *
 from pipeline import *
@@ -30,19 +31,22 @@ if __name__ == '__main__':
 
     pipeline = Pipeline(
         name='parity',
-        costFn=crossEntIdx,
-        decisionFn=argmax)
+        costFn=crossEntOne,
+        decisionFn=hardLimit)
     pipeline.addStage(LSTM(
         inputDim=1,
         memoryDim=2,
         initRange=0.01,
-        initSeed=2))
+        initSeed=2),
+        learningRate=0.5,
+        weightClip=0.1)
     pipeline.addStage(TimeUnfold())
-    pipeline.addStage(Softmax(
+    pipeline.addStage(Sigmoid(
         inputDim=2,
-        outputDim=2,
+        outputDim=1,
         initRange=0.01,
-        initSeed=3))
+        initSeed=3),
+        learningRate=0.1)
     pipeline.addStage(TimeFold(
         timespan=8))
 
@@ -52,15 +56,17 @@ if __name__ == '__main__':
         'needValid': True,
         'heldOutRatio': 0.5,
         'momentum': 0.5,
-        'batchSize': 2,
+        'batchSize': 3,
         'learningRateDecay': 1.0,
         'momentumEnd': 0.5,
+        'dropout': False,
         'shuffle': False,
         'writeRecord': False,
         'plotFigs': True,
         'everyEpoch': False,
         'calcError': True,
-        'stopE': 0.015
+        'stopE': 0.015,
+        'progress': False
     }
 
     trainInput, trainTarget = getData(

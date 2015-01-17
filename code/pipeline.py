@@ -12,6 +12,7 @@ class Pipeline:
     def __init__(self, name, costFn, decisionFn=None):
         self.stages = []
         self.name = name + time.strftime("-%Y%m%d-%H%M%S")
+        print 'Pipeline ' + self.name
         self.costFn = costFn
         self.decisionFn = decisionFn
         pass
@@ -86,10 +87,11 @@ class Pipeline:
             if bat == 1:
                 for n in range(0, N):
                     # Progress bar
-                    while n/float(N) > progress / float(80):
-                        sys.stdout.write('.')
-                        sys.stdout.flush()
-                        progress += 1
+                    if trainOpt['progress']:
+                        while n/float(N) > progress / float(80):
+                            sys.stdout.write('.')
+                            sys.stdout.flush()
+                            progress += 1
                     Y_n = self.forwardPass(X[:, n], dropout=trainOpt['dropout'])
                     if len(T.shape) == 3:
                         T_n = T[:, n, :]
@@ -108,17 +110,18 @@ class Pipeline:
                         if stage.weightClip > 0.0:
                             stage.dEdWnorm = np.sqrt(np.sum(np.power(dEdW, 2)))
                             if stage.dEdWnorm > stage.weightClip:
-                                dEdW = dEdW / stage.norm * stage.weightClip
+                                dEdW = dEdW / stage.dEdWnorm * stage.weightClip
                         stage.lastdW = -stage.learningRate * dEdW + mom * stage.lastdW
                         stage.W = stage.W + stage.lastdW
             else:
                 batchStart = 0
                 while batchStart < N:
                     # Progress bar
-                    while batchStart/float(N) > progress / float(80):
-                        sys.stdout.write('.')
-                        sys.stdout.flush()
-                        progress += 1
+                    if trainOpt['progress']:
+                        while batchStart/float(N) > progress / float(80):
+                            sys.stdout.write('.')
+                            sys.stdout.flush()
+                            progress += 1
                     batchEnd = min(N, batchStart + bat)
                     numEx = batchEnd - batchStart
                     Y_bat = self.forwardPass(X[:, batchStart:batchEnd], dropout=trainOpt['dropout'])
@@ -132,6 +135,10 @@ class Pipeline:
                     for stage in reversed(self.stages):
                         dEdW, dEdY = stage.backPropagate(dEdY,
                                                         outputdEdX=(stage!=self.stages[0]))
+                        if stage.weightClip > 0.0:
+                            stage.dEdWnorm = np.sqrt(np.sum(np.power(dEdW, 2)))
+                            if stage.dEdWnorm > stage.weightClip:
+                                dEdW = dEdW / stage.dEdWnorm * stage.weightClip
                         stage.lastdW = -stage.learningRate * dEdW + mom * stage.lastdW
                         stage.W = stage.W + stage.lastdW
 
@@ -141,6 +148,8 @@ class Pipeline:
                         total += total_
                     batchStart += bat
 
+            if trainOpt['progress']:
+                print
             # Store train statistics
             if calcError:
                 rate = correct / float(total)
@@ -163,8 +172,15 @@ class Pipeline:
 
             # Print statistics
             timeElapsed = time.time() - startTime
-            stats = 'EP: %4d E: %.4f R: %.4f VE: %.4f VR: %.4f T:%4d DW:%.4f' % \
-                    (epoch, E, rate, VE, Vrate, timeElapsed, self.stages[3].dEdWnorm)
+            # stats = 'EP: %4d E: %.4f R: %.4f VE: %.4f VR: %.4f T:%4d' % \
+            #         (epoch, E, rate, VE, Vrate, timeElapsed)
+            if trainOpt.has_key('displayDw'):
+                stats = 'EP: %4d E: %.4f R: %.4f VE: %.4f VR: %.4f T:%4d DW:%.4f' % \
+                        (epoch, E, rate, VE, Vrate, timeElapsed, self.stages[trainOpt['displayDw']].dEdWnorm)
+            else:
+                stats = 'EP: %4d E: %.4f R: %.4f VE: %.4f VR: %.4f T:%4d' % \
+                        (epoch, E, rate, VE, Vrate, timeElapsed)
+
             stats2 = '%d,%.4f,%.4f,%.4f,%.4f' % \
                     (epoch, E, rate, VE, Vrate)
             print stats

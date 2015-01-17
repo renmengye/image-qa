@@ -52,6 +52,7 @@ def crossEntOne(Y, T):
     #     Y = Y.reshape(Y.shape[:-1])
     # if T.shape[-1] == 1:
     #     T = T.reshape(T.shape[:-1])
+    T = T.reshape(Y.shape)
     if len(Y.shape) == 0:
         E = -T * np.log(Y + eps) - (1 - T) * np.log(1 - Y + eps)
         dEdY = -T / (1 - Y + eps) + (1 - T) / (1 - Y + eps)

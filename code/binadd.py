@@ -64,7 +64,8 @@ if __name__ == '__main__':
         memoryDim=3,
         initRange=0.01,
         initSeed=2),
-        learningRate=0.1)
+        learningRate=0.8,
+        weightClip=1.0)
     pipeline.addStage(TimeUnfold())
     # pipeline.addStage(Softmax(
     #     inputDim=3,
@@ -88,17 +89,19 @@ if __name__ == '__main__':
         'batchSize': 1,
         'learningRateDecay': 1.0,
         'momentumEnd': 0.3,
+        'dropout': False,
         'shuffle': False,
         'needValid': True,
         'writeRecord': False,
         'plotFigs': True,
         'everyEpoch': False,
         'calcError': True,
-        'stopE': 0.006
+        'stopE': 0.006,
+        'progress': False
     }
 
     trainInput, trainTarget = getData(
-        size=20,
+        size=40,
         length=8,
         seed=2)
     testInput, testTarget = getData(

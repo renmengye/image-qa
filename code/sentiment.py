@@ -5,6 +5,7 @@ from sigmoid import *
 from time_unfold import *
 from time_fold import *
 from time_select import *
+from dropout import *
 from linear_map import *
 from linear_dict import *
 from pipeline import *
@@ -35,7 +36,7 @@ def getTrainData():
                         word_array.append(words[j])
                         key += 1
 
-        #input_ = np.zeros((len(line_numbers), line_max, len(word_dict)), float)
+        #input_ = np.zeros((len(line_numbers), line_max, len(word_dict)), float32)
         input_ = np.zeros((len(line_numbers), line_max), int)
         target_ = np.zeros((len(line_numbers), 1), int)
         count = 0
@@ -71,18 +72,19 @@ if __name__ == '__main__':
         'numEpoch': 2000,
         'heldOutRatio': 0.1,
         'momentum': 0.9,
-        'batchSize': 1,
+        'batchSize': 20,
         'learningRateDecay': 1.0,
         'momentumEnd': 0.9,
-        #'dropout': True,
-        'dropout': False,
+        'dropout': True,
         'shuffle': True,
         'needValid': True,
         'writeRecord': True,
         'plotFigs': True,
         'everyEpoch': True,
         'calcError': True,
-        'stopE': 0.01
+        'stopE': 0.01,
+        'progress': True,
+        'displayDw': 3
     }
 
     if len(sys.argv) <= 1:
@@ -94,28 +96,30 @@ if __name__ == '__main__':
         pipeline.addStage(LinearDict(
             inputDim=np.max(trainInput)+1,
             outputDim=20,
-            initRange=0.01,
+            initRange=0.1,
             initSeed=2),
-            learningRate=0.0)
+            learningRate=0.8)
         pipeline.addStage(TimeFold(
             timespan=timespan))
+        pipeline.addStage(Dropout(
+            dropoutRate=0.5
+        ))
         pipeline.addStage(LSTM(
             inputDim=20,
-            memoryDim=100,
-            initRange=0.01,
+            memoryDim=10,
+            initRange=0.1,
             initSeed=3,
-            cutOffZeroEnd=False,
-            dropoutRate=0.0),
+            cutOffZeroEnd=True),
             learningRate=0.8,
-            weightClip=10.0)
+            weightClip=0.1)
         pipeline.addStage(TimeSelect(
             time=-1))
         pipeline.addStage(Sigmoid(
-            inputDim=100,
+            inputDim=10,
             outputDim=1,
-            initRange=0.01,
+            initRange=0.1,
             initSeed=4),
-            learningRate=0.8)
+            learningRate=0.01)
 
     if len(sys.argv) > 1:
         with open(sys.argv[1] + '.pip') as pipf:
