@@ -20,10 +20,11 @@ class Pipeline:
         self.stages = []
         pass
 
-    def addStage(self, stage, learningRate=0.1):
+    def addStage(self, stage, learningRate=0.1, weightClip=0.0):
         self.stages.append(stage)
         stage.lastdW = 0
         stage.learningRate = learningRate
+        stage.weightClip = weightClip
         pass
 
     def train(self, trainInput, trainTarget, trainOpt):
@@ -104,6 +105,10 @@ class Pipeline:
                     for stage in reversed(self.stages):
                         dEdW, dEdY = stage.backPropagate(dEdY,
                                                          outputdEdX=(stage!=self.stages[0]))
+                        if stage.weightClip > 0.0:
+                            stage.dEdWnorm = np.sqrt(np.sum(np.power(dEdW, 2)))
+                            if stage.dEdWnorm > stage.weightClip:
+                                dEdW = dEdW / stage.norm * stage.weightClip
                         stage.lastdW = -stage.learningRate * dEdW + mom * stage.lastdW
                         stage.W = stage.W + stage.lastdW
             else:
@@ -158,8 +163,8 @@ class Pipeline:
 
             # Print statistics
             timeElapsed = time.time() - startTime
-            stats = 'EP: %4d E: %.4f R: %.4f VE: %.4f VR: %.4f T:%4d' % \
-                    (epoch, E, rate, VE, Vrate, timeElapsed)
+            stats = 'EP: %4d E: %.4f R: %.4f VE: %.4f VR: %.4f T:%4d DW:%.4f' % \
+                    (epoch, E, rate, VE, Vrate, timeElapsed, self.stages[3].dEdWnorm)
             stats2 = '%d,%.4f,%.4f,%.4f,%.4f' % \
                     (epoch, E, rate, VE, Vrate)
             print stats

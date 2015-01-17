@@ -117,12 +117,15 @@ class LSTM:
         Wi, Wf, Wc, Wo = self.sliceWeights(self.inputDim, self.memoryDim, self.W)
 
         # Dropout
-        if self.dropoutRate > 0.0 and dropout:
-            if initDropout:
-                self.dropoutVec = (np.random.rand(self.memoryDim) > self.dropoutRate)
-            for i in range(0, self.memoryDim):
-                if self.dropoutVec[i]:
-                    Wc[i, :] = 0
+        if self.dropoutRate > 0.0:
+            if dropout:
+                if initDropout:
+                    self.dropoutVec = (np.random.rand(self.memoryDim) > self.dropoutRate)
+                for i in range(0, self.memoryDim):
+                    if self.dropoutVec[i]:
+                        Wc[i, :] = 0
+            else:
+                Wc *= self.dropoutRate
 
         for t in range(0, timespan):
             if self.cutOffZeroEnd and self.needCutOff(X, t):
@@ -171,10 +174,13 @@ class LSTM:
         Wi, Wf, Wc, Wo = self.sliceWeights(self.inputDim, self.memoryDim, self.W)
 
         # Dropout
-        if self.dropoutRate > 0.0 and self.dropout:
-            for i in range(0, self.memoryDim):
-                if self.dropoutVec[i]:
-                    Wc[i, :] = 0
+        if self.dropoutRate > 0.0:
+            if self.dropout:
+                for i in range(0, self.memoryDim):
+                    if self.dropoutVec[i]:
+                        Wc[i, :] = 0
+            else:
+                Wc *= self.dropoutRate
 
         Wxi = Wi[:, 0 : self.inputDim]
         Wyi = Wi[:, self.inputDim : self.inputDim + self.memoryDim]
@@ -320,7 +326,7 @@ class LSTM:
 
         for n in range(0, numEx):
             Y[:, n, :], C[:, n, :], Z[:, n, :], \
-            Gi[:, n, :], Gf[:, n, :], Go[:, n, :] = self.forwardPass_(X[:, n, :], dropout=True, initDropout=False)
+            Gi[:, n, :], Gf[:, n, :], Go[:, n, :] = self.forwardPass_(X[:, n, :], dropout=dropout, initDropout=False)
 
         self.X = X
         self.Y = Y

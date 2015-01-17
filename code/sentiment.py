@@ -74,7 +74,8 @@ if __name__ == '__main__':
         'batchSize': 1,
         'learningRateDecay': 1.0,
         'momentumEnd': 0.9,
-        'dropout': True,
+        #'dropout': True,
+        'dropout': False,
         'shuffle': True,
         'needValid': True,
         'writeRecord': True,
@@ -93,35 +94,28 @@ if __name__ == '__main__':
         pipeline.addStage(LinearDict(
             inputDim=np.max(trainInput)+1,
             outputDim=20,
-            initRange=0.1,
+            initRange=0.01,
             initSeed=2),
-            learningRate=.1)
+            learningRate=0.0)
         pipeline.addStage(TimeFold(
             timespan=timespan))
         pipeline.addStage(LSTM(
             inputDim=20,
-            memoryDim=10,
-            initRange=1,
+            memoryDim=100,
+            initRange=0.01,
             initSeed=3,
-            cutOffZeroEnd=True,
-            dropoutRate=0.5),
-            learningRate=.03)
-        # pipeline.addStage(LSTM(
-        #     inputDim=10,
-        #     memoryDim=10,
-        #     initRange=0.01,
-        #     initSeed=3,
-        #     cutOffZeroEnd=True,
-        #     dropoutRate=0.5),
-        #     learningRate=.05)
+            cutOffZeroEnd=False,
+            dropoutRate=0.0),
+            learningRate=0.8,
+            weightClip=10.0)
         pipeline.addStage(TimeSelect(
             time=-1))
         pipeline.addStage(Sigmoid(
-            inputDim=10,
+            inputDim=100,
             outputDim=1,
-            initRange=0.1,
+            initRange=0.01,
             initSeed=4),
-            learningRate=.01)
+            learningRate=0.8)
 
     if len(sys.argv) > 1:
         with open(sys.argv[1] + '.pip') as pipf:
@@ -141,7 +135,6 @@ if __name__ == '__main__':
             pipeline.train(trainInput, trainTarget, trainOpt)
     else:
         pipeline.train(trainInput, trainTarget, trainOpt)
-
 
     #pipeline.save()
     pass
