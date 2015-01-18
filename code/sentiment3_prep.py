@@ -35,6 +35,36 @@ for i in range(0, len(lines)):
             k = word_dict[words[j]]
             word_freq[k - 1] += 1
 
+# Sort frequency
+sorted_key = sorted(range(len(word_freq)), key=lambda k: word_freq[k], reverse=True)
+
+with open('../data/sentiment3/word_freq.txt', 'w+') as f:
+    for k in sorted_key:
+        f.write('%s, %d\n' % (word_array[k], word_freq[k]))
+
+# Replace low frequency words as unk_
+key = 1
+word_dict_unk = {}
+word_array_unk = []
+lowest_freq = 5
+unknown = 'unk_'
+count = 0
+for k in sorted_key:
+    count += 1
+    if word_freq[k] < lowest_freq:
+        break
+word_dict_unk[unknown] = count
+for i in range(0, len(lines)):
+    words = lines[i].split(' ')
+    for j in range(0, len(words) - 1):
+        word = words[j]
+        if not word_dict_unk.has_key(word):
+            if word_freq[word_dict[word] - 1] >= lowest_freq:
+                word_dict_unk[word] = key
+                key += 1
+                word_array_unk.append(word)
+word_array_unk.append(unknown)
+
 input_ = np.zeros((len(lines), line_max), int)
 target_ = np.zeros((len(lines), 1), int)
 count = 0
@@ -48,8 +78,12 @@ for i in range(0, len(lines)):
 
     # Last word is \n.
     for j in range(0, len(words) - 1):
-        input_[count, j] = word_dict[words[j]]
+        word = words[j]
+        if word_dict_unk.has_key(word):
+            input_[count, j] = word_dict_unk[word]
+        else:
+            input_[count, j] = word_dict_unk[unknown]
     count += 1
 
-data = np.array((word_dict, word_array, word_freq, input_, target_), object)
-np.save('../data/sentiment3/train.npy', data)
+data = np.array((word_dict_unk, word_array_unk, word_freq, input_, target_), object)
+np.save('../data/sentiment3/train-5.npy', data)

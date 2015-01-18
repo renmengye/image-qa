@@ -13,7 +13,7 @@ from util_func import *
 import sys
 
 def getTrainData():
-    data = np.load('../data/sentiment3/train.npy')
+    data = np.load('../data/sentiment3/train5.npy')
     input_ = data[3]
     target_ = data[4]
     return input_, target_
