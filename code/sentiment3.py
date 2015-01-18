@@ -85,7 +85,7 @@ if __name__ == '__main__':
     pipeline.addStage(TimeSelect(
         time=-1))
     pipeline.addStage(Sigmoid(
-        inputDim=300,
+        inputDim=40,
         outputDim=1,
         initRange=0.1,
         initSeed=5),
