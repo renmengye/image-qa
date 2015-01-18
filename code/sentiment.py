@@ -12,49 +12,14 @@ from pipeline import *
 from util_func import *
 import sys
 
-word_dict = {}
 word_array = []
 
 def getTrainData():
-    with open('../data/sentiment/train2.txt') as f:
-        lines = f.readlines()
-        line_max = 0
-        sentence_dict = {}
-        line_numbers = []
-        key = 1
-        for i in range(0, len(lines)):
-            # Remove duplicate records
-            if not sentence_dict.has_key(lines[i]):
-                sentence_dict[lines[i]] = 1
-                line_numbers.append(i)
-                words = lines[i].split(' ')
-                for j in range(1, len(words) - 1):
-                    if len(words) - 1 > line_max:
-                        line_max = len(words) - 1
-                    if not word_dict.has_key(words[j]):
-                        word_dict[words[j]] = key
-                        word_array.append(words[j])
-                        key += 1
-
-        #input_ = np.zeros((len(line_numbers), line_max, len(word_dict)), float32)
-        input_ = np.zeros((len(line_numbers), line_max), int)
-        target_ = np.zeros((len(line_numbers), 1), int)
-        count = 0
-        for i in line_numbers:
-            if lines[i][0] == 'p':
-                target_[count, 0] = 1
-            else:
-                target_[count, 0] = 0
-            words = lines[i].split(' ')
-            for j in range(1, len(words) - 1):
-                input_[count, j - 1] = word_dict[words[j]]
-                #input_[count, j - 1, word_dict[words[j]]] = 1.0
-            count += 1
+    data = np.load('../data/sentiment/train.npy')
+    input_ = data[3]
+    target_ = data[4]
+    word_array = data[1]
     return input_, target_
-
-def getTestData():
-    input_ = 0
-    return input_
 
 if __name__ == '__main__':
     trainInput, trainTarget = getTrainData()          # 2250 records
@@ -84,7 +49,7 @@ if __name__ == '__main__':
         'calcError': True,
         'stopE': 0.01,
         'progress': True,
-        'displayDw': 3
+        'displayDw': 4
     }
 
     if len(sys.argv) <= 1:
@@ -96,14 +61,13 @@ if __name__ == '__main__':
         pipeline.addStage(LinearDict(
             inputDim=np.max(trainInput)+1,
             outputDim=20,
-            initRange=0.1,
+            initRange=1.0,
             initSeed=2),
-            learningRate=0.8)
+            learningRate=0.0)
         pipeline.addStage(TimeFold(
             timespan=timespan))
         pipeline.addStage(Dropout(
-            dropoutRate=0.5
-        ))
+            dropoutRate=0.5))
         pipeline.addStage(LSTM(
             inputDim=20,
             memoryDim=10,
