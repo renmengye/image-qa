@@ -34,7 +34,7 @@ if __name__ == '__main__':
     timespan = trainInput.shape[1]
 
     trainOpt = {
-        'numEpoch': 2000,
+        'numEpoch': 1,
         'heldOutRatio': 0.1,
         'momentum': 0.9,
         'batchSize': 20,
