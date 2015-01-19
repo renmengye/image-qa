@@ -56,7 +56,7 @@ if __name__ == '__main__':
     pipeline.addStage(TimeUnfold())
     pipeline.addStage(LinearDict(
         inputDim=np.max(trainInput)+1,
-        outputDim=30,
+        outputDim=40,
         initRange=0.1,
         initSeed=2),
         learningRate=0.8)
@@ -65,27 +65,27 @@ if __name__ == '__main__':
     pipeline.addStage(Dropout(
         dropoutRate=0.2))
     pipeline.addStage(LSTM(
-        inputDim=30,
-        memoryDim=15,
+        inputDim=40,
+        memoryDim=20,
         initRange=0.1,
         initSeed=3,
         cutOffZeroEnd=True),
         learningRate=0.8,
         weightClip=0.1)
-    # pipeline.addStage(Dropout(
-    #     dropoutRate=0.5))
-    # pipeline.addStage(LSTM(
-    #     inputDim=40,
-    #     memoryDim=10,
-    #     initRange=0.1,
-    #     initSeed=4,
-    #     cutOffZeroEnd=True),
-    #     learningRate=0.8,
-    #     weightClip=0.1)
+    pipeline.addStage(Dropout(
+        dropoutRate=0.5))
+    pipeline.addStage(LSTM(
+        inputDim=20,
+        memoryDim=10,
+        initRange=0.1,
+        initSeed=4,
+        cutOffZeroEnd=True),
+        learningRate=0.8,
+        weightClip=0.1)
     pipeline.addStage(TimeSelect(
         time=-1))
     pipeline.addStage(Sigmoid(
-        inputDim=15,
+        inputDim=10,
         outputDim=1,
         initRange=0.1,
         initSeed=5),
