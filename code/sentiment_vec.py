@@ -95,8 +95,7 @@ if __name__ == '__main__':
         outputDim=10,
         initSeed=2,
         initRange=0.1),
-        learningRate=0.8,
-        outputdEdX=False)
+        learningRate=0.8)
     pipeline.addStage(TimeFold(
         timespan=timespan))
     pipeline.addStage(Dropout(
@@ -108,7 +107,8 @@ if __name__ == '__main__':
         initSeed=3,
         cutOffZeroEnd=True),
         learningRate=0.8,
-        weightClip=0.1)
+        weightClip=0.1,
+        outputdEdX=False)
     # pipeline.addStage(Dropout(
     #     dropoutRate=0.5))
     # pipeline.addStage(LSTM(
