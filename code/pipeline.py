@@ -2,6 +2,7 @@ import numpy as np
 import time
 import pickle
 import sys
+import os
 
 import matplotlib
 matplotlib.use('Agg')
@@ -9,23 +10,29 @@ import matplotlib.pyplot as plt
 plt.ion()
 
 class Pipeline:
-    def __init__(self, name, costFn, decisionFn=None):
+    def __init__(self, name, costFn, outputFolder='', decisionFn=None):
         self.stages = []
         self.name = name + time.strftime("-%Y%m%d-%H%M%S")
         print 'Pipeline ' + self.name
         self.costFn = costFn
         self.decisionFn = decisionFn
+        self.logFilename = os.path.join(outputFolder, self.name + '.csv')
+        self.modelFilename = os.path.join(outputFolder, self.name + '.pipeline')
         pass
 
     def clear(self):
         self.stages = []
         pass
 
-    def addStage(self, stage, learningRate=0.1, weightClip=0.0):
+    def addStage(self, stage, learningRate=0.1, weightClip=0.0, outputdEdX=True):
         self.stages.append(stage)
         stage.lastdW = 0
         stage.learningRate = learningRate
         stage.weightClip = weightClip
+        if len(self.stages) == 1:
+            stage.outputdEdX = False
+        else:
+            stage.outputdEdX = outputdEdX
         pass
 
     def train(self, trainInput, trainTarget, trainOpt):
@@ -46,16 +53,18 @@ class Pipeline:
             T = trainTarget
             VT = validTarget
         numEpoch = trainOpt['numEpoch']
-        #lr = trainOpt['learningRate']
         lrDecay = trainOpt['learningRateDecay']
         mom = trainOpt['momentum']
         calcError = trainOpt['calcError']
-        bat = trainOpt['batchSize']
+        numExPerBat = trainOpt['batchSize']
         N = trainInput.shape[0]
         dMom = (mom - trainOpt['momentumEnd']) / float(numEpoch)
         writeRecord = trainOpt['writeRecord']
+        saveModel = trainOpt['saveModel']
         everyEpoch = trainOpt['everyEpoch']
         plotFigs = trainOpt['plotFigs']
+        printProgress = trainOpt['progress']
+        shuffleTrainData = trainOpt['shuffle']
 
         Etotal = np.zeros(numEpoch, float)
         VEtotal = np.zeros(numEpoch, float)
@@ -74,7 +83,7 @@ class Pipeline:
             total = 0
             progress = 0
 
-            if trainOpt['shuffle']:
+            if shuffleTrainData:
                 shuffle = np.arange(0, X.shape[1])
                 shuffle = np.random.permutation(shuffle)
                 X = X[:, shuffle]
@@ -83,73 +92,55 @@ class Pipeline:
                 else:
                     T = T[shuffle]
 
-            # Stochastic only for now
-            if bat == 1:
-                for n in range(0, N):
-                    # Progress bar
-                    if trainOpt['progress']:
-                        while n/float(N) > progress / float(80):
-                            sys.stdout.write('.')
-                            sys.stdout.flush()
-                            progress += 1
-                    Y_n = self.forwardPass(X[:, n], dropout=trainOpt['dropout'])
-                    if len(T.shape) == 3:
-                        T_n = T[:, n, :]
-                    else:
-                        T_n = T[n, :]
-                    Etmp, dEdY = self.costFn(Y_n, T_n)
-                    E += Etmp / float(N)
-                    if calcError:
-                        rate_, correct_, total_ = self.calcRate(Y_n, T_n)
-                        correct += correct_
-                        total += total_
+            batchStart = 0
+            while batchStart < N:
+                # Progress bar
+                if printProgress:
+                    while batchStart/float(N) > progress / float(80):
+                        sys.stdout.write('.')
+                        sys.stdout.flush()
+                        progress += 1
 
-                    for stage in reversed(self.stages):
-                        dEdW, dEdY = stage.backPropagate(dEdY,
-                                                         outputdEdX=(stage!=self.stages[0]))
-                        if stage.weightClip > 0.0:
-                            stage.dEdWnorm = np.sqrt(np.sum(np.power(dEdW, 2)))
-                            if stage.dEdWnorm > stage.weightClip:
-                                dEdW = dEdW / stage.dEdWnorm * stage.weightClip
+                # Batch info
+                batchEnd = min(N, batchStart + numExPerBat)
+                numEx = batchEnd - batchStart
+
+                # Forward
+                Y_bat = self.forwardPass(X[:, batchStart:batchEnd], dropout=True)
+                if len(T.shape) == 3:
+                    T_bat = T[:, batchStart:batchEnd, :]
+                else:
+                    T_bat = T[batchStart:batchEnd, :]
+
+                # Loss
+                Etmp, dEdY = self.costFn(Y_bat, T_bat)
+                E += np.sum(Etmp) * numEx / float(N)
+
+                # Backpropagate
+                for stage in reversed(self.stages):
+                    dEdW, dEdY = stage.backPropagate(dEdY, outputdEdX=stage.outputdEdX)
+                    if stage.weightClip > 0.0:
+                        stage.dEdWnorm = np.sqrt(np.sum(np.power(dEdW, 2)))
+                        if stage.dEdWnorm > stage.weightClip:
+                            dEdW = dEdW / stage.dEdWnorm * stage.weightClip
+                    if stage.learningRate > 0.0:
                         stage.lastdW = -stage.learningRate * dEdW + mom * stage.lastdW
                         stage.W = stage.W + stage.lastdW
-            else:
-                batchStart = 0
-                while batchStart < N:
-                    # Progress bar
-                    if trainOpt['progress']:
-                        while batchStart/float(N) > progress / float(80):
-                            sys.stdout.write('.')
-                            sys.stdout.flush()
-                            progress += 1
-                    batchEnd = min(N, batchStart + bat)
-                    numEx = batchEnd - batchStart
-                    Y_bat = self.forwardPass(X[:, batchStart:batchEnd], dropout=trainOpt['dropout'])
-                    if len(T.shape) == 3:
-                        T_bat = T[:, batchStart:batchEnd, :]
-                    else:
-                        T_bat = T[batchStart:batchEnd, :]
-                    Etmp, dEdY = self.costFn(Y_bat, T_bat)
-                    E += np.sum(Etmp) * numEx / float(N)
+                    if not stage.outputdEdX:
+                        break
 
-                    for stage in reversed(self.stages):
-                        dEdW, dEdY = stage.backPropagate(dEdY,
-                                                        outputdEdX=(stage!=self.stages[0]))
-                        if stage.weightClip > 0.0:
-                            stage.dEdWnorm = np.sqrt(np.sum(np.power(dEdW, 2)))
-                            if stage.dEdWnorm > stage.weightClip:
-                                dEdW = dEdW / stage.dEdWnorm * stage.weightClip
-                        stage.lastdW = -stage.learningRate * dEdW + mom * stage.lastdW
-                        stage.W = stage.W + stage.lastdW
+                # Prediction error
+                if calcError:
+                    rate_, correct_, total_ = self.calcRate(Y_bat, T_bat)
+                    correct += correct_
+                    total += total_
 
-                    if calcError:
-                        rate_, correct_, total_ = self.calcRate(Y_bat, T_bat)
-                        correct += correct_
-                        total += total_
-                    batchStart += bat
+                batchStart += numExPerBat
 
-            if trainOpt['progress']:
+            # Progress bar new line
+            if printProgress:
                 print
+
             # Store train statistics
             if calcError:
                 rate = correct / float(total)
@@ -166,14 +157,11 @@ class Pipeline:
                     Vrate, correct, total = self.calcRate(VY, VT)
                     VRtotal[epoch] = 1 - Vrate
 
-            # Adjust learning rate
-            #lr = lr * lrDecay
+            # Adjust momentum
             mom -= dMom
 
             # Print statistics
             timeElapsed = time.time() - startTime
-            # stats = 'EP: %4d E: %.4f R: %.4f VE: %.4f VR: %.4f T:%4d' % \
-            #         (epoch, E, rate, VE, Vrate, timeElapsed)
             if trainOpt.has_key('displayDw'):
                 stats = 'EP: %4d E: %.4f R: %.4f VE: %.4f VR: %.4f T:%4d DW:%.4f' % \
                         (epoch, E, rate, VE, Vrate, timeElapsed, self.stages[trainOpt['displayDw']].dEdWnorm)
@@ -181,16 +169,15 @@ class Pipeline:
                 stats = 'EP: %4d E: %.4f R: %.4f VE: %.4f VR: %.4f T:%4d' % \
                         (epoch, E, rate, VE, Vrate, timeElapsed)
 
-            stats2 = '%d,%.4f,%.4f,%.4f,%.4f' % \
+            statsCsv = '%d,%.4f,%.4f,%.4f,%.4f' % \
                     (epoch, E, rate, VE, Vrate)
             print stats
-            if writeRecord:
-                if everyEpoch:
-                    with open(self.name + '.csv', 'a+') as f:
-                        f.write('%s\n' % stats2)
+            if writeRecord and everyEpoch:
+                with open(self.logFilename, 'a+') as f:
+                    f.write('%s\n' % statsCsv)
 
             # Save pipeline
-            if everyEpoch or epoch == numEpoch-1:
+            if saveModel and (everyEpoch or epoch == numEpoch - 1):
                 self.save()
 
             # Check stopping criterion
@@ -201,8 +188,8 @@ class Pipeline:
             if plotFigs and (everyEpoch or epoch == numEpoch-1):
                 plt.figure(1);
                 plt.clf()
-                plt.plot(np.arange(epoch+1), Etotal[0:epoch+1], 'b-x')
-                plt.plot(np.arange(epoch+1), VEtotal[0:epoch+1], 'g-o')
+                plt.plot(np.arange(epoch + 1), Etotal[0 : epoch + 1], 'b-x')
+                plt.plot(np.arange(epoch + 1), VEtotal[0 : epoch + 1], 'g-o')
                 plt.legend(['Train', 'Valid'])
                 plt.xlabel('Epoch')
                 plt.ylabel('Loss')
@@ -213,8 +200,8 @@ class Pipeline:
                 if calcError:
                     plt.figure(2);
                     plt.clf()
-                    plt.plot(np.arange(epoch+1), Rtotal[0:epoch+1], 'b-x')
-                    plt.plot(np.arange(epoch+1), VRtotal[0:epoch+1], 'g-o')
+                    plt.plot(np.arange(epoch + 1), Rtotal[0 : epoch + 1], 'b-x')
+                    plt.plot(np.arange(epoch + 1), VRtotal[0 : epoch + 1], 'g-o')
                     plt.legend(['Train', 'Valid'])
                     plt.xlabel('Epoch')
                     plt.ylabel('Prediction Error')
@@ -222,9 +209,8 @@ class Pipeline:
                     plt.draw()
                     plt.savefig(self.name + '_err.png')
 
-
         if writeRecord and not everyEpoch:
-            with open(self.name + '.csv', 'w+') as f:
+            with open(self.logFilename, 'w+') as f:
                 for epoch in range(0, numEpoch):
                     stats2 = '%d,%.4f,%.4f,%.4f,%.4f' % \
                             (epoch,
@@ -275,7 +261,7 @@ class Pipeline:
 
     def save(self, filename=None):
         if filename is None:
-            filename = self.name + '.pip'
+            filename = self.modelFilename
         with open(filename, 'w') as f:
             pickle.dump(self, f)
         pass

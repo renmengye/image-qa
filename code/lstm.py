@@ -169,8 +169,8 @@ class LSTM:
         Wxo = Wo[:, 0 : self.inputDim]
         Wyo = Wo[:, self.inputDim : self.inputDim + self.memoryDim]
         Wco = Wo[:, self.inputDim + self.memoryDim : self.inputDim + self.memoryDim + self.memoryDim]
-        Wy = np.concatenate((Wyi, Wyf, Wyc, Wyo), axis=0)
-        Wc2 = np.concatenate((Wci, Wcf), axis=0)
+        # Wy = np.concatenate((Wyi, Wyf, Wyc, Wyo), axis=0)
+        # Wc2 = np.concatenate((Wci, Wcf), axis=0)
 
         # Calculate dEdW
         # dY_ti__dW_kl -> (t, k, l, j)
@@ -192,22 +192,22 @@ class LSTM:
             states2 = np.concatenate((X[t, :], Yt1, np.ones(1, float)))
             states3 = np.concatenate((X[t, :], Yt1, C[t, :], np.ones(1, float)))
 
-            dGdYdW = np.inner(dYdW[t-1, :, :, :], Wy)
-            dGdCdW = np.inner(dCdW[t-1, :, :, :], Wc2)
-            # dGi_i__dW_kl = np.inner(dYdW[t-1, :, :, :], Wyi) + \
-            #                np.inner(dCdW[t-1, :, :, :], Wci)
-            dGi_i__dW_kl = dGdYdW[:, :, 0 : self.memoryDim] + \
-                           dGdCdW[:, :, 0 : self.memoryDim]
+            # dGdYdW = np.inner(dYdW[t-1, :, :, :], Wy)
+            # dGdCdW = np.inner(dCdW[t-1, :, :, :], Wc2)
+            dGi_i__dW_kl = np.inner(dYdW[t-1, :, :, :], Wyi) + \
+                           np.inner(dCdW[t-1, :, :, :], Wci)
+            # dGi_i__dW_kl = dGdYdW[:, :, 0 : self.memoryDim] + \
+            #                dGdCdW[:, :, 0 : self.memoryDim]
             dGi_i__dW_kl += np.eye(self.memoryDim).reshape(self.memoryDim, 1, self.memoryDim) * \
                             np.concatenate((
                             states1.reshape(1, states1.size, 1),
                             np.zeros((1, states1.size + states2.size + states3.size, 1), float)),
                             axis=1)
             dGi_i__dW_kl *= Gi[t, :] * (1 - Gi[t, :])
-            # dGf_i__dW_kl = np.inner(dYdW[t-1, :, :, :], Wyf) + \
-            #                np.inner(dCdW[t-1, :, :, :], Wcf)
-            dGf_i__dW_kl = dGdYdW[:, :, self.memoryDim : 2 * self.memoryDim] + \
-                           dGdCdW[:, :, self.memoryDim : 2 * self.memoryDim]
+            dGf_i__dW_kl = np.inner(dYdW[t-1, :, :, :], Wyf) + \
+                           np.inner(dCdW[t-1, :, :, :], Wcf)
+            # dGf_i__dW_kl = dGdYdW[:, :, self.memoryDim : 2 * self.memoryDim] + \
+            #                dGdCdW[:, :, self.memoryDim : 2 * self.memoryDim]
             dGf_i__dW_kl += np.eye(self.memoryDim).reshape(self.memoryDim, 1, self.memoryDim) * \
                             np.concatenate((
                             np.zeros((1, states1.size, 1), float),
@@ -215,8 +215,8 @@ class LSTM:
                             np.zeros((1, states2.size + states3.size, 1), float)),
                             axis=1)
             dGf_i__dW_kl *= Gf[t, :] * (1 - Gf[t, :])
-            # dZ_i__dW_kl = np.inner(dYdW[t-1, :, :, :], Wyc)
-            dZ_i__dW_kl = dGdYdW[:, :, 2 * self.memoryDim : 3 * self.memoryDim]
+            dZ_i__dW_kl = np.inner(dYdW[t-1, :, :, :], Wyc)
+            # dZ_i__dW_kl = dGdYdW[:, :, 2 * self.memoryDim : 3 * self.memoryDim]
             dZ_i__dW_kl += np.eye(self.memoryDim).reshape(self.memoryDim, 1, self.memoryDim) * \
                            np.concatenate((
                            np.zeros((1, states1.size * 2, 1), float),
@@ -228,10 +228,10 @@ class LSTM:
                                Gf[t, :] * dCdW[t-1, :, :, :] + \
                                dGi_i__dW_kl * Z[t, :] + \
                                Gi[t, :] * dZ_i__dW_kl
-            # dGo_i__dW_kl = np.inner(dYdW[t-1, :, :, :], Wyo) + \
-            #                np.inner(dCdW[t, :, :, :], Wco)
-            dGo_i__dW_kl = dGdYdW[:, :, 3 * self.memoryDim : 4 * self.memoryDim] + \
+            dGo_i__dW_kl = np.inner(dYdW[t-1, :, :, :], Wyo) + \
                            np.inner(dCdW[t, :, :, :], Wco)
+            # dGo_i__dW_kl = dGdYdW[:, :, 3 * self.memoryDim : 4 * self.memoryDim] + \
+            #                np.inner(dCdW[t, :, :, :], Wco)
             dGo_i__dW_kl += np.eye(self.memoryDim).reshape(self.memoryDim, 1, self.memoryDim) * \
                             np.concatenate((
                             np.zeros((1, states1.size * 2 + states2.size, 1), float),
@@ -260,33 +260,33 @@ class LSTM:
                 else:
                     Ct1 = C[t-1, :]
 
-                dGdYdX = np.inner(dYdX[t-1, :, :, :], Wy)
-                dGdCdX = np.inner(dCdX[t-1, :, :, :], Wc2)
+                # dGdYdX = np.inner(dYdX[t-1, :, :, :], Wy)
+                # dGdCdX = np.inner(dCdX[t-1, :, :, :], Wc2)
 
-                # dGi_i__dX_tj = np.inner(dYdX[t-1, :, :, :], Wyi) + \
-                #                np.inner(dCdX[t-1, :, :, :], Wci)
-                dGi_i__dX_tj = dGdYdX[:, :, 0 : self.memoryDim] + \
-                               dGdCdX[:, :, 0 : self.memoryDim]
+                dGi_i__dX_tj = np.inner(dYdX[t-1, :, :, :], Wyi) + \
+                               np.inner(dCdX[t-1, :, :, :], Wci)
+                # dGi_i__dX_tj = dGdYdX[:, :, 0 : self.memoryDim] + \
+                #                dGdCdX[:, :, 0 : self.memoryDim]
                 dGi_i__dX_tj[t, :, :] += np.transpose(Wxi)
                 dGi_i__dX_tj *= Gi[t, :] * (1 - Gi[t, :])
-                # dGf_i__dX_tj = np.inner(dYdX[t-1, :, :, :], Wyf) + \
-                #                np.inner(dCdX[t-1, :, :, :], Wcf)
-                dGf_i__dX_tj = dGdYdX[:, :, self.memoryDim : 2 * self.memoryDim] + \
-                               dGdCdX[:, :, self.memoryDim : 2 * self.memoryDim]
+                dGf_i__dX_tj = np.inner(dYdX[t-1, :, :, :], Wyf) + \
+                               np.inner(dCdX[t-1, :, :, :], Wcf)
+                # dGf_i__dX_tj = dGdYdX[:, :, self.memoryDim : 2 * self.memoryDim] + \
+                #                dGdCdX[:, :, self.memoryDim : 2 * self.memoryDim]
                 dGf_i__dX_tj[t, :, :] += np.transpose(Wxf)
                 dGf_i__dX_tj *= Gf[t, :] * (1 - Gf[t, :])
-                # dZ_i__dX_tj = np.inner(dYdX[t-1, :, :, :], Wyc)
-                dZ_i__dX_tj = dGdYdX[:, :, 2 * self.memoryDim : 3 * self.memoryDim]
+                dZ_i__dX_tj = np.inner(dYdX[t-1, :, :, :], Wyc)
+                # dZ_i__dX_tj = dGdYdX[:, :, 2 * self.memoryDim : 3 * self.memoryDim]
                 dZ_i__dX_tj[t, :, :] += np.transpose(Wxc)
                 dZ_i__dX_tj *= 1 - np.power(Z[t, :], 2)
                 dCdX[t, :, :, :] = dGf_i__dX_tj * Ct1 + \
                                    Gf[t, :] * dCdX[t-1, :, :, :] + \
                                    dGi_i__dX_tj * Z[t, :] + \
                                    Gi[t, :] * dZ_i__dX_tj
-                # dGo_i__dX_tj = np.inner(dYdX[t-1, :, :, :], Wyo) + \
-                #                np.inner(dCdX[t, :, :, :], Wco)
-                dGo_i__dX_tj = dGdYdX[:, :, 3 * self.memoryDim : 4 * self.memoryDim] + \
+                dGo_i__dX_tj = np.inner(dYdX[t-1, :, :, :], Wyo) + \
                                np.inner(dCdX[t, :, :, :], Wco)
+                # dGo_i__dX_tj = dGdYdX[:, :, 3 * self.memoryDim : 4 * self.memoryDim] + \
+                #                np.inner(dCdX[t, :, :, :], Wco)
                 dGo_i__dX_tj[t, :, :] += np.transpose(Wxo)
                 dGo_i__dX_tj *= Go[t, :] * (1 - Go[t, :])
 
