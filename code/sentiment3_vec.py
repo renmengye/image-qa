@@ -49,6 +49,7 @@ if __name__ == '__main__':
         'shuffle': True,
         'needValid': True,
         'writeRecord': True,
+        'saveModel': True,
         'plotFigs': True,
         'everyEpoch': True,
         'calcError': True,
