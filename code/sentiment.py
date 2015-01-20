@@ -80,9 +80,9 @@ if __name__ == '__main__':
     pipeline.addStage(LinearDict(
         inputDim=np.max(trainInput)+1,
         outputDim=40,
-        initRange=1.0,
+        initRange=0.1,
         initSeed=2),
-        learningRate=0.0)
+        learningRate=0.8)
     pipeline.addStage(TimeFold(
         timespan=timespan))
     pipeline.addStage(Dropout(
@@ -101,7 +101,7 @@ if __name__ == '__main__':
         inputDim=20,
         memoryDim=10,
         initRange=0.1,
-        initSeed=3,
+        initSeed=4,
         cutOffZeroEnd=True),
         learningRate=0.8,
         weightClip=0.1)
@@ -111,7 +111,7 @@ if __name__ == '__main__':
         inputDim=10,
         outputDim=1,
         initRange=0.1,
-        initSeed=4),
+        initSeed=5),
         learningRate=0.01)
     pipeline.train(trainInput, trainTarget, trainOpt)
 
