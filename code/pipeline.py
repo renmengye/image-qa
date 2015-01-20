@@ -38,10 +38,12 @@ class Pipeline:
         pass
 
     def train(self, trainInput, trainTarget, trainOpt):
-        needValid =  trainOpt['needValid']
+        needValid =  trainOpt['needValid'] if trainOpt.has_key('needValid') else False
+        xvalidNo = trainOpt['xvalidNo'] if trainOpt.has_key('xvalidNo') else 0
+        heldOutRatio = trainOpt['heldOutRatio'] if trainOpt.has_key('heldOutRatio') else 0.1
         if needValid:
             trainInput, trainTarget, validInput, validTarget = \
-                self.splitData(trainInput, trainTarget, trainOpt['heldOutRatio'])
+                self.splitData(trainInput, trainTarget, heldOutRatio, xvalidNo)
         if len(trainInput.shape) == 3:
             X = trainInput.transpose((1, 0, 2))
             VX = validInput.transpose((1, 0, 2))
@@ -275,10 +277,15 @@ class Pipeline:
         return pipeline
 
     @staticmethod
-    def splitData(trainInput, trainTarget, heldOutRatio):
+    def splitData(trainInput, trainTarget, heldOutRatio, validNumber):
         s = np.round(trainInput.shape[0] * heldOutRatio)
-        validInput = trainInput[0:s]
-        validTarget = trainTarget[0:s]
-        trainInput = trainInput[s:]
-        trainTarget = trainTarget[s:]
+        start = s * validNumber
+        validInput = trainInput[start : start + s]
+        validTarget = trainTarget[start : start + s]
+        if validNumber == 0:
+            trainInput = trainInput[s:]
+            trainTarget = trainTarget[s:]
+        else:
+            trainInput = np.concatenate((trainInput[0:start], trainInput[s:]))
+            trainTarget = np.concatenate((trainTarget[0:start], trainTarget[s:]))
         return trainInput, trainTarget, validInput, validTarget

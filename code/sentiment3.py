@@ -52,7 +52,8 @@ if __name__ == '__main__':
     pipeline = Pipeline(
         name='sentiment3',
         costFn=crossEntOne,
-        decisionFn=hardLimit)
+        decisionFn=hardLimit,
+        outputFolder='../results')
     pipeline.addStage(TimeUnfold())
     pipeline.addStage(LinearDict(
         inputDim=np.max(trainInput)+1,

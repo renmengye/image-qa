@@ -11,6 +11,7 @@ from linear_dict import *
 from pipeline import *
 from util_func import *
 import sys
+import tsne
 
 word_array = []
 
@@ -22,33 +23,35 @@ def getTrainData():
     word_array = data[1]
     return input_, target_
 
-def getWordEmbedding(initSeed, initRange):
+def getWordEmbedding(initSeed, initRange, pcaDim=0):
     np.random.seed(initSeed)
     weights = np.load('../data/sentiment/vocabs-vec.npy')
     for i in range(weights.shape[0]):
         if weights[i, 0] == 0.0:
             weights[i, :] = np.random.rand(weights.shape[1]) * initRange - initRange / 2.0
-    return weights
+    if pcaDim > 0:
+        weights = tsne.pca(weights, pcaDim)
+    return weights.transpose()
 
-def evaluate(pipelineFilename, input_):
+def evaluate(pipeline, input_):
     global word_array
-    with open(pipelineFilename) as pipf:
-        pipeline = pickle.load(pipf)
-        output = pipeline.forwardPass(input_.transpose((1, 0, 2)), dropout=False)
-        with open('../results/sentiment_result.txt', 'w+') as f:
-            for n in range(output.shape[0]):
-                sentence = '%d ' % hardLimit(output[n])
-                for t in range(input_[n].shape[0]):
-                    if input_[n, t] == 0 or input_[n, t] == '\n':
-                        break
-                    sentence += word_array[trainInput[n, t] - 1] + ' '
-                f.write(sentence + '\n')
+    output = pipeline.forwardPass(input_.transpose((1, 0, 2)), dropout=False)
+    with open('../results/sentiment_result.txt', 'w+') as f:
+        for n in range(output.shape[0]):
+            sentence = '%d ' % hardLimit(output[n])
+            for t in range(input_[n].shape[0]):
+                if input_[n, t] == 0 or input_[n, t] == '\n':
+                    break
+                sentence += word_array[trainInput[n, t] - 1] + ' '
+            f.write(sentence + '\n')
 
 if __name__ == '__main__':
     trainInput, trainTarget = getTrainData()          # 2250 records
     np.random.seed(1)
     subset = np.arange(0, 129 * 2)                    # 522 records, 129 positive
-    subset = np.random.permutation(subset)
+
+    if len(sys.argv) <= 1:
+        subset = np.random.permutation(subset)
     trainInput = trainInput[subset]
     trainInput = trainInput.reshape(trainInput.shape[0], trainInput.shape[1], 1)
     trainTarget = trainTarget[subset]
@@ -57,18 +60,19 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         with open(sys.argv[1]) as pipf:
             pipeline = pickle.load(pipf)
-        evaluate(pipeline, trainInput, trainTarget)
+        evaluate(pipeline, trainInput)
         exit()
 
     trainOpt = {
         'numEpoch': 2000,
+        'needValid': True,
         'heldOutRatio': 0.1,
+        'xvalidNo': 0,
         'momentum': 0.9,
         'batchSize': 20,
         'learningRateDecay': 1.0,
         'momentumEnd': 0.9,
         'shuffle': True,
-        'needValid': True,
         'writeRecord': True,
         'saveModel': True,
         'plotFigs': True,
@@ -76,7 +80,7 @@ if __name__ == '__main__':
         'calcError': True,
         'stopE': 0.01,
         'progress': True,
-        'displayDw': 5
+        'displayDw': 3
     }
 
     pipeline = Pipeline(
@@ -87,19 +91,23 @@ if __name__ == '__main__':
     pipeline.addStage(TimeUnfold())
     pipeline.addStage(LinearDict(
         inputDim=np.max(trainInput)+1,
-        outputDim=300,
-        W=getWordEmbedding(initSeed=2, initRange=0.42)),       # std ~= 0.12. U~[0.21, 0.21].
-        learningRate=0.0)
-    pipeline.addStage(LinearMap(
-        inputDim=300,
         outputDim=10,
-        initSeed=2,
-        initRange=0.1),
-        learningRate=0.8)
+        needInit=False,
+        W=getWordEmbedding(
+            initSeed=2,
+            initRange=0.42,
+            pcaDim=10)),       # std ~= 0.12. U~[0.21, 0.21].
+        learningRate=0.0)
+    # pipeline.addStage(LinearMap(
+    #     inputDim=300,
+    #     outputDim=10,
+    #     initSeed=2,
+    #     initRange=0.1),
+    #     learningRate=0.8)
     pipeline.addStage(TimeFold(
         timespan=timespan))
-    pipeline.addStage(Dropout(
-        dropoutRate=0.2))
+    # pipeline.addStage(Dropout(
+    #     dropoutRate=0.2))
     pipeline.addStage(LSTM(
         inputDim=10,
         memoryDim=10,

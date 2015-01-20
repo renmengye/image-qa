@@ -11,12 +11,13 @@ class LinearDict:
         self.inputDim = inputDim
         self.outputDim = outputDim
 
+        # Zeroth dimension of the weight matrix is reserved for empty word at the end of a sentence.
         if needInit:
             np.random.seed(initSeed)
-            self.W = np.random.rand(outputDim, inputDim,) * initRange - initRange / 2.0
+            self.W = np.random.rand(outputDim, inputDim) * initRange - initRange / 2.0
             self.W[:, 0] = 0
         else:
-            self.W = W
+            self.W = np.concatenate((np.zeros((outputDim, 1), float), W), axis=1)
         self.X = 0
         self.Y = 0
         pass

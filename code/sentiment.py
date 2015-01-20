@@ -22,19 +22,17 @@ def getTrainData():
     word_array = data[1]
     return input_, target_
 
-def evaluate(pipelineFilename, input_):
+def evaluate(pipeline, input_):
     global word_array
-    with open(pipelineFilename) as pipf:
-        pipeline = pickle.load(pipf)
-        output = pipeline.forwardPass(input_.transpose((1, 0, 2)), dropout=False)
-        with open('../results/sentiment_result.txt', 'w+') as f:
-            for n in range(output.shape[0]):
-                sentence = '%d ' % hardLimit(output[n])
-                for t in range(input_[n].shape[0]):
-                    if input_[n, t] == 0 or input_[n, t] == '\n':
-                        break
-                    sentence += word_array[trainInput[n, t] - 1] + ' '
-                f.write(sentence + '\n')
+    output = pipeline.forwardPass(input_.transpose((1, 0, 2)), dropout=False)
+    with open('../results/sentiment_result.txt', 'w+') as f:
+        for n in range(output.shape[0]):
+            sentence = '%d ' % hardLimit(output[n])
+            for t in range(input_[n].shape[0]):
+                if input_[n, t] == 0 or input_[n, t] == '\n':
+                    break
+                sentence += word_array[trainInput[n, t] - 1] + ' '
+            f.write(sentence + '\n')
 
 if __name__ == '__main__':
     trainInput, trainTarget = getTrainData()          # 2250 records
@@ -49,7 +47,7 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         with open(sys.argv[1]) as pipf:
             pipeline = pickle.load(pipf)
-        evaluate(pipeline, trainInput, trainTarget)
+        evaluate(pipeline, trainInput)
         exit()
 
     trainOpt = {

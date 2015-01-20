@@ -11,6 +11,7 @@ from linear_dict import *
 from pipeline import *
 from util_func import *
 import sys
+import tsne
 
 def getTrainData():
     data = np.load('../data/sentiment3/train-5.npy')
@@ -18,13 +19,15 @@ def getTrainData():
     target_ = data[4]
     return input_, target_
 
-def getWordEmbedding(initSeed, initRange):
+def getWordEmbedding(initSeed, initRange, pcaDim=0):
     np.random.seed(initSeed)
     weights = np.load('../data/sentiment3/vocabs-vec.npy')
     for i in range(weights.shape[0]):
         if weights[i, 0] == 0.0:
             weights[i, :] = np.random.rand(weights.shape[1]) * initRange - initRange / 2.0
-    return weights
+    if pcaDim > 0:
+        weights = tsne.pca(weights, pcaDim)
+    return weights.transpose()
 
 if __name__ == '__main__':
     trainInput, trainTarget = getTrainData()          # 8555 records
@@ -55,26 +58,31 @@ if __name__ == '__main__':
         'calcError': True,
         'stopE': 0.01,
         'progress': True,
-        'displayDw': 4
+        'displayDw': 3
     }
 
     pipeline = Pipeline(
         name='sentiment3-vec',
         costFn=crossEntOne,
-        decisionFn=hardLimit)
+        decisionFn=hardLimit,
+        outputFolder='../results')
     pipeline.addStage(TimeUnfold())
     pipeline.addStage(LinearDict(
         inputDim=np.max(trainInput)+1,
-        outputDim=300,
-        W=getWordEmbedding(initSeed=2, initRange=0.42)),       # std ~= 0.12. U~[0.21, 0.21].
+        outputDim=10,
+        needInit=False,
+        W=getWordEmbedding(
+            initSeed=2,
+            initRange=0.42,
+            pcaDim=10)),       # std ~= 0.12. U~[0.21, 0.21].
         learningRate=0.0)
     pipeline.addStage(TimeFold(
         timespan=timespan))
-    pipeline.addStage(Dropout(
-        dropoutRate=0.2))
+    # pipeline.addStage(Dropout(
+    #     dropoutRate=0.2))
     pipeline.addStage(LSTM(
-        inputDim=300,
-        memoryDim=100,
+        inputDim=10,
+        memoryDim=10,
         initRange=0.1,
         initSeed=3,
         cutOffZeroEnd=True),
@@ -94,7 +102,7 @@ if __name__ == '__main__':
     pipeline.addStage(TimeSelect(
         time=-1))
     pipeline.addStage(Sigmoid(
-        inputDim=100,
+        inputDim=10,
         outputDim=1,
         initRange=0.1,
         initSeed=5),
