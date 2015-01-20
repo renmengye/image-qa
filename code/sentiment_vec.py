@@ -76,7 +76,7 @@ if __name__ == '__main__':
         'calcError': True,
         'stopE': 0.01,
         'progress': True,
-        'displayDw': 4
+        'displayDw': 5
     }
 
     pipeline = Pipeline(
