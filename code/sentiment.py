@@ -53,7 +53,7 @@ if __name__ == '__main__':
         exit()
 
     trainOpt = {
-        'numEpoch': 1,
+        'numEpoch': 2000,
         'heldOutRatio': 0.1,
         'momentum': 0.9,
         'batchSize': 20,
@@ -79,12 +79,22 @@ if __name__ == '__main__':
     pipeline.addStage(TimeUnfold())
     pipeline.addStage(LinearDict(
         inputDim=np.max(trainInput)+1,
-        outputDim=20,
+        outputDim=40,
         initRange=1.0,
         initSeed=2),
         learningRate=0.0)
     pipeline.addStage(TimeFold(
         timespan=timespan))
+    pipeline.addStage(Dropout(
+        dropoutRate=0.2))
+    pipeline.addStage(LSTM(
+        inputDim=40,
+        memoryDim=20,
+        initRange=0.1,
+        initSeed=3,
+        cutOffZeroEnd=True),
+        learningRate=0.8,
+        weightClip=0.1)
     pipeline.addStage(Dropout(
         dropoutRate=0.5))
     pipeline.addStage(LSTM(

@@ -59,7 +59,8 @@ if __name__ == '__main__':
         outputDim=40,
         initRange=0.1,
         initSeed=2),
-        learningRate=0.8)
+        learningRate=0.8,
+        outputdEdX=False)
     pipeline.addStage(TimeFold(
         timespan=timespan))
     pipeline.addStage(Dropout(
