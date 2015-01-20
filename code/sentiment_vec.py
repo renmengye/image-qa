@@ -90,32 +90,39 @@ if __name__ == '__main__':
         outputDim=300,
         W=getWordEmbedding(initSeed=2, initRange=0.42)),       # std ~= 0.12. U~[0.21, 0.21].
         learningRate=0.0)
+    pipeline.addStage(LinearMap(
+        inputDim=300,
+        outputDim=10,
+        initSeed=2,
+        initRange=0.1),
+        learningRate=0.8,
+        outputdEdX=False)
     pipeline.addStage(TimeFold(
         timespan=timespan))
     pipeline.addStage(Dropout(
         dropoutRate=0.2))
     pipeline.addStage(LSTM(
-        inputDim=300,
-        memoryDim=100,
+        inputDim=10,
+        memoryDim=10,
         initRange=0.1,
         initSeed=3,
         cutOffZeroEnd=True),
         learningRate=0.8,
         weightClip=0.1)
-    pipeline.addStage(Dropout(
-        dropoutRate=0.5))
-    pipeline.addStage(LSTM(
-        inputDim=100,
-        memoryDim=50,
-        initRange=0.1,
-        initSeed=4,
-        cutOffZeroEnd=True),
-        learningRate=0.8,
-        weightClip=0.1)
+    # pipeline.addStage(Dropout(
+    #     dropoutRate=0.5))
+    # pipeline.addStage(LSTM(
+    #     inputDim=100,
+    #     memoryDim=50,
+    #     initRange=0.1,
+    #     initSeed=4,
+    #     cutOffZeroEnd=True),
+    #     learningRate=0.8,
+    #     weightClip=0.1)
     pipeline.addStage(TimeSelect(
         time=-1))
     pipeline.addStage(Sigmoid(
-        inputDim=50,
+        inputDim=10,
         outputDim=1,
         initRange=0.1,
         initSeed=5),

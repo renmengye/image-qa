@@ -18,6 +18,8 @@ class Pipeline:
         self.decisionFn = decisionFn
         self.logFilename = os.path.join(outputFolder, self.name + '.csv')
         self.modelFilename = os.path.join(outputFolder, self.name + '.pipeline')
+        self.lossFigFilename = os.path.join(outputFolder, self.name + '_loss.png')
+        self.errFigFilename = os.path.join(outputFolder, self.name + '_err.png')
         pass
 
     def clear(self):
@@ -195,7 +197,7 @@ class Pipeline:
                 plt.ylabel('Loss')
                 plt.title('Train/Valid Loss Curve')
                 plt.draw()
-                plt.savefig(self.name + '_loss.png')
+                plt.savefig(self.lossFigFilename)
 
                 if calcError:
                     plt.figure(2);
@@ -207,7 +209,7 @@ class Pipeline:
                     plt.ylabel('Prediction Error')
                     plt.title('Train/Valid Error Curve')
                     plt.draw()
-                    plt.savefig(self.name + '_err.png')
+                    plt.savefig(self.errFigFilename)
 
         if writeRecord and not everyEpoch:
             with open(self.logFilename, 'w+') as f:
