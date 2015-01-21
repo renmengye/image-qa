@@ -194,22 +194,22 @@ class LSTM:
 
             # dGdYdW = np.inner(dYdW[t-1, :, :, :], Wy)
             # dGdCdW = np.inner(dCdW[t-1, :, :, :], Wc2)
-            # dGi_i__dW_kl = np.inner(dYdW[t-1, :, :, :], Wyi) + \
-            #                np.inner(dCdW[t-1, :, :, :], Wci)
+            dGi_i__dW_kl = np.inner(dYdW[t-1, :, :, :], Wyi) + \
+                           np.inner(dCdW[t-1, :, :, :], Wci)
             # dGi_i__dW_kl = dGdYdW[:, :, 0 : self.memoryDim] + \
             #                dGdCdW[:, :, 0 : self.memoryDim]
-            dGi_i__dW_kl = np.zeros((self.W.shape[0], self.W.shape[1], self.memoryDim))
+            # dGi_i__dW_kl = np.zeros((self.W.shape[0], self.W.shape[1], self.memoryDim))
             dGi_i__dW_kl += np.eye(self.memoryDim).reshape(self.memoryDim, 1, self.memoryDim) * \
                             np.concatenate((
                             states1.reshape(1, states1.size, 1),
                             np.zeros((1, states1.size + states2.size + states3.size, 1), float)),
                             axis=1)
             dGi_i__dW_kl *= Gi[t, :] * (1 - Gi[t, :])
-            # dGf_i__dW_kl = np.inner(dYdW[t-1, :, :, :], Wyf) + \
-            #                np.inner(dCdW[t-1, :, :, :], Wcf)
+            dGf_i__dW_kl = np.inner(dYdW[t-1, :, :, :], Wyf) + \
+                           np.inner(dCdW[t-1, :, :, :], Wcf)
             # dGf_i__dW_kl = dGdYdW[:, :, self.memoryDim : 2 * self.memoryDim] + \
             #                dGdCdW[:, :, self.memoryDim : 2 * self.memoryDim]
-            dGf_i__dW_kl = np.zeros((self.W.shape[0], self.W.shape[1], self.memoryDim))
+            # dGf_i__dW_kl = np.zeros((self.W.shape[0], self.W.shape[1], self.memoryDim))
             dGf_i__dW_kl += np.eye(self.memoryDim).reshape(self.memoryDim, 1, self.memoryDim) * \
                             np.concatenate((
                             np.zeros((1, states1.size, 1), float),
@@ -217,9 +217,9 @@ class LSTM:
                             np.zeros((1, states2.size + states3.size, 1), float)),
                             axis=1)
             dGf_i__dW_kl *= Gf[t, :] * (1 - Gf[t, :])
-            #dZ_i__dW_kl = np.inner(dYdW[t-1, :, :, :], Wyc)
+            dZ_i__dW_kl = np.inner(dYdW[t-1, :, :, :], Wyc)
             # dZ_i__dW_kl = dGdYdW[:, :, 2 * self.memoryDim : 3 * self.memoryDim]
-            dZ_i__dW_kl = np.zeros((self.W.shape[0], self.W.shape[1], self.memoryDim))
+            # dZ_i__dW_kl = np.zeros((self.W.shape[0], self.W.shape[1], self.memoryDim))
             dZ_i__dW_kl += np.eye(self.memoryDim).reshape(self.memoryDim, 1, self.memoryDim) * \
                            np.concatenate((
                            np.zeros((1, states1.size * 2, 1), float),
@@ -231,11 +231,11 @@ class LSTM:
                                Gf[t, :] * dCdW[t-1, :, :, :] + \
                                dGi_i__dW_kl * Z[t, :] + \
                                Gi[t, :] * dZ_i__dW_kl
-            # dGo_i__dW_kl = np.inner(dYdW[t-1, :, :, :], Wyo) + \
-            #                np.inner(dCdW[t, :, :, :], Wco)
+            dGo_i__dW_kl = np.inner(dYdW[t-1, :, :, :], Wyo) + \
+                           np.inner(dCdW[t, :, :, :], Wco)
             # dGo_i__dW_kl = dGdYdW[:, :, 3 * self.memoryDim : 4 * self.memoryDim] + \
             #                np.inner(dCdW[t, :, :, :], Wco)
-            dGo_i__dW_kl = np.zeros((self.W.shape[0], self.W.shape[1], self.memoryDim))
+            # dGo_i__dW_kl = np.zeros((self.W.shape[0], self.W.shape[1], self.memoryDim))
             dGo_i__dW_kl += np.eye(self.memoryDim).reshape(self.memoryDim, 1, self.memoryDim) * \
                             np.concatenate((
                             np.zeros((1, states1.size * 2 + states2.size, 1), float),
