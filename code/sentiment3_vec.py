@@ -89,16 +89,16 @@ if __name__ == '__main__':
         learningRate=0.8,
         weightClip=0.1,
         outputdEdX=False)
-    pipeline.addStage(Dropout(
-        dropoutRate=0.5))
-    pipeline.addStage(LSTM(
-        inputDim=10,
-        memoryDim=10,
-        initRange=0.1,
-        initSeed=4,
-        cutOffZeroEnd=True),
-        learningRate=0.8,
-        weightClip=0.1)
+    # pipeline.addStage(Dropout(
+    #     dropoutRate=0.5))
+    # pipeline.addStage(LSTM(
+    #     inputDim=10,
+    #     memoryDim=10,
+    #     initRange=0.1,
+    #     initSeed=4,
+    #     cutOffZeroEnd=True),
+    #     learningRate=0.8,
+    #     weightClip=0.1)
     pipeline.addStage(TimeSelect(
         time=-1))
     pipeline.addStage(Sigmoid(
