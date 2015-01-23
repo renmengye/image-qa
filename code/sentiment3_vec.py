@@ -69,12 +69,12 @@ if __name__ == '__main__':
     pipeline.addStage(TimeUnfold())
     pipeline.addStage(LinearDict(
         inputDim=np.max(trainInput)+1,
-        outputDim=50,
+        outputDim=100,
         needInit=False,
         W=getWordEmbedding(
             initSeed=2,
             initRange=0.42,
-            pcaDim=50)),       # std ~= 0.12. U~[0.21, 0.21].
+            pcaDim=100)),       # std ~= 0.12. U~[0.21, 0.21].
         learningRate=0.0)
     pipeline.addStage(TimeFold(
         timespan=timespan))
