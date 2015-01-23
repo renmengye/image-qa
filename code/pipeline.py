@@ -26,11 +26,13 @@ class Pipeline:
         self.stages = []
         pass
 
-    def addStage(self, stage, learningRate=0.1, weightClip=0.0, outputdEdX=True):
+    def addStage(self, stage, learningRate=0.1, annealConst=0.0, weightClip=0.0, outputdEdX=True):
         self.stages.append(stage)
         stage.lastdW = 0
         stage.learningRate = learningRate
+        stage.currentLearningRate = learningRate
         stage.weightClip = weightClip
+        stage.annealConst = annealConst
         if len(self.stages) == 1:
             stage.outputdEdX = False
         else:
@@ -128,8 +130,10 @@ class Pipeline:
                         if stage.dEdWnorm > stage.weightClip:
                             dEdW = dEdW / stage.dEdWnorm * stage.weightClip
                     if stage.learningRate > 0.0:
-                        stage.lastdW = -stage.learningRate * dEdW + mom * stage.lastdW
+                        stage.lastdW = -stage.currentLearningRate * dEdW + mom * stage.lastdW
                         stage.W = stage.W + stage.lastdW
+
+                    # Stop backpropagate if frozen layers in the front.
                     if not stage.outputdEdX:
                         break
 
@@ -163,6 +167,10 @@ class Pipeline:
 
             # Adjust momentum
             mom -= dMom
+
+            # Anneal learning rate
+            for stage in self.stages:
+                stage.currentLearningRate = stage.learningRate / (1.0 + stage.annealConst * epoch)
 
             # Print statistics
             timeElapsed = time.time() - startTime
