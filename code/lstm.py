@@ -148,9 +148,9 @@ class LSTM:
         Wi, Wf, Wc, Wo = self.sliceWeights(self.inputDim, self.memoryDim, self.W)
 
         for t in range(0, timespan):
+            # Hack: copy the real sentence end to the fixed end
             if self.cutOffZeroEnd and self.needsCutOff(X, t):
-                for t1 in range(t, timespan):
-                    Y[t1, :] = Y[t1 - 1, :]
+                Y[-1, :] = Y[t - 1, :]
                 break
 
             # In forward pass initial stage -1 is empty, equivalent to zero.
@@ -176,7 +176,96 @@ class LSTM:
         Gi = self.Gi
         Gf = self.Gf
         Go = self.Go
-        return self.backPropagate_(dEdY, X, Y, C, Z, Gi, Gf, Go, outputdEdX)
+        return self.backPropagate_new(dEdY, X, Y, C, Z, Gi, Gf, Go, outputdEdX)
+
+    def backPropagate_new(self, dEdY, X, Y, C, Z, Gi, Gf, Go, outputdEdX):
+        timespan = Y.shape[0]
+        Wxi, Wyi, Wci, Wxf, Wyf, Wcf, Wxc, Wyc, Wxo, Wyo, Wco = \
+            self.sliceWeightsSmall(self.inputDim, self.memoryDim, self.W)
+
+        dEdWi = np.zeros((self.memoryDim, self.inputDim + 2 * self.memoryDim + 1), dtype=FLOAT)
+        dEdWf = np.zeros((self.memoryDim, self.inputDim + 2 * self.memoryDim + 1), dtype=FLOAT)
+        dEdWc = np.zeros((self.memoryDim, self.inputDim + self.memoryDim + 1), dtype=FLOAT)
+        dEdWo = np.zeros((self.memoryDim, self.inputDim + 2 * self.memoryDim + 1), dtype=FLOAT)
+
+        # (j -> T, k -> t)
+        dYTdYt = np.ones((self.memoryDim, self.memoryDim), dtype=FLOAT)
+        dYTdCt = np.zeros((self.memoryDim, self.memoryDim), dtype=FLOAT)
+
+        timespan_x = timespan
+        if self.cutOffZeroEnd:
+            for t in range(0, timespan):
+                if self.needsCutOff(X, t):
+                    timespan_x = t
+                    break
+
+        for t in reversed(range(0, timespan_x)):
+            if t == 0:
+                Yt1 = np.zeros(self.memoryDim, dtype=FLOAT)
+                Ct1 = np.zeros(self.memoryDim, dtype=FLOAT)
+            else:
+                Yt1 = Y[t-1]
+                Ct1 = C[t-1]
+
+            states1 = np.concatenate((X[t], Yt1, Ct1, np.ones(1, dtype=FLOAT)))
+            states2 = np.concatenate((X[t], Yt1, np.ones(1, dtype=FLOAT)))
+            states3 = np.concatenate((X[t], Yt1, C[t], np.ones(1, dtype=FLOAT)))
+
+            dEdYT = dEdY[timespan - 1]
+
+            # (k -> t)
+            U = np.tanh(C[t])
+            dU = 1 - np.power(U, 2)
+            dZ = 1 - np.power(Z[t], 2)
+
+            dGi = Gi[t] * (1 - Gi[t])
+            dGf = Gf[t] * (1 - Gf[t])
+            dGo = Go[t] * (1 - Go[t])
+
+            # (k, l)
+            dYtdCt = (Go[t] * dU) * np.eye(self.memoryDim) + \
+                     (U * dGo).reshape((self.memoryDim, 1)) * Wco
+
+            # (T, t)
+            if t == timespan_x - 1:
+                dYTdCt = dYtdCt
+            else:
+                dYTdCt = np.dot(dYTdCt, dCtdCt1) + np.dot(dYTdYt, dYtdCt)
+
+            dYTdGi = dYTdCt * Z[t]
+            dEdGi = np.dot(dEdYT, dYTdGi)
+            dEdWi += np.outer(dEdGi * dGi, states1)
+
+            dYTdGf = dYTdCt * Ct1
+            dEdGf = np.dot(dEdYT, dYTdGf)
+            dEdWf += np.outer(dEdGf * dGf, states1)
+
+            dYTdZ = dYTdCt * Gi[t]
+            dEdZ = np.dot(dEdYT, dYTdZ)
+            dEdWc += np.outer(dEdZ * dZ, states2)
+
+            if t == timespan_x - 1:
+                dYTdGo = U
+                dEdGo = dEdYT * dYTdGo
+            else:
+                dYTdGo = dYTdYt * U
+                dEdGo = np.dot(dEdYT, dYTdGo)
+            dEdWo += np.outer(dEdGo * dGo, states3)
+
+            # (k -> t, l -> t-1)
+            dCtdCt1 = (Ct1 * dGf).reshape((self.memoryDim, 1)) * Wcf + \
+                      Gf[t] * np.eye(self.memoryDim) + \
+                      (Z[t] * dGi).reshape((self.memoryDim, 1)) * Wci
+            dCtdYt1 = (Ct1 * dGf).reshape((self.memoryDim, 1)) * Wyf + \
+                      (Gi[t] * dZ).reshape((self.memoryDim, 1)) * Wyc + \
+                      (Z[t] * dGi).reshape((self.memoryDim, 1)) * Wyi
+            dYtdYt1 = (U * dGo).reshape((self.memoryDim, 1)) * Wyo
+
+            # (j -> T, l -> t-1) = (j -> T, k -> t) * (k -> t, l -> t-1)
+            dYTdYt = np.dot(dYTdYt, dYtdYt1) + np.dot(dYTdCt, dCtdYt1)
+
+        dEdW = np.concatenate((dEdWi, dEdWf, dEdWc, dEdWo), axis=1)
+        return dEdW, 0
 
     def backPropagate_(self, dEdY, X, Y, C, Z, Gi, Gf, Go, outputdEdX):
         timespan = Y.shape[0]
@@ -318,7 +407,7 @@ class LSTM:
         Go = self.Go
         for n in range(0, numEx):
             dEdWtmp, dEdX[:, n, :] = \
-                self.backPropagate_(
+                self.backPropagate_new(
                     dEdY[:, n, :], X[:, n, :], Y[:, n, :],
                     C[:, n, :], Z[:, n, :], Gi[:, n, :],
                     Gf[:, n, :], Go[:, n, :], outputdEdX)
