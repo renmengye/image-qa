@@ -115,10 +115,7 @@ class LSTM:
         self.Go = Go
         self.Xend = Xend
 
-        if self.multiErr:
-            return Y
-        else:
-            return Y[-1]
+        return Y if self.multiErr else Y[-1]
 
     def _forwardPassN(self, X):
         # X[t, n, i] -> t: time, n: example, i: input dimension
@@ -151,10 +148,7 @@ class LSTM:
         self.Gf = Gf
         self.Go = Go
 
-        if self.multiErr:
-            return Y
-        else:
-            return Y[-1]
+        return Y if self.multiErr else Y[-1]
 
     def _forwardPassOne(self, X, reachedEnd):
         timespan = X.shape[0]
@@ -209,12 +203,11 @@ class LSTM:
         Go = self.Go
         Xend = self.Xend
 
-        if self.multiErr:
-            return self._backPropagateOneMultiErr(
-                dEdY, X, Y, C, Z, Gi, Gf, Go, Xend, outputdEdX)
-        else:
-            return self._backPropagateOne(
-                dEdY, X, Y, C, Z, Gi, Gf, Go, Xend, outputdEdX)
+        return self._backPropagateOneMultiErr(
+            dEdY, X, Y, C, Z, Gi, Gf, Go, Xend, outputdEdX) \
+            if self.multiErr else \
+            self._backPropagateOne(
+            dEdY, X, Y, C, Z, Gi, Gf, Go, Xend, outputdEdX)
 
     def _backPropagateN(self, dEdY, outputdEdX):
         numEx = self.X.shape[1]
@@ -229,19 +222,16 @@ class LSTM:
         Go = self.Go
         Xend = self.Xend
         for n in range(0, numEx):
-            if self.multiErr:
-                dEdWtmp, dEdX[:, n] = \
-                    self._backPropagateOneMultiErr(
-                        dEdY[:, n], X[:, n], Y[:, n],
-                        C[:, n], Z[:, n], Gi[:, n],
-                        Gf[:, n], Go[:, n], Xend[n], outputdEdX)
-            else:
-                dEdWtmp, dEdX[:, n] = \
-                    self._backPropagateOne(
-                        dEdY[n], X[:, n], Y[:, n],
-                        C[:, n], Z[:, n], Gi[:, n],
-                        Gf[:, n], Go[:, n], Xend[n], outputdEdX)
-
+            dEdWtmp, dEdX[:, n] = \
+                self._backPropagateOneMultiErr(
+                    dEdY[:, n], X[:, n], Y[:, n],
+                    C[:, n], Z[:, n], Gi[:, n],
+                    Gf[:, n], Go[:, n], Xend[n], outputdEdX) \
+                    if self.multiErr else \
+                self._backPropagateOne(
+                    dEdY[n], X[:, n], Y[:, n],
+                    C[:, n], Z[:, n], Gi[:, n],
+                    Gf[:, n], Go[:, n], Xend[n], outputdEdX)
             dEdW += dEdWtmp
 
         return dEdW, dEdX
@@ -465,6 +455,7 @@ class LSTM:
         Wf = W[:, s1 : s2]
         Wc = W[:, s2 : s3]
         Wo = W[:, s3 : s4]
+        
         return Wi, Wf, Wc, Wo
 
     @staticmethod
