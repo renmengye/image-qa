@@ -89,6 +89,7 @@ if __name__ == '__main__':
         multiErr=True),
         learningRate=0.8,
         gradientClip=0.1,
+        annealConst=0.01,
         outputdEdX=False)
     pipeline.addStage(Dropout(
         dropoutRate=0.5))
@@ -100,12 +101,14 @@ if __name__ == '__main__':
         cutOffZeroEnd=True,
         multiErr=False),
         learningRate=0.8,
-        gradientClip=0.1)
+        gradientClip=0.1,
+        annealConst=0.01)
     pipeline.addStage(Sigmoid(
         inputDim=50,
         outputDim=1,
         initRange=0.1,
         initSeed=5),
-        learningRate=0.01)
+        learningRate=0.01,
+        annealConst=0.01)
 
     pipeline.train(trainInput, trainTarget, trainOpt)

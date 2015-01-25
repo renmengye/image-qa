@@ -91,41 +91,42 @@ if __name__ == '__main__':
     pipeline.addStage(TimeUnfold())
     pipeline.addStage(LinearDict(
         inputDim=np.max(trainInput)+1,
-        outputDim=10,
+        outputDim=30,
         needInit=False,
         W=getWordEmbedding(
             initSeed=2,
             initRange=0.42,
-            pcaDim=10)),       # std ~= 0.12. U~[0.21, 0.21].
+            pcaDim=30)),       # std ~= 0.12. U~[0.21, 0.21].
         learningRate=0.0)
     pipeline.addStage(TimeFold(
         timespan=timespan))
     pipeline.addStage(Dropout(
         dropoutRate=0.2))
     pipeline.addStage(LSTM(
-        inputDim=10,
-        memoryDim=10,
+        inputDim=30,
+        memoryDim=30,
         initRange=0.1,
         initSeed=3,
         cutOffZeroEnd=True,
         multiErr=True),
-        learningRate=0.8,
+        learningRate=1.0,
         annealConst=0.01,
         gradientClip=0.1,
         outputdEdX=False)
     pipeline.addStage(Dropout(
         dropoutRate=0.5))
     pipeline.addStage(LSTM(
-        inputDim=10,
-        memoryDim=10,
+        inputDim=30,
+        memoryDim=30,
         initRange=0.1,
         initSeed=4,
         cutOffZeroEnd=True,
         multiErr=False),
         learningRate=0.8,
+        annealConst=0.01,
         gradientClip=0.1)
     pipeline.addStage(Sigmoid(
-        inputDim=10,
+        inputDim=30,
         outputDim=1,
         initRange=0.1,
         initSeed=5),
