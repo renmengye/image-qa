@@ -85,7 +85,8 @@ if __name__ == '__main__':
         memoryDim=150,
         initRange=0.1,
         initSeed=3,
-        cutOffZeroEnd=True),
+        cutOffZeroEnd=True,
+        BPTT=True),
         learningRate=0.8,
         weightClip=0.1,
         outputdEdX=False)
