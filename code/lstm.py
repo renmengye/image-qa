@@ -58,11 +58,10 @@ class LSTM:
         self.Go = 0
         pass
 
-    def chkgrd(self):
+    def _chkgrd(self):
         X = np.array([[[0.1, 1]], [[1, 0.5]], [[0.2, -0.2]], [[1, 0.3]], [[0.3, -0.2]], [[1, -1]], [[-0.1, 2.0]], [[1, -2]]])
-        T = np.array([[[0]], [[0]], [[0]], [[1]], [[1]], [[1]], [[0]], [[1]]])
+        T = np.array([[[0]], [[0]], [[1.0]], [[1]], [[1]], [[1]], [[0.0]], [[1.0]]])
         Y = self.forwardPass(X)
-        dEdY = np.zeros(Y.shape)
         E, dEdY = simpleSumDeriv(T, Y)
         dEdW, dEdX = self.backPropagate(dEdY)
         eps = 1e-3
@@ -101,7 +100,11 @@ class LSTM:
         if len(X.shape) == 3:
             return self._forwardPassN(X)
 
-        Y, C, Z, Gi, Gf, Go, Xend = self._forwardPassOne(X)
+        if self.cutOffZeroEnd:
+            reachedEnd = np.sum(X, axis=-1) == 0.0
+        else:
+            reachedEnd = 0
+        Y, C, Z, Gi, Gf, Go, Xend = self._forwardPassOne(X, reachedEnd)
 
         self.X = X
         self.Y = Y
@@ -111,7 +114,11 @@ class LSTM:
         self.Gf = Gf
         self.Go = Go
         self.Xend = Xend
-        return Y
+
+        if self.multiErr:
+            return Y
+        else:
+            return Y[-1]
 
     def _forwardPassN(self, X):
         # X[t, n, i] -> t: time, n: example, i: input dimension
@@ -120,8 +127,10 @@ class LSTM:
         Xend = np.zeros(numEx, dtype=int)
         if self.cutOffZeroEnd:
             Y = np.zeros((timespan + 1, numEx, self.memoryDim), dtype=FLOAT)
+            reachedEnd = np.sum(X, axis=-1) == 0.0
         else:
             Y = np.zeros((timespan, numEx, self.memoryDim), dtype=FLOAT)
+            reachedEnd = np.zeros((timespan, numEx), dtype=FLOAT)
         C = np.zeros((timespan, numEx, self.memoryDim), dtype=FLOAT)
         Z = np.zeros((timespan, numEx, self.memoryDim), dtype=FLOAT)
         Gi = np.zeros((timespan, numEx, self.memoryDim), dtype=FLOAT)
@@ -131,7 +140,7 @@ class LSTM:
         for n in range(0, numEx):
             Y[:, n, :], C[:, n, :], Z[:, n, :], \
             Gi[:, n, :], Gf[:, n, :], Go[:, n, :], \
-            Xend[n] = self._forwardPassOne(X[:, n, :])
+            Xend[n] = self._forwardPassOne(X[:, n, :], reachedEnd[:, n])
 
         self.X = X
         self.Xend = Xend
@@ -142,9 +151,12 @@ class LSTM:
         self.Gf = Gf
         self.Go = Go
 
-        return Y
+        if self.multiErr:
+            return Y
+        else:
+            return Y[-1]
 
-    def _forwardPassOne(self, X):
+    def _forwardPassOne(self, X, reachedEnd):
         timespan = X.shape[0]
         # Last time step is reserved for final output of the entire input.
         if self.cutOffZeroEnd:
@@ -160,7 +172,7 @@ class LSTM:
         Wi, Wf, Wc, Wo = self.sliceWeights(self.inputDim, self.memoryDim, self.W)
 
         for t in range(0, timespan):
-            if self.cutOffZeroEnd and X[t, 0] == 0.0:
+            if self.cutOffZeroEnd and reachedEnd[t]:
                 Xend = t
                 Y[-1, :] = Y[t - 1, :]
                 break
@@ -195,13 +207,14 @@ class LSTM:
         Gi = self.Gi
         Gf = self.Gf
         Go = self.Go
+        Xend = self.Xend
 
         if self.multiErr:
             return self._backPropagateOneMultiErr(
-                dEdY, X, Y, C, Z, Gi, Gf, Go, outputdEdX)
+                dEdY, X, Y, C, Z, Gi, Gf, Go, Xend, outputdEdX)
         else:
             return self._backPropagateOne(
-                dEdY, X, Y, C, Z, Gi, Gf, Go, outputdEdX)
+                dEdY, X, Y, C, Z, Gi, Gf, Go, Xend, outputdEdX)
 
     def _backPropagateN(self, dEdY, outputdEdX):
         numEx = self.X.shape[1]
@@ -225,7 +238,7 @@ class LSTM:
             else:
                 dEdWtmp, dEdX[:, n] = \
                     self._backPropagateOne(
-                        dEdY[:, n], X[:, n], Y[:, n],
+                        dEdY[n], X[:, n], Y[:, n],
                         C[:, n], Z[:, n], Gi[:, n],
                         Gf[:, n], Go[:, n], Xend[n], outputdEdX)
 
@@ -309,8 +322,8 @@ class LSTM:
                                  np.dot(dYTdCt[t + 1:], dCtdYt1)
                 dYTdCt[t + 1:] = np.dot(dYTdCt[t + 1:], dCtdCt1) + \
                                  np.dot(dYTdYt[t + 1:], dYtdCt)
-                dEdGo[:, t] = np.tensordot(dEdYT, dYTdYt[t:],
-                                      axes=([0, 1], [0, 1])) * dYtdGo
+                dEdGo[:, t] = (np.tensordot(dEdYT[1:], dYTdYt[t + 1:],
+                                      axes=([0, 1], [0, 1])) + dEdYT[0]) * dYtdGo
             else:
                 dEdGoTmp = dEdYT * dYtdGo
                 dEdGo[:, t] = dEdGoTmp.reshape(dEdGoTmp.size)
@@ -335,18 +348,15 @@ class LSTM:
         dEdWo += np.dot(dEdGo, states3T)
 
         if outputdEdX:
-            dEdX = np.dot(dEdGi.transpose(), Wxi) + \
-                   np.dot(dEdGf.transpose(), Wxf) + \
-                   np.dot(dEdZ.transpose(), Wxc) + \
-                   np.dot(dEdGo.transpose(), Wxo)
+            dEdX[0:Xend] = np.dot(dEdGi.transpose(), Wxi) + \
+                           np.dot(dEdGf.transpose(), Wxf) + \
+                           np.dot(dEdZ.transpose(), Wxc) + \
+                           np.dot(dEdGo.transpose(), Wxo)
 
         return dEdW, dEdX
 
     def _backPropagateOne(
             self, dEdY, X, Y, C, Z, Gi, Gf, Go, Xend, outputdEdX):
-        # Copy the final output layer error to the input end.
-        if self.cutOffZeroEnd:
-            dEdY[Xend - 1] += dEdY[-1]
         Wxi, Wyi, Wci, Wxf, Wyf, Wcf, Wxc, Wyc, Wxo, Wyo, Wco = \
             self.sliceWeightsSmall(self.inputDim, self.memoryDim, self.W)
 
@@ -390,7 +400,7 @@ class LSTM:
             states3T[t] = \
                 np.concatenate((X[t], Yt1, C[t], np.ones(1, dtype=FLOAT)))
 
-            dEdYT = dEdY[Xend - 1]
+            dEdYT = dEdY
 
             # (k -> t)
             U = np.tanh(C[t])
@@ -438,10 +448,10 @@ class LSTM:
         dEdWo += np.dot(dEdGo, states3T)
 
         if outputdEdX:
-            dEdX = np.dot(dEdGi.transpose(), Wxi) + \
-                   np.dot(dEdGf.transpose(), Wxf) + \
-                   np.dot(dEdZ.transpose(), Wxc) + \
-                   np.dot(dEdGo.transpose(), Wxo)
+            dEdX[0:Xend] = np.dot(dEdGi.transpose(), Wxi) + \
+                           np.dot(dEdGf.transpose(), Wxf) + \
+                           np.dot(dEdZ.transpose(), Wxc) + \
+                           np.dot(dEdGo.transpose(), Wxo)
 
         return dEdW, dEdX
 
@@ -478,8 +488,8 @@ class LSTM:
 if __name__ == '__main__':
     lstm = LSTM(
         inputDim=2,
-        memoryDim=1,
+        memoryDim=3,
         initRange=0.01,
         initSeed=2,
         multiErr=True)
-    lstm.chkgrd()
+    lstm._chkgrd()

@@ -80,7 +80,7 @@ if __name__ == '__main__':
         'calcError': True,
         'stopE': 0.01,
         'progress': True,
-        'displayDw': 3
+        'displayDw': 4
     }
 
     pipeline = Pipeline(
@@ -98,39 +98,32 @@ if __name__ == '__main__':
             initRange=0.42,
             pcaDim=10)),       # std ~= 0.12. U~[0.21, 0.21].
         learningRate=0.0)
-    # pipeline.addStage(LinearMap(
-    #     inputDim=300,
-    #     outputDim=10,
-    #     initSeed=2,
-    #     initRange=0.1),
-    #     learningRate=0.8)
     pipeline.addStage(TimeFold(
         timespan=timespan))
-    # pipeline.addStage(Dropout(
-    #     dropoutRate=0.2))
+    pipeline.addStage(Dropout(
+        dropoutRate=0.2))
     pipeline.addStage(LSTM(
         inputDim=10,
         memoryDim=10,
         initRange=0.1,
         initSeed=3,
         cutOffZeroEnd=True,
-        multiErr=False),
+        multiErr=True),
         learningRate=0.8,
         annealConst=0.01,
         gradientClip=0.1,
         outputdEdX=False)
-    # pipeline.addStage(Dropout(
-    #     dropoutRate=0.5))
-    # pipeline.addStage(LSTM(
-    #     inputDim=10,
-    #     memoryDim=10,
-    #     initRange=0.1,
-    #     initSeed=4,
-    #     cutOffZeroEnd=True),
-    #     learningRate=0.8,
-    #     gradientClip=0.1)
-    pipeline.addStage(TimeSelect(
-        time=-1))
+    pipeline.addStage(Dropout(
+        dropoutRate=0.5))
+    pipeline.addStage(LSTM(
+        inputDim=10,
+        memoryDim=10,
+        initRange=0.1,
+        initSeed=4,
+        cutOffZeroEnd=True,
+        multiErr=False),
+        learningRate=0.8,
+        gradientClip=0.1)
     pipeline.addStage(Sigmoid(
         inputDim=10,
         outputDim=1,

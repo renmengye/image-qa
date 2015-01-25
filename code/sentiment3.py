@@ -86,8 +86,6 @@ if __name__ == '__main__':
         multiErr=False),
         learningRate=0.8,
         gradientClip=0.1)
-    pipeline.addStage(TimeSelect(
-        time=-1))
     pipeline.addStage(Sigmoid(
         inputDim=10,
         outputDim=1,

@@ -1,24 +1,21 @@
 import numpy as np
 
 class Dropout:
-    def __init__(self, dropoutRate, initSeed=2):
+    def __init__(self, dropoutRate, debug=False):
         self.W = 0
         self.X = 0
         self.dropout = True
         self.dropoutVec = 0
         self.dropoutRate = dropoutRate
-        self.seed = initSeed
-        #self.dropoutVec = (np.random.rand(5) > self.dropoutRate)
+        self.debug = debug
         pass
-
-    def reinit(self):
-        np.random.seed(self.seed)
 
     def forwardPass(self, X, dropout=False):
         Y = np.zeros(X.shape, float)
         if self.dropoutRate > 0.0 and dropout:
-            np.random.seed(self.seed)
-            self.dropoutVec = (np.random.rand(X.shape[-1]) > self.dropoutRate)
+            self.dropoutVec = (np.random.rand(X.shape[-1]) >
+                               self.dropoutRate) \
+                if not self.debug else np.array((True, True, True, False, False))
             for i in range(0, X.shape[-1]):
                 if self.dropoutVec[i]:
                     if len(X.shape) == 1:
@@ -39,12 +36,13 @@ class Dropout:
             if self.dropout:
                 dEdX = np.zeros(self.X.shape, float)
                 for i in range(0, self.X.shape[-1]):
-                    if len(self.X.shape) == 1:
-                        dEdX[i] = dEdY[i]
-                    elif len(self.X.shape) == 2:
-                        dEdX[:, i] = dEdY[:, i]
-                    elif len(self.X.shape) == 3:
-                        dEdX[:, :, i] = dEdY[:, :, i]
+                    if self.dropoutVec[i]:
+                        if len(self.X.shape) == 1:
+                            dEdX[i] = dEdY[i]
+                        elif len(self.X.shape) == 2:
+                            dEdX[:, i] = dEdY[:, i]
+                        elif len(self.X.shape) == 3:
+                            dEdX[:, :, i] = dEdY[:, :, i]
             else:
                 dEdX = dEdY / (1 - self.dropoutRate)
 
