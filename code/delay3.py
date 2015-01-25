@@ -50,14 +50,16 @@ if __name__ == '__main__':
     pipeline = Pipeline(
         name='delay3',
         costFn=crossEntOne,
-        decisionFn=hardLimit)
+        decisionFn=hardLimit,
+        outputFolder='../results')
     pipeline.addStage(LSTM(
         inputDim=1,
         memoryDim=5,
         initRange=0.01,
-        initSeed=2),
+        initSeed=2,
+        multiErr=True),
         learningRate=0.8,
-        weightClip=0.1)
+        gradientClip=0.02)
     pipeline.addStage(TimeUnfold())
     # pipeline.addStage(Softmax(
     #     inputDim=3,
@@ -92,7 +94,7 @@ if __name__ == '__main__':
     }
 
     trainInput, trainTarget = getData(
-        size=80,
+        size=40,
         length=8,
         seed=2)
     testInput, testTarget = getData(

@@ -26,12 +26,12 @@ class Pipeline:
         self.stages = []
         pass
 
-    def addStage(self, stage, learningRate=0.1, annealConst=0.0, weightClip=0.0, outputdEdX=True):
+    def addStage(self, stage, learningRate=0.1, annealConst=0.0, gradientClip=0.0, outputdEdX=True):
         self.stages.append(stage)
         stage.lastdW = 0
         stage.learningRate = learningRate
         stage.currentLearningRate = learningRate
-        stage.weightClip = weightClip
+        stage.weightClip = gradientClip
         stage.annealConst = annealConst
         if len(self.stages) == 1:
             stage.outputdEdX = False

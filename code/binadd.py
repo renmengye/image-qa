@@ -58,14 +58,16 @@ if __name__ == '__main__':
     pipeline = Pipeline(
         name='binadd',
         costFn=crossEntOne,
-        decisionFn=hardLimit)
+        decisionFn=hardLimit,
+        outputFolder='../results')
     pipeline.addStage(LSTM(
         inputDim=2,
         memoryDim=3,
         initRange=0.01,
-        initSeed=2),
+        initSeed=2,
+        multiErr=True),
         learningRate=0.8,
-        weightClip=1.0)
+        gradientClip=1.0)
     pipeline.addStage(TimeUnfold())
     # pipeline.addStage(Softmax(
     #     inputDim=3,

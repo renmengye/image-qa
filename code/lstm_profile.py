@@ -11,4 +11,4 @@ for i in range(0, 10):
     X = np.random.rand(100, 10, 10)
     Y = lstm.forwardPass(X)
     dEdY = np.random.rand(100, 10, 10)
-    dEdY = lstm.backPropagate(dEdY, outputdEdX=False)
+    dEdY = lstm.backPropagate(dEdY, outputdEdX=True)

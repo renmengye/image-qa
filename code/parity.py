@@ -32,17 +32,19 @@ if __name__ == '__main__':
     pipeline = Pipeline(
         name='parity',
         costFn=crossEntOne,
-        decisionFn=hardLimit)
+        decisionFn=hardLimit,
+        outputFolder='../results')
     pipeline.addStage(LSTM(
         inputDim=1,
-        memoryDim=2,
+        memoryDim=5,
         initRange=0.01,
-        initSeed=2),
-        learningRate=0.5,
-        weightClip=0.1)
+        initSeed=2,
+        multiErr=True),
+        learningRate=0.8,
+        gradientClip=0.0)
     pipeline.addStage(TimeUnfold())
     pipeline.addStage(Sigmoid(
-        inputDim=2,
+        inputDim=5,
         outputDim=1,
         initRange=0.01,
         initSeed=3),
@@ -51,7 +53,6 @@ if __name__ == '__main__':
         timespan=8))
 
     trainOpt = {
-        'learningRate': 0.1,
         'numEpoch': 1200,
         'needValid': True,
         'heldOutRatio': 0.5,
@@ -70,7 +71,7 @@ if __name__ == '__main__':
     }
 
     trainInput, trainTarget = getData(
-        size=10,
+        size=20,
         length=8,
         seed=2)
     testInput, testTarget = getData(
@@ -80,5 +81,3 @@ if __name__ == '__main__':
 
     pipeline.train(trainInput, trainTarget, trainOpt)
     pipeline.test(testInput, testTarget)
-    pipeline.save()
-    pass
