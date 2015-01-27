@@ -2,10 +2,14 @@ import numpy as np
 
 def meanSqErr(Y, T):
     diff =  Y - T.reshape(Y.shape)
-    timespan = Y.shape[0]
     N = 1
+    timespan = 1
+    if len(Y.shape) > 1:
+        N = Y.shape[0]
+        timespan = 1
     if len(Y.shape) > 2:
-        N = Y.shape[1]
+        N = Y.shape[0]
+        timespan = Y.shape[1]
     E = 0.5 * np.sum(np.power(diff, 2)) / float(timespan) / float(N)
     dEdY = diff / float(timespan) / float(N)
     return E, dEdY
@@ -34,37 +38,32 @@ def crossEntIdx(Y, T):
             dEdY[n, T[n]] = -1 / (Y[n, T[n]] + eps)
         dEdY /= float(N)
     elif len(Y.shape) == 3:
+        N = Y.shape[0]
+        timespan = Y.shape[1]
         T = T.reshape(T.shape[0], T.shape[1])
-        timespan = Y.shape[0]
-        N = Y.shape[1]
         E = np.zeros(N)
         for n in range(0, N):
             for t in range(0, timespan):
-                E[n] += -np.log(Y[t, n, T[t, n]] + eps)
+                E[n] += -np.log(Y[n, t, T[n, t]] + eps)
         E /= float(N) * float(timespan)
         dEdY = np.zeros(Y.shape, float)
         for n in range(0, N):
             for t in range(0, timespan):
-                dEdY[t, n, T[t, n]] += -1 / (Y[t, n, T[t, n]] + eps)
+                dEdY[n, t, T[n, t]] += -1 / (Y[n, t, T[n, t]] + eps)
         dEdY /= float(N) * float(timespan)
     return E, dEdY
 
 def crossEntOne(Y, T):
     eps = 1e-5
-    # if Y.shape[-1] == 1:
-    #     Y = Y.reshape(Y.shape[:-1])
-    # if T.shape[-1] == 1:
-    #     T = T.reshape(T.shape[:-1])
-    T = T.reshape(Y.shape)
+    T = np.reshape(T, Y.shape)
+    cost = -T * np.log(Y + eps) - (1 - T) * np.log(1 - Y + eps)
+    dcost = -T / (Y + eps) + (1 - T) / (1 - Y + eps)
     if len(Y.shape) == 0:
-        E = -T * np.log(Y + eps) - (1 - T) * np.log(1 - Y + eps)
-        dEdY = -T / (1 - Y + eps) + (1 - T) / (1 - Y + eps)
-    elif len(Y.shape) < 3:
-        E = np.sum(-T * np.log(Y + eps) - (1 - T) * np.log(1 - Y + eps)) / float(Y.shape[0])
-        dEdY = (-T / (Y + eps) + (1 - T) / (1 - Y + eps)) / float(Y.shape[0])
-    elif len(Y.shape) == 3:
-        E = np.sum(-T * np.log(Y + eps) - (1 - T) * np.log(1 - Y + eps)) / float(Y.shape[0] * Y.shape[1])
-        dEdY = (-T / (Y + eps) + (1 - T) / (1 - Y + eps)) / float(Y.shape[0] * Y.shape[1])
+        E = cost
+        dEdY = dcost
+    else:
+        E = np.sum(cost) / float(Y.size)
+        dEdY = dcost / float(Y.size)
 
     return E, dEdY
 
@@ -76,14 +75,14 @@ def simpleSum(Y):
 
 def simpleSumDeriv(T, Y):
     Yout = simpleSum(Y)
-    diff =  Yout - T.reshape(Yout.shape)
-    timespan = Y.shape[0]
+    diff =  Yout - np.reshape(T, Yout.shape)
+    timespan = Y.shape[-2]
     E = 0.5 * np.sum(np.power(diff, 2), axis=0) / float(timespan)
 
     if len(Y.shape) == 2:
-        dEdY = np.repeat(diff.reshape(diff.shape[0], 1), Y.shape[1], axis=1) / float(timespan)
+        dEdY = np.repeat(np.reshape(diff, (diff.shape[0], 1)), Y.shape[1], axis=1) / float(timespan)
     elif len(Y.shape) == 3:
-        dEdY = np.repeat(diff.reshape(diff.shape[0], diff.shape[1], 1), Y.shape[2], axis=2) / float(timespan)
+        dEdY = np.repeat(np.reshape(diff, (diff.shape[0], diff.shape[1], 1)), Y.shape[2], axis=2) / float(timespan)
     return E, dEdY
 
 def simpleSumDecision(Y):

@@ -1,3 +1,5 @@
+import numpy as np
+
 class TimeFold:
     def __init__(self, timespan):
         self.W = 0
@@ -9,7 +11,7 @@ class TimeFold:
         if X.shape[0] == self.timespan:
             Y = X
         else:
-            Y = X.reshape(self.timespan, X.shape[0] / self.timespan, X.shape[1])
+            Y = np.reshape(X, (X.shape[0] / self.timespan, self.timespan, X.shape[1]))
         self.Xshape = X.shape
 
         return Y
@@ -18,7 +20,7 @@ class TimeFold:
         dEdW = 0
         if outputdEdX:
             if len(dEdY.shape) == 3:
-                dEdX = dEdY.reshape(self.Xshape)
+                dEdX = np.reshape(dEdY, self.Xshape)
             else:
                 dEdX = dEdY
         else:

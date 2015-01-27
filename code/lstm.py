@@ -77,8 +77,8 @@ class LSTM:
 
                 dEdWTmp[i,j] = (Etmp1 - Etmp2) / 2.0 / eps
                 self.W[i,j] += eps
-        for t in range(0, X.shape[0]):
-            for n in range(0, X.shape[1]):
+        for n in range(0, X.shape[0]):
+            for t in range(0, X.shape[1]):
                 for j in range(0, X.shape[2]):
                     X[t, n, j] += eps
                     Y = self.forwardPass(X)
@@ -116,26 +116,28 @@ class LSTM:
         return Y if self.multiErr else Y[-1]
 
     def _forwardPassN(self, X):
-        # X[t, n, i] -> t: time, n: example, i: input dimension
-        timespan = X.shape[0]
-        numEx = X.shape[1]
+        # X[n, t, i] -> n: example, t: time, i: input dimension
+        numEx = X.shape[0]
+        timespan = X.shape[1]
         Xend = np.zeros(numEx, dtype=int)
+        myShape = (numEx, timespan, self.outputDim)
         if self.cutOffZeroEnd:
-            Y = np.zeros((timespan + 1, numEx, self.outputDim), dtype=FLOAT)
+            Y = np.zeros((numEx, timespan + 1, self.outputDim), dtype=FLOAT)
             reachedEnd = np.sum(X, axis=-1) == 0.0
         else:
-            Y = np.zeros((timespan, numEx, self.outputDim), dtype=FLOAT)
-            reachedEnd = np.zeros((timespan, numEx), dtype=FLOAT)
-        C = np.zeros((timespan, numEx, self.outputDim), dtype=FLOAT)
-        Z = np.zeros((timespan, numEx, self.outputDim), dtype=FLOAT)
-        Gi = np.zeros((timespan, numEx, self.outputDim), dtype=FLOAT)
-        Gf = np.zeros((timespan, numEx, self.outputDim), dtype=FLOAT)
-        Go = np.zeros((timespan, numEx, self.outputDim), dtype=FLOAT)
+            Y = np.zeros(myShape, dtype=FLOAT)
+            reachedEnd = np.zeros((numEx, timespan), dtype=FLOAT)
+
+        C = np.zeros(myShape, dtype=FLOAT)
+        Z = np.zeros(myShape, dtype=FLOAT)
+        Gi = np.zeros(myShape, dtype=FLOAT)
+        Gf = np.zeros(myShape, dtype=FLOAT)
+        Go = np.zeros(myShape, dtype=FLOAT)
 
         for n in range(0, numEx):
-            Y[:, n, :], C[:, n, :], Z[:, n, :], \
-            Gi[:, n, :], Gf[:, n, :], Go[:, n, :], \
-            Xend[n] = self._forwardPassOne(X[:, n, :], reachedEnd[:, n])
+            Y[n], C[n], Z[n], \
+            Gi[n], Gf[n], Go[n], \
+            Xend[n] = self._forwardPassOne(X[n], reachedEnd[n])
 
         self.X = X
         self.Xend = Xend
@@ -146,7 +148,7 @@ class LSTM:
         self.Gf = Gf
         self.Go = Go
 
-        return Y if self.multiErr else Y[-1]
+        return Y if self.multiErr else Y[:, -1]
 
     def _forwardPassOne(self, X, reachedEnd):
         timespan = X.shape[0]
@@ -208,7 +210,7 @@ class LSTM:
             dEdY, X, Y, C, Z, Gi, Gf, Go, Xend, outputdEdX)
 
     def _backPropagateN(self, dEdY, outputdEdX):
-        numEx = self.X.shape[1]
+        numEx = self.X.shape[0]
         dEdW = np.zeros(self.W.shape, dtype=FLOAT)
         dEdX = np.zeros(self.X.shape, dtype=FLOAT)
         X = self.X
@@ -220,16 +222,16 @@ class LSTM:
         Go = self.Go
         Xend = self.Xend
         for n in range(0, numEx):
-            dEdWtmp, dEdX[:, n] = \
+            dEdWtmp, dEdX[n] = \
                 self._backPropagateOneMultiErr(
-                    dEdY[:, n], X[:, n], Y[:, n],
-                    C[:, n], Z[:, n], Gi[:, n],
-                    Gf[:, n], Go[:, n], Xend[n], outputdEdX) \
+                    dEdY[n], X[n], Y[n],
+                    C[n], Z[n], Gi[n],
+                    Gf[n], Go[n], Xend[n], outputdEdX) \
                     if self.multiErr else \
                 self._backPropagateOne(
-                    dEdY[n], X[:, n], Y[:, n],
-                    C[:, n], Z[:, n], Gi[:, n],
-                    Gf[:, n], Go[:, n], Xend[n], outputdEdX)
+                    dEdY[n], X[n], Y[n],
+                    C[n], Z[n], Gi[n],
+                    Gf[n], Go[n], Xend[n], outputdEdX)
             dEdW += dEdWtmp
 
         return dEdW, dEdX

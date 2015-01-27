@@ -15,8 +15,6 @@ class SimpleSum:
     def backPropagate(self, dEdY, outputdEdX=True):
         dEdW = 0
         if outputdEdX:
-            #dEdYshape = np.concatenate((dEdY.shape, np.ones(1)))
-            #dEdX = dEdY.reshape(dEdYshape).repeat(self.X.shape[-1], axis=-1)
             dEdX = dEdY.repeat(self.X.shape[-1], axis=-1)
         else:
             dEdX = 0

@@ -56,24 +56,16 @@ class Pipeline:
         if needValid:
             trainInput, trainTarget, validInput, validTarget = \
                 self.splitData(trainInput, trainTarget, heldOutRatio, xvalidNo)
-        if len(trainInput.shape) == 3:
-            X = trainInput.transpose((1, 0, 2))
-            VX = validInput.transpose((1, 0, 2))
-        else:
-            X = trainInput.transpose()
-            VX = validInput.transpose()
-        if len(trainTarget.shape) == 3:
-            T = trainTarget.transpose((1, 0, 2))
-            VT = validTarget.transpose((1, 0, 2))
-        else:
-            T = trainTarget
-            VT = validTarget
+        X = trainInput
+        VX = validInput
+        T = trainTarget
+        VT = validTarget
+        N = trainInput.shape[0]
         numEpoch = trainOpt['numEpoch']
         lrDecay = trainOpt['learningRateDecay']
         mom = trainOpt['momentum']
         calcError = trainOpt['calcError']
         numExPerBat = trainOpt['batchSize']
-        N = trainInput.shape[0]
         dMom = (mom - trainOpt['momentumEnd']) / float(numEpoch)
         writeRecord = trainOpt['writeRecord']
         saveModel = trainOpt['saveModel']
@@ -100,13 +92,10 @@ class Pipeline:
             progress = 0
 
             if shuffleTrainData:
-                shuffle = np.arange(0, X.shape[1])
+                shuffle = np.arange(0, N)
                 shuffle = np.random.permutation(shuffle)
-                X = X[:, shuffle]
-                if len(T.shape)==3:
-                    T = T[:, shuffle]
-                else:
-                    T = T[shuffle]
+                X = X[shuffle]
+                T = T[shuffle]
 
             batchStart = 0
             while batchStart < N:
@@ -119,18 +108,15 @@ class Pipeline:
 
                 # Batch info
                 batchEnd = min(N, batchStart + numExPerBat)
-                numEx = batchEnd - batchStart
+                numExThisBat = batchEnd - batchStart
 
                 # Forward
-                Y_bat = self.forwardPass(X[:, batchStart:batchEnd], dropout=True)
-                if len(T.shape) == 3:
-                    T_bat = T[:, batchStart:batchEnd, :]
-                else:
-                    T_bat = T[batchStart:batchEnd, :]
+                Y_bat = self.forwardPass(X[batchStart:batchEnd], dropout=True)
+                T_bat = T[batchStart:batchEnd]
 
                 # Loss
                 Etmp, dEdY = self.costFn(Y_bat, T_bat)
-                E += np.sum(Etmp) * numEx / float(N)
+                E += np.sum(Etmp) * numExThisBat / float(N)
 
                 # Backpropagate
                 for stage in reversed(self.stages):
@@ -265,26 +251,10 @@ class Pipeline:
                 X1 = stage.forwardPass(X1)
         return X1
 
-    def test(self, X, T, printEx=False):
-        X = X.transpose((1, 0, 2))
-        if len(T.shape) == 3:
-            T = T.transpose((1, 0, 2))
+    def test(self, X, T):
         Y = self.forwardPass(X, dropout=False)
-        if printEx:
-            for n in range(0, min(X.shape[0], 10)):
-                for j in range(0, X.shape[-1]):
-                    print "X:",
-                    print X[n, :, j]
-                for j in range(0, T.shape[-1]):
-                    print "T:",
-                    print T[n, :, j]
-                Yfinal = self.decisionFn(Y)
-                print "Y:",
-                print Yfinal[:, n].astype(float)
-
         rate, correct, total = self.calcRate(Y, T)
         print 'TR: %.4f' % rate
-
         return rate, correct, total
 
     def calcRate(self, Y, T):

@@ -109,7 +109,7 @@ class Sigmoid:
         Y = self.Y
         X = self.X
         dEdZ = dEdY * Y * (1 - Y)
-        dEdW = np.outer(Y, X)
+        dEdW = np.outer(dEdZ, X)
 
         if outputdEdX:
             dEdX = np.dot(dEdZ, self.W[:, :-1])

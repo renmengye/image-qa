@@ -18,7 +18,7 @@ class TimeSelect:
 
     def forwardPassAll(self, X):
         # X(t, n, i)
-        Y = X[self.t, :, :]
+        Y = X[:, self.t, :]
         self.X = X
         self.Y = Y
         return Y
@@ -30,13 +30,11 @@ class TimeSelect:
         if outputdEdX:
             dEdX = np.zeros(self.X.shape)
             dEdX[self.t, :] = dEdY
-            #dEdX[:, :] = dEdY
         return dEdW, dEdX
 
     def backPropagateAll(self, dEdY, outputdEdX=True):
         dEdW = 0
         if outputdEdX:
             dEdX = np.zeros(self.X.shape)
-            dEdX[self.t, :, :] = dEdY
-            #dEdX[:, :] = dEdY
+            dEdX[:,self.t,  :] = dEdY
         return dEdW, dEdX
