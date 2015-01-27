@@ -19,7 +19,7 @@ class Pipeline:
         self.outputFolder = os.path.join(outputFolder, self.name)
         if not os.path.exists(self.outputFolder): os.makedirs(self.outputFolder)
         self.logFilename = os.path.join(self.outputFolder, self.name + '.csv')
-        self.modelFilename = os.path.join(self.outputFolder, self.name + '.pipeline')
+        self.modelFilename = os.path.join(self.outputFolder, self.name + '.w')
         self.lossFigFilename = os.path.join(self.outputFolder, self.name + '_loss.png')
         self.errFigFilename = os.path.join(self.outputFolder, self.name + '_err.png')
         pass
