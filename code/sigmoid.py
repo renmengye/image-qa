@@ -112,7 +112,7 @@ class Sigmoid:
         dEdW = np.outer(Y, X)
 
         if outputdEdX:
-            dEdX = np.dot(dEdZ, self.W[:, -1])
+            dEdX = np.dot(dEdZ, self.W[:, :-1])
 
         return dEdW, dEdX
 
@@ -123,7 +123,7 @@ class Sigmoid:
         dEdW = np.dot(dEdZ.transpose(), X)
 
         if outputdEdX:
-            dEdX = np.dot(dEdZ, self.W[:, -1])
+            dEdX = np.dot(dEdZ, self.W[:, :-1])
 
         return dEdW, dEdX
 
