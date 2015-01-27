@@ -271,7 +271,17 @@ class Pipeline:
         rate = correct / float(total)
         return rate, correct, total
 
+
     def save(self, filename=None):
+        if filename is None:
+            filename = self.modelFilename
+        model = []
+        for stage in self.stages:
+            model.append(stage.W)
+        np.save(filename, np.array(model, dtype=object))
+        pass
+
+    def savePickle(self, filename=None):
         if filename is None:
             filename = self.modelFilename
         with open(filename, 'w') as f:

@@ -6,7 +6,7 @@ for i in range(0, 10):
     dx = len(sys.argv) > 2 and sys.argv[2] == 'dx'
     lstm = LSTM(
         inputDim=10,
-        memoryDim=10,
+        outputDim=10,
         initRange=.1,
         initSeed=3,
         cutOffZeroEnd=True,

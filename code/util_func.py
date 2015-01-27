@@ -13,6 +13,9 @@ def meanSqErr(Y, T):
 def hardLimit(Y):
     return (Y > 0.5).astype(int)
 
+def sigmoidFn(X):
+    return 1 / (1 + np.exp(-X))
+
 def crossEntIdx(Y, T):
     eps = 1e-5
     if len(Y.shape) == 1:

@@ -1,5 +1,4 @@
 from util_func import *
-from scipy import special
 
 class Sigmoid:
     def __init__(self,
@@ -8,16 +7,18 @@ class Sigmoid:
                  initRange=1.0,
                  initSeed=2,
                  needInit=True,
-                 W=0):
+                 initWeights=0):
         self.inputDim = inputDim
         self.outputDim = outputDim
+        self.random = np.random.RandomState(initSeed)
 
         if needInit:
-            np.random.seed(initSeed)
-            self.W = np.random.rand(outputDim, inputDim + 1) * initRange - initRange / 2.0
+            self.W = np.random.uniform(
+                -initRange/2.0, initRange/2.0,
+                (outputDim, inputDim + 1))
             self.W[:, -1] = 0
         else:
-            self.W = W
+            self.W = initWeights
         self.X = 0
         self.Y = 0
         pass
@@ -96,8 +97,8 @@ class Sigmoid:
         else:
             X2 = np.concatenate((X, np.ones(1)))
         Y = np.inner(X2, self.W)
-        Y = special.expit(Y)
-        self.X = X
+        Y = sigmoidFn(Y)
+        self.X = X2
         self.Y = Y
         return Y
 
@@ -107,32 +108,22 @@ class Sigmoid:
 
         Y = self.Y
         X = self.X
-
-        dY_i__dZ_i = Y * (1 - Y).reshape(self.outputDim, 1)
-        dY_i__dW_ij = dY_i__dZ_i * np.concatenate((X.reshape(1, self.inputDim), np.ones((1, 1), float)), axis=1)
-        dEdW = np.dot(dEdY, dY_i__dW_ij)
-        #dEdW[:, -1] = 0
+        dEdZ = dEdY * Y * (1 - Y)
+        dEdW = np.outer(Y, X)
 
         if outputdEdX:
-            dY_i__dX_j = dY_i__dZ_i * self.W[:, 0:-1]
-            dEdX = np.dot(dEdY, dY_i__dX_j)
+            dEdX = np.dot(dEdZ, self.W[:, -1])
 
         return dEdW, dEdX
 
     def backPropagateAll(self, dEdY, outputdEdX=True):
         Y = self.Y
         X = self.X
-        numEx = X.shape[0]
-        dY_ni__dZ_i = (Y * (1 - Y)).reshape(numEx, self.outputDim, 1)
-        dZ_ni__dW_ij = np.concatenate((X.reshape(numEx, 1, self.inputDim),np.ones((numEx, 1, 1))), axis=2)
-        dY_ni__dW_ij = dY_ni__dZ_i * dZ_ni__dW_ij
-        dEdW = np.diagonal(dEdY.transpose().dot(dY_ni__dW_ij.transpose((1, 0, 2))), axis1=0, axis2=1).transpose()
-        #dEdW[:, -1] = 0
+        dEdZ = dEdY * Y * (1 - Y)
+        dEdW = np.dot(dEdZ.transpose(), X)
 
         if outputdEdX:
-            dZ_ni__dX_j = self.W[:, 0:-1].reshape(1, self.outputDim, self.inputDim)
-            dY_ni__dX_j = dY_ni__dZ_i * dZ_ni__dX_j
-            dEdX = np.diagonal(dEdY.dot(dY_ni__dX_j), axis1=0, axis2=1).transpose()
+            dEdX = np.dot(dEdZ, self.W[:, -1])
 
         return dEdW, dEdX
 

@@ -7,15 +7,16 @@ class LinearMap:
                  initRange=1.0,
                  initSeed=2,
                  needInit=True,
-                 W=0):
+                 initWeights=0):
         self.inputDim = inputDim
         self.outputDim = outputDim
+        self.random = np.random.RandomState(initSeed)
 
         if needInit:
-            np.random.seed(initSeed)
-            self.W = np.random.rand(outputDim, inputDim) * initRange - initRange / 2.0
+            self.W = self.random.uniform(
+                -initRange/2.0, initRange/2.0, (outputDim, inputDim))
         else:
-            self.W = W
+            self.W = initWeights
         self.X = 0
         self.Y = 0
         pass

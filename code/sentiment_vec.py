@@ -93,7 +93,7 @@ if __name__ == '__main__':
         inputDim=np.max(trainInput)+1,
         outputDim=30,
         needInit=False,
-        W=getWordEmbedding(
+        initWeights=getWordEmbedding(
             initSeed=2,
             initRange=0.42,
             pcaDim=30)),       # std ~= 0.12. U~[0.21, 0.21].
@@ -101,12 +101,13 @@ if __name__ == '__main__':
     pipeline.addStage(TimeFold(
         timespan=timespan))
     pipeline.addStage(Dropout(
-        dropoutRate=0.2))
+        dropoutRate=0.2,
+        initSeed=3))
     pipeline.addStage(LSTM(
         inputDim=30,
-        memoryDim=30,
+        outputDim=30,
         initRange=0.1,
-        initSeed=3,
+        initSeed=4,
         cutOffZeroEnd=True,
         multiErr=True),
         learningRate=1.0,
@@ -114,12 +115,13 @@ if __name__ == '__main__':
         gradientClip=0.1,
         outputdEdX=False)
     pipeline.addStage(Dropout(
-        dropoutRate=0.5))
+        dropoutRate=0.5,
+        initSeed=5))
     pipeline.addStage(LSTM(
         inputDim=30,
-        memoryDim=30,
+        outputDim=30,
         initRange=0.1,
-        initSeed=4,
+        initSeed=6,
         cutOffZeroEnd=True,
         multiErr=False),
         learningRate=0.8,
@@ -129,7 +131,7 @@ if __name__ == '__main__':
         inputDim=30,
         outputDim=1,
         initRange=0.1,
-        initSeed=5),
+        initSeed=7),
         learningRate=0.01,
         annealConst=0.01)
     pipeline.train(trainInput, trainTarget, trainOpt)

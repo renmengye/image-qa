@@ -24,7 +24,7 @@ if __name__ == '__main__':
     #     decisionFn=hardLimit)
     # pipeline.addStage(LSTM(
     #     inputDim=1,
-    #     memoryDim=1,
+    #     outputDim=1,
     #     initRange=0.01,
     #     initSeed=2))
     # pipeline.addStage(SimpleSum())
@@ -36,7 +36,7 @@ if __name__ == '__main__':
         outputFolder='../results')
     pipeline.addStage(LSTM(
         inputDim=1,
-        memoryDim=5,
+        outputDim=5,
         initRange=0.01,
         initSeed=2,
         multiErr=True),

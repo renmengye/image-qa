@@ -1,4 +1,3 @@
-from scipy import special
 from util_func import *
 
 FLOAT = np.float
@@ -6,39 +5,38 @@ FLOAT = np.float
 class LSTM:
     def __init__(self,
                  inputDim,
-                 memoryDim,
+                 outputDim,
                  initRange=1.0,
                  initSeed=2,
                  needInit=True,
-                 W=0,
+                 initWeights=0,
                  cutOffZeroEnd=False,
                  multiErr=False):
         self.inputDim = inputDim
-        self.memoryDim = memoryDim
+        self.outputDim = outputDim
         self.cutOffZeroEnd = cutOffZeroEnd
         self.multiErr = multiErr
+        self.random = np.random.RandomState(initSeed)
 
         if needInit:
             np.random.seed(initSeed)
-            Wxi = np.random.rand(self.memoryDim, self.inputDim) * initRange - initRange / 2.0
-            Wxf = np.random.rand(self.memoryDim, self.inputDim) * initRange - initRange / 2.0
-            Wxc = np.random.rand(self.memoryDim, self.inputDim) * initRange - initRange / 2.0
-            Wxo = np.random.rand(self.memoryDim, self.inputDim) * initRange - initRange / 2.0
-            Wyi = np.random.rand(self.memoryDim, self.memoryDim) * initRange - initRange / 2.0
-            Wyf = np.random.rand(self.memoryDim, self.memoryDim) * initRange - initRange / 2.0
-            Wyc = np.random.rand(self.memoryDim, self.memoryDim) * initRange - initRange / 2.0
-            Wyo = np.random.rand(self.memoryDim, self.memoryDim) * initRange - initRange / 2.0
-            Wci = np.random.rand(self.memoryDim, self.memoryDim) * initRange - initRange / 2.0
-            Wcf = np.random.rand(self.memoryDim, self.memoryDim) * initRange - initRange / 2.0
-            Wco = np.random.rand(self.memoryDim, self.memoryDim) * initRange - initRange / 2.0
-            # Wbi = np.random.rand(self.memoryDim, 1) * initRange - initRange / 2.0
-            # Wbf = np.random.rand(self.memoryDim, 1) * initRange - initRange / 2.0
-            # Wbc = np.random.rand(self.memoryDim, 1) * initRange - initRange / 2.0
-            # Wbo = np.random.rand(self.memoryDim, 1) * initRange - initRange / 2.0
-            Wbi = np.ones((self.memoryDim, 1), dtype=FLOAT)
-            Wbf = np.ones((self.memoryDim, 1), dtype=FLOAT)
-            Wbc = np.zeros((self.memoryDim, 1), dtype=FLOAT)
-            Wbo = np.ones((self.memoryDim, 1), dtype=FLOAT)
+            start = -initRange / 2.0
+            end = initRange / 2.0
+            Wxi = self.random.uniform(start, end, (self.outputDim, self.inputDim))
+            Wxf = self.random.uniform(start, end, (self.outputDim, self.inputDim))
+            Wxc = self.random.uniform(start, end, (self.outputDim, self.inputDim))
+            Wxo = self.random.uniform(start, end, (self.outputDim, self.inputDim))
+            Wyi = self.random.uniform(start, end, (self.outputDim, self.outputDim))
+            Wyf = self.random.uniform(start, end, (self.outputDim, self.outputDim))
+            Wyc = self.random.uniform(start, end, (self.outputDim, self.outputDim))
+            Wyo = self.random.uniform(start, end, (self.outputDim, self.outputDim))
+            Wci = self.random.uniform(start, end, (self.outputDim, self.outputDim))
+            Wcf = self.random.uniform(start, end, (self.outputDim, self.outputDim))
+            Wco = self.random.uniform(start, end, (self.outputDim, self.outputDim))
+            Wbi = np.ones((self.outputDim, 1), dtype=FLOAT)
+            Wbf = np.ones((self.outputDim, 1), dtype=FLOAT)
+            Wbc = np.zeros((self.outputDim, 1), dtype=FLOAT)
+            Wbo = np.ones((self.outputDim, 1), dtype=FLOAT)
 
             Wi = np.concatenate((Wxi, Wyi, Wci, Wbi), axis=1)
             Wf = np.concatenate((Wxf, Wyf, Wcf, Wbf), axis=1)
@@ -46,7 +44,7 @@ class LSTM:
             Wo = np.concatenate((Wxo, Wyo, Wco, Wbo), axis=1)
             self.W = np.concatenate((Wi, Wf, Wc, Wo), axis = 1)
         else:
-            self.W = W
+            self.W = initWeights
 
         self.X = 0
         self.Xend = 0
@@ -123,16 +121,16 @@ class LSTM:
         numEx = X.shape[1]
         Xend = np.zeros(numEx, dtype=int)
         if self.cutOffZeroEnd:
-            Y = np.zeros((timespan + 1, numEx, self.memoryDim), dtype=FLOAT)
+            Y = np.zeros((timespan + 1, numEx, self.outputDim), dtype=FLOAT)
             reachedEnd = np.sum(X, axis=-1) == 0.0
         else:
-            Y = np.zeros((timespan, numEx, self.memoryDim), dtype=FLOAT)
+            Y = np.zeros((timespan, numEx, self.outputDim), dtype=FLOAT)
             reachedEnd = np.zeros((timespan, numEx), dtype=FLOAT)
-        C = np.zeros((timespan, numEx, self.memoryDim), dtype=FLOAT)
-        Z = np.zeros((timespan, numEx, self.memoryDim), dtype=FLOAT)
-        Gi = np.zeros((timespan, numEx, self.memoryDim), dtype=FLOAT)
-        Gf = np.zeros((timespan, numEx, self.memoryDim), dtype=FLOAT)
-        Go = np.zeros((timespan, numEx, self.memoryDim), dtype=FLOAT)
+        C = np.zeros((timespan, numEx, self.outputDim), dtype=FLOAT)
+        Z = np.zeros((timespan, numEx, self.outputDim), dtype=FLOAT)
+        Gi = np.zeros((timespan, numEx, self.outputDim), dtype=FLOAT)
+        Gf = np.zeros((timespan, numEx, self.outputDim), dtype=FLOAT)
+        Go = np.zeros((timespan, numEx, self.outputDim), dtype=FLOAT)
 
         for n in range(0, numEx):
             Y[:, n, :], C[:, n, :], Z[:, n, :], \
@@ -154,16 +152,16 @@ class LSTM:
         timespan = X.shape[0]
         # Last time step is reserved for final output of the entire input.
         if self.cutOffZeroEnd:
-            Y = np.zeros((timespan + 1, self.memoryDim), dtype=FLOAT)
+            Y = np.zeros((timespan + 1, self.outputDim), dtype=FLOAT)
         else:
-            Y = np.zeros((timespan, self.memoryDim), dtype=FLOAT)
-        C = np.zeros((timespan, self.memoryDim), dtype=FLOAT)
-        Z = np.zeros((timespan, self.memoryDim), dtype=FLOAT)
-        Gi = np.zeros((timespan, self.memoryDim), dtype=FLOAT)
-        Gf = np.zeros((timespan, self.memoryDim), dtype=FLOAT)
-        Go = np.zeros((timespan, self.memoryDim), dtype=FLOAT)
+            Y = np.zeros((timespan, self.outputDim), dtype=FLOAT)
+        C = np.zeros((timespan, self.outputDim), dtype=FLOAT)
+        Z = np.zeros((timespan, self.outputDim), dtype=FLOAT)
+        Gi = np.zeros((timespan, self.outputDim), dtype=FLOAT)
+        Gf = np.zeros((timespan, self.outputDim), dtype=FLOAT)
+        Go = np.zeros((timespan, self.outputDim), dtype=FLOAT)
         Xend = timespan
-        Wi, Wf, Wc, Wo = self.sliceWeights(self.inputDim, self.memoryDim, self.W)
+        Wi, Wf, Wc, Wo = self.sliceWeights(self.inputDim, self.outputDim, self.W)
 
         for t in range(0, timespan):
             if self.cutOffZeroEnd and reachedEnd[t]:
@@ -178,15 +176,15 @@ class LSTM:
             states2 = np.concatenate((X[t, :], \
                                       Y[t-1, :], \
                                       np.ones(1, dtype=FLOAT)))
-            Gi[t, :] = special.expit(np.dot(Wi, states1))
-            Gf[t, :] = special.expit(np.dot(Wf, states1))
+            Gi[t, :] = sigmoidFn(np.dot(Wi, states1))
+            Gf[t, :] = sigmoidFn(np.dot(Wf, states1))
             Z[t, :] = np.tanh(np.dot(Wc, states2))
             C[t, :] = Gf[t, :] * C[t-1, :] + Gi[t, :] * Z[t, :]
             states3 = np.concatenate((X[t, :], \
                                       Y[t-1, :], \
                                       C[t, :], \
                                       np.ones(1, dtype=FLOAT)))
-            Go[t, :] = special.expit(np.dot(Wo, states3))
+            Go[t, :] = sigmoidFn(np.dot(Wo, states3))
             Y[t, :] = Go[t, :] * np.tanh(C[t, :])
 
         return Y, C, Z, Gi, Gf, Go, Xend
@@ -242,38 +240,38 @@ class LSTM:
         if self.cutOffZeroEnd:
             dEdY[Xend - 1] += dEdY[-1]
         Wxi, Wyi, Wci, Wxf, Wyf, Wcf, Wxc, Wyc, Wxo, Wyo, Wco = \
-            self.sliceWeightsSmall(self.inputDim, self.memoryDim, self.W)
+            self.sliceWeightsSmall(self.inputDim, self.outputDim, self.W)
 
         dEdW = np.zeros(self.W.shape, dtype=FLOAT)
         dEdWi, dEdWf, dEdWc, dEdWo = \
-            self.sliceWeights(self.inputDim, self.memoryDim, dEdW)
+            self.sliceWeights(self.inputDim, self.outputDim, dEdW)
 
         # (j, t)
-        dEdGi = np.zeros((self.memoryDim, Xend), dtype=FLOAT)
-        dEdGf = np.zeros((self.memoryDim, Xend), dtype=FLOAT)
-        dEdZ = np.zeros((self.memoryDim, Xend), dtype=FLOAT)
-        dEdGo = np.zeros((self.memoryDim, Xend), dtype=FLOAT)
+        dEdGi = np.zeros((self.outputDim, Xend), dtype=FLOAT)
+        dEdGf = np.zeros((self.outputDim, Xend), dtype=FLOAT)
+        dEdZ = np.zeros((self.outputDim, Xend), dtype=FLOAT)
+        dEdGo = np.zeros((self.outputDim, Xend), dtype=FLOAT)
 
         # (t, k)
         states1T = np.zeros((Xend,
-                   self.inputDim + 2 * self.memoryDim + 1), dtype=FLOAT)
+                   self.inputDim + 2 * self.outputDim + 1), dtype=FLOAT)
         states2T = np.zeros((Xend,
-                   self.inputDim + self.memoryDim + 1), dtype=FLOAT)
+                   self.inputDim + self.outputDim + 1), dtype=FLOAT)
         states3T = np.zeros((Xend,
-                   self.inputDim + 2 * self.memoryDim + 1), dtype=FLOAT)
+                   self.inputDim + 2 * self.outputDim + 1), dtype=FLOAT)
 
         dEdX = np.zeros(X.shape, dtype=FLOAT)
 
         # (tau -> T', j -> T', k -> t)
-        dYTdYt = np.ones((Xend, self.memoryDim, self.memoryDim), dtype=FLOAT)
-        dYTdCt = np.zeros((Xend, self.memoryDim, self.memoryDim), dtype=FLOAT)
-        memEye = np.eye(self.memoryDim)
-        memCol = (self.memoryDim, 1)
+        dYTdYt = np.ones((Xend, self.outputDim, self.outputDim), dtype=FLOAT)
+        dYTdCt = np.zeros((Xend, self.outputDim, self.outputDim), dtype=FLOAT)
+        memEye = np.eye(self.outputDim)
+        memCol = (self.outputDim, 1)
 
         for t in reversed(range(0, Xend)):
             if t == 0:
-                Yt1 = np.zeros(self.memoryDim, dtype=FLOAT)
-                Ct1 = np.zeros(self.memoryDim, dtype=FLOAT)
+                Yt1 = np.zeros(self.outputDim, dtype=FLOAT)
+                Ct1 = np.zeros(self.outputDim, dtype=FLOAT)
             else:
                 Yt1 = Y[t-1]
                 Ct1 = C[t-1]
@@ -348,37 +346,37 @@ class LSTM:
     def _backPropagateOne(
             self, dEdY, X, Y, C, Z, Gi, Gf, Go, Xend, outputdEdX):
         Wxi, Wyi, Wci, Wxf, Wyf, Wcf, Wxc, Wyc, Wxo, Wyo, Wco = \
-            self.sliceWeightsSmall(self.inputDim, self.memoryDim, self.W)
+            self.sliceWeightsSmall(self.inputDim, self.outputDim, self.W)
 
         dEdW = np.zeros(self.W.shape, dtype=FLOAT)
         dEdWi, dEdWf, dEdWc, dEdWo = \
-            self.sliceWeights(self.inputDim, self.memoryDim, dEdW)
+            self.sliceWeights(self.inputDim, self.outputDim, dEdW)
 
         # (j, t)
-        dEdGi = np.zeros((self.memoryDim, Xend), dtype=FLOAT)
-        dEdGf = np.zeros((self.memoryDim, Xend), dtype=FLOAT)
-        dEdZ = np.zeros((self.memoryDim, Xend), dtype=FLOAT)
-        dEdGo = np.zeros((self.memoryDim, Xend), dtype=FLOAT)
+        dEdGi = np.zeros((self.outputDim, Xend), dtype=FLOAT)
+        dEdGf = np.zeros((self.outputDim, Xend), dtype=FLOAT)
+        dEdZ = np.zeros((self.outputDim, Xend), dtype=FLOAT)
+        dEdGo = np.zeros((self.outputDim, Xend), dtype=FLOAT)
 
         # (t, k)
         states1T = np.zeros((Xend,
-                   self.inputDim + 2 * self.memoryDim + 1), dtype=FLOAT)
+                   self.inputDim + 2 * self.outputDim + 1), dtype=FLOAT)
         states2T = np.zeros((Xend,
-                   self.inputDim + self.memoryDim + 1), dtype=FLOAT)
+                   self.inputDim + self.outputDim + 1), dtype=FLOAT)
         states3T = np.zeros((Xend,
-                   self.inputDim + 2 * self.memoryDim + 1), dtype=FLOAT)
+                   self.inputDim + 2 * self.outputDim + 1), dtype=FLOAT)
 
         dEdX = np.zeros(X.shape, dtype=FLOAT)
 
         # (j -> T, k -> t)
-        dYTdYt = np.ones((self.memoryDim, self.memoryDim), dtype=FLOAT)
-        memEye = np.eye(self.memoryDim)
-        memCol = (self.memoryDim, 1)
+        dYTdYt = np.ones((self.outputDim, self.outputDim), dtype=FLOAT)
+        memEye = np.eye(self.outputDim)
+        memCol = (self.outputDim, 1)
 
         for t in reversed(range(0, Xend)):
             if t == 0:
-                Yt1 = np.zeros(self.memoryDim, dtype=FLOAT)
-                Ct1 = np.zeros(self.memoryDim, dtype=FLOAT)
+                Yt1 = np.zeros(self.outputDim, dtype=FLOAT)
+                Ct1 = np.zeros(self.outputDim, dtype=FLOAT)
             else:
                 Yt1 = Y[t-1]
                 Ct1 = C[t-1]
@@ -479,7 +477,7 @@ class LSTM:
 if __name__ == '__main__':
     lstm = LSTM(
         inputDim=2,
-        memoryDim=3,
+        outputDim=3,
         initRange=0.01,
         initSeed=2,
         multiErr=True)

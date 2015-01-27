@@ -7,17 +7,20 @@ class LinearDict:
                  initRange=1.0,
                  initSeed=2,
                  needInit=True,
-                 W=0):
+                 initWeights=0):
         self.inputDim = inputDim
         self.outputDim = outputDim
+        self.random = np.random.RandomState(initSeed)
 
-        # Zeroth dimension of the weight matrix is reserved for empty word at the end of a sentence.
+        # Zeroth dimension of the weight matrix is reserved
+        # for empty word at the end of a sentence.
         if needInit:
-            np.random.seed(initSeed)
-            self.W = np.random.rand(outputDim, inputDim) * initRange - initRange / 2.0
+            self.W = self.random.uniform(
+                -initRange/2.0, initRange/2.0, (outputDim, inputDim))
             self.W[:, 0] = 0
         else:
-            self.W = np.concatenate((np.zeros((outputDim, 1), float), W), axis=1)
+            self.W = np.concatenate(
+                (np.zeros((outputDim, 1), float), initWeights), axis=1)
         self.X = 0
         self.Y = 0
         pass
@@ -89,9 +92,9 @@ class LinearDict:
         return dEdW, dEdX
 
 if __name__ == '__main__':
-    dict = LinearDict(
+    lindict = LinearDict(
         inputDim=5,
         outputDim=2,
         initRange=0.01,
         initSeed=2)
-    dict.chkgrd()
+    lindict.chkgrd()

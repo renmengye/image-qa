@@ -1,21 +1,24 @@
 import numpy as np
 
 class Dropout:
-    def __init__(self, dropoutRate, debug=False):
+    def __init__(self, dropoutRate, initSeed, debug=False):
         self.W = 0
         self.X = 0
         self.dropout = True
         self.dropoutVec = 0
         self.dropoutRate = dropoutRate
         self.debug = debug
+        self.random = np.random.RandomState(initSeed)
+        self.seed = initSeed
         pass
 
     def forwardPass(self, X, dropout=False):
         Y = np.zeros(X.shape, float)
         if self.dropoutRate > 0.0 and dropout:
-            self.dropoutVec = (np.random.rand(X.shape[-1]) >
-                               self.dropoutRate) \
-                if not self.debug else np.array((True, True, True, False, False))
+            if self.debug:
+                self.random = np.random.RandomState(self.seed)
+            self.dropoutVec = (self.random.uniform(0, 1, (X.shape[-1])) >
+                               self.dropoutRate)
             for i in range(0, X.shape[-1]):
                 if self.dropoutVec[i]:
                     if len(X.shape) == 1:

@@ -68,7 +68,7 @@ if __name__ == '__main__':
         dropoutRate=0.2))
     pipeline.addStage(LSTM(
         inputDim=40,
-        memoryDim=20,
+        outputDim=20,
         initRange=0.1,
         initSeed=3,
         cutOffZeroEnd=True,
@@ -79,7 +79,7 @@ if __name__ == '__main__':
         dropoutRate=0.5))
     pipeline.addStage(LSTM(
         inputDim=20,
-        memoryDim=10,
+        outputDim=10,
         initRange=0.1,
         initSeed=4,
         cutOffZeroEnd=True,
