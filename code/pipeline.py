@@ -16,23 +16,33 @@ class Pipeline:
         print 'Pipeline ' + self.name
         self.costFn = costFn
         self.decisionFn = decisionFn
-        self.logFilename = os.path.join(outputFolder, self.name + '.csv')
-        self.modelFilename = os.path.join(outputFolder, self.name + '.pipeline')
-        self.lossFigFilename = os.path.join(outputFolder, self.name + '_loss.png')
-        self.errFigFilename = os.path.join(outputFolder, self.name + '_err.png')
+        self.outputFolder = os.path.join(outputFolder, self.name)
+        if not os.path.exists(self.outputFolder): os.makedirs(self.outputFolder)
+        self.logFilename = os.path.join(self.outputFolder, self.name + '.csv')
+        self.modelFilename = os.path.join(self.outputFolder, self.name + '.pipeline')
+        self.lossFigFilename = os.path.join(self.outputFolder, self.name + '_loss.png')
+        self.errFigFilename = os.path.join(self.outputFolder, self.name + '_err.png')
         pass
 
     def clear(self):
         self.stages = []
         pass
 
-    def addStage(self, stage, learningRate=0.1, annealConst=0.0, gradientClip=0.0, outputdEdX=True):
+    def addStage(self, stage,
+                 learningRate=0.1,
+                 annealConst=0.0,
+                 gradientClip=0.0,
+                 weightClip=0.0,
+                 weightRegConst=0.0,
+                 outputdEdX=True):
         self.stages.append(stage)
         stage.lastdW = 0
         stage.learningRate = learningRate
         stage.currentLearningRate = learningRate
-        stage.weightClip = gradientClip
+        stage.gradientClip = gradientClip
         stage.annealConst = annealConst
+        stage.weightClip = weightClip
+        stage.weightRegConst = weightRegConst
         if len(self.stages) == 1:
             stage.outputdEdX = False
         else:
@@ -125,13 +135,24 @@ class Pipeline:
                 # Backpropagate
                 for stage in reversed(self.stages):
                     dEdW, dEdY = stage.backPropagate(dEdY, outputdEdX=stage.outputdEdX)
-                    if stage.weightClip > 0.0:
+                    if stage.gradientClip > 0.0:
                         stage.dEdWnorm = np.sqrt(np.sum(np.power(dEdW, 2)))
-                        if stage.dEdWnorm > stage.weightClip:
-                            dEdW = dEdW / stage.dEdWnorm * stage.weightClip
+                        if stage.dEdWnorm > stage.gradientClip:
+                            dEdW *= stage.gradientClip / stage.dEdWnorm
                     if stage.learningRate > 0.0:
-                        stage.lastdW = -stage.currentLearningRate * dEdW + mom * stage.lastdW
+                        stage.lastdW = -stage.currentLearningRate * dEdW + \
+                                       mom * stage.lastdW
                         stage.W = stage.W + stage.lastdW
+                    if stage.weightRegConst > 0.0:
+                        stage.Wnorm = np.sqrt(np.sum(np.power(stage.W, 2)))
+                        stage.W -= stage.currentLearningRate * \
+                                   stage.weightRegConst * stage.W
+                    if stage.weightClip > 0.0:
+                        stage.Wnorm = np.sqrt(np.sum(np.power(stage.W, 2)))
+                        if stage.Wnorm > stage.weightClip:
+                            stage.W *= stage.weightClip / stage.Wnorm
+                        #stage.Wnorm = np.sqrt(np.sum(np.power(stage.W, 2)))
+                        pass
 
                     # Stop backpropagate if frozen layers in the front.
                     if not stage.outputdEdX:
@@ -175,8 +196,10 @@ class Pipeline:
             # Print statistics
             timeElapsed = time.time() - startTime
             if trainOpt.has_key('displayDw'):
-                stats = 'EP: %4d E: %.4f R: %.4f VE: %.4f VR: %.4f T:%4d DW:%.4f' % \
-                        (epoch, E, rate, VE, Vrate, timeElapsed, self.stages[trainOpt['displayDw']].dEdWnorm)
+                stats = 'EP: %4d E: %.4f R: %.4f VE: %.4f VR: %.4f T:%4d DW:%.4f W:%.4f' % \
+                        (epoch, E, rate, VE, Vrate, timeElapsed,
+                         self.stages[trainOpt['displayDw']].dEdWnorm,
+                         self.stages[trainOpt['displayDw']].Wnorm)
             else:
                 stats = 'EP: %4d E: %.4f R: %.4f VE: %.4f VR: %.4f T:%4d' % \
                         (epoch, E, rate, VE, Vrate, timeElapsed)

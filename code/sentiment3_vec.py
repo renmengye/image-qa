@@ -90,6 +90,8 @@ if __name__ == '__main__':
         multiErr=True),
         learningRate=0.8,
         gradientClip=0.1,
+        weightClip=100.0,
+        weightRegConst=5e-5,
         annealConst=0.01,
         outputdEdX=False)
     pipeline.addStage(Dropout(
@@ -104,6 +106,8 @@ if __name__ == '__main__':
         multiErr=False),
         learningRate=0.8,
         gradientClip=0.1,
+        weightClip=100.0,
+        weightRegConst=5e-5,
         annealConst=0.01)
     pipeline.addStage(Sigmoid(
         inputDim=50,
@@ -111,6 +115,9 @@ if __name__ == '__main__':
         initRange=0.1,
         initSeed=7),
         learningRate=0.01,
+        gradientClip=0.1,
+        weightClip=3.0,
+        weightRegConst=5e-5,
         annealConst=0.01)
 
     pipeline.train(trainInput, trainTarget, trainOpt)
