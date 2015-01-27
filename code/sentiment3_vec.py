@@ -90,7 +90,7 @@ if __name__ == '__main__':
         multiErr=True),
         learningRate=0.8,
         gradientClip=0.1,
-        weightClip=100.0,
+        weightClip=10.0,
         weightRegConst=5e-5,
         annealConst=0.01,
         outputdEdX=False)
@@ -106,7 +106,7 @@ if __name__ == '__main__':
         multiErr=False),
         learningRate=0.8,
         gradientClip=0.1,
-        weightClip=100.0,
+        weightClip=20.0,
         weightRegConst=5e-5,
         annealConst=0.01)
     pipeline.addStage(Sigmoid(
