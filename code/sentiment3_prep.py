@@ -46,7 +46,7 @@ with open('../data/sentiment3/word_freq.txt', 'w+') as f:
 key = 1
 word_dict_unk = {}
 word_array_unk = []
-lowest_freq = 5
+lowest_freq = 1
 unknown = 'unk_'
 count = 0
 for k in sorted_key:
@@ -88,8 +88,8 @@ for i in range(0, len(lines)):
 data = np.array((word_dict_unk, word_array_unk, word_freq, input_, target_), object)
 
 # Output vocab file for converting word2vec
-with open('../data/sentiment3/vocabs.txt', 'w+') as vocab_f:
+with open('../data/sentiment3/vocabs-1.txt', 'w+') as vocab_f:
     for word in word_array_unk:
         vocab_f.write(word + '\n')
 
-np.save('../data/sentiment3/train-5.npy', data)
+np.save('../data/sentiment3/train-1.npy', data)

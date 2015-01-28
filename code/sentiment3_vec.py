@@ -13,15 +13,18 @@ from util_func import *
 import sys
 import tsne
 
+trainDataFilename = '../data/sentiment3/train-1.npy'
+vocabVecFilename = '../data/sentiment3/vocabs-vec-1.npy'
+
 def getTrainData():
-    data = np.load('../data/sentiment3/train-5.npy')
+    data = np.load(trainDataFilename)
     input_ = data[3]
     target_ = data[4]
     return input_, target_
 
 def getWordEmbedding(initSeed, initRange, pcaDim=0):
     np.random.seed(initSeed)
-    weights = np.load('../data/sentiment3/vocabs-vec.npy')
+    weights = np.load(vocabVecFilename)
     for i in range(weights.shape[0]):
         if weights[i, 0] == 0.0:
             weights[i, :] = np.random.rand(weights.shape[1]) * initRange - initRange / 2.0
