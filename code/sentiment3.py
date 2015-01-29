@@ -13,7 +13,7 @@ from util_func import *
 import sys
 
 def getTrainData():
-    data = np.load('../data/sentiment3/train-5.npy')
+    data = np.load('../data/sentiment3/train-info-1.npy')
     input_ = data[3]
     target_ = data[4]
     return input_, target_
@@ -44,13 +44,14 @@ if __name__ == '__main__':
         'plotFigs': True,
         'everyEpoch': True,
         'calcError': True,
-        'stopE': 0.01,
+        'stopCost': 0.01,
         'progress': True,
         'displayDw': 4
     }
 
     pipeline = Pipeline(
         name='sentiment3',
+        trainOpt=trainOpt,
         costFn=crossEntOne,
         decisionFn=hardLimit,
         outputFolder='../results')
@@ -93,4 +94,4 @@ if __name__ == '__main__':
         initSeed=5),
         learningRate=0.01)
 
-    pipeline.train(trainInput, trainTarget, trainOpt)
+    pipeline.train(trainInput, trainTarget)

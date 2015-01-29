@@ -3,6 +3,9 @@ import time
 import pickle
 import sys
 import os
+import yaml
+import shutil
+import router
 
 import matplotlib
 matplotlib.use('Agg')
@@ -10,19 +13,56 @@ import matplotlib.pyplot as plt
 plt.ion()
 
 class Pipeline:
-    def __init__(self, name, costFn, outputFolder='', decisionFn=None):
+    def __init__(self, name, trainOpt, costFn, decisionFn=None, outputFolder='', configFilename=None):
         self.stages = []
         self.name = name + time.strftime("-%Y%m%d-%H%M%S")
         print 'Pipeline ' + self.name
         self.costFn = costFn
         self.decisionFn = decisionFn
         self.outputFolder = os.path.join(outputFolder, self.name)
+        self.trainOpt = trainOpt
         if not os.path.exists(self.outputFolder): os.makedirs(self.outputFolder)
+        if configFilename is not None:
+            shutil.copyfile(configFilename, os.path.join(self.outputFolder, self.name + '.yaml'))
         self.logFilename = os.path.join(self.outputFolder, self.name + '.csv')
         self.modelFilename = os.path.join(self.outputFolder, self.name + '.w')
         self.lossFigFilename = os.path.join(self.outputFolder, self.name + '_loss.png')
         self.errFigFilename = os.path.join(self.outputFolder, self.name + '_err.png')
         pass
+
+    @staticmethod
+    def initFromConfig(name, configFilename, outputFolder=None):
+        with open(configFilename) as f:
+            pipeDict = yaml.load(f)
+
+        pipeline = Pipeline(
+            name=name,
+            trainOpt=pipeDict['trainOpt'],
+            costFn=router.routeFn(pipeDict['costFn']),
+            decisionFn=router.routeFn(pipeDict['decisionFn']),
+            outputFolder=outputFolder,
+            configFilename=configFilename
+        )
+
+        for stageDict in pipeDict['stages']:
+            stage = router.routeStage(stageDict)
+            pipeline.addStage(
+                stage,
+                learningRate=stageDict['learningRate']
+                if stageDict.has_key('learningRate') else 0.1,
+                annealConst=stageDict['annealConst']
+                if stageDict.has_key('annealConst') else 0.0,
+                gradientClip=stageDict['gradientClip']
+                if stageDict.has_key('gradientClip') else 0.0,
+                weightClip=stageDict['weightClip']
+                if stageDict.has_key('weightClip') else 0.0,
+                weightRegConst=stageDict['weightRegConst']
+                if stageDict.has_key('weightRegConst') else 0.0,
+                outputdEdX=stageDict['outputdEdX']
+                if stageDict.has_key('outputdEdX') else True
+            )
+
+        return pipeline
 
     def clear(self):
         self.stages = []
@@ -49,10 +89,21 @@ class Pipeline:
             stage.outputdEdX = outputdEdX
         pass
 
-    def train(self, trainInput, trainTarget, trainOpt):
+    def shuffleData(self, X, T):
+        shuffle = np.arange(0, X.shape[0])
+        shuffle = np.random.permutation(shuffle)
+        X = X[shuffle]
+        T = T[shuffle]
+
+        return X, T
+
+
+    def train(self, trainInput, trainTarget):
+        trainOpt = self.trainOpt
         needValid =  trainOpt['needValid'] if trainOpt.has_key('needValid') else False
         xvalidNo = trainOpt['xvalidNo'] if trainOpt.has_key('xvalidNo') else 0
         heldOutRatio = trainOpt['heldOutRatio'] if trainOpt.has_key('heldOutRatio') else 0.1
+        trainInput, trainTarget = self.shuffleData(trainInput, trainTarget)
         if needValid:
             trainInput, trainTarget, validInput, validTarget = \
                 self.splitData(trainInput, trainTarget, heldOutRatio, xvalidNo)
@@ -92,10 +143,7 @@ class Pipeline:
             progress = 0
 
             if shuffleTrainData:
-                shuffle = np.arange(0, N)
-                shuffle = np.random.permutation(shuffle)
-                X = X[shuffle]
-                T = T[shuffle]
+                X, T = self.shuffleData(X, T)
 
             batchStart = 0
             while batchStart < N:
@@ -128,11 +176,11 @@ class Pipeline:
                     if stage.learningRate > 0.0:
                         stage.lastdW = -stage.currentLearningRate * dEdW + \
                                        mom * stage.lastdW
-                        stage.W = stage.W + stage.lastdW
+                        stage.W += stage.lastdW
                     if stage.weightRegConst > 0.0:
-                        stage.Wnorm = np.sqrt(np.sum(np.power(stage.W, 2)))
-                        stage.W -= stage.currentLearningRate * \
-                                   stage.weightRegConst * stage.W
+                        a = float(stage.currentLearningRate) * float(stage.weightRegConst)
+                        stage.W -= a * np.asarray(stage.W)
+                        pass
                     if stage.weightClip > 0.0:
                         stage.Wnorm = np.sqrt(np.sum(np.power(stage.W, 2)))
                         if stage.Wnorm > stage.weightClip:
@@ -202,7 +250,7 @@ class Pipeline:
                 self.save()
 
             # Check stopping criterion
-            if E < trainOpt['stopE'] and VE < trainOpt['stopE']:
+            if E < trainOpt['stopCost'] and VE < trainOpt['stopCost']:
                 break
 
             # Plot train curves
@@ -264,7 +312,6 @@ class Pipeline:
         rate = correct / float(total)
         return rate, correct, total
 
-
     def save(self, filename=None):
         if filename is None:
             filename = self.modelFilename
@@ -274,6 +321,11 @@ class Pipeline:
         np.save(filename, np.array(model, dtype=object))
         pass
 
+    def loadWeights(self, weightsFilename):
+        weights = np.load(weightsFilename)
+        for i in range(0, weights.shape[0]):
+            self.stages[i].W = weights[i]
+
     def savePickle(self, filename=None):
         if filename is None:
             filename = self.modelFilename
@@ -282,7 +334,7 @@ class Pipeline:
         pass
 
     @staticmethod
-    def load(filename):
+    def loadPickle(filename):
         with open(filename) as f:
             pipeline = pickle.load(f)
         return pipeline

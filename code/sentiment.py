@@ -16,7 +16,7 @@ word_array = []
 
 def getTrainData():
     global word_array
-    data = np.load('../data/sentiment/train.npy')
+    data = np.load('../data/sentiment/train-info.npy')
     input_ = data[3]
     target_ = data[4]
     word_array = data[1]
@@ -64,13 +64,14 @@ if __name__ == '__main__':
         'plotFigs': True,
         'everyEpoch': True,
         'calcError': True,
-        'stopE': 0.01,
+        'stopCost': 0.01,
         'progress': True,
         'displayDw': 4
     }
 
     pipeline = Pipeline(
         name='sentiment',
+        trainOpt=trainOpt,
         costFn=crossEntOne,
         decisionFn=hardLimit,
         outputFolder='../results')
@@ -111,5 +112,5 @@ if __name__ == '__main__':
         initRange=0.1,
         initSeed=5),
         learningRate=0.01)
-    pipeline.train(trainInput, trainTarget, trainOpt)
+    pipeline.train(trainInput, trainTarget)
 

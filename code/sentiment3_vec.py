@@ -13,7 +13,7 @@ from util_func import *
 import sys
 import tsne
 
-trainDataFilename = '../data/sentiment3/train-1.npy'
+trainDataFilename = '../data/sentiment3/train-info-1.npy'
 vocabVecFilename = '../data/sentiment3/vocabs-vec-1.npy'
 
 def getTrainData():
@@ -59,13 +59,14 @@ if __name__ == '__main__':
         'plotFigs': True,
         'everyEpoch': True,
         'calcError': True,
-        'stopE': 0.01,
+        'stopCost': 0.01,
         'progress': True,
         'displayDw': 4
     }
 
     pipeline = Pipeline(
         name='sentiment3-vec',
+        trainOpt=trainOpt,
         costFn=crossEntOne,
         decisionFn=hardLimit,
         outputFolder='../results')
@@ -123,4 +124,4 @@ if __name__ == '__main__':
         weightRegConst=5e-5,
         annealConst=0.01)
 
-    pipeline.train(trainInput, trainTarget, trainOpt)
+    pipeline.train(trainInput, trainTarget)

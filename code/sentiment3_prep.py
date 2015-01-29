@@ -86,10 +86,12 @@ for i in range(0, len(lines)):
     count += 1
 
 data = np.array((word_dict_unk, word_array_unk, word_freq, input_, target_), object)
+train_data = np.array((input_, target_, 0), object)
 
 # Output vocab file for converting word2vec
 with open('../data/sentiment3/vocabs-1.txt', 'w+') as vocab_f:
     for word in word_array_unk:
         vocab_f.write(word + '\n')
 
-np.save('../data/sentiment3/train-1.npy', data)
+np.save('../data/sentiment3/train-info-1.npy', data)
+np.save('../data/sentiment3/train-1.npy', train_data)

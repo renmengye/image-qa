@@ -29,8 +29,27 @@ if __name__ == '__main__':
     #     initSeed=2))
     # pipeline.addStage(SimpleSum())
 
+
+    trainOpt = {
+        'numEpoch': 1200,
+        'needValid': True,
+        'heldOutRatio': 0.5,
+        'momentum': 0.5,
+        'batchSize': 3,
+        'learningRateDecay': 1.0,
+        'momentumEnd': 0.5,
+        'shuffle': False,
+        'writeRecord': False,
+        'saveModel': False,
+        'plotFigs': True,
+        'everyEpoch': False,
+        'calcError': True,
+        'stopCost': 0.015,
+        'progress': False
+    }
     pipeline = Pipeline(
         name='parity',
+        trainOpt=trainOpt,
         costFn=crossEntOne,
         decisionFn=hardLimit,
         outputFolder='../results')
@@ -51,24 +70,6 @@ if __name__ == '__main__':
         learningRate=0.1)
     pipeline.addStage(TimeFold(
         timespan=8))
-
-    trainOpt = {
-        'numEpoch': 1200,
-        'needValid': True,
-        'heldOutRatio': 0.5,
-        'momentum': 0.5,
-        'batchSize': 3,
-        'learningRateDecay': 1.0,
-        'momentumEnd': 0.5,
-        'shuffle': False,
-        'writeRecord': False,
-        'saveModel': False,
-        'plotFigs': True,
-        'everyEpoch': False,
-        'calcError': True,
-        'stopE': 0.015,
-        'progress': False
-    }
 
     trainInput, trainTarget = getData(
         size=20,

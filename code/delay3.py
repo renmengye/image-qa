@@ -47,8 +47,27 @@ if __name__ == '__main__':
     #     name='delay3',
     #     costFn=crossEntIdx,
     #     decisionFn=argmax)
+    trainOpt = {
+        'learningRate': 0.1,
+        'numEpoch': 2000,
+        'heldOutRatio': 0.2,
+        'momentum': 0.9,
+        'batchSize': 5,
+        'learningRateDecay': 1.0,
+        'momentumEnd': 0.9,
+        'shuffle': False,
+        'needValid': True,
+        'writeRecord': False,
+        'saveModel': False,
+        'plotFigs': True,
+        'everyEpoch': False,
+        'calcError': True,
+        'stopCost': 0.01,
+        'progress': False
+    }
     pipeline = Pipeline(
         name='delay3',
+        trainOpt=trainOpt,
         costFn=crossEntOne,
         decisionFn=hardLimit,
         outputFolder='../results')
@@ -74,24 +93,6 @@ if __name__ == '__main__':
         learningRate=0.1)
     pipeline.addStage(TimeFold(
         timespan=8))
-    trainOpt = {
-        'learningRate': 0.1,
-        'numEpoch': 2000,
-        'heldOutRatio': 0.2,
-        'momentum': 0.9,
-        'batchSize': 5,
-        'learningRateDecay': 1.0,
-        'momentumEnd': 0.9,
-        'shuffle': False,
-        'needValid': True,
-        'writeRecord': False,
-        'saveModel': False,
-        'plotFigs': True,
-        'everyEpoch': False,
-        'calcError': True,
-        'stopE': 0.01,
-        'progress': False
-    }
 
     trainInput, trainTarget = getData(
         size=40,
@@ -101,7 +102,7 @@ if __name__ == '__main__':
         size=1000,
         length=8,
         seed=3)
-    pipeline.train(trainInput, trainTarget, trainOpt)
+    pipeline.train(trainInput, trainTarget)
     pipeline.test(testInput, testTarget)
     pipeline.save()
     pass

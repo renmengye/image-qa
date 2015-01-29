@@ -57,4 +57,6 @@ with open('../data/sentiment/vocabs.txt', 'w+') as vocab_f:
         vocab_f.write(word + '\n')
 
 data = np.array((word_dict, word_array, word_freq, input_, target_), object)
-np.save('../data/sentiment/train.npy', data)
+train_data = np.array((input_[0:129 * 2], target_[0:129 * 2], 0), object)
+np.save('../data/sentiment/train-info.npy', data)
+np.save('../data/sentiment/train.npy', train_data)

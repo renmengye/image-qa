@@ -55,8 +55,27 @@ if __name__ == '__main__':
     #     name='binadd',
     #     costFn=crossEntIdx,
     #     decisionFn=argmax)
+
+    trainOpt = {
+        'numEpoch': 2000,
+        'heldOutRatio': 0.5,
+        'momentum': 0.3,
+        'batchSize': 1,
+        'learningRateDecay': 1.0,
+        'momentumEnd': 0.3,
+        'shuffle': False,
+        'needValid': True,
+        'writeRecord': False,
+        'saveModel': False,
+        'plotFigs': True,
+        'everyEpoch': False,
+        'calcError': True,
+        'stopCost': 0.006,
+        'progress': False
+    }
     pipeline = Pipeline(
         name='binadd',
+        trainOpt=trainOpt,
         costFn=crossEntOne,
         decisionFn=hardLimit,
         outputFolder='../results')
@@ -84,24 +103,6 @@ if __name__ == '__main__':
     pipeline.addStage(TimeFold(
         timespan=8))
 
-    trainOpt = {
-        'numEpoch': 2000,
-        'heldOutRatio': 0.5,
-        'momentum': 0.3,
-        'batchSize': 1,
-        'learningRateDecay': 1.0,
-        'momentumEnd': 0.3,
-        'shuffle': False,
-        'needValid': True,
-        'writeRecord': False,
-        'saveModel': False,
-        'plotFigs': True,
-        'everyEpoch': False,
-        'calcError': True,
-        'stopE': 0.006,
-        'progress': False
-    }
-
     trainInput, trainTarget = getData(
         size=40,
         length=8,
@@ -111,7 +112,7 @@ if __name__ == '__main__':
         length=8,
         seed=3)
 
-    pipeline.train(trainInput, trainTarget, trainOpt)
+    pipeline.train(trainInput, trainTarget)
     pipeline.test(testInput, testTarget)
     pipeline.save()
     pass
