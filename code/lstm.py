@@ -119,36 +119,31 @@ class LSTM:
         # X[n, t, i] -> n: example, t: time, i: input dimension
         numEx = X.shape[0]
         timespan = X.shape[1]
-        Xend = np.zeros(numEx, dtype=int)
+        self.Xend = np.zeros(numEx, dtype=int)
         myShape = (numEx, timespan, self.outputDim)
         if self.cutOffZeroEnd:
-            Y = np.zeros((numEx, timespan + 1, self.outputDim), dtype=FLOAT)
+            self.Y = np.zeros((numEx, timespan + 1, self.outputDim),
+                              dtype=FLOAT)
             reachedEnd = np.sum(X, axis=-1) == 0.0
         else:
-            Y = np.zeros(myShape, dtype=FLOAT)
+            self.Y = np.zeros(myShape, dtype=FLOAT)
             reachedEnd = np.zeros((numEx, timespan), dtype=FLOAT)
 
-        C = np.zeros(myShape, dtype=FLOAT)
-        Z = np.zeros(myShape, dtype=FLOAT)
-        Gi = np.zeros(myShape, dtype=FLOAT)
-        Gf = np.zeros(myShape, dtype=FLOAT)
-        Go = np.zeros(myShape, dtype=FLOAT)
+        self.C = np.zeros(myShape, dtype=FLOAT)
+        self.Z = np.zeros(myShape, dtype=FLOAT)
+        self.Gi = np.zeros(myShape, dtype=FLOAT)
+        self.Gf = np.zeros(myShape, dtype=FLOAT)
+        self.Go = np.zeros(myShape, dtype=FLOAT)
 
         for n in range(0, numEx):
-            Y[n], C[n], Z[n], \
-            Gi[n], Gf[n], Go[n], \
-            Xend[n] = self._forwardPassOne(X[n], reachedEnd[n])
+            self.Y[n], self.C[n], self.Z[n], \
+            self.Gi[n], self.Gf[n], self.Go[n], \
+            self.Xend[n] = self._forwardPassOne(X[n], reachedEnd[n])
 
         self.X = X
-        self.Xend = Xend
-        self.Y = Y
-        self.C = C
-        self.Z = Z
-        self.Gi = Gi
-        self.Gf = Gf
-        self.Go = Go
 
-        return Y if self.multiErr else Y[:, -1]
+        return self.Y \
+            if self.multiErr else self.Y[:, -1]
 
     def _forwardPassOne(self, X, reachedEnd):
         timespan = X.shape[0]
@@ -194,36 +189,21 @@ class LSTM:
     def backPropagate(self, dEdY, outputdEdX=True):
         if len(self.X.shape) == 3:
             return self._backPropagateN(dEdY, outputdEdX)
-        X = self.X
-        Y = self.Y
-        C = self.C
-        Z = self.Z
-        Gi = self.Gi
-        Gf = self.Gf
-        Go = self.Go
-        Xend = self.Xend
-
         return self._backPropagateOne(
-            dEdY, X, Y, C, Z, Gi, Gf, Go, Xend, outputdEdX)
+            dEdY, self.X, self.Y, self.C, self.Z,self.Gi,
+            self.Gf, self.Go, self.Xend, outputdEdX)
 
     def _backPropagateN(self, dEdY, outputdEdX):
         numEx = self.X.shape[0]
         dEdW = np.zeros(self.W.shape, dtype=FLOAT)
         dEdX = np.zeros(self.X.shape, dtype=FLOAT)
-        X = self.X
-        Y = self.Y
-        C = self.C
-        Z = self.Z
-        Gi = self.Gi
-        Gf = self.Gf
-        Go = self.Go
-        Xend = self.Xend
         for n in range(0, numEx):
             dEdWtmp, dEdX[n] = \
                 self._backPropagateOne(
-                    dEdY[n], X[n], Y[n],
-                    C[n], Z[n], Gi[n],
-                    Gf[n], Go[n], Xend[n], outputdEdX)
+                    dEdY[n], self.X[n], self.Y[n],
+                    self.C[n], self.Z[n], self.Gi[n],
+                    self.Gf[n], self.Go[n], self.Xend[n],
+                    outputdEdX)
             dEdW += dEdWtmp
 
         return dEdW, dEdX
