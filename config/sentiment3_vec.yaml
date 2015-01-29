@@ -14,14 +14,14 @@ stages:
       initSeed: 3
     - type: lstm
       inputDim: 300
-      outputDim: 150
+      outputDim: 50
       initRange: 0.1
       initSeed: 4
       cutOffZeroEnd: true
       multiErr: true
       learningRate: 0.8
       gradientClip: 0.1
-      weightClip: 30.0
+      weightClip: 20.0
       weightRegConst: 0.00005
       annealConst: 0.0
       outputdEdX: false
@@ -29,8 +29,8 @@ stages:
       dropoutRate: 0.5
       initSeed: 5
     - type: lstm
-      inputDim: 150
-      outputDim: 100
+      inputDim: 50
+      outputDim: 50
       initRange: 0.1
       initSeed: 6
       cutOffZeroEnd: true
@@ -42,13 +42,13 @@ stages:
       annealConst: 0.0
       outputdEdX: true
     - type: sigmoid
-      inputDim: 100
+      inputDim: 50
       outputDim: 1
       initRange: 0.1
       initSeed: 7
       learningRate: 0.01
       gradientClip: 0.1
-      weightClip: 10.0
+      weightClip: 5.0
       annealConst: 0.0
       weightRegConst: 0.00005
 trainOpt:
