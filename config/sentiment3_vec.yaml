@@ -20,10 +20,10 @@ stages:
       cutOffZeroEnd: true
       multiErr: true
       learningRate: 0.8
-      gradientClip: 0.1
-      weightClip: 100.0
+      gradientClip: 1.0
+      weightClip: 80.0
       weightRegConst: 0.00005
-      annealConst: 0.01
+      annealConst: 0.0
       outputdEdX: false
     - type: dropout
       dropoutRate: 0.5
@@ -36,10 +36,10 @@ stages:
       cutOffZeroEnd: true
       multiErr: false
       learningRate: 0.8
-      gradientClip: 0.1
-      weightClip: 100.0
+      gradientClip: 1.0
+      weightClip: 30.0
       weightRegConst: 0.00005
-      annealConst: 0.01
+      annealConst: 0.0
       outputdEdX: true
     - type: sigmoid
       inputDim: 100
@@ -49,7 +49,7 @@ stages:
       learningRate: 0.01
       gradientClip: 0.1
       weightClip: 1
-      annealConst: 0.01
+      annealConst: 0.0
       weightRegConst: 0.00005
 trainOpt:
     numEpoch: 2000
@@ -57,7 +57,7 @@ trainOpt:
     xvalidNo: 0
     needValid: true
     momentum: 0.9
-    batchSize: 20
+    batchSize: 25
     learningRateDecay: 1.0
     momentumEnd: 0.9
     shuffle: true
@@ -68,4 +68,4 @@ trainOpt:
     calcError: true
     stopCost: 0.01
     progress: true
-    displayDw: 7
+    displayDw: 5

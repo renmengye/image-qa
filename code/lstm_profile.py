@@ -11,7 +11,7 @@ for i in range(0, 10):
         initSeed=3,
         cutOffZeroEnd=True,
         multiErr=multiErr)
-    X = np.random.rand(100, 10, 10)
+    X = np.random.rand(10, 100, 10)
     Y = lstm.forwardPass(X)
-    dEdY = np.random.rand(100, 10, 10) if multiErr else np.random.rand(10, 10)
+    dEdY = np.random.rand(10, 100, 10) if multiErr else np.random.rand(10, 10)
     dEdY = lstm.backPropagate(dEdY, outputdEdX=dx)

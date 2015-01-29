@@ -80,16 +80,16 @@ class LSTM:
         for n in range(0, X.shape[0]):
             for t in range(0, X.shape[1]):
                 for j in range(0, X.shape[2]):
-                    X[t, n, j] += eps
+                    X[n, t, j] += eps
                     Y = self.forwardPass(X)
                     Etmp1, d1 = simpleSumDeriv(T, Y)
 
-                    X[t, n, j] -= 2 * eps
+                    X[n, t, j] -= 2 * eps
                     Y = self.forwardPass(X)
                     Etmp2, d2 = simpleSumDeriv(T, Y)
 
-                    dEdXTmp[t, n, j] = (Etmp1 - Etmp2) / 2.0 / eps
-                    X[t, n, j] += eps
+                    dEdXTmp[n, t, j] = (Etmp1 - Etmp2) / 2.0 / eps
+                    X[n, t, j] += eps
 
         print "haha"
         pass
@@ -203,10 +203,7 @@ class LSTM:
         Go = self.Go
         Xend = self.Xend
 
-        return self._backPropagateOneMultiErr(
-            dEdY, X, Y, C, Z, Gi, Gf, Go, Xend, outputdEdX) \
-            if self.multiErr else \
-            self._backPropagateOne(
+        return self._backPropagateOne(
             dEdY, X, Y, C, Z, Gi, Gf, Go, Xend, outputdEdX)
 
     def _backPropagateN(self, dEdY, outputdEdX):
@@ -223,11 +220,6 @@ class LSTM:
         Xend = self.Xend
         for n in range(0, numEx):
             dEdWtmp, dEdX[n] = \
-                self._backPropagateOneMultiErr(
-                    dEdY[n], X[n], Y[n],
-                    C[n], Z[n], Gi[n],
-                    Gf[n], Go[n], Xend[n], outputdEdX) \
-                    if self.multiErr else \
                 self._backPropagateOne(
                     dEdY[n], X[n], Y[n],
                     C[n], Z[n], Gi[n],
@@ -236,10 +228,9 @@ class LSTM:
 
         return dEdW, dEdX
 
-    def _backPropagateOneMultiErr(
+    def _backPropagateOne(
             self, dEdY, X, Y, C, Z, Gi, Gf, Go, Xend, outputdEdX):
-        # Copy the final output layer error to the input end.
-        if self.cutOffZeroEnd:
+        if self.cutOffZeroEnd and self.multiErr:
             dEdY[Xend - 1] += dEdY[-1]
         Wxi, Wyi, Wci, Wxf, Wyf, Wcf, Wxc, Wyc, Wxo, Wyo, Wco = \
             self.sliceWeightsSmall(self.inputDim, self.outputDim, self.W)
@@ -264,9 +255,6 @@ class LSTM:
 
         dEdX = np.zeros(X.shape, dtype=FLOAT)
 
-        # (tau -> T', j -> T', k -> t)
-        dYTdYt = np.ones((Xend, self.outputDim, self.outputDim), dtype=FLOAT)
-        dYTdCt = np.zeros((Xend, self.outputDim, self.outputDim), dtype=FLOAT)
         memEye = np.eye(self.outputDim)
         memCol = (self.outputDim, 1)
 
@@ -285,7 +273,6 @@ class LSTM:
             states3T[t] = \
                 np.concatenate((X[t], Yt1, C[t], np.ones(1, dtype=FLOAT)))
 
-            dEdYT = dEdY[t : Xend]
 
             # (k -> t)
             U = np.tanh(C[t])
@@ -304,124 +291,19 @@ class LSTM:
             dYtdCt = (Go[t] * dU) * memEye+ \
                      dYtdGo.reshape(memCol) * Wco
 
+            dEdYnow = dEdY[t] if self.multiErr else 0
             # (T, t)
-            dYTdCt[t] = dYtdCt
             if t < Xend - 1:
-                # (j -> T, l -> t-1) = (j -> T, k -> t) * (k -> t, l -> t-1)
-                dYTdYt[t + 1:] = np.dot(dYTdYt[t + 1:], dYtdYt1) + \
-                                 np.dot(dYTdCt[t + 1:], dCtdYt1)
-                dYTdCt[t + 1:] = np.dot(dYTdCt[t + 1:], dCtdCt1) + \
-                                 np.dot(dYTdYt[t + 1:], dYtdCt)
-                dEdGo[:, t] = (np.tensordot(dEdYT[1:], dYTdYt[t + 1:],
-                                      axes=([0, 1], [0, 1])) + dEdYT[0]) * dYtdGo
+                dEdYt = np.dot(dEdYt, dYtdYt1) + np.dot(dEdCt, dCtdYt1) + dEdYnow
+                dEdCt = np.dot(dEdCt, dCtdCt1) + np.dot(dEdYt, dYtdCt)
             else:
-                dEdGoTmp = dEdYT * dYtdGo
-                dEdGo[:, t] = dEdGoTmp.reshape(dEdGoTmp.size)
+                dEdYt = dEdYnow if self.multiErr else dEdY
+                dEdCt = np.dot(dEdYt, dYtdCt)
 
-            dEdCt = np.tensordot(dEdYT, dYTdCt[t:], axes=([0, 1], [0, 1]))
             dEdGi[:, t] = dEdCt * dCtdGi
             dEdGf[:, t] = dEdCt * dCtdGf
             dEdZ[:, t] = dEdCt * dCtdZ
-
-            # (k -> t, l -> t-1)
-            dCtdCt1 = dCtdGf.reshape(memCol) * Wcf + \
-                      Gf[t] * memEye + \
-                      dCtdGi.reshape(memCol) * Wci
-            dCtdYt1 = dCtdGf.reshape(memCol) * Wyf + \
-                      dCtdZ.reshape(memCol) * Wyc + \
-                      dCtdGi.reshape(memCol) * Wyi
-            dYtdYt1 = dYtdGo.reshape(memCol) * Wyo
-
-        dEdWi += np.dot(dEdGi, states1T)
-        dEdWf += np.dot(dEdGf, states1T)
-        dEdWc += np.dot(dEdZ, states2T)
-        dEdWo += np.dot(dEdGo, states3T)
-
-        if outputdEdX:
-            dEdX[0:Xend] = np.dot(dEdGi.transpose(), Wxi) + \
-                           np.dot(dEdGf.transpose(), Wxf) + \
-                           np.dot(dEdZ.transpose(), Wxc) + \
-                           np.dot(dEdGo.transpose(), Wxo)
-
-        return dEdW, dEdX
-
-    def _backPropagateOne(
-            self, dEdY, X, Y, C, Z, Gi, Gf, Go, Xend, outputdEdX):
-        Wxi, Wyi, Wci, Wxf, Wyf, Wcf, Wxc, Wyc, Wxo, Wyo, Wco = \
-            self.sliceWeightsSmall(self.inputDim, self.outputDim, self.W)
-
-        dEdW = np.zeros(self.W.shape, dtype=FLOAT)
-        dEdWi, dEdWf, dEdWc, dEdWo = \
-            self.sliceWeights(self.inputDim, self.outputDim, dEdW)
-
-        # (j, t)
-        dEdGi = np.zeros((self.outputDim, Xend), dtype=FLOAT)
-        dEdGf = np.zeros((self.outputDim, Xend), dtype=FLOAT)
-        dEdZ = np.zeros((self.outputDim, Xend), dtype=FLOAT)
-        dEdGo = np.zeros((self.outputDim, Xend), dtype=FLOAT)
-
-        # (t, k)
-        states1T = np.zeros((Xend,
-                   self.inputDim + 2 * self.outputDim + 1), dtype=FLOAT)
-        states2T = np.zeros((Xend,
-                   self.inputDim + self.outputDim + 1), dtype=FLOAT)
-        states3T = np.zeros((Xend,
-                   self.inputDim + 2 * self.outputDim + 1), dtype=FLOAT)
-
-        dEdX = np.zeros(X.shape, dtype=FLOAT)
-
-        # (j -> T, k -> t)
-        dYTdYt = np.ones((self.outputDim, self.outputDim), dtype=FLOAT)
-        memEye = np.eye(self.outputDim)
-        memCol = (self.outputDim, 1)
-
-        for t in reversed(range(0, Xend)):
-            if t == 0:
-                Yt1 = np.zeros(self.outputDim, dtype=FLOAT)
-                Ct1 = np.zeros(self.outputDim, dtype=FLOAT)
-            else:
-                Yt1 = Y[t-1]
-                Ct1 = C[t-1]
-
-            states1T[t] = \
-                np.concatenate((X[t], Yt1, Ct1, np.ones(1, dtype=FLOAT)))
-            states2T[t] = \
-                np.concatenate((X[t], Yt1, np.ones(1, dtype=FLOAT)))
-            states3T[t] = \
-                np.concatenate((X[t], Yt1, C[t], np.ones(1, dtype=FLOAT)))
-
-            dEdYT = dEdY
-
-            # (k -> t)
-            U = np.tanh(C[t])
-            dU = 1 - np.power(U, 2)
-            dZ = 1 - np.power(Z[t], 2)
-
-            dGi = Gi[t] * (1 - Gi[t])
-            dGf = Gf[t] * (1 - Gf[t])
-            dGo = Go[t] * (1 - Go[t])
-            dCtdGi = Z[t] * dGi
-            dCtdGf = Ct1 * dGf
-            dCtdZ = Gi[t] * dZ
-            dYtdGo = U * dGo
-
-            # (k, l)
-            dYtdCt = (Go[t] * dU) * memEye+ \
-                     dYtdGo.reshape(memCol) * Wco
-
-            # (T, t)
-            if t < Xend - 1:
-                dYTdYt = np.dot(dYTdYt, dYtdYt1) + np.dot(dYTdCt, dCtdYt1)
-                dYTdCt = np.dot(dYTdCt, dCtdCt1) + np.dot(dYTdYt, dYtdCt)
-                dEdGo[:, t] = np.dot(dEdYT, dYTdYt) * dYtdGo
-            else:
-                dYTdCt = dYtdCt
-                dEdGo[:, t] = dEdYT * dYtdGo
-
-            dEdCt = np.dot(dEdYT, dYTdCt)
-            dEdGi[:, t] = dEdCt * dCtdGi
-            dEdGf[:, t] = dEdCt * dCtdGf
-            dEdZ[:, t] = dEdCt * dCtdZ
+            dEdGo[:, t] = dEdYt * dYtdGo
 
             # (k -> t, l -> t-1)
             dCtdCt1 = dCtdGf.reshape(memCol) * Wcf + \
