@@ -4,16 +4,19 @@ stages:
     - type: timeUnfold
     - type: linearDict
       inputDim: 16547
-      outputDim: 300
-      initWeights: ../data/sentiment3/word-embed-0.npy
-      learningRate: 0.0
+      outputDim: 50
+      initSeed: 2
+      initRange: 0.1
+      learningRate: 0.8
+      gradientClip: 5.0
+      weightRegConst: 0.00005
     - type: timeFold
       timespan: 69
     - type: dropout
       dropoutRate: 0.2
       initSeed: 3
     - type: lstm
-      inputDim: 300
+      inputDim: 50
       outputDim: 50
       initRange: 0.1
       initSeed: 4
