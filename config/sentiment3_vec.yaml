@@ -7,7 +7,7 @@ stages:
       outputDim: 4096
       initSeed: 2
       initRange: 0.1
-      learningRate: 0.8
+      learningRate: 0.0
       gradientClip: 5.0
       weightRegConst: 0.00005
     - type: timeFold
@@ -17,25 +17,41 @@ stages:
       initSeed: 3
     - type: lstm
       inputDim: 4096
-      outputDim: 150
+      outputDim: 50
       initRange: 0.1
       initSeed: 4
       cutOffZeroEnd: true
       multiErr: true
       learningRate: 0.8
       gradientClip: 0.1
+      weightClip: 40.0
+      weightRegConst: 0.00005
+      annealConst: 0.0
+      outputdEdX: false   
+      - type: dropout
+      dropoutRate: 0.5
+      initSeed: 5
+    - type: lstm
+      inputDim: 50
+      outputDim: 50
+      initRange: 0.1
+      initSeed: 6
+      cutOffZeroEnd: true
+      multiErr: false
+      learningRate: 0.8
+      gradientClip: 0.1
       weightClip: 20.0
       weightRegConst: 0.00005
       annealConst: 0.0
-      outputdEdX: false
+      outputdEdX: true
     - type: sigmoid
-      inputDim: 50
+      inputDim: 150
       outputDim: 1
       initRange: 0.1
       initSeed: 7
       learningRate: 0.01
       gradientClip: 0.1
-      weightClip: 5.0
+      weightClip: 10.0
       annealConst: 0.0
       weightRegConst: 0.00005
 trainOpt:
