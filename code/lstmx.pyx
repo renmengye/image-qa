@@ -48,8 +48,8 @@ def forwardPassN(
                 np.ndarray[FLOAT_t, ndim=2] W):
     cdef int numEx = X.shape[0]
     cdef int timespan = X.shape[1]
-    cdef int outputDim = X.shape[2]
-    cdef int inputDim = W.shape[0]
+    cdef int inputDim = X.shape[2]
+    cdef int outputDim = W.shape[0]
     Wi, Wf, Wc, Wo = sliceWeights(inputDim, outputDim, W)
     cdef np.ndarray Xend = np.zeros(numEx, dtype=int)
     cdef np.ndarray Y
@@ -188,17 +188,10 @@ def backPropagateOne(
                    Wshape):
     if cutOffZeroEnd and multiErr:
         dEdY[Xend - 1] += dEdY[-1]
-    cdef int inputDim = Wxi.shape[1]
-    cdef int outputDim = Wxi.shape[0]
+    cdef int inputDim = X.shape[1]
+    cdef int outputDim = Y.shape[1]
     cdef np.ndarray dEdW = np.zeros(Wshape, dtype=FLOAT)
-    s1 = inputDim + outputDim * 2 + 1
-    s2 = s1 * 2
-    s3 = s2 + inputDim + outputDim + 1
-    s4 = s3 + s1
-    cdef np.ndarray dEdWi = dEdW[:, 0 : s1]
-    cdef np.ndarray dEdWf = dEdW[:, s1 : s2]
-    cdef np.ndarray dEdWc = dEdW[:, s2 : s3]
-    cdef np.ndarray dEdWo = dEdW[:, s3 : s4]
+    dEdWi,dEdWf,dEdWc,dEdWo = sliceWeights(inputDim, outputDim, dEdW)
     cdef ddim = (outputDim, Xend)
 
     # (j, t)
