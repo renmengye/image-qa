@@ -1,4 +1,5 @@
 from util_func import *
+import lstmx
 
 FLOAT = np.float
 
@@ -97,12 +98,17 @@ class LSTM:
     def forwardPass(self, X):
         if len(X.shape) == 3:
             return self._forwardPassN(X)
+        Wi, Wf, Wc, Wo = \
+            self.sliceWeights(self.inputDim, self.outputDim, self.W)
 
         if self.cutOffZeroEnd:
             reachedEnd = np.sum(X, axis=-1) == 0.0
         else:
             reachedEnd = 0
-        Y, C, Z, Gi, Gf, Go, Xend = self._forwardPassOne(X, reachedEnd)
+
+        Y, C, Z, Gi, Gf, Go, Xend = \
+                lstmx.forwardPass(
+                    X, reachedEnd, self.cutOffZeroEnd, Wi, Wf, Wc, Wo)
 
         self.X = X
         self.Y = Y
@@ -134,21 +140,25 @@ class LSTM:
         self.Gi = np.zeros(myShape, dtype=FLOAT)
         self.Gf = np.zeros(myShape, dtype=FLOAT)
         self.Go = np.zeros(myShape, dtype=FLOAT)
+        Wi, Wf, Wc, Wo = \
+            self.sliceWeights(self.inputDim, self.outputDim, self.W)
 
         for n in range(0, numEx):
             self.Y[n], self.C[n], self.Z[n], \
             self.Gi[n], self.Gf[n], self.Go[n], \
-            self.Xend[n] = self._forwardPassOne(X[n], reachedEnd[n])
+            self.Xend[n] = \
+                lstmx.forwardPass(
+                    X[n], reachedEnd[n], self.cutOffZeroEnd, Wi, Wf, Wc, Wo)
 
         self.X = X
 
         return self.Y \
             if self.multiErr else self.Y[:, -1]
 
-    def _forwardPassOne(self, X, reachedEnd):
+    def _forwardPassOneOld(self, X, reachedEnd, cutOffZeroEnd, Wi, Wf, Wc, Wo):
         timespan = X.shape[0]
         # Last time step is reserved for final output of the entire input.
-        if self.cutOffZeroEnd:
+        if cutOffZeroEnd:
             Y = np.zeros((timespan + 1, self.outputDim), dtype=FLOAT)
         else:
             Y = np.zeros((timespan, self.outputDim), dtype=FLOAT)
@@ -158,10 +168,9 @@ class LSTM:
         Gf = np.zeros((timespan, self.outputDim), dtype=FLOAT)
         Go = np.zeros((timespan, self.outputDim), dtype=FLOAT)
         Xend = timespan
-        Wi, Wf, Wc, Wo = self.sliceWeights(self.inputDim, self.outputDim, self.W)
 
         for t in range(0, timespan):
-            if self.cutOffZeroEnd and reachedEnd[t]:
+            if cutOffZeroEnd and reachedEnd[t]:
                 Xend = t
                 Y[-1, :] = Y[t - 1, :]
                 break
@@ -189,33 +198,43 @@ class LSTM:
     def backPropagate(self, dEdY, outputdEdX=True):
         if len(self.X.shape) == 3:
             return self._backPropagateN(dEdY, outputdEdX)
-        return self._backPropagateOne(
-            dEdY, self.X, self.Y, self.C, self.Z,self.Gi,
-            self.Gf, self.Go, self.Xend, outputdEdX)
+        Wxi, Wyi, Wci, Wxf, Wyf, Wcf, Wxc, Wyc, Wxo, Wyo, Wco = \
+            self.sliceWeightsSmall(self.inputDim, self.outputDim, self.W)
+        return lstmx.backPropagate(dEdY,self.X,self.Y,
+                                    self.C,self.Z,self.Gi,
+                                    self.Gf,self.Go,
+                                    self.Xend,self.cutOffZeroEnd,
+                                    self.multiErr,outputdEdX,
+                                    Wxi,Wyi,Wci,Wxf,Wyf,Wcf,Wxc,
+                                    Wyc,Wxo,Wyo,Wco,self.W.shape)
 
     def _backPropagateN(self, dEdY, outputdEdX):
         numEx = self.X.shape[0]
         dEdW = np.zeros(self.W.shape, dtype=FLOAT)
         dEdX = np.zeros(self.X.shape, dtype=FLOAT)
+        Wxi, Wyi, Wci, Wxf, Wyf, Wcf, Wxc, Wyc, Wxo, Wyo, Wco = \
+            self.sliceWeightsSmall(self.inputDim, self.outputDim, self.W)
         for n in range(0, numEx):
             dEdWtmp, dEdX[n] = \
-                self._backPropagateOne(
-                    dEdY[n], self.X[n], self.Y[n],
-                    self.C[n], self.Z[n], self.Gi[n],
-                    self.Gf[n], self.Go[n], self.Xend[n],
-                    outputdEdX)
+                lstmx.backPropagate(dEdY[n],self.X[n],self.Y[n],
+                                    self.C[n],self.Z[n],self.Gi[n],
+                                    self.Gf[n],self.Go[n],
+                                    self.Xend[n],self.cutOffZeroEnd,
+                                    self.multiErr,outputdEdX,
+                                    Wxi,Wyi,Wci,Wxf,Wyf,Wcf,Wxc,
+                                    Wyc,Wxo,Wyo,Wco,self.W.shape)
             dEdW += dEdWtmp
 
         return dEdW, dEdX
 
-    def _backPropagateOne(
-            self, dEdY, X, Y, C, Z, Gi, Gf, Go, Xend, outputdEdX):
-        if self.cutOffZeroEnd and self.multiErr:
+    def _backPropagateOneOld(
+            self, dEdY, X, Y, C, Z, Gi, Gf, Go, Xend, cutOffZeroEnd, multiErr,outputdEdX,
+                                    Wxi,Wyi,Wci,Wxf,Wyf,Wcf,Wxc,
+                                    Wyc,Wxo,Wyo,Wco, Wshape):
+        if cutOffZeroEnd and multiErr:
             dEdY[Xend - 1] += dEdY[-1]
-        Wxi, Wyi, Wci, Wxf, Wyf, Wcf, Wxc, Wyc, Wxo, Wyo, Wco = \
-            self.sliceWeightsSmall(self.inputDim, self.outputDim, self.W)
 
-        dEdW = np.zeros(self.W.shape, dtype=FLOAT)
+        dEdW = np.zeros(Wshape, dtype=FLOAT)
         dEdWi, dEdWf, dEdWc, dEdWo = \
             self.sliceWeights(self.inputDim, self.outputDim, dEdW)
 
@@ -271,13 +290,13 @@ class LSTM:
             dYtdCt = (Go[t] * dU) * memEye+ \
                      dYtdGo.reshape(memCol) * Wco
 
-            dEdYnow = dEdY[t] if self.multiErr else 0
+            dEdYnow = dEdY[t] if multiErr else 0
             # (T, t)
             if t < Xend - 1:
                 dEdYt = np.dot(dEdYt, dYtdYt1) + np.dot(dEdCt, dCtdYt1) + dEdYnow
                 dEdCt = np.dot(dEdCt, dCtdCt1) + np.dot(dEdYt, dYtdCt)
             else:
-                dEdYt = dEdYnow if self.multiErr else dEdY
+                dEdYt = dEdYnow if multiErr else dEdY
                 dEdCt = np.dot(dEdYt, dYtdCt)
 
             dEdGi[:, t] = dEdCt * dCtdGi
