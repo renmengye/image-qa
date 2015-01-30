@@ -6,18 +6,85 @@ ctypedef np.float_t FLOAT_t
 import cython
 @cython.boundscheck(False)
 def sigmoidFn(X):
-    #cdef np.ndarray Y = np.zeros((X.shape), dtype=X.dtype)
     Y = 1 / (1 + np.exp(-X))
     return Y
 
-def forwardPass(
-                    np.ndarray[FLOAT_t, ndim=2] X, 
-                    np.ndarray reachedEnd,
-                    cutOffZeroEnd,
-                    np.ndarray[FLOAT_t, ndim=2] Wi, 
-                    np.ndarray[FLOAT_t, ndim=2] Wf, 
-                    np.ndarray[FLOAT_t, ndim=2] Wc, 
-                    np.ndarray[FLOAT_t, ndim=2] Wo):
+def sliceWeights(int inputDim, 
+                int outputDim, 
+                np.ndarray[FLOAT_t, ndim=2] W):
+    s1 = inputDim + outputDim * 2 + 1
+    s2 = s1 * 2
+    s3 = s2 + inputDim + outputDim + 1
+    s4 = s3 + s1
+    Wi = W[:, 0 : s1]
+    Wf = W[:, s1 : s2]
+    Wc = W[:, s2 : s3]
+    Wo = W[:, s3 : s4]
+    
+    return Wi, Wf, Wc, Wo
+
+def sliceWeightsSmall(int inputDim, 
+                    int outputDim, 
+                    np.ndarray[FLOAT_t, ndim=2] W):
+    Wi, Wf, Wc, Wo = sliceWeights(inputDim, outputDim, W)
+
+    Wxi = Wi[:, 0 : outputDim]
+    Wyi = Wi[:, inputDim : inputDim + outputDim]
+    Wci = Wi[:, inputDim + outputDim : inputDim + outputDim + outputDim]
+    Wxf = Wf[:, 0 : inputDim]
+    Wyf = Wf[:, inputDim : inputDim + outputDim]
+    Wcf = Wf[:, inputDim + outputDim : inputDim + outputDim + outputDim]
+    Wxc = Wc[:, 0 : inputDim]
+    Wyc = Wc[:, inputDim : inputDim + outputDim]
+    Wxo = Wo[:, 0 : inputDim]
+    Wyo = Wo[:, inputDim : inputDim + outputDim]
+    Wco = Wo[:, inputDim + outputDim : inputDim + outputDim + outputDim]
+
+    return Wxi, Wyi, Wci, Wxf, Wyf, Wcf, Wxc, Wyc, Wxo, Wyo, Wco
+
+def forwardPassN(
+                np.ndarray[FLOAT_t, ndim=3] X,
+                cutOffZeroEnd,
+                np.ndarray[FLOAT_t, ndim=2] W):
+    cdef int numEx = X.shape[0]
+    cdef int timespan = X.shape[1]
+    cdef int outputDim = X.shape[2]
+    cdef int inputDim = W.shape[0]
+    Wi, Wf, Wc, Wo = sliceWeights(inputDim, outputDim, W)
+    cdef np.ndarray Xend = np.zeros(numEx, dtype=int)
+    cdef np.ndarray Y
+    cdef np.ndarray reachedEnd
+    cdef np.ndarray Gi = np.zeros((numEx,timespan,outputDim), dtype=FLOAT)
+    cdef np.ndarray Gf = np.zeros((numEx,timespan,outputDim), dtype=FLOAT)
+    cdef np.ndarray Go = np.zeros((numEx,timespan,outputDim), dtype=FLOAT)
+    cdef np.ndarray Z = np.zeros((numEx,timespan,outputDim), dtype=FLOAT)
+    cdef np.ndarray C = np.zeros((numEx,timespan,outputDim), dtype=FLOAT)
+    myShape = (numEx,timespan,outputDim)
+    if cutOffZeroEnd:
+        Y = np.zeros((numEx, timespan + 1, outputDim),
+                          dtype=FLOAT)
+        reachedEnd = np.sum(X, axis=-1) == 0.0
+    else:
+        Y = np.zeros(myShape, dtype=FLOAT)
+        reachedEnd = np.zeros((numEx, timespan), dtype=FLOAT)
+    
+    for n in range(0, numEx):
+        Y[n], C[n], Z[n], \
+        Gi[n], Gf[n], Go[n], \
+        Xend[n] = \
+            forwardPassOne(
+                X[n], reachedEnd[n], cutOffZeroEnd, Wi, Wf, Wc, Wo)
+
+    return Y, C, Z, Gi, Gf, Go, Xend
+    
+def forwardPassOne(
+                np.ndarray[FLOAT_t, ndim=2] X, 
+                np.ndarray reachedEnd,
+                cutOffZeroEnd,
+                np.ndarray[FLOAT_t, ndim=2] Wi, 
+                np.ndarray[FLOAT_t, ndim=2] Wf, 
+                np.ndarray[FLOAT_t, ndim=2] Wc, 
+                np.ndarray[FLOAT_t, ndim=2] Wo):
     timespan = X.shape[0]
     outputDim = Wi.shape[0]
     # Last time step is reserved for final output of the entire input.
@@ -61,8 +128,40 @@ def forwardPass(
 
     return Y, C, Z, Gi, Gf, Go, Xend
     
-    
-def backPropagate(
+def backPropagateN(
+                   np.ndarray dEdY, 
+                   np.ndarray[FLOAT_t, ndim=3] X, 
+                   np.ndarray[FLOAT_t, ndim=3] Y, 
+                   np.ndarray[FLOAT_t, ndim=3] C, 
+                   np.ndarray[FLOAT_t, ndim=3] Z, 
+                   np.ndarray[FLOAT_t, ndim=3] Gi, 
+                   np.ndarray[FLOAT_t, ndim=3] Gf, 
+                   np.ndarray[FLOAT_t, ndim=3] Go, 
+                   Xend, 
+                   cutOffZeroEnd,
+                   multiErr,
+                   outputdEdX,
+                   np.ndarray[FLOAT_t, ndim=2] W):
+    cdef int numEx = X.shape[0]
+    cdef int inputDim = X.shape[2]
+    cdef int outputDim = Y.shape[2]
+    Wxi,Wyi,Wci,Wxf,Wyf,Wcf,Wxc,Wyc,Wxo,Wyo,Wco = sliceWeightsSmall(inputDim, outputDim, W)
+    cdef np.ndarray dEdW = np.zeros((W.shape[0], W.shape[1]), dtype=FLOAT)
+    cdef np.ndarray dEdX = np.zeros((X.shape[0], X.shape[1], X.shape[2]), dtype=FLOAT)
+    cdef np.ndarray dEdWtmp
+    for n in range(0, numEx):
+        dEdWtmp, dEdX[n] = \
+            backPropagateOne(dEdY[n],X[n],Y[n],
+                        C[n],Z[n],Gi[n],
+                        Gf[n],Go[n],
+                        Xend[n],cutOffZeroEnd,
+                        multiErr,outputdEdX,
+                        Wxi,Wyi,Wci,Wxf,Wyf,Wcf,Wxc,
+                        Wyc,Wxo,Wyo,Wco,(W.shape[0], W.shape[1]))
+        dEdW += dEdWtmp
+    return dEdW, dEdX
+
+def backPropagateOne(
                    np.ndarray dEdY, 
                    np.ndarray[FLOAT_t, ndim=2] X, 
                    np.ndarray[FLOAT_t, ndim=2] Y, 
