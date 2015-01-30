@@ -45,13 +45,13 @@ stages:
       annealConst: 0.0
       outputdEdX: true
     - type: sigmoid
-      inputDim: 150
+      inputDim: 50
       outputDim: 1
       initRange: 0.1
       initSeed: 7
       learningRate: 0.01
       gradientClip: 0.1
-      weightClip: 10.0
+      weightClip: 5.0
       annealConst: 0.0
       weightRegConst: 0.00005
 trainOpt:
