@@ -28,7 +28,7 @@ stages:
       weightRegConst: 0.00005
       annealConst: 0.0
       outputdEdX: false   
-      - type: dropout
+    - type: dropout
       dropoutRate: 0.5
       initSeed: 5
     - type: lstm
