@@ -1,5 +1,6 @@
 from util_func import *
 from stage import *
+import numpy
 import lstmpy as lstmx
 
 class LSTM(Stage):
@@ -33,10 +34,9 @@ class LSTM(Stage):
         self.outputDim = outputDim
         self.cutOffZeroEnd = cutOffZeroEnd
         self.multiErr = multiErr
-        self.random = np.random.RandomState(initSeed)
+        self.random = numpy.random.RandomState(initSeed)
 
         if needInit:
-            np.random.seed(initSeed)
             start = -initRange / 2.0
             end = initRange / 2.0
             Wxi = self.random.uniform(start, end, (self.outputDim, self.inputDim))
