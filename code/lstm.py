@@ -2,6 +2,7 @@ from util_func import *
 from stage import *
 import numpy
 import lstmpy as lstmx
+#import lstmx
 
 class LSTM(Stage):
     def __init__(self,

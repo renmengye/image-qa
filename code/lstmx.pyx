@@ -52,7 +52,7 @@ def forwardPassN(
     cdef int inputDim = X.shape[2]
     cdef int outputDim = W.shape[0]
     Wi, Wf, Wc, Wo = sliceWeights(inputDim, outputDim, W)
-    cdef np.ndarray Xend = np.zeros(numEx)
+    cdef np.ndarray Xend = np.zeros(numEx, dtype=int)
     cdef np.ndarray Y
     cdef np.ndarray reachedEnd
     cdef np.ndarray Gi = np.zeros((numEx,timespan,outputDim))
