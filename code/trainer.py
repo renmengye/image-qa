@@ -206,8 +206,10 @@ class Trainer:
             rate, correct, total = self.calcRate(Y, T)
             correctT += correct
             totalT += total
+            batchStart += numExPerBat
 
-        print 'SR: %.4f' % correctT / float(totalT)
+        rateT = correctT / float(totalT)
+        print 'SR: %.4f' % rateT
 
     def plotFigs(self, epoch, Etotal, VEtotal, calcError, Rtotal=None, VRtotal=None):
         plt.figure(1)

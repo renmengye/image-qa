@@ -36,7 +36,7 @@ def escapeNumber(line):
 
     return line
 
-def buildDict(lines):
+def buildDict(lines, keystart):
     # From word to number.
     word_dict = {}
     # From number to word, numbers need to minus one to convert to list indices.
@@ -44,7 +44,7 @@ def buildDict(lines):
     # Word frequency
     word_freq = []
     # Key is 1-based, 0 is reserved for sentence end.
-    key = 1
+    key = keystart
     for i in range(0, len(lines)):
         line = lines[i].replace(',', '')
         words = line.split(' ')
@@ -65,11 +65,9 @@ def buildInputTarget(question, answer, numEx, lineMax, wordDict, answerDict):
     target_ = np.zeros((numEx, 1), dtype=int)
     for i in range(0, numEx):
         words = question[i].split(' ')
-        # Ignore two word answers for now.
-        if wordDict.has_key(answer[i]):
-            target_[i, 0] = answerDict[answer[i]]
-            for t in range(0, len(words)):
-                input_[i, t, 0] = wordDict[words[t]]
+        target_[i, 0] = answerDict[answer[i]]
+        for t in range(0, len(words)):
+            input_[i, t, 0] = wordDict[words[t]]
     return input_, target_
 
 if __name__ == '__main__':
@@ -79,20 +77,34 @@ if __name__ == '__main__':
     with open('../data/mpi-qa/qa.37.raw.train.txt') as f:
         lines = f.readlines()
 
-    numTrain = len(lines) / 2
+    newlines = []
+    # Purge multi answer question for now.
+    for i in range(len(lines) / 2):
+        if ',' in lines[2 * i + 1]:
+            continue
+        newlines.append(lines[2 * i])
+        newlines.append(lines[2 * i + 1])
+    numTrain = len(newlines) / 2
+
     with open('../data/mpi-qa/qa.37.raw.test.txt') as f:
-        lines.extend(f.readlines())
-    numTest = len(lines) / 2 - numTrain
+        lines = f.readlines()
+    # Purge multi answer question for now.
+    for i in range(len(lines) / 2):
+        if ',' in lines[2 * i + 1]:
+            continue
+        newlines.append(lines[2 * i])
+        newlines.append(lines[2 * i + 1])
+    numTest = len(newlines) / 2 - numTrain
 
     imgIdPattern = re.compile('image')
     pureQ = []
     pureA = []
     lineMax = 0
-    for i in range(0, len(lines) / 2):
+    for i in range(0, len(newlines) / 2):
         n = i * 2
-        match = re.search('image(\d+)', lines[n])
+        match = re.search('image(\d+)', newlines[n])
         number = int((re.search('\d+', match.group())).group())
-        line = lines[n]
+        line = newlines[n]
         line = re.sub(' in the image(\d+)( \?\s)?', '' , line)
         line = re.sub(' in this image(\d+)( \?\s)?', '' , line)
         line = re.sub(' on the image(\d+)( \?\s)?', '' , line)
@@ -100,13 +112,13 @@ if __name__ == '__main__':
         line = re.sub(' in image(\d+)( \?\s)?', '' , line)
         line = re.sub(' image(\d+)( \?\s)?', '' , line)
         pureQ.append(line)
-        answer = escapeNumber(re.sub('\s$', '', lines[n + 1]))
+        answer = escapeNumber(re.sub('\s$', '', newlines[n + 1]))
         pureA.append(answer)
         imgIds.append(number)
         if len(pureQ[i]) > lineMax: lineMax = len(pureQ[i])
 
-    questionDict, questionVocab = buildDict(pureQ)
-    answerDict, answerVocab = buildDict(pureA)
+    questionDict, questionVocab = buildDict(pureQ, keystart=1)
+    answerDict, answerVocab = buildDict(pureA, keystart=0)
     trainInput, trainTarget = buildInputTarget(pureQ[:numTrain], pureA[:numTrain], numTrain, lineMax, questionDict, answerDict)
     trainInput = np.concatenate((np.reshape(imgIds[:numTrain], (numTrain, 1, 1)), trainInput), axis=1)
     testInput, testTarget = buildInputTarget(pureQ[numTrain:], pureA[numTrain:], numTest, lineMax, questionDict, answerDict)
