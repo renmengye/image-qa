@@ -1,8 +1,6 @@
 from util_func import *
 from stage import *
-import lstmx
-
-FLOAT = np.float32
+import lstmpy as lstmx
 
 class LSTM(Stage):
     def __init__(self,
@@ -138,6 +136,21 @@ class LSTM(Stage):
                                 self.multiErr,self.outputdEdX,
                                 self.W)
         return dEdX if self.outputdEdX else None
+
+    def sliceWeights(
+                    inputDim,
+                    outputDim,
+                    W):
+        s1 = inputDim + outputDim * 2 + 1
+        s2 = s1 * 2
+        s3 = s2 + inputDim + outputDim + 1
+        s4 = s3 + s1
+        Wi = W[:, 0 : s1]
+        Wf = W[:, s1 : s2]
+        Wc = W[:, s2 : s3]
+        Wo = W[:, s3 : s4]
+
+        return Wi, Wf, Wc, Wo
 
 if __name__ == '__main__':
     lstm = LSTM(

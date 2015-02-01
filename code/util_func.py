@@ -1,4 +1,7 @@
-import numpy as np
+import os
+os.environ['GNUMPY_USE_GPU'] = 'yes'
+import gnumpy as np
+FLOAT = np.float
 
 def meanSqErr(Y, T):
     diff =  Y - T.reshape(Y.shape)

@@ -26,7 +26,7 @@ stages:
       gradientClip: 0.1
       weightClip: 40.0
       weightRegConst: 0.00005
-      annealConst: 0.0
+      learningRateAnnealConst: 0.0
       outputdEdX: false
     - type: sigmoid
       inputDim: 50
@@ -36,7 +36,7 @@ stages:
       learningRate: 0.01
       gradientClip: 0.1
       weightClip: 5.0
-      annealConst: 0.0
+      learningRateAnnealConst: 0.0
       weightRegConst: 0.00005
 trainOpt:
     numEpoch: 2000
