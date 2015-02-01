@@ -12,7 +12,7 @@ version = '20150117-142115'
 with open('sentiment_results/sentiment-' + version + '.pip') as pipf:
     pipeline = pickle.load(pipf)
 
-# lin_dict = pipeline.stages[1].W
+# lin_dict = trainer.stages[1].W
 # lin_dict = lin_dict[:, 1:]
 # lin_dict2 = tsne(lin_dict.transpose())
 # np.save('sentiment_results/sentiment-20150117-142115-embedding.npy', lin_dict2)

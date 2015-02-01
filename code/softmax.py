@@ -16,8 +16,10 @@ class Softmax(Stage):
                  weightClip=0.0,
                  gradientClip=0.0,
                  weightRegConst=0.0,
-                 outputdEdX=True):
+                 outputdEdX=True,
+                 name=None):
         Stage.__init__(self,
+                 name=name,
                  learningRate=learningRate,
                  learningRateAnnealConst=learningRateAnnealConst,
                  momentum=momentum,
@@ -91,10 +93,8 @@ class Softmax(Stage):
         Y = self.Y
         X = self.X
         timespan = Y.shape[0]
-        #dY_ti__dZ_j = -Y.reshape(timespan, self.outputDim, 1) * Y.reshape(timespan, 1, self.outputDim)
-        dEdZ = dEdY * Y
-        for n in range(0, timespan):
-            dEdZ[n] -= np.inner(dEdY[n], Y[n]) * Y[n]
+        U = dEdY * Y
+        dEdZ = U - np.sum(U, axis=-1).reshape(timespan, 1) * Y
         self.dEdW = np.dot(dEdZ.transpose(), X)
         dEdX = np.dot(dEdZ, self.W[:, :-1])
         return dEdX if self.outputdEdX else None

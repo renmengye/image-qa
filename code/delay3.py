@@ -19,16 +19,16 @@ def getData(size, length, seed=2):
     return input_, target_
 
 if __name__ == '__main__':
-    # pipeline = Trainer(
+    # trainer = Trainer(
     #     name='delay3',
     #     costFn=meanSqErr,
     #     decisionFn=hardLimit)
-    # pipeline.addStage(LSTM(
+    # trainer.addStage(LSTM(
     #     inputDim=1,
     #     outputDim=5,
     #     initRange=0.01,
     #     initSeed=2))
-    # pipeline.addStage(SimpleSum())
+    # trainer.addStage(SimpleSum())
     # trainOpt = {
     #     'learningRate': 0.1,
     #     'numEpoch': 2000,
@@ -43,7 +43,7 @@ if __name__ == '__main__':
     #     'stopE': 0.005
     # }
 
-    # pipeline = Trainer(
+    # trainer = Trainer(
     #     name='delay3',
     #     costFn=crossEntIdx,
     #     decisionFn=argmax)
@@ -80,7 +80,7 @@ if __name__ == '__main__':
         learningRate=0.8,
         gradientClip=0.02)
     pipeline.addStage(TimeUnfold())
-    # pipeline.addStage(Softmax(
+    # trainer.addStage(Softmax(
     #     inputDim=3,
     #     outputDim=2,
     #     initRange=0.01,

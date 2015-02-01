@@ -16,8 +16,10 @@ class LinearDict(Stage):
                  deltaMomentum=0.0,
                  weightClip=0.0,
                  gradientClip=0.0,
-                 weightRegConst=0.0):
+                 weightRegConst=0.0,
+                 name=None):
         Stage.__init__(self,
+                 name=name,
                  learningRate=learningRate,
                  learningRateAnnealConst=learningRateAnnealConst,
                  momentum=momentum,
@@ -90,13 +92,10 @@ class LinearDict(Stage):
         pass
 
     def forwardPass(self, X):
-        if X.size > 1:
-            X = X.reshape(X.size)
-            Y = np.zeros((X.shape[0], self.outputDim))
-            for n in range(0, X.shape[0]):
-                Y[n, :] = self.W[:, X[n]]
-        else:
-            Y = self.W[:, X]
+        X = X.reshape(X.size)
+        Y = np.zeros((X.shape[0], self.outputDim))
+        for n in range(0, X.shape[0]):
+            Y[n, :] = self.W[:, X[n]]
         self.X = X
         self.Y = Y
         return Y

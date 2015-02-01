@@ -2,6 +2,7 @@ from util_func import *
 
 class Stage:
     def __init__(self,
+                 name=None,
                  learningRate=0.0,
                  learningRateAnnealConst=0.0,
                  momentum=0.0,
@@ -10,6 +11,7 @@ class Stage:
                  gradientClip=0.0,
                  weightRegConst=0.0,
                  outputdEdX=True):
+        self.name = name
         self.startLearningRate = learningRate
         self.currentLearningRate = learningRate
         self.learningRateAnnealConst = learningRateAnnealConst
@@ -66,3 +68,21 @@ class Stage:
         self.currentLearningRate = self.startLearningRate / \
                                    (1.0 + self.learningRateAnnealConst * numEpoch)
         self.momentum -= self.deltaMomentum
+
+        if self.gradientClip > 0.0 or self.weightClip > 0.0:
+            print 'ST: %s' % self.name,
+            if self.gradientClip > 0.0:
+                print 'GN: %.4f ' % self.dEdWnorm,
+                print 'GC: %.4f ' % self.gradientClip,
+            if self.weightClip > 0.0:
+                print 'WN: %.4f ' % self.Wnorm,
+                print 'WC: %.4f ' % self.weightClip,
+            print
+        return
+
+    def getWeights(self):
+        return self.W
+
+    def loadWeights(self, W):
+        self.W = W
+        return

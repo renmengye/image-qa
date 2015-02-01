@@ -13,7 +13,15 @@ import matplotlib.pyplot as plt
 plt.ion()
 
 class Trainer:
-    def __init__(self, name, model, trainOpt, costFn, decisionFn=None, outputFolder='', configFilename=None):
+    def __init__(self,
+                 name,
+                 model,
+                 trainOpt,
+                 costFn,
+                 decisionFn=None,
+                 outputFolder='',
+                 configFilename=None,
+                 seed=1000):
         self.model = model
         self.name = name + time.strftime("-%Y%m%d-%H%M%S")
         print 'Trainer ' + self.name
@@ -29,13 +37,13 @@ class Trainer:
         self.lossFigFilename = os.path.join(self.outputFolder, self.name + '_loss.png')
         self.errFigFilename = os.path.join(self.outputFolder, self.name + '_err.png')
         self.startTime = time.time()
+        self.random = np.random.RandomState(seed)
         pass
 
     @staticmethod
     def initFromConfig(name, configFilename, outputFolder=None):
         with open(configFilename) as f:
             pipeDict = yaml.load(f)
-
 
         for stageDict in pipeDict['stages']:
             stage = router.routeStage(stageDict)
@@ -47,19 +55,23 @@ class Trainer:
             costFn=router.routeFn(pipeDict['costFn']),
             decisionFn=router.routeFn(pipeDict['decisionFn']),
             outputFolder=outputFolder,
-            configFilename=configFilename
+            configFilename=configFilename,
+            seed=pipeDict['seed'] if pipeDict.has_key('seed') else 1000
         )
         return pipeline
 
-    @staticmethod
-    def shuffleData(X, T):
+    def shuffleData(self, X, T):
         shuffle = numpy.arange(0, X.shape[0])
-        shuffle = numpy.random.permutation(shuffle)
+        shuffle = self.random.permutation(shuffle)
         X = X[shuffle]
         T = T[shuffle]
         return X, T
 
-    def train(self, trainInput, trainTarget):
+    def train(self,
+              trainInput,
+              trainTarget,
+              testInput=None,
+              testTarget=None):
         trainOpt = self.trainOpt
         needValid =  trainOpt['needValid'] if trainOpt.has_key('needValid') else False
         xvalidNo = trainOpt['xvalidNo'] if trainOpt.has_key('xvalidNo') else 0
@@ -68,17 +80,10 @@ class Trainer:
         if needValid:
             trainInput, trainTarget, validInput, validTarget = \
                 self.splitData(trainInput, trainTarget, heldOutRatio, xvalidNo)
-
-        if gpu:
-            X = np.as_garray(trainInput)
-            VX = np.as_garray(validInput)
-            T = np.as_garray(trainTarget)
-            VT = np.as_garray(validTarget)
-        else:
-            X = trainInput
-            VX = validInput
-            T = trainTarget
-            VT = validTarget
+        X = trainInput
+        VX = validInput
+        T = trainTarget
+        VT = validTarget
         N = trainInput.shape[0]
         numEpoch = trainOpt['numEpoch']
         calcError = trainOpt['calcError']
@@ -144,7 +149,7 @@ class Trainer:
                 batchStart += numExPerBat
 
             # Progress bar new line
-            if printProgress:
+            if printProgress and progress < 80:
                 print
 
             # Store train statistics
@@ -170,7 +175,7 @@ class Trainer:
             displayDw = trainOpt['displayDw'] if trainOpt.has_key('displayDw') else None
             self.writeRecordEvery(epoch, E, rate, VE, Vrate, displayDw, needWriteRecord)
 
-            # Save pipeline
+            # Save trainer
             if saveModel and (everyEpoch or epoch == numEpoch - 1):
                 self.save()
 
@@ -184,7 +189,9 @@ class Trainer:
 
         if needWriteRecord and not everyEpoch:
             self.writeRecordAll(numEpoch, Etotal, Rtotal, VEtotal, VRtotal)
-        pass
+
+        if testInput is not None and testTarget is not None:
+            self.test(testInput, testTarget)
 
     def test(self, X, T):
         Y = self.model.forwardPass(X, dropout=False)
@@ -248,18 +255,14 @@ class Trainer:
         return rate, correct, total
 
     def save(self, filename=None):
-        # if filename is None:
-        #     filename = self.modelFilename
-        # model = []
-        # for stage in self.stages:
-        #     model.append(stage.W)
-        # np.save(filename, np.array(model, dtype=object))
+        if filename is None:
+            filename = self.modelFilename
+        np.save(filename, self.model.getWeights())
         pass
 
     def loadWeights(self, weightsFilename):
-        # weights = numpy.load(weightsFilename)
-        # for i in range(0, weights.shape[0]):
-        #     self.stages[i].W = weights[i]
+        weights = numpy.load(weightsFilename)
+        self.model.loadWeights(weights)
         pass
 
     def savePickle(self, filename=None):

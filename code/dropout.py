@@ -5,8 +5,9 @@ class Dropout(Stage):
     def __init__(self,
                  dropoutRate,
                  initSeed,
-                 debug=False):
-        Stage.__init__(self)
+                 debug=False,
+                 name=None):
+        Stage.__init__(self, name=name)
         self.W = 0
         self.X = 0
         self.dropout = True

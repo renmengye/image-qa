@@ -17,8 +17,10 @@ class Sigmoid(Stage):
                  weightClip=0.0,
                  gradientClip=0.0,
                  weightRegConst=0.0,
-                 outputdEdX=True):
+                 outputdEdX=True,
+                 name=None):
         Stage.__init__(self,
+                 name=name,
                  learningRate=learningRate,
                  learningRateAnnealConst=learningRateAnnealConst,
                  momentum=momentum,

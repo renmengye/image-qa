@@ -1,8 +1,8 @@
 from stage import *
 
 class TimeSelect(Stage):
-    def __init__(self, time):
-        Stage.__init__(self)
+    def __init__(self, time, name=None):
+        Stage.__init__(self, name=name)
         self.t = time
         self.X = 0
         self.Y = 0

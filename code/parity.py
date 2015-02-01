@@ -18,16 +18,16 @@ def getData(size, length, seed=2):
     return input_, target_
 
 if __name__ == '__main__':
-    # pipeline = Trainer(
+    # trainer = Trainer(
     #     name='parity',
     #     costFn=meanSqErr,
     #     decisionFn=hardLimit)
-    # pipeline.addStage(LSTM(
+    # trainer.addStage(LSTM(
     #     inputDim=1,
     #     outputDim=1,
     #     initRange=0.01,
     #     initSeed=2))
-    # pipeline.addStage(SimpleSum())
+    # trainer.addStage(SimpleSum())
 
 
     trainOpt = {

@@ -1,8 +1,8 @@
 from stage import *
 
 class TimeFold(Stage):
-    def __init__(self, timespan):
-        Stage.__init__(self)
+    def __init__(self, timespan, name=None):
+        Stage.__init__(self, name=name)
         self.timespan = timespan
         self.Xshape = 0
         pass

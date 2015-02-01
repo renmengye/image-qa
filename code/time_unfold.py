@@ -1,8 +1,8 @@
 from stage import *
 
 class TimeUnfold(Stage):
-    def __init__(self):
-        Stage.__init__(self)
+    def __init__(self, name=None):
+        Stage.__init__(self, name=name)
         self.Xshape = 0
         pass
 

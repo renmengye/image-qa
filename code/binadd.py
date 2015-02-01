@@ -27,16 +27,16 @@ def getData(size, length, seed=2):
     return input_, target_
 
 if __name__ == '__main__':
-    # pipeline = Trainer(
+    # trainer = Trainer(
     #     name='binadd',
     #     costFn=meanSqErr,
     #     decisionFn=hardLimit)
-    # pipeline.addStage(LSTM(
+    # trainer.addStage(LSTM(
     #     inputDim=2,
     #     outputDim=3,
     #     initRange=0.01,
     #     initSeed=2))
-    # pipeline.addStage(SimpleSum())
+    # trainer.addStage(SimpleSum())
 
     # trainOpt = {
     #     'learningRate': 0.3,
@@ -51,7 +51,7 @@ if __name__ == '__main__':
     #     'calcError': True,
     #     'stopE': 0.006
     # }
-    # pipeline = Trainer(
+    # trainer = Trainer(
     #     name='binadd',
     #     costFn=crossEntIdx,
     #     decisionFn=argmax)
@@ -88,7 +88,7 @@ if __name__ == '__main__':
         learningRate=0.8,
         gradientClip=1.0)
     pipeline.addStage(TimeUnfold())
-    # pipeline.addStage(Softmax(
+    # trainer.addStage(Softmax(
     #     inputDim=3,
     #     outputDim=2,
     #     initRange=0.01,

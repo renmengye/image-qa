@@ -16,8 +16,10 @@ class LinearMap(Stage):
                  weightClip=0.0,
                  gradientClip=0.0,
                  weightRegConst=0.0,
-                 outputdEdX=True):
+                 outputdEdX=True,
+                 name=None):
         Stage.__init__(self,
+                 name=name,
                  learningRate=learningRate,
                  learningRateAnnealConst=learningRateAnnealConst,
                  momentum=momentum,
@@ -32,7 +34,7 @@ class LinearMap(Stage):
 
         if needInit:
             self.W = self.random.uniform(
-                -initRange/2.0, initRange/2.0, (outputDim, inputDim))
+                -initRange/2.0, initRange/2.0, (outputDim, inputDim + 1))
         else:
             self.W = initWeights
         self.X = 0
@@ -45,7 +47,8 @@ class LinearMap(Stage):
         T = np.array([[0], [1], [0], [1]])
         Y = self.forwardPass(X)
         E, dEdY = meanSqErr(Y, T)
-        dEdW, dEdX = self.backPropagate(dEdY)
+        dEdX = self.backPropagate(dEdY)
+        dEdW = self.dEdW
         dEdWTmp = np.zeros(self.W.shape)
         dEdXTmp = np.zeros(X.shape)
         for i in range(0, self.W.shape[0]):
@@ -77,8 +80,9 @@ class LinearMap(Stage):
         pass
 
     def forwardPass(self, X):
-        Y = np.inner(X, self.W)
-        self.X = X
+        X2 = np.concatenate((X, np.ones((X.shape[0], 1))), axis=-1)
+        Y = np.inner(X2, self.W)
+        self.X = X2
         self.Y = Y
         return Y
 
@@ -89,7 +93,7 @@ class LinearMap(Stage):
         dEdX = None
         if self.outputdEdX:
             # (t, j) * (j, k) = (t, k)
-            dEdX = np.dot(dEdY, self.W)
+            dEdX = np.dot(dEdY, self.W[:, :-1])
         return dEdX
 
 if __name__ == '__main__':
