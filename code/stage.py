@@ -70,13 +70,13 @@ class Stage:
         self.momentum -= self.deltaMomentum
 
         if self.gradientClip > 0.0 or self.weightClip > 0.0:
-            print 'ST: %s' % self.name,
+            print 'ST: %11s ' % self.name,
             if self.gradientClip > 0.0:
-                print 'GN: %.4f ' % self.dEdWnorm,
-                print 'GC: %.4f ' % self.gradientClip,
+                print 'GN: %8.4f ' % self.dEdWnorm,
+                print 'GC: %8.4f ' % self.gradientClip,
             if self.weightClip > 0.0:
-                print 'WN: %.4f ' % self.Wnorm,
-                print 'WC: %.4f ' % self.weightClip,
+                print 'WN: %8.4f ' % self.Wnorm,
+                print 'WC: %8.4f ' % self.weightClip,
             print
         return
 

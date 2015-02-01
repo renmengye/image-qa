@@ -196,7 +196,7 @@ class Trainer:
     def test(self, X, T):
         Y = self.model.forwardPass(X, dropout=False)
         rate, correct, total = self.calcRate(Y, T)
-        print 'TR: %.4f' % rate
+        print 'SR: %.4f' % rate
         return rate, correct, total
 
     def plotFigs(self, epoch, Etotal, VEtotal, calcError, Rtotal=None, VRtotal=None):
@@ -237,8 +237,8 @@ class Trainer:
     def writeRecordEvery(self, epoch, E, R, VE, VR, displayDw=None, writeToFile=True):
         # Print statistics
         timeElapsed = time.time() - self.startTime
-        stats = 'EP: %4d E: %.4f R: %.4f VE: %.4f VR: %.4f T:%4d' % \
-                (epoch, E, R, VE, VR, timeElapsed)
+        stats = 'N: %3d T: %5d  TE: %8.4f  TR: %8.4f  VE: %8.4f  VR: %8.4f' % \
+                (epoch, timeElapsed, E, R, VE, VR)
         print stats
 
         if writeToFile:

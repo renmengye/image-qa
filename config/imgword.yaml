@@ -20,7 +20,7 @@ stages:
       learningRate: 0.8
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 1000.0
+      weightClip: 100.0
     - name: imgFold
       type: timeFold
       timespan: 1
