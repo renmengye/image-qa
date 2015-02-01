@@ -1,3 +1,5 @@
+import os
+os.environ['GNUMPY_USE_GPU'] = 'yes'
 import gnumpy as np
 cimport numpy as np
 
