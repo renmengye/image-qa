@@ -295,7 +295,7 @@ class Pipeline:
 
     @staticmethod
     def splitData(trainInput, trainTarget, heldOutRatio, validNumber):
-        s = np.round(trainInput.shape[0] * heldOutRatio)
+        s = numpy.round(trainInput.shape[0] * heldOutRatio)
         start = s * validNumber
         validInput = trainInput[start : start + s]
         validTarget = trainTarget[start : start + s]
