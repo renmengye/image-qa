@@ -367,6 +367,9 @@ def seed_rand(seed=None):
  if seed==None: seed = int(_time.time())
  _cudamat.CUDAMatrix.init_random(seed)
 
+def inner(a1, a2):
+ return dot(a1, a2.transpose())
+
 def dot(a1, a2):
  # internally: for matrix-matrix multiplies only; vectors are treated like special cases.
  a1 = as_garray(a1); a2 = as_garray(a2)
