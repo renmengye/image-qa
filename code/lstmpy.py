@@ -177,7 +177,7 @@ def backPropagateOne(
     outputDim = Y.shape[1]
     dEdW = np.zeros(Wshape)
     dEdWi,dEdWf,dEdWc,dEdWo = sliceWeights(inputDim, outputDim, dEdW)
-    ddim = (outputDim, Xend)
+    ddim = (outputDim, int(Xend))
 
     # (j, t)
     dEdGi = np.zeros(ddim)
