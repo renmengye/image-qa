@@ -1,4 +1,5 @@
-import numpy as np
+from util_func import *
+import numpy
 import time
 import pickle
 import sys
@@ -60,8 +61,8 @@ class Pipeline:
 
     @staticmethod
     def shuffleData(X, T):
-        shuffle = np.arange(0, X.shape[0])
-        shuffle = np.random.permutation(shuffle)
+        shuffle = numpy.arange(0, X.shape[0])
+        shuffle = numpy.random.permutation(shuffle)
         X = X[shuffle]
         T = T[shuffle]
         return X, T
@@ -90,10 +91,10 @@ class Pipeline:
         printProgress = trainOpt['progress']
         shuffleTrainData = trainOpt['shuffle']
 
-        Etotal = np.zeros(numEpoch, float)
-        VEtotal = np.zeros(numEpoch, float)
-        Rtotal = np.zeros(numEpoch, float)
-        VRtotal = np.zeros(numEpoch, float)
+        Etotal = np.zeros(numEpoch)
+        VEtotal = np.zeros(numEpoch)
+        Rtotal = np.zeros(numEpoch)
+        VRtotal = np.zeros(numEpoch)
 
         # Train loop through epochs
         for epoch in range(0, numEpoch):
@@ -207,8 +208,8 @@ class Pipeline:
     def plotFigs(self, epoch, Etotal, VEtotal, calcError, Rtotal=None, VRtotal=None):
         plt.figure(1);
         plt.clf()
-        plt.plot(np.arange(epoch + 1), Etotal[0 : epoch + 1], 'b-x')
-        plt.plot(np.arange(epoch + 1), VEtotal[0 : epoch + 1], 'g-o')
+        plt.plot(numpy.arange(epoch + 1), Etotal[0 : epoch + 1], 'b-x')
+        plt.plot(numpy.arange(epoch + 1), VEtotal[0 : epoch + 1], 'g-o')
         plt.legend(['Train', 'Valid'])
         plt.xlabel('Epoch')
         plt.ylabel('Loss')
@@ -219,8 +220,8 @@ class Pipeline:
         if calcError:
             plt.figure(2);
             plt.clf()
-            plt.plot(np.arange(epoch + 1), Rtotal[0 : epoch + 1], 'b-x')
-            plt.plot(np.arange(epoch + 1), VRtotal[0 : epoch + 1], 'g-o')
+            plt.plot(numpy.arange(epoch + 1), Rtotal[0 : epoch + 1], 'b-x')
+            plt.plot(numpy.arange(epoch + 1), VRtotal[0 : epoch + 1], 'g-o')
             plt.legend(['Train', 'Valid'])
             plt.xlabel('Epoch')
             plt.ylabel('Prediction Error')
