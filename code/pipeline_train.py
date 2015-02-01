@@ -9,6 +9,8 @@ for i in range(2, len(sys.argv)):
         trainDataFilename = sys.argv[i + 1]
     elif sys.argv[i] == '-c':
         configFilename = sys.argv[i + 1]
+    elif sys.argv[i] == '-g':
+        gpu = True
 
 trainData = numpy.load(trainDataFilename)
 trainInput = trainData[0]
