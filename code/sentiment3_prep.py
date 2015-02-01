@@ -65,7 +65,7 @@ for i in range(0, len(lines)):
                 word_array_unk.append(word)
 word_array_unk.append(unknown)
 
-input_ = np.zeros((len(lines), line_max), int)
+input_ = np.zeros((len(lines), line_max, 1), int)
 target_ = np.zeros((len(lines), 1), int)
 count = 0
 
@@ -80,9 +80,9 @@ for i in range(0, len(lines)):
     for j in range(0, len(words) - 1):
         word = words[j]
         if word_dict_unk.has_key(word):
-            input_[count, j] = word_dict_unk[word]
+            input_[count, j, 0] = word_dict_unk[word]
         else:
-            input_[count, j] = word_dict_unk[unknown]
+            input_[count, j, 0] = word_dict_unk[unknown]
     count += 1
 
 data = np.array((word_dict_unk, word_array_unk, word_freq, input_, target_), object)

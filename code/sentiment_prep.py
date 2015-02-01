@@ -36,7 +36,7 @@ for i in range(0, len(lines)):
                 k = word_dict[words[j]]
                 word_freq[k - 1] += 1
 
-input_ = np.zeros((len(line_numbers), line_max), int)
+input_ = np.zeros((len(line_numbers), line_max, 1), int)
 target_ = np.zeros((len(line_numbers), 1), int)
 count = 0
 for i in line_numbers:
@@ -48,7 +48,7 @@ for i in line_numbers:
 
     # First word is target, last word is \n.
     for j in range(1, len(words) - 1):
-        input_[count, j - 1] = word_dict[words[j]]
+        input_[count, j - 1, 0] = word_dict[words[j]]
     count += 1
 
 # Output vocab file for converting word2vec

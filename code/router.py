@@ -1,4 +1,3 @@
-__author__ = 'renme_000'
 from util_func import *
 from lstm import *
 from linear_dict import *
@@ -22,8 +21,9 @@ def routeFn(name):
     pass
 
 def routeStage(stageDict):
+    stage = None
     if stageDict['type'] == 'lstm':
-        return LSTM(
+        stage = LSTM(
             inputDim=stageDict['inputDim'],
             outputDim=stageDict['outputDim'],
             initSeed=stageDict['initSeed']
@@ -35,10 +35,26 @@ def routeStage(stageDict):
             needInit=False
             if stageDict.has_key('initWeights') else True,
             cutOffZeroEnd=stageDict['cutOffZeroEnd'],
-            multiErr=stageDict['multiErr']
+            multiErr=stageDict['multiErr'],
+            learningRate=stageDict['learningRate']
+            if stageDict.has_key('learningRate') else 0.0,
+            learningRateAnnealConst=stageDict['learningRateAnnealConst']
+            if stageDict.has_key('learningRatennealConst') else 0.0,
+            momentum=stageDict['momentum']
+            if stageDict.has_key('momentum') else 0.0,
+            deltaMomentum=stageDict['deltaMomentum']
+            if stageDict.has_key('deltaMomentum') else 0.0,
+            gradientClip=stageDict['gradientClip']
+            if stageDict.has_key('gradientClip') else 0.0,
+            weightClip=stageDict['weightClip']
+            if stageDict.has_key('weightClip') else 0.0,
+            weightRegConst=stageDict['weightRegConst']
+            if stageDict.has_key('weightRegConst') else 0.0,
+            outputdEdX=stageDict['outputdEdX']
+            if stageDict.has_key('outputdEdX') else True
         )
     elif stageDict['type'] == 'linearDict':
-        return LinearDict(
+        stage = LinearDict(
             inputDim=stageDict['inputDim'],
             outputDim=stageDict['outputDim'],
             initSeed=stageDict['initSeed']
@@ -48,22 +64,35 @@ def routeStage(stageDict):
             initWeights=np.load(stageDict['initWeights'])
             if stageDict.has_key('initWeights') else 0,
             needInit=False
-            if stageDict.has_key('initWeights') else True
+            if stageDict.has_key('initWeights') else True,
+            learningRate=stageDict['learningRate']
+            if stageDict.has_key('learningRate') else 0.0,
+            learningRateAnnealConst=stageDict['learningRateAnnealConst']
+            if stageDict.has_key('learningRateAnnealConst') else 0.0,
+            momentum=stageDict['momentum']
+            if stageDict.has_key('momentum') else 0.0,
+            deltaMomentum=stageDict['deltaMomentum']
+            if stageDict.has_key('deltaMomentum') else 0.0,
+            gradientClip=stageDict['gradientClip']
+            if stageDict.has_key('gradientClip') else 0.0,
+            weightClip=stageDict['weightClip']
+            if stageDict.has_key('weightClip') else 0.0,
+            weightRegConst=stageDict['weightRegConst']
+            if stageDict.has_key('weightRegConst') else 0.0
         )
-        pass
     elif stageDict['type'] == 'timeUnfold':
-        return TimeUnfold()
+        stage = TimeUnfold()
     elif stageDict['type'] == 'timeFold':
-        return TimeFold(
+        stage = TimeFold(
             timespan=stageDict['timespan']
         )
     elif stageDict['type'] == 'dropout':
-        return Dropout(
+        stage = Dropout(
             dropoutRate=stageDict['dropoutRate'],
             initSeed=stageDict['initSeed']
         )
     elif stageDict['type'] == 'sigmoid':
-        return Sigmoid(
+        stage = Sigmoid(
             inputDim=stageDict['inputDim'],
             outputDim=stageDict['outputDim'],
             initSeed=stageDict['initSeed']
@@ -73,10 +102,26 @@ def routeStage(stageDict):
             initWeights=np.load(stageDict['initWeights'])
             if stageDict.has_key('initWeights') else 0,
             needInit=False
-            if stageDict.has_key('initWeights') else True
+            if stageDict.has_key('initWeights') else True,
+            learningRate=stageDict['learningRate']
+            if stageDict.has_key('learningRate') else 0.0,
+            learningRateAnnealConst=stageDict['learningRateAnnealConst']
+            if stageDict.has_key('learningRateAnnealConst') else 0.0,
+            momentum=stageDict['momentum']
+            if stageDict.has_key('momentum') else 0.0,
+            deltaMomentum=stageDict['deltaMomentum']
+            if stageDict.has_key('deltaMomentum') else 0.0,
+            gradientClip=stageDict['gradientClip']
+            if stageDict.has_key('gradientClip') else 0.0,
+            weightClip=stageDict['weightClip']
+            if stageDict.has_key('weightClip') else 0.0,
+            weightRegConst=stageDict['weightRegConst']
+            if stageDict.has_key('weightRegConst') else 0.0,
+            outputdEdX=stageDict['outputdEdX']
+            if stageDict.has_key('outputdEdX') else True
         )
     elif stageDict['type'] == 'softmax':
-        return Softmax(
+        stage = Softmax(
             inputDim=stageDict['inputDim'],
             outputDim=stageDict['outputDim'],
             initSeed=stageDict['initSeed']
@@ -86,7 +131,25 @@ def routeStage(stageDict):
             initWeights=np.load(stageDict['initWeights'])
             if stageDict.has_key('initWeights') else 0,
             needInit=False
-            if stageDict.has_key('initWeights') else True
+            if stageDict.has_key('initWeights') else True,
+            learningRate=stageDict['learningRate']
+            if stageDict.has_key('learningRate') else 0.0,
+            learningRateAnnealConst=stageDict['learningRateAnnealConst']
+            if stageDict.has_key('learningRateAnnealConst') else 0.0,
+            momentum=stageDict['momentum']
+            if stageDict.has_key('momentum') else 0.0,
+            deltaMomentum=stageDict['deltaMomentum']
+            if stageDict.has_key('deltaMomentum') else 0.0,
+            gradientClip=stageDict['gradientClip']
+            if stageDict.has_key('gradientClip') else 0.0,
+            weightClip=stageDict['weightClip']
+            if stageDict.has_key('weightClip') else 0.0,
+            weightRegConst=stageDict['weightRegConst']
+            if stageDict.has_key('weightRegConst') else 0.0,
+            outputdEdX=stageDict['outputdEdX']
+            if stageDict.has_key('outputdEdX') else True
         )
     else:
         raise 'Stage type ' + stageDict['type'] + ' not found.'
+
+    return stage
