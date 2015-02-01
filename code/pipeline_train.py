@@ -1,4 +1,3 @@
-import sys
 from pipeline import *
 
 name = sys.argv[1]
@@ -11,7 +10,7 @@ for i in range(2, len(sys.argv)):
     elif sys.argv[i] == '-c':
         configFilename = sys.argv[i + 1]
 
-trainData = np.load(trainDataFilename)
+trainData = numpy.load(trainDataFilename)
 trainInput = trainData[0]
 trainTarget = trainData[1]
 

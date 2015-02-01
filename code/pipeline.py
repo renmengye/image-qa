@@ -276,7 +276,7 @@ class Pipeline:
         pass
 
     def loadWeights(self, weightsFilename):
-        weights = np.load(weightsFilename)
+        weights = numpy.load(weightsFilename)
         for i in range(0, weights.shape[0]):
             self.stages[i].W = weights[i]
 
