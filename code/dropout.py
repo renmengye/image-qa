@@ -13,7 +13,7 @@ class Dropout(Stage):
         self.dropoutVec = 0
         self.dropoutRate = dropoutRate
         self.debug = debug
-        self.random = np.random.RandomState(initSeed)
+        self.random = numpy.random.RandomState(initSeed)
         self.seed = initSeed
         pass
 
