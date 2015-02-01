@@ -8,12 +8,12 @@ class TimeFold(Stage):
         pass
 
     def forwardPass(self, X):
-        Y = np.reshape(X, (X.shape[0] / self.timespan, self.timespan, X.shape[1]))
+        Y = X.reshape((X.shape[0] / self.timespan, self.timespan, X.shape[1]))
         self.Xshape = X.shape
 
         return Y
 
     def backPropagate(self, dEdY):
         self.dEdW = 0
-        dEdX = np.reshape(dEdY, self.Xshape)
+        dEdX = dEdY.reshape(self.Xshape)
         return dEdX
