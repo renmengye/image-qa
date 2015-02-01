@@ -4,7 +4,7 @@ from softmax import *
 from sigmoid import *
 from time_unfold import *
 from time_fold import *
-from pipeline import *
+from trainer import *
 from util_func import *
 
 def getData(size, length, seed=2):
@@ -19,7 +19,7 @@ def getData(size, length, seed=2):
     return input_, target_
 
 if __name__ == '__main__':
-    # pipeline = Pipeline(
+    # pipeline = Trainer(
     #     name='delay3',
     #     costFn=meanSqErr,
     #     decisionFn=hardLimit)
@@ -43,7 +43,7 @@ if __name__ == '__main__':
     #     'stopE': 0.005
     # }
 
-    # pipeline = Pipeline(
+    # pipeline = Trainer(
     #     name='delay3',
     #     costFn=crossEntIdx,
     #     decisionFn=argmax)
@@ -65,7 +65,7 @@ if __name__ == '__main__':
         'stopCost': 0.01,
         'progress': False
     }
-    pipeline = Pipeline(
+    pipeline = Trainer(
         name='delay3',
         trainOpt=trainOpt,
         costFn=crossEntOne,

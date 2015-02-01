@@ -1,4 +1,4 @@
-from pipeline import *
+from trainer import *
 
 name = sys.argv[1]
 outputFolder = None
@@ -16,7 +16,7 @@ trainData = numpy.load(trainDataFilename)
 trainInput = trainData[0]
 trainTarget = trainData[1]
 
-pipeline = Pipeline.initFromConfig(
+pipeline = Trainer.initFromConfig(
     name=name,
     configFilename=configFilename,
     outputFolder=outputFolder

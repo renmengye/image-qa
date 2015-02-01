@@ -49,6 +49,7 @@ class Sigmoid(Stage):
         T = np.array([[0], [1], [0], [1]])
         Y = self.forwardPass(X)
         E, dEdY = crossEntOne(Y, T)
+        eps = 1e-3
         dEdW, dEdX = self.backPropagate(dEdY)
         dEdWTmp = np.zeros(self.W.shape)
         dEdXTmp = np.zeros(X.shape)

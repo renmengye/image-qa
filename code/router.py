@@ -6,12 +6,13 @@ from time_fold import *
 from dropout import *
 from sigmoid import *
 from softmax import *
+from sequential import *
 import numpy
 
 def routeFn(name):
     if name == 'crossEntOne':
         return crossEntOne
-    elif name == 'crossEntInx':
+    elif name == 'crossEntIdx':
         return crossEntIdx
     elif name == 'hardLimit':
         return hardLimit
@@ -20,6 +21,11 @@ def routeFn(name):
     else:
         raise 'Function ' + name + ' not found.'
     pass
+
+stageLib = {}
+
+def getStage(name):
+    return stageLib[name]
 
 def routeStage(stageDict):
     stage = None
@@ -150,7 +156,14 @@ def routeStage(stageDict):
             outputdEdX=stageDict['outputdEdX']
             if stageDict.has_key('outputdEdX') else True
         )
+    elif stageDict['type'] == 'sequential':
+        stages = stageDict['stages']
+        realStages = []
+        for i in range(len(stages)):
+            realStages.append(stageLib[stages[i]])
+        stage = Sequential(realStages)
     else:
         raise 'Stage type ' + stageDict['type'] + ' not found.'
 
+    stageLib[stageDict['name']] = stage
     return stage

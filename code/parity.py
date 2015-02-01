@@ -4,7 +4,7 @@ from softmax import *
 from sigmoid import *
 from time_unfold import *
 from time_fold import *
-from pipeline import *
+from trainer import *
 from util_func import *
 
 def getData(size, length, seed=2):
@@ -18,7 +18,7 @@ def getData(size, length, seed=2):
     return input_, target_
 
 if __name__ == '__main__':
-    # pipeline = Pipeline(
+    # pipeline = Trainer(
     #     name='parity',
     #     costFn=meanSqErr,
     #     decisionFn=hardLimit)
@@ -47,7 +47,7 @@ if __name__ == '__main__':
         'stopCost': 0.015,
         'progress': False
     }
-    pipeline = Pipeline(
+    pipeline = Trainer(
         name='parity',
         trainOpt=trainOpt,
         costFn=crossEntOne,

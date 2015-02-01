@@ -1,18 +1,24 @@
-costFn: crossEntOne
+costFn: crossEntOne 
 decisionFn: hardLimit
+model: all
 stages:
-    - type: timeUnfold
-    - type: linearDict
+    - name: timeUnfold
+      type: timeUnfold
+    - name: linearDict
+      type: linearDict
       inputDim: 816
       outputDim: 30
       initWeights: ../data/sentiment/word-embed-30.npy
       learningRate: 0.0
-    - type: timeFold
+    - name: timeFold
+      type: timeFold
       timespan: 38
-    - type: dropout
+    - name: dropout1
+      type: dropout
       dropoutRate: 0.2
       initSeed: 3
-    - type: lstm
+    - name: lstm1
+      type: lstm
       inputDim: 30
       outputDim: 30
       initRange: 0.1
@@ -26,10 +32,12 @@ stages:
       weightClip: 10.0
       weightRegConst: 0.00005
       outputdEdX: false
-    - type: dropout
+    - name: dropout2
+      type: dropout
       dropoutRate: 0.5
       initSeed: 5
-    - type: lstm
+    - name: lstm2
+      type: lstm
       inputDim: 30
       outputDim: 30
       initRange: 0.1
@@ -43,7 +51,8 @@ stages:
       weightClip: 20.0
       weightRegConst: 0.00005
       outputdEdX: true
-    - type: sigmoid
+    - name: sigmoid
+      type: sigmoid
       inputDim: 30
       outputDim: 1
       initRange: 0.1
@@ -54,14 +63,23 @@ stages:
       gradientClip: 0.1
       weightClip: 1
       weightRegConst: 0.00005
+    - name: all
+      type: sequential
+      stages:
+          - timeUnfold
+          - linearDict
+          - timeFold
+          - dropout1
+          - lstm1
+          - dropout2
+          - lstm2
+          - sigmoid
 trainOpt:
     numEpoch: 2000
     heldOutRatio: 0.1
     xvalidNo: 0
     needValid: true
     batchSize: 20
-    learningRateDecay: 1.0
-    momentumEnd: 0.9
     shuffle: true
     writeRecord: true
     saveModel: true

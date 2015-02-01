@@ -8,7 +8,7 @@ from time_select import *
 from dropout import *
 from linear_map import *
 from linear_dict import *
-from pipeline import *
+from trainer import *
 from util_func import *
 import sys
 
@@ -69,7 +69,7 @@ if __name__ == '__main__':
         'displayDw': 4
     }
 
-    pipeline = Pipeline(
+    pipeline = Trainer(
         name='sentiment',
         trainOpt=trainOpt,
         costFn=crossEntOne,

@@ -32,7 +32,7 @@ class Softmax(Stage):
 
         if needInit:
             self.W = self.random.uniform(
-                -initRange/2.0, initRange/2.0, (outputDim, inputDim))
+                -initRange/2.0, initRange/2.0, (outputDim, inputDim + 1))
         else:
             self.W = initWeights
         self.X = 0
@@ -73,17 +73,17 @@ class Softmax(Stage):
 
                 dEdXTmp[t, k] += (Etmp1 - Etmp2) / 2.0 / eps
                 X[t, k] += eps
-
         print "haha"
         pass
 
     def forwardPass(self, X):
-        Y = np.inner(X, self.W)
+        X2 = np.concatenate((X, np.ones((X.shape[0], 1))), axis=-1)
+        Y = np.inner(X2, self.W)
         expY = np.exp(Y)
         expYshape = np.copy(Y.shape)
         expYshape[-1] = 1
         Y = expY / np.sum(expY, axis=-1).reshape(expYshape).repeat(Y.shape[-1], axis=-1)
-        self.X = X
+        self.X = X2
         self.Y = Y
         return Y
 
@@ -91,21 +91,12 @@ class Softmax(Stage):
         Y = self.Y
         X = self.X
         timespan = Y.shape[0]
-        # (t, i, j)
-        dY_ti__dZ_j = -Y.reshape(timespan, self.outputDim, 1) * Y.reshape(timespan, 1, self.outputDim)
-        dY_ti__dZ_j += np.eye(self.outputDim).reshape(1, self.outputDim, self.outputDim) * Y.reshape(timespan, 1, self.outputDim)
-
-        # (t, i, j, k)
-        dY_ti__dW_jk = dY_ti__dZ_j.reshape(timespan, self.outputDim, self.outputDim, 1) * X.reshape(timespan, 1, 1, self.inputDim)
-
-        # (t, i, j, k) * (t, i) = (j, k)
-        self.dEdW = np.tensordot(dY_ti__dW_jk, dEdY, axes=([1, 0], [1, 0]))
-        if self.outputdEdX:
-            # (t, i, j) * (j, k) = (t, i, k)
-            dY_ti__dX_k = np.dot(dY_ti__dZ_j, self.W)
-            # (t, i) * (t, i, k) = (t, t, k) -> (k, t) -> (t, k)
-            dEdX = np.diagonal(np.dot(dEdY, dY_ti__dX_k), axis1=0, axis2=1).transpose()
-
+        #dY_ti__dZ_j = -Y.reshape(timespan, self.outputDim, 1) * Y.reshape(timespan, 1, self.outputDim)
+        dEdZ = dEdY * Y
+        for n in range(0, timespan):
+            dEdZ[n] -= np.inner(dEdY[n], Y[n]) * Y[n]
+        self.dEdW = np.dot(dEdZ.transpose(), X)
+        dEdX = np.dot(dEdZ, self.W[:, :-1])
         return dEdX if self.outputdEdX else None
 
 if __name__ == '__main__':

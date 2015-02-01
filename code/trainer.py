@@ -12,11 +12,11 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 plt.ion()
 
-class Pipeline:
-    def __init__(self, name, trainOpt, costFn, decisionFn=None, outputFolder='', configFilename=None):
-        self.stages = []
+class Trainer:
+    def __init__(self, name, model, trainOpt, costFn, decisionFn=None, outputFolder='', configFilename=None):
+        self.model = model
         self.name = name + time.strftime("-%Y%m%d-%H%M%S")
-        print 'Pipeline ' + self.name
+        print 'Trainer ' + self.name
         self.costFn = costFn
         self.decisionFn = decisionFn
         self.outputFolder = os.path.join(outputFolder, self.name)
@@ -36,27 +36,20 @@ class Pipeline:
         with open(configFilename) as f:
             pipeDict = yaml.load(f)
 
-        pipeline = Pipeline(
+
+        for stageDict in pipeDict['stages']:
+            stage = router.routeStage(stageDict)
+
+        pipeline = Trainer(
             name=name,
+            model=router.getStage(pipeDict['model']),
             trainOpt=pipeDict['trainOpt'],
             costFn=router.routeFn(pipeDict['costFn']),
             decisionFn=router.routeFn(pipeDict['decisionFn']),
             outputFolder=outputFolder,
             configFilename=configFilename
         )
-
-        for stageDict in pipeDict['stages']:
-            stage = router.routeStage(stageDict)
-            pipeline.addStage(stage)
-
         return pipeline
-
-    def clear(self):
-        self.stages = []
-        pass
-
-    def addStage(self, stage):
-        self.stages.append(stage)
 
     @staticmethod
     def shuffleData(X, T):
@@ -129,7 +122,7 @@ class Pipeline:
                 numExThisBat = batchEnd - batchStart
 
                 # Forward
-                Y_bat = self.forwardPass(X[batchStart:batchEnd], dropout=True)
+                Y_bat = self.model.forwardPass(X[batchStart:batchEnd], dropout=True)
                 T_bat = T[batchStart:batchEnd]
 
                 # Loss
@@ -137,11 +130,10 @@ class Pipeline:
                 E += np.sum(Etmp) * numExThisBat / float(N)
 
                 # Backpropagate
-                for stage in reversed(self.stages):
-                    dEdY = stage.backPropagate(dEdY)
-                    stage.updateWeights()
-                    # Stop backpropagate if frozen layers in the front.
-                    if dEdY is None: break
+                self.model.backPropagate(dEdY)
+
+                # Update
+                self.model.updateWeights()
 
                 # Prediction error
                 if calcError:
@@ -163,7 +155,7 @@ class Pipeline:
 
             # Run validation
             if needValid:
-                VY = self.forwardPass(VX, dropout=False)
+                VY = self.model.forwardPass(VX, dropout=False)
                 VE, dVE = self.costFn(VY, VT)
                 VE = np.sum(VE)
                 VEtotal[epoch] = VE
@@ -172,8 +164,7 @@ class Pipeline:
                     VRtotal[epoch] = 1 - Vrate
 
             # Anneal learning rate
-            for stage in self.stages:
-                stage.updateLearningParams(epoch)
+            self.model.updateLearningParams(epoch)
 
             # Print statistics
             displayDw = trainOpt['displayDw'] if trainOpt.has_key('displayDw') else None
@@ -195,24 +186,14 @@ class Pipeline:
             self.writeRecordAll(numEpoch, Etotal, Rtotal, VEtotal, VRtotal)
         pass
 
-    def forwardPass(self, X, dropout):
-        X1 = X
-        for stage in self.stages:
-            if hasattr(stage, 'dropout'):
-                stage.dropout = dropout
-                X1 = stage.forwardPass(X1)
-            else:
-                X1 = stage.forwardPass(X1)
-        return X1
-
     def test(self, X, T):
-        Y = self.forwardPass(X, dropout=False)
+        Y = self.model.forwardPass(X, dropout=False)
         rate, correct, total = self.calcRate(Y, T)
         print 'TR: %.4f' % rate
         return rate, correct, total
 
     def plotFigs(self, epoch, Etotal, VEtotal, calcError, Rtotal=None, VRtotal=None):
-        plt.figure(1);
+        plt.figure(1)
         plt.clf()
         plt.plot(numpy.arange(epoch + 1), Etotal[0 : epoch + 1], 'b-x')
         plt.plot(numpy.arange(epoch + 1), VEtotal[0 : epoch + 1], 'g-o')
@@ -224,7 +205,7 @@ class Pipeline:
         plt.savefig(self.lossFigFilename)
 
         if calcError:
-            plt.figure(2);
+            plt.figure(2)
             plt.clf()
             plt.plot(numpy.arange(epoch + 1), Rtotal[0 : epoch + 1], 'b-x')
             plt.plot(numpy.arange(epoch + 1), VRtotal[0 : epoch + 1], 'g-o')
@@ -249,14 +230,8 @@ class Pipeline:
     def writeRecordEvery(self, epoch, E, R, VE, VR, displayDw=None, writeToFile=True):
         # Print statistics
         timeElapsed = time.time() - self.startTime
-        if displayDw is not None:
-            stats = 'EP: %4d E: %.4f R: %.4f VE: %.4f VR: %.4f T:%4d DW:%.4f W:%.4f' % \
-                    (epoch, E, R, VE, VR, timeElapsed,
-                     self.stages[displayDw].dEdWnorm,
-                     self.stages[displayDw].Wnorm)
-        else:
-            stats = 'EP: %4d E: %.4f R: %.4f VE: %.4f VR: %.4f T:%4d' % \
-                    (epoch, E, R, VE, VR, timeElapsed)
+        stats = 'EP: %4d E: %.4f R: %.4f VE: %.4f VR: %.4f T:%4d' % \
+                (epoch, E, R, VE, VR, timeElapsed)
         print stats
 
         if writeToFile:
@@ -273,18 +248,19 @@ class Pipeline:
         return rate, correct, total
 
     def save(self, filename=None):
-        if filename is None:
-            filename = self.modelFilename
-        model = []
-        for stage in self.stages:
-            model.append(stage.W)
-        np.save(filename, np.array(model, dtype=object))
+        # if filename is None:
+        #     filename = self.modelFilename
+        # model = []
+        # for stage in self.stages:
+        #     model.append(stage.W)
+        # np.save(filename, np.array(model, dtype=object))
         pass
 
     def loadWeights(self, weightsFilename):
-        weights = numpy.load(weightsFilename)
-        for i in range(0, weights.shape[0]):
-            self.stages[i].W = weights[i]
+        # weights = numpy.load(weightsFilename)
+        # for i in range(0, weights.shape[0]):
+        #     self.stages[i].W = weights[i]
+        pass
 
     def savePickle(self, filename=None):
         if filename is None:
