@@ -565,7 +565,8 @@ def sin(x):
  """ This works on garrays, numpy arrays, and numbers, preserving type (though all numbers become floats). """
  return _elementwise__base(x, None, numpy.sin)
  
-
+def power(x, p):
+ return _cudamat.pow(x, p)
  
  
 
