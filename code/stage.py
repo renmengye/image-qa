@@ -54,7 +54,7 @@ class Stage:
             self.W += self.lastdW
         if self.weightRegConst > 0.0:
             a = self.currentLearningRate * self.weightRegConst
-            self.W -= a * np.asarray(self.W)
+            self.W -= a * self.W
             pass
         if self.weightClip > 0.0:
             self.Wnorm = np.sqrt(np.sum(np.power(self.W, 2)))

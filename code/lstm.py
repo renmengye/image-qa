@@ -63,6 +63,7 @@ class LSTM(Stage):
         else:
             self.W = initWeights
 
+        self.W = np.as_garray(self.W)
         self.X = 0
         self.Xend = 0
         self.Y = 0
