@@ -566,7 +566,7 @@ def sin(x):
  return _elementwise__base(x, None, numpy.sin)
  
 def power(x, p):
- return _cudamat.pow(x._new_cm(), p)
+ return x**p
  
  
 
