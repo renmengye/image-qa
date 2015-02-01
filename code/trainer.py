@@ -203,7 +203,7 @@ class Trainer:
             # Batch info
             batchEnd = min(N, batchStart + numExPerBat)
             Y = self.model.forwardPass(X[batchStart:batchEnd], dropout=False)
-            rate, correct, total = self.calcRate(Y, T)
+            rate, correct, total = self.calcRate(Y, T[batchStart:batchEnd])
             correctT += correct
             totalT += total
             batchStart += numExPerBat
