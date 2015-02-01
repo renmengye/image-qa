@@ -18,7 +18,7 @@ class Dropout(Stage):
         pass
 
     def forwardPass(self, X):
-        Y = np.zeros(X.shape, float)
+        Y = np.zeros(X.shape)
         if self.dropoutRate > 0.0 and self.dropout:
             if self.debug:
                 self.random = numpy.random.RandomState(self.seed)
@@ -42,7 +42,7 @@ class Dropout(Stage):
         dEdX = None
         if outputdEdX:
             if self.dropout:
-                dEdX = np.zeros(self.X.shape, float)
+                dEdX = np.zeros(self.X.shape)
                 for i in range(0, self.X.shape[-1]):
                     if self.dropoutVec[i]:
                         if len(self.X.shape) == 1:
