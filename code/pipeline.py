@@ -1,5 +1,4 @@
 from util_func import *
-import numpy
 import time
 import pickle
 import sys
@@ -76,10 +75,17 @@ class Pipeline:
         if needValid:
             trainInput, trainTarget, validInput, validTarget = \
                 self.splitData(trainInput, trainTarget, heldOutRatio, xvalidNo)
-        X = np.as_garray(trainInput)
-        VX = np.as_garray(validInput)
-        T = np.as_garray(trainTarget)
-        VT = np.as_garray(validTarget)
+
+        if gpu:
+            X = np.as_garray(trainInput)
+            VX = np.as_garray(validInput)
+            T = np.as_garray(trainTarget)
+            VT = np.as_garray(validTarget)
+        else:
+            X = trainInput
+            VX = validInput
+            T = trainTarget
+            VT = validTarget
         N = trainInput.shape[0]
         numEpoch = trainOpt['numEpoch']
         calcError = trainOpt['calcError']

@@ -6,6 +6,7 @@ from time_fold import *
 from dropout import *
 from sigmoid import *
 from softmax import *
+import numpy
 
 def routeFn(name):
     if name == 'crossEntOne':
@@ -30,7 +31,7 @@ def routeStage(stageDict):
             if stageDict.has_key('initSeed') else 0,
             initRange=stageDict['initRange']
             if stageDict.has_key('initRange') else 1.0,
-            initWeights=np.load(stageDict['initWeights'])
+            initWeights=numpy.load(stageDict['initWeights'])
             if stageDict.has_key('initWeights') else 0,
             needInit=False
             if stageDict.has_key('initWeights') else True,
@@ -61,7 +62,7 @@ def routeStage(stageDict):
             if stageDict.has_key('initSeed') else 0,
             initRange=stageDict['initRange']
             if stageDict.has_key('initRange') else 1.0,
-            initWeights=np.load(stageDict['initWeights'])
+            initWeights=numpy.load(stageDict['initWeights'])
             if stageDict.has_key('initWeights') else 0,
             needInit=False
             if stageDict.has_key('initWeights') else True,
@@ -99,7 +100,7 @@ def routeStage(stageDict):
             if stageDict.has_key('initSeed') else 0,
             initRange=stageDict['initRange']
             if stageDict.has_key('initRange') else 1.0,
-            initWeights=np.load(stageDict['initWeights'])
+            initWeights=numpy.load(stageDict['initWeights'])
             if stageDict.has_key('initWeights') else 0,
             needInit=False
             if stageDict.has_key('initWeights') else True,
@@ -128,7 +129,7 @@ def routeStage(stageDict):
             if stageDict.has_key('initSeed') else 0,
             initRange=stageDict['initRange']
             if stageDict.has_key('initRange') else 1.0,
-            initWeights=np.load(stageDict['initWeights'])
+            initWeights=numpy.load(stageDict['initWeights'])
             if stageDict.has_key('initWeights') else 0,
             needInit=False
             if stageDict.has_key('initWeights') else True,

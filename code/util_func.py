@@ -1,6 +1,12 @@
 import os
+gpu = False
 os.environ['GNUMPY_USE_GPU'] = 'yes'
-import gnumpy as np
+if gpu:
+    import gnumpy as np
+    import numpy
+else:
+    import numpy as np
+    import numpy
 #:FLOAT = np.float
 
 def meanSqErr(Y, T):

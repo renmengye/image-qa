@@ -39,7 +39,8 @@ class LinearDict(Stage):
         else:
             self.W = np.concatenate(
                 (np.zeros((outputDim, 1)), initWeights), axis=1)
-        self.W = np.as_garray(self.W)
+        if gpu:
+            self.W = np.as_garray(self.W)
         self.X = 0
         self.Y = 0
         pass
