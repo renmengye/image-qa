@@ -194,10 +194,20 @@ class Trainer:
             self.test(testInput, testTarget)
 
     def test(self, X, T):
-        Y = self.model.forwardPass(X, dropout=False)
-        rate, correct, total = self.calcRate(Y, T)
-        print 'SR: %.4f' % rate
-        return rate, correct, total
+        N = X.shape[0]
+        numExPerBat = 100
+        batchStart = 0
+        correctT = 0
+        totalT = 0
+        while batchStart < N:
+            # Batch info
+            batchEnd = min(N, batchStart + numExPerBat)
+            Y = self.model.forwardPass(X[batchStart:batchEnd], dropout=False)
+            rate, correct, total = self.calcRate(Y, T)
+            correctT += correct
+            totalT += total
+
+        print 'SR: %.4f' % correctT / float(totalT)
 
     def plotFigs(self, epoch, Etotal, VEtotal, calcError, Rtotal=None, VRtotal=None):
         plt.figure(1)
