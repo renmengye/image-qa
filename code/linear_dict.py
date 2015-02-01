@@ -37,7 +37,7 @@ class LinearDict(Stage):
             self.W[:, 0] = 0
         else:
             self.W = np.concatenate(
-                (np.zeros((outputDim, 1), float), initWeights), axis=1)
+                (np.zeros((outputDim, 1)), initWeights), axis=1)
         self.X = 0
         self.Y = 0
         pass

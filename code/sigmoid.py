@@ -79,7 +79,7 @@ class Sigmoid(Stage):
 
     def forwardPass(self, X):
         if len(X.shape) == 2:
-            X2 = np.concatenate((X, np.ones((X.shape[0], 1), float)), axis=1)
+            X2 = np.concatenate((X, np.ones((X.shape[0], 1))), axis=1)
         else:
             X2 = np.concatenate((X, np.ones(1)))
         Y = np.inner(X2, self.W)
