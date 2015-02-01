@@ -1,6 +1,10 @@
 from trainer import *
+
+taskId = sys.argv[1]
+dataFile = sys.argv[2]
+
 trainer = Trainer.initFromConfig(
-    'imgword', '../results/imgword-20150201-160840/imgword-20150201-160840.yaml', '../results')
-trainer.loadWeights('../results/imgword-20150201-160840/imgword-20150201-160840.w.npy')
-data = np.load('../data/imgword/train-37.npy')
+    'imgword', '../results/%s/%s.yaml' % (taskId, taskId), '../results')
+trainer.loadWeights('../results/%s/%s.w.npy' % (taskId, taskId))
+data = np.load(dataFile)
 trainer.test(data[2],data[3])
