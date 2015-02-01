@@ -1,4 +1,4 @@
-import numpy as np
+from util_func import *
 
 class Stage:
     def __init__(self,
