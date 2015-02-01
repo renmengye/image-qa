@@ -58,7 +58,6 @@ def crossEntIdx(Y, T):
 
 def crossEntOne(Y, T):
     eps = 1e-5
-    T = np.as_garray(T)
     T = T.reshape(Y.shape)
     cost = -T * np.log(Y + eps) - (1 - T) * np.log(1 - Y + eps)
     dcost = -T / (Y + eps) + (1 - T) / (1 - Y + eps)

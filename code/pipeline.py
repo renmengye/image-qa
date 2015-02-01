@@ -76,10 +76,10 @@ class Pipeline:
         if needValid:
             trainInput, trainTarget, validInput, validTarget = \
                 self.splitData(trainInput, trainTarget, heldOutRatio, xvalidNo)
-        X = trainInput
-        VX = validInput
-        T = trainTarget
-        VT = validTarget
+        X = np.as_garray(trainInput)
+        VX = np.as_garray(validInput)
+        T = np.as_garray(trainTarget)
+        VT = np.as_garray(validTarget)
         N = trainInput.shape[0]
         numEpoch = trainOpt['numEpoch']
         calcError = trainOpt['calcError']
