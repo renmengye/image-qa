@@ -1,10 +1,12 @@
-import numpy as np
+from stage import *
 
-class SimpleSum:
+class SimpleSum(Stage):
     def __init__(self):
+        Stage.__init__(self)
         self.W = 0
         self.X = 0
         pass
+
     def forwardPass(self, X):
         self.X = X
         Y = np.sum(X, axis=-1)
@@ -13,9 +15,5 @@ class SimpleSum:
         return Y
 
     def backPropagate(self, dEdY, outputdEdX=True):
-        dEdW = 0
-        if outputdEdX:
-            dEdX = dEdY.repeat(self.X.shape[-1], axis=-1)
-        else:
-            dEdX = 0
-        return dEdW, dEdX
+        self.dEdW = 0
+        return dEdY.repeat(self.X.shape[-1], axis=-1) if outputdEdX else None

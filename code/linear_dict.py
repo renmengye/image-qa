@@ -1,13 +1,30 @@
 from util_func import *
+from stage import *
 
-class LinearDict:
+class LinearDict(Stage):
     def __init__(self,
                  inputDim,
                  outputDim,
                  initRange=1.0,
                  initSeed=2,
                  needInit=True,
-                 initWeights=0):
+                 initWeights=0,
+                 learningRate=0.0,
+                 learningRateAnnealConst=0.0,
+                 momentum=0.0,
+                 deltaMomentum=0.0,
+                 weightClip=0.0,
+                 gradientClip=0.0,
+                 weightRegConst=0.0):
+        Stage.__init__(self,
+                 learningRate=learningRate,
+                 learningRateAnnealConst=learningRateAnnealConst,
+                 momentum=momentum,
+                 deltaMomentum=deltaMomentum,
+                 weightClip=weightClip,
+                 gradientClip=gradientClip,
+                 weightRegConst=weightRegConst,
+                 outputdEdX=False)
         self.inputDim = inputDim
         self.outputDim = outputDim
         self.random = np.random.RandomState(initSeed)
@@ -30,7 +47,8 @@ class LinearDict:
         T = np.array([0.1, 0.3])
         Y = self.forwardPass(X)
         E, dEdY = meanSqErr(Y, T)
-        dEdW, dEdX = self.backPropagate(dEdY)
+        dEdX = self.backPropagate(dEdY)
+        dEdW = self.dEdW
         eps = 1e-3
         dEdWTmp = np.zeros(self.W.shape)
         for i in range(0, self.W.shape[0]):
@@ -80,16 +98,12 @@ class LinearDict:
         self.Y = Y
         return Y
 
-    def backPropagate(self, dEdY, outputdEdX=True):
+    def backPropagate(self, dEdY):
         X = self.X
-        dEdW = np.zeros(self.W.shape)
-        if X.size > 1:
-            for t in range(0, X.shape[0]):
-                dEdW[:, X[t]] += dEdY[t, :]
-        else:
-            dEdW[:, X] = dEdY
-        dEdX = 0
-        return dEdW, dEdX
+        self.dEdW = np.zeros(self.W.shape)
+        for n in range(0, X.shape[0]):
+            self.dEdW[:, X[n]] += dEdY[n, :]
+        return None
 
 if __name__ == '__main__':
     lindict = LinearDict(

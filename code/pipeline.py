@@ -28,6 +28,7 @@ class Pipeline:
         self.modelFilename = os.path.join(self.outputFolder, self.name + '.w')
         self.lossFigFilename = os.path.join(self.outputFolder, self.name + '_loss.png')
         self.errFigFilename = os.path.join(self.outputFolder, self.name + '_err.png')
+        self.startTime = time.time()
         pass
 
     @staticmethod
@@ -46,21 +47,7 @@ class Pipeline:
 
         for stageDict in pipeDict['stages']:
             stage = router.routeStage(stageDict)
-            pipeline.addStage(
-                stage,
-                learningRate=stageDict['learningRate']
-                if stageDict.has_key('learningRate') else 0.1,
-                annealConst=stageDict['annealConst']
-                if stageDict.has_key('annealConst') else 0.0,
-                gradientClip=stageDict['gradientClip']
-                if stageDict.has_key('gradientClip') else 0.0,
-                weightClip=stageDict['weightClip']
-                if stageDict.has_key('weightClip') else 0.0,
-                weightRegConst=stageDict['weightRegConst']
-                if stageDict.has_key('weightRegConst') else 0.0,
-                outputdEdX=stageDict['outputdEdX']
-                if stageDict.has_key('outputdEdX') else True
-            )
+            pipeline.addStage(stage)
 
         return pipeline
 
@@ -68,35 +55,16 @@ class Pipeline:
         self.stages = []
         pass
 
-    def addStage(self, stage,
-                 learningRate=0.1,
-                 annealConst=0.0,
-                 gradientClip=0.0,
-                 weightClip=0.0,
-                 weightRegConst=0.0,
-                 outputdEdX=True):
+    def addStage(self, stage):
         self.stages.append(stage)
-        stage.lastdW = 0
-        stage.learningRate = learningRate
-        stage.currentLearningRate = learningRate
-        stage.gradientClip = gradientClip
-        stage.annealConst = annealConst
-        stage.weightClip = weightClip
-        stage.weightRegConst = weightRegConst
-        if len(self.stages) == 1:
-            stage.outputdEdX = False
-        else:
-            stage.outputdEdX = outputdEdX
-        pass
 
-    def shuffleData(self, X, T):
+    @staticmethod
+    def shuffleData(X, T):
         shuffle = np.arange(0, X.shape[0])
         shuffle = np.random.permutation(shuffle)
         X = X[shuffle]
         T = T[shuffle]
-
         return X, T
-
 
     def train(self, trainInput, trainTarget):
         trainOpt = self.trainOpt
@@ -113,15 +81,12 @@ class Pipeline:
         VT = validTarget
         N = trainInput.shape[0]
         numEpoch = trainOpt['numEpoch']
-        lrDecay = trainOpt['learningRateDecay']
-        mom = trainOpt['momentum']
         calcError = trainOpt['calcError']
         numExPerBat = trainOpt['batchSize']
-        dMom = (mom - trainOpt['momentumEnd']) / float(numEpoch)
-        writeRecord = trainOpt['writeRecord']
+        needWriteRecord = trainOpt['writeRecord']
         saveModel = trainOpt['saveModel']
         everyEpoch = trainOpt['everyEpoch']
-        plotFigs = trainOpt['plotFigs']
+        needPlotFigs = trainOpt['plotFigs']
         printProgress = trainOpt['progress']
         shuffleTrainData = trainOpt['shuffle']
 
@@ -129,8 +94,6 @@ class Pipeline:
         VEtotal = np.zeros(numEpoch, float)
         Rtotal = np.zeros(numEpoch, float)
         VRtotal = np.zeros(numEpoch, float)
-
-        startTime = time.time()
 
         # Train loop through epochs
         for epoch in range(0, numEpoch):
@@ -168,29 +131,10 @@ class Pipeline:
 
                 # Backpropagate
                 for stage in reversed(self.stages):
-                    dEdW, dEdY = stage.backPropagate(dEdY, outputdEdX=stage.outputdEdX)
-                    if stage.gradientClip > 0.0:
-                        stage.dEdWnorm = np.sqrt(np.sum(np.power(dEdW, 2)))
-                        if stage.dEdWnorm > stage.gradientClip:
-                            dEdW *= stage.gradientClip / stage.dEdWnorm
-                    if stage.learningRate > 0.0:
-                        stage.lastdW = -stage.currentLearningRate * dEdW + \
-                                       mom * stage.lastdW
-                        stage.W += stage.lastdW
-                    if stage.weightRegConst > 0.0:
-                        a = float(stage.currentLearningRate) * float(stage.weightRegConst)
-                        stage.W -= a * np.asarray(stage.W)
-                        pass
-                    if stage.weightClip > 0.0:
-                        stage.Wnorm = np.sqrt(np.sum(np.power(stage.W, 2)))
-                        if stage.Wnorm > stage.weightClip:
-                            stage.W *= stage.weightClip / stage.Wnorm
-                        #stage.Wnorm = np.sqrt(np.sum(np.power(stage.W, 2)))
-                        pass
-
+                    dEdY = stage.backPropagate(dEdY)
+                    stage.updateWeights()
                     # Stop backpropagate if frozen layers in the front.
-                    if not stage.outputdEdX:
-                        break
+                    if dEdY is None: break
 
                 # Prediction error
                 if calcError:
@@ -220,30 +164,13 @@ class Pipeline:
                     Vrate, correct, total = self.calcRate(VY, VT)
                     VRtotal[epoch] = 1 - Vrate
 
-            # Adjust momentum
-            mom -= dMom
-
             # Anneal learning rate
             for stage in self.stages:
-                stage.currentLearningRate = stage.learningRate / (1.0 + stage.annealConst * epoch)
+                stage.updateLearningParams(epoch)
 
             # Print statistics
-            timeElapsed = time.time() - startTime
-            if trainOpt.has_key('displayDw'):
-                stats = 'EP: %4d E: %.4f R: %.4f VE: %.4f VR: %.4f T:%4d DW:%.4f W:%.4f' % \
-                        (epoch, E, rate, VE, Vrate, timeElapsed,
-                         self.stages[trainOpt['displayDw']].dEdWnorm,
-                         self.stages[trainOpt['displayDw']].Wnorm)
-            else:
-                stats = 'EP: %4d E: %.4f R: %.4f VE: %.4f VR: %.4f T:%4d' % \
-                        (epoch, E, rate, VE, Vrate, timeElapsed)
-
-            statsCsv = '%d,%.4f,%.4f,%.4f,%.4f' % \
-                    (epoch, E, rate, VE, Vrate)
-            print stats
-            if writeRecord and everyEpoch:
-                with open(self.logFilename, 'a+') as f:
-                    f.write('%s\n' % statsCsv)
+            displayDw = trainOpt['displayDw'] if trainOpt.has_key('displayDw') else None
+            self.writeRecordEvery(epoch, E, rate, VE, Vrate, displayDw, needWriteRecord)
 
             # Save pipeline
             if saveModel and (everyEpoch or epoch == numEpoch - 1):
@@ -254,47 +181,19 @@ class Pipeline:
                 break
 
             # Plot train curves
-            if plotFigs and (everyEpoch or epoch == numEpoch-1):
-                plt.figure(1);
-                plt.clf()
-                plt.plot(np.arange(epoch + 1), Etotal[0 : epoch + 1], 'b-x')
-                plt.plot(np.arange(epoch + 1), VEtotal[0 : epoch + 1], 'g-o')
-                plt.legend(['Train', 'Valid'])
-                plt.xlabel('Epoch')
-                plt.ylabel('Loss')
-                plt.title('Train/Valid Loss Curve')
-                plt.draw()
-                plt.savefig(self.lossFigFilename)
+            if needPlotFigs and (everyEpoch or epoch == numEpoch-1):
+                self.plotFigs(epoch, Etotal, VEtotal, calcError, Rtotal, VRtotal)
 
-                if calcError:
-                    plt.figure(2);
-                    plt.clf()
-                    plt.plot(np.arange(epoch + 1), Rtotal[0 : epoch + 1], 'b-x')
-                    plt.plot(np.arange(epoch + 1), VRtotal[0 : epoch + 1], 'g-o')
-                    plt.legend(['Train', 'Valid'])
-                    plt.xlabel('Epoch')
-                    plt.ylabel('Prediction Error')
-                    plt.title('Train/Valid Error Curve')
-                    plt.draw()
-                    plt.savefig(self.errFigFilename)
-
-        if writeRecord and not everyEpoch:
-            with open(self.logFilename, 'w+') as f:
-                for epoch in range(0, numEpoch):
-                    stats2 = '%d,%.4f,%.4f,%.4f,%.4f' % \
-                            (epoch,
-                             Etotal[epoch],
-                             1 - Rtotal[epoch],
-                             VEtotal[epoch],
-                             1 - VRtotal[epoch])
-                    f.write('%s\n' % stats2)
+        if needWriteRecord and not everyEpoch:
+            self.writeRecordAll(numEpoch, Etotal, Rtotal, VEtotal, VRtotal)
         pass
 
     def forwardPass(self, X, dropout):
         X1 = X
         for stage in self.stages:
             if hasattr(stage, 'dropout'):
-                X1 = stage.forwardPass(X1, dropout)
+                stage.dropout = dropout
+                X1 = stage.forwardPass(X1)
             else:
                 X1 = stage.forwardPass(X1)
         return X1
@@ -304,6 +203,60 @@ class Pipeline:
         rate, correct, total = self.calcRate(Y, T)
         print 'TR: %.4f' % rate
         return rate, correct, total
+
+    def plotFigs(self, epoch, Etotal, VEtotal, calcError, Rtotal=None, VRtotal=None):
+        plt.figure(1);
+        plt.clf()
+        plt.plot(np.arange(epoch + 1), Etotal[0 : epoch + 1], 'b-x')
+        plt.plot(np.arange(epoch + 1), VEtotal[0 : epoch + 1], 'g-o')
+        plt.legend(['Train', 'Valid'])
+        plt.xlabel('Epoch')
+        plt.ylabel('Loss')
+        plt.title('Train/Valid Loss Curve')
+        plt.draw()
+        plt.savefig(self.lossFigFilename)
+
+        if calcError:
+            plt.figure(2);
+            plt.clf()
+            plt.plot(np.arange(epoch + 1), Rtotal[0 : epoch + 1], 'b-x')
+            plt.plot(np.arange(epoch + 1), VRtotal[0 : epoch + 1], 'g-o')
+            plt.legend(['Train', 'Valid'])
+            plt.xlabel('Epoch')
+            plt.ylabel('Prediction Error')
+            plt.title('Train/Valid Error Curve')
+            plt.draw()
+            plt.savefig(self.errFigFilename)
+
+    def writeRecordAll(self, numEpoch, Etotal, Rtotal, VEtotal, VRtotal):
+        with open(self.logFilename, 'w+') as f:
+            for epoch in range(0, numEpoch):
+                stats2 = '%d,%.4f,%.4f,%.4f,%.4f' % \
+                        (epoch,
+                         Etotal[epoch],
+                         1 - Rtotal[epoch],
+                         VEtotal[epoch],
+                         1 - VRtotal[epoch])
+                f.write('%s\n' % stats2)
+
+    def writeRecordEvery(self, epoch, E, R, VE, VR, displayDw=None, writeToFile=True):
+        # Print statistics
+        timeElapsed = time.time() - self.startTime
+        if displayDw is not None:
+            stats = 'EP: %4d E: %.4f R: %.4f VE: %.4f VR: %.4f T:%4d DW:%.4f W:%.4f' % \
+                    (epoch, E, R, VE, VR, timeElapsed,
+                     self.stages[displayDw].dEdWnorm,
+                     self.stages[displayDw].Wnorm)
+        else:
+            stats = 'EP: %4d E: %.4f R: %.4f VE: %.4f VR: %.4f T:%4d' % \
+                    (epoch, E, R, VE, VR, timeElapsed)
+        print stats
+
+        if writeToFile:
+            statsCsv = '%d,%.4f,%.4f,%.4f,%.4f' % \
+                    (epoch, E, R, VE, VR)
+            with open(self.logFilename, 'a+') as f:
+                f.write('%s\n' % statsCsv)
 
     def calcRate(self, Y, T):
         Yfinal = self.decisionFn(Y)

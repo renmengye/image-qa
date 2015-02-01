@@ -1,7 +1,11 @@
-import numpy as np
+from stage import *
 
-class Dropout:
-    def __init__(self, dropoutRate, initSeed, debug=False):
+class Dropout(Stage):
+    def __init__(self,
+                 dropoutRate,
+                 initSeed,
+                 debug=False):
+        Stage.__init__(self)
         self.W = 0
         self.X = 0
         self.dropout = True
@@ -12,9 +16,9 @@ class Dropout:
         self.seed = initSeed
         pass
 
-    def forwardPass(self, X, dropout=False):
+    def forwardPass(self, X):
         Y = np.zeros(X.shape, float)
-        if self.dropoutRate > 0.0 and dropout:
+        if self.dropoutRate > 0.0 and self.dropout:
             if self.debug:
                 self.random = np.random.RandomState(self.seed)
             self.dropoutVec = (self.random.uniform(0, 1, (X.shape[-1])) >
@@ -30,11 +34,11 @@ class Dropout:
         else:
             Y = X * (1 - self.dropoutRate)
         self.X = X
-        self.dropout = dropout
         return Y
 
     def backPropagate(self, dEdY, outputdEdX=True):
-        dEdW = 0
+        self.dEdW = 0
+        dEdX = None
         if outputdEdX:
             if self.dropout:
                 dEdX = np.zeros(self.X.shape, float)
@@ -49,4 +53,4 @@ class Dropout:
             else:
                 dEdX = dEdY / (1 - self.dropoutRate)
 
-        return dEdW, dEdX
+        return dEdX

@@ -68,10 +68,7 @@ if __name__ == '__main__':
         'needValid': True,
         'heldOutRatio': 0.1,
         'xvalidNo': 0,
-        'momentum': 0.9,
         'batchSize': 20,
-        'learningRateDecay': 1.0,
-        'momentumEnd': 0.9,
         'shuffle': True,
         'writeRecord': True,
         'saveModel': True,
@@ -96,8 +93,9 @@ if __name__ == '__main__':
         initWeights=getWordEmbedding(
             initSeed=2,
             initRange=0.42,
-            pcaDim=30)),       # std ~= 0.12. U~[0.21, 0.21].
-        learningRate=0.0)
+            pcaDim=30),       # std ~= 0.12. U~[0.21, 0.21].
+        learningRate=0.0,
+        momentum=0.9))
     pipeline.addStage(TimeFold(
         timespan=timespan))
     pipeline.addStage(Dropout(
@@ -109,13 +107,14 @@ if __name__ == '__main__':
         initRange=0.1,
         initSeed=4,
         cutOffZeroEnd=True,
-        multiErr=True),
+        multiErr=True,
         learningRate=1.0,
-        annealConst=0.01,
+        learningRateAnnealConst=0.01,
+        momentum=0.9,
         gradientClip=0.1,
         weightClip=100,
         weightRegConst=5e-5,
-        outputdEdX=False)
+        outputdEdX=False))
     pipeline.addStage(Dropout(
         dropoutRate=0.5,
         initSeed=5))
@@ -125,21 +124,23 @@ if __name__ == '__main__':
         initRange=0.1,
         initSeed=6,
         cutOffZeroEnd=True,
-        multiErr=False),
+        multiErr=False,
         learningRate=0.8,
-        annealConst=0.01,
+        learningRateAnnealConst=0.01,
+        momentum=0.9,
         weightClip=100,
         weightRegConst=5e-5,
-        gradientClip=0.1)
+        gradientClip=0.1))
     pipeline.addStage(Sigmoid(
         inputDim=30,
         outputDim=1,
         initRange=0.1,
-        initSeed=7),
+        initSeed=7,
         learningRate=0.01,
+        learningRateAnnealConst=0.01,
+        momentum=0.9,
         gradientClip=0.1,
         weightClip=1,
-        annealConst=0.01,
-        weightRegConst=5e-5)
+        weightRegConst=5e-5))
     pipeline.train(trainInput, trainTarget)
 

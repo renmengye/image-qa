@@ -1,9 +1,10 @@
 from util_func import *
+from stage import *
 import lstmx
 
 FLOAT = np.float
 
-class LSTM:
+class LSTM(Stage):
     def __init__(self,
                  inputDim,
                  outputDim,
@@ -12,7 +13,24 @@ class LSTM:
                  needInit=True,
                  initWeights=0,
                  cutOffZeroEnd=False,
-                 multiErr=False):
+                 multiErr=False,
+                 learningRate=0.0,
+                 learningRateAnnealConst=0.0,
+                 momentum=0.0,
+                 deltaMomentum=0.0,
+                 weightClip=0.0,
+                 gradientClip=0.0,
+                 weightRegConst=0.0,
+                 outputdEdX=True):
+        Stage.__init__(self,
+                 learningRate=learningRate,
+                 learningRateAnnealConst=learningRateAnnealConst,
+                 momentum=momentum,
+                 deltaMomentum=deltaMomentum,
+                 weightClip=weightClip,
+                 gradientClip=gradientClip,
+                 weightRegConst=weightRegConst,
+                 outputdEdX=outputdEdX)
         self.inputDim = inputDim
         self.outputDim = outputDim
         self.cutOffZeroEnd = cutOffZeroEnd
@@ -57,12 +75,13 @@ class LSTM:
         self.Go = 0
         pass
 
-    def _chkgrd(self):
+    def chkgrd(self):
         X = np.array([[[0.1, 1]], [[1, 0.5]], [[0.2, -0.2]], [[1, 0.3]], [[0.3, -0.2]], [[1, -1]], [[-0.1, 2.0]], [[1, -2]]])
         T = np.array([[[0]], [[0]], [[1.0]], [[1]], [[1]], [[1]], [[0.0]], [[1.0]]])
         Y = self.forwardPass(X)
         E, dEdY = simpleSumDeriv(T, Y)
-        dEdW, dEdX = self.backPropagate(dEdY)
+        dEdX = self.backPropagate(dEdY)
+        dEdW = self.dEdW
         eps = 1e-3
         dEdWTmp = np.zeros(self.W.shape)
         dEdXTmp = np.zeros(X.shape)
@@ -96,7 +115,6 @@ class LSTM:
         pass
 
     def forwardPass(self, X):
-            
         Y, C, Z, Gi, Gf, Go, Xend = \
             lstmx.forwardPassN(
             X, self.cutOffZeroEnd, self.W)
@@ -112,13 +130,14 @@ class LSTM:
 
         return Y if self.multiErr else Y[:,-1]
 
-    def backPropagate(self, dEdY, outputdEdX=True):
-        return lstmx.backPropagateN(dEdY,self.X,self.Y,
+    def backPropagate(self, dEdY):
+        self.dEdW, dEdX = lstmx.backPropagateN(dEdY,self.X,self.Y,
                                 self.C,self.Z,self.Gi,
                                 self.Gf,self.Go,
                                 self.Xend,self.cutOffZeroEnd,
-                                self.multiErr,outputdEdX,
+                                self.multiErr,self.outputdEdX,
                                 self.W)
+        return dEdX if self.outputdEdX else None
 
 if __name__ == '__main__':
     lstm = LSTM(
@@ -127,4 +146,4 @@ if __name__ == '__main__':
         initRange=0.01,
         initSeed=2,
         multiErr=True)
-    lstm._chkgrd()
+    lstm.chkgrd()
