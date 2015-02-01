@@ -1,4 +1,4 @@
-import numpy as np
+import gnumpy as np
 cimport numpy as np
 
 FLOAT = np.float
@@ -12,10 +12,10 @@ def sigmoidFn(X):
 def sliceWeights(int inputDim, 
                 int outputDim, 
                 np.ndarray[FLOAT_t, ndim=2] W):
-    s1 = inputDim + outputDim * 2 + 1
-    s2 = s1 * 2
-    s3 = s2 + inputDim + outputDim + 1
-    s4 = s3 + s1
+    cdef int s1 = inputDim + outputDim * 2 + 1
+    cdef int s2 = s1 * 2
+    cdef int s3 = s2 + inputDim + outputDim + 1
+    cdef int s4 = s3 + s1
     Wi = W[:, 0 : s1]
     Wf = W[:, s1 : s2]
     Wc = W[:, s2 : s3]
