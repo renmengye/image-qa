@@ -171,13 +171,14 @@ def backPropagateOne(
                     Wyo,
                     Wco,
                    Wshape):
+    Xend = int(Xend)
     if cutOffZeroEnd and multiErr:
         dEdY[Xend - 1] += dEdY[-1]
     inputDim = X.shape[1]
     outputDim = Y.shape[1]
     dEdW = np.zeros(Wshape)
     dEdWi,dEdWf,dEdWc,dEdWo = sliceWeights(inputDim, outputDim, dEdW)
-    ddim = (outputDim, int(Xend))
+    ddim = (outputDim, Xend)
 
     # (j, t)
     dEdGi = np.zeros(ddim)
