@@ -35,8 +35,13 @@ class Parallel(Stage):
             return None
 
     def updateWeights(self):
-        for i in range(0, len(self.stages)):
-            self.stages[i].updateWeights()
+        for stage in self.stages:
+            stage.updateWeights()
+        return
+
+    def updateLearningParams(self, numEpoch):
+        for stage in self.stages:
+            stage.updateLearningParams(numEpoch)
         return
 
     def getWeights(self):
