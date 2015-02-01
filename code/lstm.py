@@ -2,7 +2,7 @@ from util_func import *
 from stage import *
 import lstmx
 
-FLOAT = np.float
+FLOAT = np.float32
 
 class LSTM(Stage):
     def __init__(self,
