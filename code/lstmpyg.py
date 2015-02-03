@@ -54,7 +54,7 @@ def forwardPassN(
     Wfg = gnp.as_garray(Wf.transpose())
     Wcg = gnp.as_garray(Wc.transpose())
     Wog = gnp.as_garray(Wo.transpose())
-    Xend = np.zeros(numEx)
+    Xend = np.zeros(numEx) + (timespan + 1)
     Gi = np.zeros((numEx,timespan,outputDim))
     Gf = np.zeros((numEx,timespan,outputDim))
     Go = np.zeros((numEx,timespan,outputDim))
