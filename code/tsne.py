@@ -94,7 +94,7 @@ def pca(X = Math.array([]), no_dims = 50):
 
 def tsne(X = Math.array([]), no_dims = 2, initial_dims = 50, perplexity = 30.0):
 	"""Runs t-SNE on the dataset in the NxD array X to reduce its dimensionality to no_dims dimensions.
-	The syntaxis of the function is Y = tsne.tsne(X, no_dims, perplexity), where X is an NxD NumPy array."""
+	The syntaxis of the function is TY = tsne.tsne(X, no_dims, perplexity), where X is an NxD NumPy array."""
 	
 	# Check inputs
 	if X.dtype != "float64":
@@ -164,7 +164,7 @@ def tsne(X = Math.array([]), no_dims = 2, initial_dims = 50, perplexity = 30.0):
 		
 	
 if __name__ == "__main__":
-	print "Run Y = tsne.tsne(X, no_dims, perplexity) to perform t-SNE on your dataset."
+	print "Run TY = tsne.tsne(X, no_dims, perplexity) to perform t-SNE on your dataset."
 	print "Running example on 2,500 MNIST digits..."
 	X = Math.loadtxt("mnist2500_X.txt");
 	labels = Math.loadtxt("mnist2500_labels.txt");

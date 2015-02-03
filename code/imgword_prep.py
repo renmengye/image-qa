@@ -124,7 +124,9 @@ if __name__ == '__main__':
     testInput, testTarget = buildInputTarget(pureQ[numTrain:], pureA[numTrain:], numTest, lineMax, questionDict, answerDict)
     testInput = np.concatenate((np.reshape(imgIds[numTrain:], (numTest, 1, 1)), testInput), axis=1)
     data = np.array((trainInput, trainTarget, testInput, testTarget, 0), dtype=object)
+    vocabDict = np.array((questionDict, questionVocab, answerDict, answerVocab, 0), dtype=object)
     np.save('../data/imgword/train-37.npy', data)
+    np.save('../data/imgword/vocab-dict.npy', vocabDict)
 
     with open('../data/imgword/vocabs.txt', 'w+') as f:
         for word in questionVocab:

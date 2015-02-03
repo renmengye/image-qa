@@ -2,6 +2,8 @@
 
 # Mateusz Malinowski
 # mmalinow@mpi-inf.mpg.de
+# Hash Speedup Modification made by Mengye Ren
+# m.ren@mail.utoronto.ca
 
 # it assumes there are two files
 # - first file with ground truth answers
@@ -16,6 +18,7 @@ import re
 from numpy import prod
 from nltk.corpus import wordnet as wn
 
+word_pair_dict = {}
 
 def file2list(filepath):
     with open(filepath,'r') as f:
@@ -48,19 +51,19 @@ def fuzzy_set_membership_measure(x,A,m):
 def score_it(A,T,m):
     """
     A: list of A items 
-    T: list of T items
+    TT: list of TT items
     m: set membership measure
         m(a \in A) gives a membership quality of a into A 
 
     This function implements a fuzzy accuracy score:
-        score(A,T) = min{min_{a \in A} m(a \in T), min_{t \in T} m(a \in A)}
-        where A and T are set representations of the answers
+        score(A,TT) = min{min_{a \in A} m(a \in TT), min_{t \in TT} m(a \in A)}
+        where A and TT are set representations of the answers
         and m is a measure
     """
     if A==[] and T==[]:
         return 1
 
-    # print A,T
+    # print A,TT
 
     score_left=0 if A==[] else prod(map(lambda a: m(a,T), A))
     score_right=0 if T==[] else prod(map(lambda t: m(t,A),T))
@@ -82,6 +85,9 @@ def wup_measure(a,b,similarity_threshold=0.925):
         max_{x \in interp(a)} max_{y \in interp(b)} wup(x,y)
         where interp is a 'interpretation field'
     """
+    if word_pair_dict.has_key(a+','+b):
+        return  word_pair_dict[a+','+b]
+
     def get_semantic_field(a):
         weight = 1.0
         semantic_field = wn.synsets(a,pos=wn.NOUN)
@@ -154,6 +160,7 @@ def wup_measure(a,b,similarity_threshold=0.925):
         interp_weight = 1.0
 
     final_score=global_max*weight_a*weight_b*interp_weight*global_weight
+    word_pair_dict[a+','+b] = final_score
     return final_score 
 ###
 
@@ -191,6 +198,7 @@ if __name__ == '__main__':
     final_score=sum(map(lambda x:float(x)/float(len(score_list)),score_list))
 
     # filtering to obtain the results
+    #print 'full score:', score_list
     #print 'full score:', score_list
     print 'final score:', final_score
 

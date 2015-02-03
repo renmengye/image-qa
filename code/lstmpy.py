@@ -232,7 +232,7 @@ def backPropagateOne(
                  dYtdGo.reshape(memCol) * Wco
 
         dEdYnow = dEdY[t] if multiErr else 0
-        # (T, t)
+        # (TT, t)
         if t < Xend - 1:
             dEdYt = np.dot(dEdYt, dYtdYt1) + np.dot(dEdCt, dCtdYt1) + dEdYnow
             dEdCt = np.dot(dEdCt, dCtdCt1) + np.dot(dEdYt, dYtdCt)

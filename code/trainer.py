@@ -29,9 +29,7 @@ class Trainer:
         self.decisionFn = decisionFn
         self.outputFolder = os.path.join(outputFolder, self.name)
         self.trainOpt = trainOpt
-        if not os.path.exists(self.outputFolder): os.makedirs(self.outputFolder)
-        if configFilename is not None:
-            shutil.copyfile(configFilename, os.path.join(self.outputFolder, self.name + '.yaml'))
+        self.configFilename = configFilename
         self.logFilename = os.path.join(self.outputFolder, self.name + '.csv')
         self.modelFilename = os.path.join(self.outputFolder, self.name + '.w')
         self.lossFigFilename = os.path.join(self.outputFolder, self.name + '_loss.png')
@@ -72,6 +70,12 @@ class Trainer:
               trainTarget,
               testInput=None,
               testTarget=None):
+        if not os.path.exists(self.outputFolder):
+            os.makedirs(self.outputFolder)
+        if self.configFilename is not None:
+            shutil.copyfile(
+                self.configFilename,
+                os.path.join(self.outputFolder, self.name + '.yaml'))
         trainOpt = self.trainOpt
         needValid =  trainOpt['needValid'] if trainOpt.has_key('needValid') else False
         xvalidNo = trainOpt['xvalidNo'] if trainOpt.has_key('xvalidNo') else 0
@@ -172,8 +176,7 @@ class Trainer:
             self.model.updateLearningParams(epoch)
 
             # Print statistics
-            displayDw = trainOpt['displayDw'] if trainOpt.has_key('displayDw') else None
-            self.writeRecordEvery(epoch, E, rate, VE, Vrate, displayDw, needWriteRecord)
+            self.writeRecordEvery(epoch, E, rate, VE, Vrate, needWriteRecord)
 
             # Save trainer
             if saveModel and (everyEpoch or epoch == numEpoch - 1):
@@ -197,19 +200,21 @@ class Trainer:
         N = X.shape[0]
         numExPerBat = 100
         batchStart = 0
-        correctT = 0
-        totalT = 0
+        Y = None
         while batchStart < N:
             # Batch info
             batchEnd = min(N, batchStart + numExPerBat)
-            Y = self.model.forwardPass(X[batchStart:batchEnd], dropout=False)
-            rate, correct, total = self.calcRate(Y, T[batchStart:batchEnd])
-            correctT += correct
-            totalT += total
+            Ytmp = self.model.forwardPass(X[batchStart:batchEnd], dropout=False)
+            if Y is None:
+                Yshape = np.copy(Ytmp.shape)
+                Yshape[0] = N
+                Y = np.zeros(Yshape)
+            Y[batchStart:batchEnd] = Ytmp
             batchStart += numExPerBat
 
-        rateT = correctT / float(totalT)
-        print 'SR: %.4f' % rateT
+        rate, correct, total = self.calcRate(Y, T)
+        print 'SR: %.4f' % rate
+        return Y
 
     def plotFigs(self, epoch, Etotal, VEtotal, calcError, Rtotal=None, VRtotal=None):
         plt.figure(1)
@@ -246,10 +251,10 @@ class Trainer:
                          1 - VRtotal[epoch])
                 f.write('%s\n' % stats2)
 
-    def writeRecordEvery(self, epoch, E, R, VE, VR, displayDw=None, writeToFile=True):
+    def writeRecordEvery(self, epoch, E, R, VE, VR, writeToFile=True):
         # Print statistics
         timeElapsed = time.time() - self.startTime
-        stats = 'N: %3d T: %5d  TE: %8.4f  TR: %8.4f  VE: %8.4f  VR: %8.4f' % \
+        stats = 'N: %3d TT: %5d  TE: %8.4f  TR: %8.4f  VE: %8.4f  VR: %8.4f' % \
                 (epoch, timeElapsed, E, R, VE, VR)
         print stats
 
