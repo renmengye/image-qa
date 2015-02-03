@@ -215,6 +215,7 @@ def backPropagateOne(
 
     dGig = Gig * (oneg - Gig)
     dGfg = Gfg * (oneg - Gfg)
+    print dGfg.shape
     dGog = Gog * (oneg - Gog)
     dZg = 1 - Zg * Zg
     Ug = gnp.tanh(Cg)
