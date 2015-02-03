@@ -204,7 +204,8 @@ def backPropagateOne(
     memCol = (outputDim, 1)
 
     Ct1g = gnp.as_garray(
-           np.concatenate((np.zeros((1, outputDim)), C[:Xend - 1]), axis=0))
+           np.concatenate((np.zeros((1, outputDim)), C[0:Xend - 1]), axis=0))
+    print Ct1g.shape
     oneg = gnp.ones((Xend, outputDim))
     Cg = gnp.as_garray(C[:Xend])
     Gig = gnp.as_garray(Gi[:Xend])
@@ -223,7 +224,7 @@ def backPropagateOne(
     dCtdZ = (Gig * dZg).as_numpy_array()
     dYtdGo = (Ug * dGog).as_numpy_array()
 
-    for t in reversed(range(0, int(Xend))):
+    for t in reversed(range(0, Xend)):
         if t == 0:
             Yt1 = np.zeros(outputDim)
             Ct1 = np.zeros(outputDim)
