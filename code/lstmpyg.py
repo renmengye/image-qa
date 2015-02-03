@@ -103,25 +103,25 @@ def forwardPassN(
                     break
     return Y, C, Z, Gi, Gf, Go, Xend
 
-def backPropagateN(dEdY,X,Y,C,Z,Gi,Gf,Go,Xend,
-                   cutOffZeroEnd,multiErr,outputdEdX,W):
-    numEx = X.shape[0]
-    inputDim = X.shape[2]
-    outputDim = Y.shape[2]
-    Wxi,Wyi,Wci,Wxf,Wyf,Wcf,Wxc,Wyc,Wxo,Wyo,Wco = sliceWeightsSmall(inputDim, outputDim, W)
-    dEdW = np.zeros((W.shape[0], W.shape[1]))
-    dEdX = np.zeros((X.shape[0], X.shape[1], X.shape[2]))
-    for n in range(0, numEx):
-        dEdWtmp, dEdX[n] = \
-            backPropagateOne(dEdY[n],X[n],Y[n],
-                        C[n],Z[n],Gi[n],
-                        Gf[n],Go[n],
-                        Xend[n],cutOffZeroEnd,
-                        multiErr,outputdEdX,
-                        Wxi,Wyi,Wci,Wxf,Wyf,Wcf,Wxc,
-                        Wyc,Wxo,Wyo,Wco,(W.shape[0], W.shape[1]))
-        dEdW += dEdWtmp
-    return dEdW, dEdX
+# def backPropagateN(dEdY,X,Y,C,Z,Gi,Gf,Go,Xend,
+#                    cutOffZeroEnd,multiErr,outputdEdX,W):
+#     numEx = X.shape[0]
+#     inputDim = X.shape[2]
+#     outputDim = Y.shape[2]
+#     Wxi,Wyi,Wci,Wxf,Wyf,Wcf,Wxc,Wyc,Wxo,Wyo,Wco = sliceWeightsSmall(inputDim, outputDim, W)
+#     dEdW = np.zeros((W.shape[0], W.shape[1]))
+#     dEdX = np.zeros((X.shape[0], X.shape[1], X.shape[2]))
+#     for n in range(0, numEx):
+#         dEdWtmp, dEdX[n] = \
+#             backPropagateOne(dEdY[n],X[n],Y[n],
+#                         C[n],Z[n],Gi[n],
+#                         Gf[n],Go[n],
+#                         Xend[n],cutOffZeroEnd,
+#                         multiErr,outputdEdX,
+#                         Wxi,Wyi,Wci,Wxf,Wyf,Wcf,Wxc,
+#                         Wyc,Wxo,Wyo,Wco,(W.shape[0], W.shape[1]))
+#         dEdW += dEdWtmp
+#     return dEdW, dEdX
 
 def backPropagateN(
                    dEdY,X,Y,C,Z,Gi,Gf,Go,
@@ -151,7 +151,7 @@ def backPropagateN(
     dEdWo = gnp.zeros(dEdWo.shape)
 
     for n in range(0, numEx):
-        dEdWitmp, dEdWftmp, dEdWctmp, dEdWotmp, dEdXtmp = \
+        dEdWitmp, dEdWftmp, dEdWctmp, dEdWotmp, dEdX[n] = \
             backPropagateOne(dEdY[n],X[n],Y[n],
                         C[n],Z[n],Gi[n],
                         Gf[n],Go[n],
@@ -163,7 +163,6 @@ def backPropagateN(
         dEdWf += dEdWftmp
         dEdWc += dEdWctmp
         dEdWo += dEdWotmp
-        dEdX[n, :Xend[n]] = dEdXtmp
     dEdW = np.concatenate((
         dEdWi.as_numpy_array(),
         dEdWf.as_numpy_array(),
