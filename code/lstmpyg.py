@@ -98,37 +98,33 @@ def forwardPassOne(
     Gf = np.zeros((timespan, outputDim))
     Go = np.zeros((timespan, outputDim))
     Xend = timespan
-    Yt1 = gnp.zeros(outputDim)
     Ct1 = gnp.zeros(outputDim)
     for t in range(0, timespan):
         if cutOffZeroEnd and reachedEnd[t]:
             Xend = t
             Y[-1, :] = Y[t - 1, :]
             break
-        Xt = gnp.as_garray(X[t])
-
-        states1 = gnp.concatenate((Xt, \
-                                  Yt1, \
-                                  Ct1, \
-                                  gnp.ones(1)))
-        states2 = gnp.concatenate((Xt, \
-                                  Yt1, \
-                                  gnp.ones(1)))
-        Git = sigmoidFn(gnp.dot(Wi, states1))
-        Gft = sigmoidFn(gnp.dot(Wf, states1))
-        Zt = gnp.tanh(gnp.dot(Wc, states2))
+        states1 = np.concatenate((X[t], \
+                                  Y[t-1], \
+                                  C[t-1], \
+                                  np.ones(1)))
+        states2 = np.concatenate((X[t], \
+                                  Y[t-1], \
+                                  np.ones(1)))
+        Git = sigmoidFn(gnp.dot(Wi, gnp.as_garray(states1)))
+        Gft = sigmoidFn(gnp.dot(Wf, gnp.as_garray(states1)))
+        Zt = gnp.tanh(gnp.dot(Wc, gnp.as_garray(states2)))
         Ct = Gft * Ct1 + Git * Zt
-        states3 = gnp.concatenate((Xt, \
-                                  Yt1, \
-                                  Ct, \
-                                  gnp.ones(1)))
-        Got = sigmoidFn(gnp.dot(Wo, states3))
+        C[t] = gnp.as_numpy_array(Ct)
+        states3 = np.concatenate((X[t], \
+                                  Y[t-1], \
+                                  C[t], \
+                                  np.ones(1)))
+        Got = sigmoidFn(gnp.dot(Wo, gnp.as_garray(states3)))
         Yt = Got * gnp.tanh(Ct)
-        Yt1 = Yt
         Ct1 = Ct
         Y[t] = gnp.as_numpy_array(Yt)
         Go[t] = gnp.as_numpy_array(Got)
-        C[t] = gnp.as_numpy_array(Ct)
         Z[t] = gnp.as_numpy_array(Zt)
         Gf[t] = gnp.as_numpy_array(Gft)
         Gi[t] = gnp.as_numpy_array(Git)
