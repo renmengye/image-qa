@@ -50,10 +50,10 @@ def forwardPassN(
     inputDim = X.shape[2]
     outputDim = W.shape[0]
     Wi, Wf, Wc, Wo = sliceWeights(inputDim, outputDim, W)
-    Wi = gnp.as_garray(Wi)
-    Wf = gnp.as_garray(Wf)
-    Wc = gnp.as_garray(Wc)
-    Wo = gnp.as_garray(Wo)
+    Wig = gnp.as_garray(Wi)
+    Wfg = gnp.as_garray(Wf)
+    Wcg = gnp.as_garray(Wc)
+    Wog = gnp.as_garray(Wo)
     Xend = np.zeros(numEx)
     Gi = np.zeros((numEx,timespan,outputDim))
     Gf = np.zeros((numEx,timespan,outputDim))
@@ -73,7 +73,7 @@ def forwardPassN(
         Gi[n], Gf[n], Go[n], \
         Xend[n] = \
             forwardPassOne(
-                X[n], reachedEnd[n], cutOffZeroEnd, Wi, Wf, Wc, Wo)
+                X[n], reachedEnd[n], cutOffZeroEnd, Wig, Wfg, Wcg, Wog)
 
     return Y, C, Z, Gi, Gf, Go, Xend
 
