@@ -164,7 +164,11 @@ def backPropagateOne(
     inputDim = X.shape[1]
     outputDim = Y.shape[1]
     dEdW = np.zeros(Wshape)
-    dEdWi,dEdWf,dEdWc,dEdWo = sliceWeights(inputDim, outputDim, dEdW)
+    # dEdWi,dEdWf,dEdWc,dEdWo = sliceWeights(inputDim, outputDim, dEdW)
+    # dEdWi = gnp.zeros(dEdWi.shape)
+    # dEdWf = gnp.zeros(dEdWf.shape)
+    # dEdWc = gnp.zeros(dEdWc.shape)
+    # dEdWo = gnp.zeros(dEdWo.shape)
     ddim = (outputDim, Xend)
 
     # (j, t)
@@ -241,10 +245,10 @@ def backPropagateOne(
                   dCtdGi.reshape(memCol) * Wyi)
         dYtdYt1 = gnp.as_garray(dYtdGo.reshape(memCol) * Wyo)
 
-    dEdWi += gnp.dot(gnp.as_garray(dEdGi), gnp.as_garray(states1T))
-    dEdWf += gnp.dot(gnp.as_garray(dEdGf), gnp.as_garray(states1T))
-    dEdWc += gnp.dot(gnp.as_garray(dEdZ), gnp.as_garray(states2T))
-    dEdWo += gnp.dot(gnp.as_garray(dEdGo), gnp.as_garray(states3T))
+    dEdWi = gnp.dot(gnp.as_garray(dEdGi), gnp.as_garray(states1T)).as_numpy_array()
+    dEdWf = gnp.dot(gnp.as_garray(dEdGf), gnp.as_garray(states1T)).as_numpy_array()
+    dEdWc = gnp.dot(gnp.as_garray(dEdZ), gnp.as_garray(states2T)).as_numpy_array()
+    dEdWo = gnp.dot(gnp.as_garray(dEdGo), gnp.as_garray(states3T)).as_numpy_array()
 
     if outputdEdX:
         dEdX[0:Xend] = gnp.dot(gnp.as_garray(dEdGi.transpose()), gnp.as_garray(Wxi)) + \
@@ -252,6 +256,7 @@ def backPropagateOne(
                        gnp.dot(gnp.as_garray(dEdZ.transpose()), gnp.as_garray(Wxc)) + \
                        gnp.dot(gnp.as_garray(dEdGo.transpose()), gnp.as_garray(Wxo))
 
+    dEdW = np.concatenate((dEdWi, dEdWf, dEdWc, dEdWo), axis=-1)
     return dEdW, dEdX
 
 # def backPropagateN(
