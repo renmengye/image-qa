@@ -65,9 +65,6 @@ class LSTM(Stage):
             self.W = np.concatenate((Wi, Wf, Wc, Wo), axis = 1)
         else:
             self.W = initWeights
-
-        if gpu:
-            self.W = np.as_garray(self.W)
         self.X = 0
         self.Xend = 0
         self.Y = 0

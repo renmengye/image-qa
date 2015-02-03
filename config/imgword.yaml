@@ -20,7 +20,7 @@ stages:
       learningRate: 0.8
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 100.0
+      weightClip: 50.0
     - name: imgFold
       type: timeFold
       timespan: 1
@@ -73,7 +73,7 @@ stages:
       learningRateAnnealConst: 0.0
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 100.0
+      weightClip: 50.0
       weightRegConst: 0.00005
       outputdEdX: true
     - name: softmax
@@ -86,7 +86,7 @@ stages:
       learningRateAnnealConst: 0.0
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 10.0
+      weightClip: 5.0
       weightRegConst: 0.00005
     - name: all
       type: sequential

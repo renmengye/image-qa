@@ -1,7 +1,10 @@
-from util_func import *
 import os
 os.environ['GNUMPY_USE_GPU'] = 'yes'
 import gnumpy as gnp
+import numpy as np
+
+def sigmoidFn(X):
+    return 1 / (1 + gnp.exp(-X))
 
 def sliceWeights(
                 inputDim,
@@ -105,19 +108,19 @@ def forwardPassOne(
         states1 = gnp.concatenate((X[t, :], \
                                   Y[t-1, :], \
                                   C[t-1, :], \
-                                  np.ones(1)))
+                                  gnp.ones(1)))
         states2 = gnp.concatenate((X[t, :], \
                                   Y[t-1, :], \
-                                  np.ones(1)))
-        Gi[t, :] = sigmoidFn(np.dot(Wi, states1))
-        Gf[t, :] = sigmoidFn(np.dot(Wf, states1))
-        Z[t, :] = gnp.tanh(np.dot(Wc, states2))
+                                  gnp.ones(1)))
+        Gi[t, :] = sigmoidFn(gnp.dot(Wi, states1))
+        Gf[t, :] = sigmoidFn(gnp.dot(Wf, states1))
+        Z[t, :] = gnp.tanh(gnp.dot(Wc, states2))
         C[t, :] = Gf[t, :] * C[t-1, :] + Gi[t, :] * Z[t, :]
         states3 = gnp.concatenate((X[t, :], \
                                   Y[t-1, :], \
                                   C[t, :], \
-                                  np.ones(1)))
-        Go[t, :] = sigmoidFn(np.dot(Wo, states3))
+                                  gnp.ones(1)))
+        Go[t, :] = sigmoidFn(gnp.dot(Wo, states3))
         Y[t, :] = Go[t, :] * gnp.tanh(C[t, :])
 
     return Y.as_numpy_array(), C.as_numpy_array(), Z.as_numpy_array(), Gi.as_numpy_array(), Gf.as_numpy_array(), Go.as_numpy_array(), Xend
@@ -239,11 +242,11 @@ def backPropagateOne(
             Ct1 = C[t-1]
 
         states1T[t] = \
-            gnp.concatenate((X[t], Yt1, Ct1, np.ones(1)))
+            gnp.concatenate((X[t], Yt1, Ct1, gnp.ones(1)))
         states2T[t] = \
-            gnp.concatenate((X[t], Yt1, np.ones(1)))
+            gnp.concatenate((X[t], Yt1, gnp.ones(1)))
         states3T[t] = \
-            gnp.concatenate((X[t], Yt1, C[t], np.ones(1)))
+            gnp.concatenate((X[t], Yt1, C[t], gnp.ones(1)))
 
         # (k -> t)
         U = gnp.tanh(C[t])

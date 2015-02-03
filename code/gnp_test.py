@@ -25,16 +25,16 @@ def FreeGPU(board):
 def main():
     start = time.time()
     for i in range(10):
-        A = np.random.rand((1000, 1000))
-        B = np.random.rand((1000, 1000))
+        A = np.random.rand(1000, 1000)
+        B = np.random.rand(1000, 1000)
         C = np.dot(A, B)
 
     print '%.4f ms' % (time.time() - start)
     start = time.time()
 
     for i in range(10):
-        A = np.random.rand((1000, 1000))
-        B = np.random.rand((1000, 1000))
+        A = np.random.rand(1000, 1000)
+        B = np.random.rand(1000, 1000)
         Ag = gnp.as_garray(A)
         Bg = gnp.as_garray(B)
         C = gnp.dot(Ag, Bg)
@@ -42,8 +42,10 @@ def main():
     print '%.4f ms' % (time.time() - start)
 
 if __name__ == '__main__':
-    board = LockGPU()
-    print 'Using board', board
-    cm.CUDAMatrix.init_random(0)
+    #board = LockGPU()
+    #print 'Using board', board
+    #cm.CUDAMatrix.init_random(0)
+    cm.cuda_set_device(int(sys.argv[1]))
+    cm.cublas_init()
     main()
-    FreeGPU(board)
+    #FreeGPU(board)
