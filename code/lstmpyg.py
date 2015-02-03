@@ -98,7 +98,6 @@ def forwardPassOne(
     Gf = np.zeros((timespan, outputDim))
     Go = np.zeros((timespan, outputDim))
     Xend = timespan
-    Ct1 = gnp.zeros(outputDim)
     for t in range(0, timespan):
         if cutOffZeroEnd and reachedEnd[t]:
             Xend = t
@@ -114,9 +113,11 @@ def forwardPassOne(
                                   np.ones(1)))
         states2 = states2.reshape(states2.size, 1)
         res = gnp.dot(Wi, gnp.as_garray(states1))
-        Gi[t] = sigmoidFn(res.as_numpy_array())
+        res2 = res.as_numpy_array()
+        Gi[t] = sigmoidFn(res2)
         res = gnp.dot(Wf, gnp.as_garray(states1))
-        Gf[t] = sigmoidFn(res.as_numpy_array())
+        res2 = res.as_numpy_array()
+        Gf[t] = sigmoidFn(res2)
 
         Zt = gnp.tanh(gnp.dot(Wc, gnp.as_garray(states2)))
         Z[t] = gnp.as_numpy_array(Zt)
@@ -130,7 +131,8 @@ def forwardPassOne(
                                   np.ones(1)))
         states3 = states3.reshape(states1.size, 1)
         res = gnp.dot(Wo, gnp.as_garray(states3))
-        Go[t] = sigmoidFn(res.as_numpy_array())
+        res2 = res.as_numpy_array()
+        Go[t] = sigmoidFn(res2)
         Yt = Go[t] * np.tanh(C[t])
         Y[t] = gnp.as_numpy_array(Yt)
 
