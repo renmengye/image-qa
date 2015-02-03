@@ -140,6 +140,7 @@ class LSTM(Stage):
                                 self.W)
         return dEdX if self.outputdEdX else None
 
+    @staticmethod
     def sliceWeights(
                     inputDim,
                     outputDim,
