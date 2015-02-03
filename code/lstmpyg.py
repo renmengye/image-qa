@@ -123,70 +123,65 @@ def backPropagateN(dEdY,X,Y,C,Z,Gi,Gf,Go,Xend,
         dEdW += dEdWtmp
     return dEdW, dEdX
 
-# def backPropagateN(
-#                    dEdY,
-#                    X,
-#                    Y,
-#                    C,
-#                    Z,
-#                    Gi,
-#                    Gf,
-#                    Go,
-#                    Xend,
-#                    cutOffZeroEnd,
-#                    multiErr,
-#                    outputdEdX,
-#                    W):
-#     numEx = X.shape[0]
-#     inputDim = X.shape[2]
-#     outputDim = Y.shape[2]
-#     Wxi,Wyi,Wci,Wxf,Wyf,Wcf,Wxc,Wyc,Wxo,Wyo,Wco = sliceWeightsSmall(inputDim, outputDim, W)
-#     dEdW = np.zeros((W.shape[0], W.shape[1]))
-#     dEdX = np.zeros((X.shape[0], X.shape[1], X.shape[2]))
-#     Wxig = gnp.as_garray(Wxi)
-#     Wxfg = gnp.as_garray(Wxf)
-#     Wxcg = gnp.as_garray(Wxc)
-#     Wxog = gnp.as_garray(Wxo)
-#     dEdWi,dEdWf,dEdWc,dEdWo = sliceWeights(inputDim, outputDim, dEdW)
-#     dEdWi = gnp.zeros(dEdWi.shape)
-#     dEdWf = gnp.zeros(dEdWf.shape)
-#     dEdWc = gnp.zeros(dEdWc.shape)
-#     dEdWo = gnp.zeros(dEdWo.shape)
-#
-#     for n in range(0, numEx):
-#         dEdWitmp, dEdWftmp, dEdWctmp, dEdWotmp, dEdXtmp = \
-#             backPropagateOne(dEdY[n],X[n],Y[n],
-#                         C[n],Z[n],Gi[n],
-#                         Gf[n],Go[n],
-#                         Xend[n],cutOffZeroEnd,
-#                         multiErr,outputdEdX,
-#                         Wxig,Wyi,Wci,Wxfg,Wyf,Wcf,Wxcg,
-#                         Wyc,Wxog,Wyo,Wco)
-#         dEdWi += dEdWitmp
-#         dEdWf += dEdWftmp
-#         dEdWc += dEdWctmp
-#         dEdWo += dEdWotmp
-#         dEdX[n, :Xend[n]] = dEdXtmp.as_numpy_array()
-#     dEdW = np.concatenate((
-#         dEdWi.as_numpy_array(),
-#         dEdWf.as_numpy_array(),
-#         dEdWc.as_numpy_array(),
-#         dEdWo.as_numpy_array())
-#         ,axis=-1
-#     )
-#     return dEdW, dEdX
+def backPropagateN(
+                   dEdY,X,Y,C,Z,Gi,Gf,Go,
+                   Xend,cutOffZeroEnd,multiErr,
+                   outputdEdX,W):
+    numEx = X.shape[0]
+    inputDim = X.shape[2]
+    outputDim = Y.shape[2]
+    Wxi,Wyi,Wci,Wxf,Wyf,Wcf,Wxc,Wyc,Wxo,Wyo,Wco = sliceWeightsSmall(inputDim, outputDim, W)
+    dEdW = np.zeros((W.shape[0], W.shape[1]))
+    dEdX = np.zeros((X.shape[0], X.shape[1], X.shape[2]))
+    Wcig = gnp.as_garray(Wyi)
+    Wcfg = gnp.as_garray(Wyf)
+    Wcog = gnp.as_garray(Wyo)
+    Wyig = gnp.as_garray(Wyi)
+    Wyfg = gnp.as_garray(Wyf)
+    Wycg = gnp.as_garray(Wyc)
+    Wyog = gnp.as_garray(Wyo)
+    Wxig = gnp.as_garray(Wxi)
+    Wxfg = gnp.as_garray(Wxf)
+    Wxcg = gnp.as_garray(Wxc)
+    Wxog = gnp.as_garray(Wxo)
+    dEdWi,dEdWf,dEdWc,dEdWo = sliceWeights(inputDim, outputDim, dEdW)
+    dEdWi = gnp.zeros(dEdWi.shape)
+    dEdWf = gnp.zeros(dEdWf.shape)
+    dEdWc = gnp.zeros(dEdWc.shape)
+    dEdWo = gnp.zeros(dEdWo.shape)
+
+    for n in range(0, numEx):
+        dEdWitmp, dEdWftmp, dEdWctmp, dEdWotmp, dEdXtmp = \
+            backPropagateOne(dEdY[n],X[n],Y[n],
+                        C[n],Z[n],Gi[n],
+                        Gf[n],Go[n],
+                        Xend[n],cutOffZeroEnd,
+                        multiErr,outputdEdX,
+                        Wxig,Wyig,Wcig,Wxfg,Wyfg,Wcfg,Wxcg,
+                        Wycg,Wxog,Wyog,Wcog)
+        dEdWi += dEdWitmp
+        dEdWf += dEdWftmp
+        dEdWc += dEdWctmp
+        dEdWo += dEdWotmp
+        dEdX[n, :Xend[n]] = dEdXtmp.as_numpy_array()
+    dEdW = np.concatenate((
+        dEdWi.as_numpy_array(),
+        dEdWf.as_numpy_array(),
+        dEdWc.as_numpy_array(),
+        dEdWo.as_numpy_array())
+        ,axis=-1
+    )
+    return dEdW, dEdX
 
 def backPropagateOne(
                     dEdY,X,Y,C,Z,Gi,Gf,Go,Xend,cutOffZeroEnd,
                     multiErr,outputdEdX,Wxi,Wyi,Wci,Wxf,Wyf,Wcf,
-                    Wxc,Wyc,Wxo,Wyo,Wco,Wshape):
+                    Wxc,Wyc,Wxo,Wyo,Wco):
     Xend = int(Xend)
     if cutOffZeroEnd and multiErr:
         dEdY[Xend - 1] += dEdY[-1]
     inputDim = X.shape[1]
     outputDim = Y.shape[1]
-    dEdW = np.zeros(Wshape)
-    dEdWi,dEdWf,dEdWc,dEdWo = sliceWeights(inputDim, outputDim, dEdW)
     ddim = (outputDim, Xend)
 
     # (j, t)
@@ -195,30 +190,36 @@ def backPropagateOne(
     dEdZ = np.zeros(ddim)
     dEdGo = np.zeros(ddim)
     dEdX = np.zeros((X.shape[0], X.shape[1]))
-
-    memEyeT = np.eye(outputDim).reshape(1, outputDim, outputDim)
+    memEyeT = gnp.eye(outputDim).reshape(1, outputDim, outputDim)
 
     # (k -> t)
     one = np.ones((Xend, 1))
     Yt1 = np.concatenate((np.zeros((1, outputDim)), Y[:Xend-1]))
     Ct1 = np.concatenate((np.zeros((1, outputDim)), C[:Xend-1]))
-    states1T = np.concatenate((X[:Xend], Yt1, Ct1, one), axis=-1)
-    states2T = np.concatenate((X[:Xend], Yt1, one), axis=-1)
-    states3T = np.concatenate((X[:Xend], Yt1, C[:Xend], one), axis=-1)
-    U = np.tanh(C[:Xend])
-    dU = 1 - U[:Xend] * U[:Xend]
-    dZ = 1 - Z[:Xend] * Z[:Xend]
+    Ct1g = gnp.as_garray(Ct1)
+    states1T = gnp.as_garray(np.concatenate((X[:Xend], Yt1, Ct1, one), axis=-1))
+    states2T = gnp.as_garray(np.concatenate((X[:Xend], Yt1, one), axis=-1))
+    states3T = gnp.as_garray(np.concatenate((X[:Xend], Yt1, C[:Xend], one), axis=-1))
 
-    dGi = Gi[:Xend] * (1 - Gi[:Xend])
-    dGf = Gf[:Xend] * (1 - Gf[:Xend])
-    dGo = Go[:Xend] * (1 - Go[:Xend])
+    Cg = gnp.as_garray(C[:Xend])
+    Zg = gnp.as_garray(Z[:Xend])
+    Gig = gnp.as_garray(Gi[:Xend])
+    Gfg = gnp.as_garray(Gf[:Xend])
+    Gog = gnp.as_garray(Go[:Xend])
+    Ug = gnp.tanh(Cg)
+    dU = 1 - Ug * Ug
+    dZ = 1 - Zg * Zg
+    dGi = Gig * (1 - Gig)
+    dGf = Gfg * (1 - Gfg)
+    dGo = Gog * (1 - Gog)
 
     # (j, t)
-    dCdGi = (Z[:Xend] * dGi)
-    dCdGf = (Ct1 * dGf)
-    dCdZ = (Gi[:Xend] * dZ)
-    dYdGo = (U[:Xend] * dGo)
-    dYdC = (Go[:Xend] * dU).reshape(Xend, outputDim, 1) * memEyeT + \
+    dCdGi = (Zg * dGi)
+    dCdGf = (Ct1g * dGf)
+    dCdZ = (Gig * dZ)
+    dYdGo = (Ug * dGo)
+
+    dYdC = (Gog * dU).reshape(Xend, outputDim, 1) * memEyeT + \
            dYdGo.reshape(Xend, outputDim, 1) * Wco.reshape(1, Wco.shape[0], Wco.shape[1])
     dCdC = dCdGf.reshape(Xend, outputDim, 1) * Wcf.reshape(1, Wcf.shape[0], Wcf.shape[1]) + \
            Gf[:Xend].reshape(Xend, outputDim, 1) * memEyeT + \
@@ -231,26 +232,26 @@ def backPropagateOne(
     for t in reversed(range(0, Xend)):
         dEdYnow = dEdY[t] if multiErr else 0
         if t < Xend - 1:
-            dEdYt = np.dot(dEdYt, dYdY[t]) + np.dot(dEdCt, dCdY[t]) + dEdYnow
-            dEdCt = np.dot(dEdCt, dCdC[t]) + np.dot(dEdYt, dYdC[t])
+            dEdYt = gnp.dot(dEdYt, dYdY[t]) + gnp.dot(dEdCt, dCdY[t]) + dEdYnow
+            dEdCt = gnp.dot(dEdCt, dCdC[t]) + gnp.dot(dEdYt, dYdC[t])
         else:
             dEdYt = dEdYnow if multiErr else dEdY
-            dEdCt = np.dot(dEdYt, dYdC[t])
+            dEdCt = gnp.dot(dEdYt, dYdC[t])
 
         dEdGi[:, t] = dEdCt * dCdGi[t]
         dEdGf[:, t] = dEdCt * dCdGf[t]
         dEdZ[:, t] = dEdCt * dCdZ[t]
         dEdGo[:, t] = dEdYt * dYdGo[t]
 
-    dEdWi += np.dot(dEdGi, states1T)
-    dEdWf += np.dot(dEdGf, states1T)
-    dEdWc += np.dot(dEdZ, states2T)
-    dEdWo += np.dot(dEdGo, states3T)
+    dEdWi = gnp.dot(dEdGi, states1T)
+    dEdWf = gnp.dot(dEdGf, states1T)
+    dEdWc = gnp.dot(dEdZ, states2T)
+    dEdWo = gnp.dot(dEdGo, states3T)
 
     if outputdEdX:
-        dEdX[:Xend] = np.dot(dEdGi.transpose(), Wxi) + \
-                       np.dot(dEdGf.transpose(), Wxf) + \
-                       np.dot(dEdZ.transpose(), Wxc) + \
-                       np.dot(dEdGo.transpose(), Wxo)
+        dEdX[:Xend] = gnp.dot(dEdGi.transpose(), Wxi) + \
+                      gnp.dot(dEdGf.transpose(), Wxf) + \
+                      gnp.dot(dEdZ.transpose(), Wxc) + \
+                      gnp.dot(dEdGo.transpose(), Wxo)
 
-    return dEdW, dEdX
+    return dEdWi, dEdWf, dEdWc, dEdWo, dEdX
