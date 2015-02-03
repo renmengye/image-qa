@@ -149,12 +149,20 @@ def backPropagateN(
     dEdWf = gnp.zeros(dEdWf.shape)
     dEdWc = gnp.zeros(dEdWc.shape)
     dEdWo = gnp.zeros(dEdWo.shape)
+    Xg = gnp.as_garray(X)
+    Yg = gnp.as_garray(Y)
+    Cg = gnp.as_garray(C)
+    Zg = gnp.as_garray(Z)
+    Gig = gnp.as_garray(Gi)
+    Gfg = gnp.as_garray(Gf)
+    Gog = gnp.as_garray(Go)
+    dEdYg = gnp.as_garray(dEdY)
 
     for n in range(0, numEx):
         dEdWitmp, dEdWftmp, dEdWctmp, dEdWotmp, dEdX[n] = \
-            backPropagateOne(dEdY[n],X[n],Y[n],
-                        C[n],Z[n],Gi[n],
-                        Gf[n],Go[n],
+            backPropagateOne(dEdYg[n],Xg[n],Yg[n],
+                        Cg[n],Zg[n],Gig[n],
+                        Gfg[n],Gog[n],
                         Xend[n],cutOffZeroEnd,
                         multiErr,outputdEdX,
                         Wxig,Wyig,Wcig,Wxfg,Wyfg,Wcfg,Wxcg,
@@ -195,19 +203,18 @@ def backPropagateOne(
     memEyeT = gnp.eye(outputDim).reshape(1, outputDim, outputDim)
 
     # (k -> t)
-    one = np.ones((Xend, 1))
-    Yt1 = np.concatenate((np.zeros((1, outputDim)), Y[:Xend-1]))
-    Ct1 = np.concatenate((np.zeros((1, outputDim)), C[:Xend-1]))
-    Ct1g = gnp.as_garray(Ct1)
-    states1T = gnp.as_garray(np.concatenate((X[:Xend], Yt1, Ct1, one), axis=-1))
-    states2T = gnp.as_garray(np.concatenate((X[:Xend], Yt1, one), axis=-1))
-    states3T = gnp.as_garray(np.concatenate((X[:Xend], Yt1, C[:Xend], one), axis=-1))
+    one = gnp.ones((Xend, 1))
+    Yt1g = gnp.concatenate((np.zeros((1, outputDim)), Y[:Xend-1]))
+    Ct1g = gnp.concatenate((np.zeros((1, outputDim)), C[:Xend-1]))
+    states1T = gnp.concatenate((X[:Xend], Yt1g, Ct1g, one), axis=-1)
+    states2T = gnp.concatenate((X[:Xend], Yt1g, one), axis=-1)
+    states3T = gnp.concatenate((X[:Xend], Yt1g, C[:Xend], one), axis=-1)
 
-    Cg = gnp.as_garray(C[:Xend])
-    Zg = gnp.as_garray(Z[:Xend])
-    Gig = gnp.as_garray(Gi[:Xend])
-    Gfg = gnp.as_garray(Gf[:Xend])
-    Gog = gnp.as_garray(Go[:Xend])
+    Cg = C[:Xend]
+    Zg = Z[:Xend]
+    Gig = Gi[:Xend]
+    Gfg = Gf[:Xend]
+    Gog = Go[:Xend]
     Ug = gnp.tanh(Cg)
     dU = 1 - Ug * Ug
     dZ = 1 - Zg * Zg
@@ -240,15 +247,15 @@ def backPropagateOne(
     # dCdZ = dCdZg.as_numpy_array()
     # dYdGo =dYdGog.as_numpy_array()
 
-    dEdYg = gnp.as_garray(dEdY)
+    #dEdYg = gnp.as_garray(dEdY)
 
     for t in reversed(range(0, Xend)):
-        dEdYnow = dEdYg[t] if multiErr else 0
+        dEdYnow = dEdY[t] if multiErr else 0
         if t < Xend - 1:
             dEdYt = gnp.dot(dEdYt, dYdYg[t]) + gnp.dot(dEdCt, dCdYg[t]) + dEdYnow
             dEdCt = gnp.dot(dEdCt, dCdCg[t]) + gnp.dot(dEdYt, dYdCg[t])
         else:
-            dEdYt = dEdYnow if multiErr else dEdYg
+            dEdYt = dEdYnow if multiErr else dEdY
             dEdCt = gnp.dot(dEdYt, dYdCg[t])
         dEdGig[:, t] = dEdCt * dCdGig[t]
         dEdGfg[:, t] = dEdCt * dCdGfg[t]
