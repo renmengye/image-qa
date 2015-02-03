@@ -114,13 +114,13 @@ def forwardPassOne(
         states2 = states2.reshape(states2.size, 1)
         res = gnp.dot(Wi, gnp.as_garray(states1))
         res2 = res.as_numpy_array()
-        Gi[t] = sigmoidFn(res2)
+        Gi[t] = sigmoidFn(res2.reshape(outputDim))
         res = gnp.dot(Wf, gnp.as_garray(states1))
         res2 = res.as_numpy_array()
-        Gf[t] = sigmoidFn(res2)
+        Gf[t] = sigmoidFn(res2.reshape(outputDim))
 
         Zt = gnp.tanh(gnp.dot(Wc, gnp.as_garray(states2)))
-        Z[t] = gnp.as_numpy_array(Zt)
+        Z[t] = (gnp.as_numpy_array(Zt)).reshape(outputDim)
 
         # Ct = Gft * Ct1 + Git * Zt
         # C[t] = gnp.as_numpy_array(Ct)
@@ -132,7 +132,7 @@ def forwardPassOne(
         states3 = states3.reshape(states1.size, 1)
         res = gnp.dot(Wo, gnp.as_garray(states3))
         res2 = res.as_numpy_array()
-        Go[t] = sigmoidFn(res2)
+        Go[t] = sigmoidFn(res2.reshape(outputDim))
         Yt = Go[t] * np.tanh(C[t])
         Y[t] = gnp.as_numpy_array(Yt)
 
