@@ -1,5 +1,4 @@
 from trainer import *
-
 name = sys.argv[1]
 outputFolder = None
 test = False
@@ -11,11 +10,11 @@ for i in range(2, len(sys.argv)):
     elif sys.argv[i] == '-c':
         configFilename = sys.argv[i + 1]
     elif sys.argv[i] == '-g':
-        gpu = True
+        useGpu = True
     elif sys.argv[i] == '-t':
         test = True
 
-trainData = numpy.load(trainDataFilename)
+trainData = np.load(trainDataFilename)
 trainInput = trainData[0]
 trainTarget = trainData[1]
 testInput = None

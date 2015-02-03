@@ -59,7 +59,7 @@ class Trainer:
         return pipeline
 
     def shuffleData(self, X, T):
-        shuffle = numpy.arange(0, X.shape[0])
+        shuffle = np.arange(0, X.shape[0])
         shuffle = self.random.permutation(shuffle)
         X = X[shuffle]
         T = T[shuffle]
@@ -219,8 +219,8 @@ class Trainer:
     def plotFigs(self, epoch, Etotal, VEtotal, calcError, Rtotal=None, VRtotal=None):
         plt.figure(1)
         plt.clf()
-        plt.plot(numpy.arange(epoch + 1), Etotal[0 : epoch + 1], 'b-x')
-        plt.plot(numpy.arange(epoch + 1), VEtotal[0 : epoch + 1], 'g-o')
+        plt.plot(np.arange(epoch + 1), Etotal[0 : epoch + 1], 'b-x')
+        plt.plot(np.arange(epoch + 1), VEtotal[0 : epoch + 1], 'g-o')
         plt.legend(['Train', 'Valid'])
         plt.xlabel('Epoch')
         plt.ylabel('Loss')
@@ -231,8 +231,8 @@ class Trainer:
         if calcError:
             plt.figure(2)
             plt.clf()
-            plt.plot(numpy.arange(epoch + 1), Rtotal[0 : epoch + 1], 'b-x')
-            plt.plot(numpy.arange(epoch + 1), VRtotal[0 : epoch + 1], 'g-o')
+            plt.plot(np.arange(epoch + 1), Rtotal[0 : epoch + 1], 'b-x')
+            plt.plot(np.arange(epoch + 1), VRtotal[0 : epoch + 1], 'g-o')
             plt.legend(['Train', 'Valid'])
             plt.xlabel('Epoch')
             plt.ylabel('Prediction Error')
@@ -254,7 +254,7 @@ class Trainer:
     def writeRecordEvery(self, epoch, E, R, VE, VR, writeToFile=True):
         # Print statistics
         timeElapsed = time.time() - self.startTime
-        stats = 'N: %3d TT: %5d  TE: %8.4f  TR: %8.4f  VE: %8.4f  VR: %8.4f' % \
+        stats = 'N: %3d T: %5d  TE: %8.4f  TR: %8.4f  VE: %8.4f  VR: %8.4f' % \
                 (epoch, timeElapsed, E, R, VE, VR)
         print stats
 
@@ -278,7 +278,7 @@ class Trainer:
         pass
 
     def loadWeights(self, weightsFilename):
-        weights = numpy.load(weightsFilename)
+        weights = np.load(weightsFilename)
         self.model.loadWeights(weights)
         pass
 
@@ -297,7 +297,7 @@ class Trainer:
 
     @staticmethod
     def splitData(trainInput, trainTarget, heldOutRatio, validNumber):
-        s = numpy.round(trainInput.shape[0] * heldOutRatio)
+        s = np.round(trainInput.shape[0] * heldOutRatio)
         start = s * validNumber
         validInput = trainInput[start : start + s]
         validTarget = trainTarget[start : start + s]

@@ -1,6 +1,5 @@
 from util_func import *
 from stage import *
-import numpy
 
 class LinearDict(Stage):
     def __init__(self,
@@ -30,7 +29,7 @@ class LinearDict(Stage):
                  outputdEdX=False)
         self.inputDim = inputDim
         self.outputDim = outputDim
-        self.random = numpy.random.RandomState(initSeed)
+        self.random = np.random.RandomState(initSeed)
 
         # Zeroth dimension of the weight matrix is reserved
         # for empty word at the end of a sentence.

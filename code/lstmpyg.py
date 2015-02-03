@@ -40,6 +40,7 @@ def sliceWeightsSmall(
     Wco = Wo[:, inputDim + outputDim : inputDim + outputDim + outputDim]
 
     return Wxi, Wyi, Wci, Wxf, Wyf, Wcf, Wxc, Wyc, Wxo, Wyo, Wco
+
 def forwardPassN(
                 X,
                 cutOffZeroEnd,
@@ -49,7 +50,11 @@ def forwardPassN(
     inputDim = X.shape[2]
     outputDim = W.shape[0]
     Wi, Wf, Wc, Wo = sliceWeights(inputDim, outputDim, W)
-    Xend = np.zeros(numEx)
+    Wig = gnp.as_garray(Wi.transpose())
+    Wfg = gnp.as_garray(Wf.transpose())
+    Wcg = gnp.as_garray(Wc.transpose())
+    Wog = gnp.as_garray(Wo.transpose())
+    Xend = np.zeros(numEx) + timespan
     Gi = np.zeros((numEx,timespan,outputDim))
     Gf = np.zeros((numEx,timespan,outputDim))
     Go = np.zeros((numEx,timespan,outputDim))
@@ -62,123 +67,41 @@ def forwardPassN(
     else:
         Y = np.zeros(myShape,)
         reachedEnd = np.zeros((numEx, timespan))
-
-    for n in range(0, numEx):
-        Y[n], C[n], Z[n], \
-        Gi[n], Gf[n], Go[n], \
-        Xend[n] = \
-            forwardPassOne(
-                X[n], reachedEnd[n], cutOffZeroEnd, Wi, Wf, Wc, Wo)
-
-    return Y, C, Z, Gi, Gf, Go, Xend
-
-def forwardPassOne(
-                X,
-                reachedEnd,
-                cutOffZeroEnd,
-                Wi,
-                Wf,
-                Wc,
-                Wo):
-    timespan = X.shape[0]
-    outputDim = Wi.shape[0]
-    # Last time step is reserved for final output of the entire input.
-    if cutOffZeroEnd:
-        Y = np.zeros((timespan + 1, outputDim))
-    else:
-        Y = np.zeros((timespan, outputDim))
-    C = np.zeros((timespan, outputDim))
-    Z = np.zeros((timespan, outputDim))
-    Gi = np.zeros((timespan, outputDim))
-    Gf = np.zeros((timespan, outputDim))
-    Go = np.zeros((timespan, outputDim))
-    Xend = timespan
     for t in range(0, timespan):
-        if cutOffZeroEnd and reachedEnd[t]:
-            Xend = t
-            Y[-1, :] = Y[t - 1, :]
-            break
+            states1 = np.concatenate((X[:,t], \
+                                      Y[:,t-1], \
+                                      C[:,t-1], \
+                                      np.ones((numEx, 1))), axis=-1)
+            states2 = np.concatenate((X[:,t], \
+                                      Y[:,t-1], \
+                                      np.ones((numEx, 1))), axis=-1)
+            res = gnp.dot(gnp.as_garray(states1), Wig)
+            res2 = res.as_numpy_array()
+            Gi[:,t] = sigmoidFn(res2)
+            res = gnp.dot(gnp.as_garray(states1), Wfg)
+            res2 = res.as_numpy_array()
+            Gf[:,t] = sigmoidFn(res2)
 
-        states1 = np.concatenate((X[t, :], \
-                                  Y[t-1, :], \
-                                  C[t-1, :], \
-                                  np.ones(1)))
-        states2 = np.concatenate((X[t, :], \
-                                  Y[t-1, :], \
-                                  np.ones(1)))
-        Gi[t, :] = sigmoidFn(np.dot(Wi, states1))
-        Gf[t, :] = sigmoidFn(np.dot(Wf, states1))
-        Z[t, :] = np.tanh(np.dot(Wc, states2))
-        C[t, :] = Gf[t, :] * C[t-1, :] + Gi[t, :] * Z[t, :]
-        states3 = np.concatenate((X[t, :], \
-                                  Y[t-1, :], \
-                                  C[t, :], \
-                                  np.ones(1)))
-        Go[t, :] = sigmoidFn(np.dot(Wo, states3))
-        Y[t, :] = Go[t, :] * np.tanh(C[t, :])
-
+            Zt = gnp.tanh(gnp.dot(gnp.as_garray(states2), Wcg))
+            Z[:,t] = gnp.as_numpy_array(Zt)
+            C[:,t] = Gf[:,t] * C[:,t-1] + Gi[:,t] * Z[:,t]
+            states3 = np.concatenate((X[:,t], \
+                                      Y[:,t-1], \
+                                      C[:,t], \
+                                      np.ones((numEx, 1))), axis=-1)
+            res = gnp.dot(gnp.as_garray(states3), Wog)
+            res2 = res.as_numpy_array()
+            Go[:,t] = sigmoidFn(res2)
+            Y[:,t] = Go[:,t] * np.tanh(C[:,t])
+    if cutOffZeroEnd:
+        for n in range(0, numEx):
+            for t in range(0, timespan):
+                if reachedEnd[n, t]:
+                    Y[n, -1] = Y[n, t - 1]
+                    Y[n, t] = 0.0
+                    Xend[n] = t
+                    break
     return Y, C, Z, Gi, Gf, Go, Xend
-# def forwardPassN(
-#                 X,
-#                 cutOffZeroEnd,
-#                 W):
-#     numEx = X.shape[0]
-#     timespan = X.shape[1]
-#     inputDim = X.shape[2]
-#     outputDim = W.shape[0]
-#     Wi, Wf, Wc, Wo = sliceWeights(inputDim, outputDim, W)
-#     Wig = gnp.as_garray(Wi.transpose())
-#     Wfg = gnp.as_garray(Wf.transpose())
-#     Wcg = gnp.as_garray(Wc.transpose())
-#     Wog = gnp.as_garray(Wo.transpose())
-#     Xend = np.zeros(numEx) + timespan
-#     Gi = np.zeros((numEx,timespan,outputDim))
-#     Gf = np.zeros((numEx,timespan,outputDim))
-#     Go = np.zeros((numEx,timespan,outputDim))
-#     Z = np.zeros((numEx,timespan,outputDim))
-#     C = np.zeros((numEx,timespan,outputDim))
-#     myShape = (numEx,timespan,outputDim)
-#     if cutOffZeroEnd:
-#         Y = np.zeros((numEx, timespan + 1, outputDim),)
-#         reachedEnd = np.sum(X, axis=-1) == 0.0
-#     else:
-#         Y = np.zeros(myShape,)
-#         reachedEnd = np.zeros((numEx, timespan))
-#     for t in range(0, timespan):
-#             states1 = np.concatenate((X[:,t], \
-#                                       Y[:,t-1], \
-#                                       C[:,t-1], \
-#                                       np.ones((numEx, 1))), axis=-1)
-#             states2 = np.concatenate((X[:,t], \
-#                                       Y[:,t-1], \
-#                                       np.ones((numEx, 1))), axis=-1)
-#             res = gnp.dot(gnp.as_garray(states1), Wig)
-#             res2 = res.as_numpy_array()
-#             Gi[:,t] = sigmoidFn(res2)
-#             res = gnp.dot(gnp.as_garray(states1), Wfg)
-#             res2 = res.as_numpy_array()
-#             Gf[:,t] = sigmoidFn(res2)
-#
-#             Zt = gnp.tanh(gnp.dot(gnp.as_garray(states2), Wcg))
-#             Z[:,t] = gnp.as_numpy_array(Zt)
-#             C[:,t] = Gf[:,t] * C[:,t-1] + Gi[:,t] * Z[:,t]
-#             states3 = np.concatenate((X[:,t], \
-#                                       Y[:,t-1], \
-#                                       C[:,t], \
-#                                       np.ones((numEx, 1))), axis=-1)
-#             res = gnp.dot(gnp.as_garray(states3), Wog)
-#             res2 = res.as_numpy_array()
-#             Go[:,t] = sigmoidFn(res2)
-#             Y[:,t] = Go[:,t] * np.tanh(C[:,t])
-#     if cutOffZeroEnd:
-#         for n in range(0, numEx):
-#             for t in range(0, timespan):
-#                 if reachedEnd[n, t]:
-#                     Y[n, -1] = Y[n, t - 1]
-#                     Y[n, t] = 0.0
-#                     Xend[n] = t
-#                     break
-#     return Y, C, Z, Gi, Gf, Go, Xend
 
 def backPropagateN(
                    dEdY,X,Y,C,Z,Gi,Gf,Go,
