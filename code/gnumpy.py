@@ -72,7 +72,7 @@ def board_id_to_use():
  
 class GnumpyGpuUnavailableException(Exception): pass
  
-_boardId = 0
+_boardId = 2 
 def _init_gpu():
  """ picks a board and claims it (if using cudamat aot npmat). exception if there is no board. """
  if '__gpu_inited' in globals(): return
