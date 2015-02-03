@@ -132,6 +132,7 @@ def backPropagateN(
     outputDim = Y.shape[2]
     Wg = gnp.as_garray(W)
     Wxig,Wyig,Wcig,Wxfg,Wyfg,Wcfg,Wxcg,Wycg,Wxog,Wyog,Wcog = sliceWeightsSmall(inputDim, outputDim, Wg)
+    Wxi,Wyi,Wci,Wxf,Wyf,Wcf,Wxc,Wyc,Wxo,Wyo,Wco = sliceWeightsSmall(inputDim, outputDim, W)
     dEdW = np.zeros((W.shape[0], W.shape[1]))
     dEdX = np.zeros((X.shape[0], X.shape[1], X.shape[2]))
     dEdWi,dEdWf,dEdWc,dEdWo = sliceWeights(inputDim, outputDim, dEdW)
@@ -151,8 +152,8 @@ def backPropagateN(
                         Gfg[n],Gog[n],
                         Xend[n],cutOffZeroEnd,
                         multiErr,outputdEdX,
-                        Wxig,Wyig,Wcig,Wxfg,Wyfg,Wcfg,Wxcg,
-                        Wycg,Wxog,Wyog,Wcog)
+                        Wxi,Wyig,Wcig,Wxf,Wyfg,Wcfg,Wxc,
+                        Wycg,Wxo,Wyog,Wcog)
         dEdWi += dEdWitmp
         dEdWf += dEdWftmp
         dEdWc += dEdWctmp
