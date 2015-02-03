@@ -40,6 +40,7 @@ def sliceWeightsSmall(
     Wco = Wo[:, inputDim + outputDim : inputDim + outputDim + outputDim]
 
     return Wxi, Wyi, Wci, Wxf, Wyf, Wcf, Wxc, Wyc, Wxo, Wyo, Wco
+
 def forwardPassN(
                 X,
                 cutOffZeroEnd,
@@ -118,6 +119,7 @@ def forwardPassOne(
         Y[t, :] = Go[t, :] * np.tanh(C[t, :])
 
     return Y, C, Z, Gi, Gf, Go, Xend
+
 # def forwardPassN(
 #                 X,
 #                 cutOffZeroEnd,

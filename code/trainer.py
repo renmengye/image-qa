@@ -254,7 +254,7 @@ class Trainer:
     def writeRecordEvery(self, epoch, E, R, VE, VR, writeToFile=True):
         # Print statistics
         timeElapsed = time.time() - self.startTime
-        stats = 'N: %3d TT: %5d  TE: %8.4f  TR: %8.4f  VE: %8.4f  VR: %8.4f' % \
+        stats = 'N: %3d T: %5d  TE: %8.4f  TR: %8.4f  VE: %8.4f  VR: %8.4f' % \
                 (epoch, timeElapsed, E, R, VE, VR)
         print stats
 
