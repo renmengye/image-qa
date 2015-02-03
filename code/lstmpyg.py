@@ -231,10 +231,10 @@ def backPropagateOne(
             dEdYt = dEdYnow if multiErr else dEdY
             dEdCt = gnp.dot(dEdYt, dYtdCt)
 
-        dEdGi[:, t] = dEdCt * dCtdGi
-        dEdGf[:, t] = dEdCt * dCtdGf
-        dEdZ[:, t] = dEdCt * dCtdZ
-        dEdGo[:, t] = dEdYt * dYtdGo
+        dEdGi[:, t] = dEdCt.as_numpy_array() * dCtdGi
+        dEdGf[:, t] = dEdCt.as_numpy_array()  * dCtdGf
+        dEdZ[:, t] = dEdCt.as_numpy_array()  * dCtdZ
+        dEdGo[:, t] = dEdYt.as_numpy_array()  * dYtdGo
 
         # (k -> t, l -> t-1)
         dCtdCt1 = gnp.as_garray(dCtdGf.reshape(memCol) * Wcf + \
@@ -245,16 +245,23 @@ def backPropagateOne(
                   dCtdGi.reshape(memCol) * Wyi)
         dYtdYt1 = gnp.as_garray(dYtdGo.reshape(memCol) * Wyo)
 
-    dEdWi = gnp.dot(gnp.as_garray(dEdGi), gnp.as_garray(states1T)).as_numpy_array()
-    dEdWf = gnp.dot(gnp.as_garray(dEdGf), gnp.as_garray(states1T)).as_numpy_array()
-    dEdWc = gnp.dot(gnp.as_garray(dEdZ), gnp.as_garray(states2T)).as_numpy_array()
-    dEdWo = gnp.dot(gnp.as_garray(dEdGo), gnp.as_garray(states3T)).as_numpy_array()
+    st1g = gnp.as_garray(states1T)
+    st2g = gnp.as_garray(states2T)
+    st3g = gnp.as_garray(states3T)
+    dEdWi = gnp.dot(gnp.as_garray(dEdGi), st1g).as_numpy_array()
+    dEdWf = gnp.dot(gnp.as_garray(dEdGf), st1g).as_numpy_array()
+    dEdWc = gnp.dot(gnp.as_garray(dEdZ), st2g).as_numpy_array()
+    dEdWo = gnp.dot(gnp.as_garray(dEdGo), st3g).as_numpy_array()
 
     if outputdEdX:
-        dEdX[0:Xend] = (gnp.dot(gnp.as_garray(dEdGi.transpose()), gnp.as_garray(Wxi)) + \
-                       gnp.dot(gnp.as_garray(dEdGf.transpose()), gnp.as_garray(Wxf)) + \
-                       gnp.dot(gnp.as_garray(dEdZ.transpose()), gnp.as_garray(Wxc)) + \
-                       gnp.dot(gnp.as_garray(dEdGo.transpose()), gnp.as_garray(Wxo))).as_numpy_array()
+        Wxig = gnp.as_garray(Wxi)
+        Wxfg = gnp.as_garray(Wxf)
+        Wxcg = gnp.as_garray(Wxc)
+        Wxog = gnp.as_garray(Wxo)
+        dEdX[0:Xend] = (gnp.dot(gnp.as_garray(dEdGi.transpose()), Wxig) + \
+                       gnp.dot(gnp.as_garray(dEdGf.transpose()), Wxfg) + \
+                       gnp.dot(gnp.as_garray(dEdZ.transpose()), Wxcg) + \
+                       gnp.dot(gnp.as_garray(dEdGo.transpose()), Wxog)).as_numpy_array()
 
     dEdW = np.concatenate((dEdWi, dEdWf, dEdWc, dEdWo), axis=-1)
     return dEdW, dEdX
