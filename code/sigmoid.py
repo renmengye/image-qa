@@ -1,6 +1,5 @@
 from util_func import *
 from stage import *
-import numpy
 
 class Sigmoid(Stage):
     def __init__(self,
@@ -31,7 +30,7 @@ class Sigmoid(Stage):
                  outputdEdX=outputdEdX)
         self.inputDim = inputDim
         self.outputDim = outputDim
-        self.random = numpy.random.RandomState(initSeed)
+        self.random = np.random.RandomState(initSeed)
 
         if needInit:
             self.W = self.random.uniform(

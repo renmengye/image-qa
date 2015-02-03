@@ -1,6 +1,4 @@
 import numpy as np
-import numpy
-#:FLOAT = np.float
 
 def meanSqErr(Y, T):
     diff =  Y - T.reshape(Y.shape)

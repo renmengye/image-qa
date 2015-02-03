@@ -1,5 +1,4 @@
 from stage import *
-import numpy
 
 class Dropout(Stage):
     def __init__(self,
@@ -14,14 +13,14 @@ class Dropout(Stage):
         self.dropoutVec = 0
         self.dropoutRate = dropoutRate
         self.debug = debug
-        self.random = numpy.random.RandomState(initSeed)
+        self.random = np.random.RandomState(initSeed)
         self.seed = initSeed
         pass
 
     def forwardPass(self, X):
         if self.dropoutRate > 0.0 and self.dropout:
             if self.debug:
-                self.random = numpy.random.RandomState(self.seed)
+                self.random = np.random.RandomState(self.seed)
             self.dropoutVec = (self.random.uniform(0, 1, (X.shape[-1])) >
                                self.dropoutRate)
             Y = X * self.dropoutVec
