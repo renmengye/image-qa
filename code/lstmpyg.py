@@ -98,6 +98,7 @@ def forwardPassN(
             for t in range(0, timespan):
                 if reachedEnd[n, t]:
                     Y[n, -1] = Y[n, t - 1]
+                    Y[n, t] = 0.0
                     break
     return Y, C, Z, Gi, Gf, Go, Xend
 
@@ -161,14 +162,11 @@ def backPropagateOne(
     Xend = int(Xend)
     if cutOffZeroEnd and multiErr:
         dEdY[Xend - 1] += dEdY[-1]
+    timespan = X.shape[0]
     inputDim = X.shape[1]
     outputDim = Y.shape[1]
     dEdW = np.zeros(Wshape)
-    # dEdWi,dEdWf,dEdWc,dEdWo = sliceWeights(inputDim, outputDim, dEdW)
-    # dEdWi = gnp.zeros(dEdWi.shape)
-    # dEdWf = gnp.zeros(dEdWf.shape)
-    # dEdWc = gnp.zeros(dEdWc.shape)
-    # dEdWo = gnp.zeros(dEdWo.shape)
+    dEdWi,dEdWf,dEdWc,dEdWo = sliceWeights(inputDim, outputDim, dEdW)
     ddim = (outputDim, Xend)
 
     # (j, t)
@@ -190,6 +188,24 @@ def backPropagateOne(
     memEye = np.eye(outputDim)
     memCol = (outputDim, 1)
 
+    Ct1g = gnp.as_garray(np.concatenate((np.zeros(timespan, outputDim), C[:-1])))
+    Cg = gnp.as_garray(C)
+    Gig = gnp.as_garray(Gi)
+    Gfg = gnp.as_garray(Gf)
+    Gog = gnp.as_garray(Go)
+    Zg = gnp.as_garray(Z)
+
+    dGig = Gig * (1 - Gig)
+    dGfg = Gfg * (1 - Gfg)
+    dGog = Gog * (1 - Gog)
+    dZg = 1 - Zg * Zg
+    Ug = np.tanh(Cg)
+    dU = (1 - Ug * Ug).as_numpy_array()
+    dCtdGi = (Z * dGig).as_numpy_array()
+    dCtdGf = (Ct1g * dGfg).as_numpy_array()
+    dCtdZ = (Gig * dZg).as_numpy_array()
+    dYtdGo = (Ug * dGog).as_numpy_array()
+
     for t in reversed(range(0, int(Xend))):
         if t == 0:
             Yt1 = np.zeros(outputDim)
@@ -205,21 +221,8 @@ def backPropagateOne(
         states3T[t] = \
             np.concatenate((X[t], Yt1, C[t], np.ones(1)))
 
-        # (k -> t)
-        U = np.tanh(C[t])
-        dU = 1 - np.power(U, 2)
-        dZ = 1 - np.power(Z[t], 2)
-
-        dGi = Gi[t] * (1 - Gi[t])
-        dGf = Gf[t] * (1 - Gf[t])
-        dGo = Go[t] * (1 - Go[t])
-        dCtdGi = Z[t] * dGi
-        dCtdGf = Ct1 * dGf
-        dCtdZ = Gi[t] * dZ
-        dYtdGo = U * dGo
-
         # (k, l)
-        dYtdCt = gnp.as_garray((Go[t] * dU) * memEye+ \
+        dYtdCt = gnp.as_garray((Go[t] * dU[t]) * memEye+ \
                  dYtdGo.reshape(memCol) * Wco)
 
         dEdYnow = gnp.as_garray(dEdY[t]) if multiErr else 0
@@ -231,10 +234,10 @@ def backPropagateOne(
             dEdYt = dEdYnow if multiErr else dEdY
             dEdCt = gnp.dot(dEdYt, dYtdCt)
 
-        dEdGi[:, t] = dEdCt.as_numpy_array() * dCtdGi
-        dEdGf[:, t] = dEdCt.as_numpy_array()  * dCtdGf
-        dEdZ[:, t] = dEdCt.as_numpy_array()  * dCtdZ
-        dEdGo[:, t] = dEdYt.as_numpy_array()  * dYtdGo
+        dEdGi[:, t] = dEdCt.as_numpy_array() * dCtdGi[t]
+        dEdGf[:, t] = dEdCt.as_numpy_array()  * dCtdGf[t]
+        dEdZ[:, t] = dEdCt.as_numpy_array()  * dCtdZ[t]
+        dEdGo[:, t] = dEdYt.as_numpy_array()  * dYtdGo[t]
 
         # (k -> t, l -> t-1)
         dCtdCt1 = gnp.as_garray(dCtdGf.reshape(memCol) * Wcf + \
@@ -248,10 +251,10 @@ def backPropagateOne(
     st1g = gnp.as_garray(states1T)
     st2g = gnp.as_garray(states2T)
     st3g = gnp.as_garray(states3T)
-    dEdWi = gnp.dot(gnp.as_garray(dEdGi), st1g).as_numpy_array()
-    dEdWf = gnp.dot(gnp.as_garray(dEdGf), st1g).as_numpy_array()
-    dEdWc = gnp.dot(gnp.as_garray(dEdZ), st2g).as_numpy_array()
-    dEdWo = gnp.dot(gnp.as_garray(dEdGo), st3g).as_numpy_array()
+    dEdWi += gnp.dot(gnp.as_garray(dEdGi), st1g).as_numpy_array()
+    dEdWf += gnp.dot(gnp.as_garray(dEdGf), st1g).as_numpy_array()
+    dEdWc += gnp.dot(gnp.as_garray(dEdZ), st2g).as_numpy_array()
+    dEdWo += gnp.dot(gnp.as_garray(dEdGo), st3g).as_numpy_array()
 
     if outputdEdX:
         Wxig = gnp.as_garray(Wxi)
@@ -263,7 +266,7 @@ def backPropagateOne(
                        gnp.dot(gnp.as_garray(dEdZ.transpose()), Wxcg) + \
                        gnp.dot(gnp.as_garray(dEdGo.transpose()), Wxog)).as_numpy_array()
 
-    dEdW = np.concatenate((dEdWi, dEdWf, dEdWc, dEdWo), axis=-1)
+    #dEdW = np.concatenate((dEdWi, dEdWf, dEdWc, dEdWo), axis=-1)
     return dEdW, dEdX
 
 # def backPropagateN(
