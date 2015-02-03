@@ -135,8 +135,8 @@ def backPropagateN(
     dEdW = np.zeros((W.shape[0], W.shape[1]))
     dEdX = np.zeros((X.shape[0], X.shape[1], X.shape[2]))
     dEdWi,dEdWf,dEdWc,dEdWo = sliceWeights(inputDim, outputDim, dEdW)
-    Xg = gnp.as_garray(X)
-    Yg = gnp.as_garray(Y)
+    # Xg = gnp.as_garray(X)
+    # Yg = gnp.as_garray(Y)
     Cg = gnp.as_garray(C)
     Zg = gnp.as_garray(Z)
     Gig = gnp.as_garray(Gi)
@@ -146,8 +146,8 @@ def backPropagateN(
 
     for n in range(0, numEx):
         dEdWitmp, dEdWftmp, dEdWctmp, dEdWotmp, dEdX[n] = \
-            backPropagateOne(dEdY[n],Xg[n],Yg[n],
-                        Cg[n],Zg[n],Gig[n],
+            backPropagateOne(dEdY[n],X[n],Y[n],
+                        C[n],Cg[n],Zg[n],Gig[n],
                         Gfg[n],Gog[n],
                         Xend[n],cutOffZeroEnd,
                         multiErr,outputdEdX,
@@ -162,7 +162,7 @@ def backPropagateN(
     return dEdW, dEdX
 
 def backPropagateOne(
-                    dEdY,X,Y,C,Z,Gi,Gf,Go,Xend,cutOffZeroEnd,
+                    dEdY,X,Y,C,Cg,Z,Gi,Gf,Go,Xend,cutOffZeroEnd,
                     multiErr,outputdEdX,Wxi,Wyi,Wci,Wxf,Wyf,Wcf,
                     Wxc,Wyc,Wxo,Wyo,Wco):
     Xend = int(Xend)
@@ -181,14 +181,15 @@ def backPropagateOne(
     memEyeT = gnp.eye(outputDim).reshape(1, outputDim, outputDim)
 
     # (k -> t)
-    one = gnp.ones((Xend, 1))
-    Yt1g = gnp.concatenate((np.zeros((1, outputDim)), Y[:Xend-1]))
-    Ct1g = gnp.concatenate((np.zeros((1, outputDim)), C[:Xend-1]))
-    states1T = gnp.concatenate((X[:Xend], Yt1g, Ct1g, one), axis=-1)
-    states2T = gnp.concatenate((X[:Xend], Yt1g, one), axis=-1)
-    states3T = gnp.concatenate((X[:Xend], Yt1g, C[:Xend], one), axis=-1)
+    one = np.ones((Xend, 1))
+    Yt1 = np.concatenate((np.zeros((1, outputDim)), Y[:Xend-1]))
+    Ct1 = np.concatenate((np.zeros((1, outputDim)), C[:Xend-1]))
+    Ct1g = gnp.concatenate((gnp.zeros((1, outputDim)), Cg[:Xend-1]))
+    states1T = np.concatenate((X[:Xend], Yt1, Ct1, one), axis=-1)
+    states2T = np.concatenate((X[:Xend], Yt1, one), axis=-1)
+    states3T = np.concatenate((X[:Xend], Yt1, C[:Xend], one), axis=-1)
 
-    Cg = C[:Xend]
+    Cg = Cg[:Xend]
     Zg = Z[:Xend]
     Gig = Gi[:Xend]
     Gfg = Gf[:Xend]
