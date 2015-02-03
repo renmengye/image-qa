@@ -64,7 +64,7 @@ if hasattr(_cudamat, 'ct'): _ctInt = _cudamat.ct.c_int
 
 def board_id_to_use():
  try:
-  import gpu_lock
+  from cudamat import gpu_lock2 as gpu_lock
   return gpu_lock.obtain_lock_id()
  except:
   print 'gnumpy: failed to use gpu_lock. Using board #0 without knowing whether it is in use or not.'
