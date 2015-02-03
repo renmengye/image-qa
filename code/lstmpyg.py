@@ -133,8 +133,8 @@ def backPropagateN(
     Wxi,Wyi,Wci,Wxf,Wyf,Wcf,Wxc,Wyc,Wxo,Wyo,Wco = sliceWeightsSmall(inputDim, outputDim, W)
     Wg = gnp.as_garray(W)
     Wxig,Wyig,Wcig,Wxfg,Wyfg,Wcfg,Wxcg,Wycg,Wxog,Wyog,Wcog = sliceWeightsSmall(inputDim, outputDim, Wg)
-    dEdW = np.zeros((W.shape[0], W.shape[1]))
-    dEdX = np.zeros((X.shape[0], X.shape[1], X.shape[2]))
+    dEdW = np.zeros(W.shape)
+    dEdX = np.zeros(X.shape)
     dEdWi,dEdWf,dEdWc,dEdWo = sliceWeights(inputDim, outputDim, dEdW)
     # Xg = gnp.as_garray(X)
     # Yg = gnp.as_garray(Y)
@@ -152,14 +152,12 @@ def backPropagateN(
                         Gfg[n],Gog[n],
                         Xend[n],cutOffZeroEnd,
                         multiErr,outputdEdX,
-                        Wxig,Wyig,Wcig,Wxfg,Wyfg,Wcfg,Wxcg,
-                        Wycg,Wxog,Wyog,Wcog)
+                        Wxi,Wyig,Wcig,Wxf,Wyfg,Wcfg,Wxc,
+                        Wycg,Wxo,Wyog,Wcog)
         dEdWi += dEdWitmp
         dEdWf += dEdWftmp
         dEdWc += dEdWctmp
         dEdWo += dEdWotmp
-    # dEdW = dEdW.as_numpy_array()
-    # dEdX = dEdX.as_numpy_array()
     return dEdW, dEdX
 
 def backPropagateOne(
@@ -178,7 +176,7 @@ def backPropagateOne(
     dEdGf = np.zeros(ddim)
     dEdZ = np.zeros(ddim)
     dEdGo = np.zeros(ddim)
-    dEdX = gnp.zeros((X.shape[0], X.shape[1]))
+    dEdX = np.zeros(X.shape)
     memEyeT = gnp.eye(outputDim).reshape(1, outputDim, outputDim)
 
     # (k -> t)
@@ -246,9 +244,9 @@ def backPropagateOne(
     dEdWo = np.dot(dEdGo, states3T)
 
     if outputdEdX:
-        dEdX[:Xend] = (np.dot(dEdGi.transpose(), Wxi.as_numpy_array()) + \
-                      np.dot(dEdGf.transpose(), Wxf.as_numpy_array()) + \
-                      np.dot(dEdZ.transpose(), Wxc.as_numpy_array()) + \
-                      np.dot(dEdGo.transpose(), Wxo.as_numpy_array()))
+        dEdX[:Xend] = (np.dot(dEdGi.transpose(), Wxi) + \
+                      np.dot(dEdGf.transpose(), Wxf) + \
+                      np.dot(dEdZ.transpose(), Wxc) + \
+                      np.dot(dEdGo.transpose(), Wxo))
 
     return dEdWi, dEdWf, dEdWc, dEdWo, dEdX
