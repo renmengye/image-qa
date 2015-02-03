@@ -247,7 +247,7 @@ def backPropagateOne(
             dEdCt = np.dot(dEdCt, dCdC[t]) + np.dot(dEdYt, dYdC[t])
         else:
             dEdYt = dEdYnow if multiErr else dEdY
-            dEdCt = np.dot(dEdYt, dYdCg[t])
+            dEdCt = np.dot(dEdYt, dYdC[t])
         dEdGi[:, t] = dEdCt * dCdGi[t]
         dEdGf[:, t] = dEdCt * dCdGf[t]
         dEdZ[:, t] = dEdCt * dCdZ[t]
