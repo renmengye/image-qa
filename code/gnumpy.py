@@ -76,12 +76,12 @@ _boardId = 0
 def _init_gpu():
  """ picks a board and claims it (if using cudamat aot npmat). exception if there is no board. """
  if '__gpu_inited' in globals(): return
- global _boardId
- if _useGpu=='yes':
-  #_boardId = ( board_id_to_use() if callable(board_id_to_use) else board_id_to_use)
-  if _boardId==-1: raise GnumpyGpuUnavailableException('No gpu board is available. gnumpy will not function. Consider telling it to run on the CPU by setting environment variable GNUMPY_USE_GPU to "no".')
-  _cudamat.cuda_set_device(_boardId)
-  _cudamat.cublas_init()
+ #global _boardId
+ #if _useGpu=='yes':
+ # boardId = ( board_id_to_use() if callable(board_id_to_use) else board_id_to_use)
+ # if _boardId==-1: raise GnumpyGpuUnavailableException('No gpu board is available. gnumpy will not function. Consider telling it to run on the CPU by setting environment variable GNUMPY_USE_GPU to "no".')
+ _cudamat.cuda_set_device(_boardId)
+ _cudamat.cublas_init()
  _cudamat.CUDAMatrix.init_random(0)
  globals()['__gpu_inited'] = None
 
