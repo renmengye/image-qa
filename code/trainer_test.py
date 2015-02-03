@@ -141,5 +141,5 @@ if __name__ == '__main__':
     #dEdWdict2 = evaluateGrad(model, lindict.getWeights(), eps, costFn, hasDropout)
 
     print 'hello'
-    print dEdWlstm2
+    print dEdWlstm / dEdWlstm2
     pass
