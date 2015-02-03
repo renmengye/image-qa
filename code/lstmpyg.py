@@ -152,8 +152,8 @@ def backPropagateN(
                         Gfg[n],Gog[n],
                         Xend[n],cutOffZeroEnd,
                         multiErr,outputdEdX,
-                        Wxi,Wyig,Wcig,Wxf,Wyfg,Wcfg,Wxc,
-                        Wycg,Wxo,Wyog,Wcog)
+                        Wxig,Wyig,Wcig,Wxfg,Wyfg,Wcfg,Wxcg,
+                        Wycg,Wxog,Wyog,Wcog)
         dEdWi += dEdWitmp
         dEdWf += dEdWftmp
         dEdWc += dEdWctmp
@@ -246,9 +246,9 @@ def backPropagateOne(
     dEdWo = np.dot(dEdGo, states3T)
 
     if outputdEdX:
-        dEdX[:Xend] = (np.dot(dEdGi.transpose(), Wxi) + \
-                      np.dot(dEdGf.transpose(), Wxf) + \
-                      np.dot(dEdZ.transpose(), Wxc) + \
-                      np.dot(dEdGo.transpose(), Wxo))
+        dEdX[:Xend] = (np.dot(dEdGi.transpose(), Wxi.as_numpy_array()) + \
+                      np.dot(dEdGf.transpose(), Wxf.as_numpy_array()) + \
+                      np.dot(dEdZ.transpose(), Wxc.as_numpy_array()) + \
+                      np.dot(dEdGo.transpose(), Wxo.as_numpy_array()))
 
     return dEdWi, dEdWf, dEdWc, dEdWo, dEdX
