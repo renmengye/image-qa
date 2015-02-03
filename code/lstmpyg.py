@@ -67,74 +67,32 @@ def forwardPassN(
     else:
         Y = np.zeros(myShape,)
         reachedEnd = np.zeros((numEx, timespan))
-
-    for n in range(0, numEx):
-        Y[n], C[n], Z[n], \
-        Gi[n], Gf[n], Go[n], \
-        Xend[n] = \
-            forwardPassOne(
-                X[n], reachedEnd[n], cutOffZeroEnd, Wig, Wfg, Wcg, Wog)
-
-    return Y, C, Z, Gi, Gf, Go, Xend
-
-def forwardPassOne(
-                X,
-                reachedEnd,
-                cutOffZeroEnd,
-                Wi,
-                Wf,
-                Wc,
-                Wo):
-    timespan = X.shape[0]
-    outputDim = Wi.shape[0]
-    # Last time step is reserved for final output of the entire input.
-    if cutOffZeroEnd:
-        Y = np.zeros((timespan + 1, outputDim))
-    else:
-        Y = np.zeros((timespan, outputDim))
-    C = np.zeros((timespan, outputDim))
-    Z = np.zeros((timespan, outputDim))
-    Gi = np.zeros((timespan, outputDim))
-    Gf = np.zeros((timespan, outputDim))
-    Go = np.zeros((timespan, outputDim))
-    Xend = timespan
     for t in range(0, timespan):
-        if cutOffZeroEnd and reachedEnd[t]:
-            Xend = t
-            Y[-1, :] = Y[t - 1, :]
-            break
-        states1 = np.concatenate((X[t], \
-                                  Y[t-1], \
-                                  C[t-1], \
-                                  np.ones(1)))
-        states1 = states1.reshape(states1.size, 1)
-        states2 = np.concatenate((X[t], \
-                                  Y[t-1], \
-                                  np.ones(1)))
-        states2 = states2.reshape(states2.size, 1)
-        res = gnp.dot(Wi, gnp.as_garray(states1))
-        res2 = res.as_numpy_array()
-        Gi[t] = sigmoidFn(res2.reshape(outputDim))
-        res = gnp.dot(Wf, gnp.as_garray(states1))
-        res2 = res.as_numpy_array()
-        Gf[t] = sigmoidFn(res2.reshape(outputDim))
+            states1 = np.concatenate((X[:,t], \
+                                      Y[:,t-1], \
+                                      C[:,t-1], \
+                                      np.ones(1)), axis=-1)
+            states2 = np.concatenate((X[:,t], \
+                                      Y[:,t-1], \
+                                      np.ones(1)), axis=-1)
+            res = gnp.dot(Wig, gnp.as_garray(states1))
+            res2 = res.as_numpy_array()
+            Gi[:,t] = sigmoidFn(res2)
+            res = gnp.dot(Wfg, gnp.as_garray(states1))
+            res2 = res.as_numpy_array()
+            Gf[:,t] = sigmoidFn(res2)
 
-        Zt = gnp.tanh(gnp.dot(Wc, gnp.as_garray(states2)))
-        Z[t] = (gnp.as_numpy_array(Zt)).reshape(outputDim)
-
-        # Ct = Gft * Ct1 + Git * Zt
-        # C[t] = gnp.as_numpy_array(Ct)
-        C[t] = Gf[t] * C[t-1] + Gi[t] * Z[t]
-        states3 = np.concatenate((X[t], \
-                                  Y[t-1], \
-                                  C[t], \
-                                  np.ones(1)))
-        states3 = states3.reshape(states1.size, 1)
-        res = gnp.dot(Wo, gnp.as_garray(states3))
-        res2 = res.as_numpy_array()
-        Go[t] = sigmoidFn(res2.reshape(outputDim))
-        Yt = Go[t] * np.tanh(C[t])
-        Y[t] = gnp.as_numpy_array(Yt)
+            Zt = gnp.tanh(gnp.dot(Wcg, gnp.as_garray(states2)))
+            Z[:,t] = gnp.as_numpy_array(Zt)
+            C[:,t] = Gf[:,t] * C[:,t-1] + Gi[:,t] * Z[:,t]
+            states3 = np.concatenate((X[:,t], \
+                                      Y[:,t-1], \
+                                      C[:,t], \
+                                      np.ones(1)), axis=-1)
+            res = gnp.dot(Wog, gnp.as_garray(states3))
+            res2 = res.as_numpy_array()
+            Go[:,t] = sigmoidFn(res2)
+            Y[:,t] = Go[:,t] * np.tanh(C[:,t])
 
     return Y, C, Z, Gi, Gf, Go, Xend
 
