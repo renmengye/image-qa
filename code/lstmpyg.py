@@ -222,7 +222,7 @@ def backPropagateOne(
     dYdC = (Gog * dU).reshape(Xend, outputDim, 1) * memEyeT + \
            dYdGo.reshape(Xend, outputDim, 1) * Wco.reshape(1, Wco.shape[0], Wco.shape[1])
     dCdC = dCdGf.reshape(Xend, outputDim, 1) * Wcf.reshape(1, Wcf.shape[0], Wcf.shape[1]) + \
-           Gf[:Xend].reshape(Xend, outputDim, 1) * memEyeT + \
+           Gfg.reshape(Xend, outputDim, 1) * memEyeT + \
            dCdGi.reshape(Xend, outputDim, 1) * Wci.reshape(1, Wci.shape[0], Wci.shape[1])
     dCdY = dCdGf.reshape(Xend, outputDim, 1) * Wyf.reshape(1, Wyf.shape[0], Wyf.shape[1]) + \
            dCdZ.reshape(Xend, outputDim, 1) * Wyc.reshape(1, Wyc.shape[0], Wyc.shape[1]) + \
@@ -249,9 +249,9 @@ def backPropagateOne(
     dEdWo = gnp.dot(dEdGo, states3T)
 
     if outputdEdX:
-        dEdX[:Xend] = gnp.dot(dEdGi.transpose(), Wxi) + \
+        dEdX[:Xend] = (gnp.dot(dEdGi.transpose(), Wxi) + \
                       gnp.dot(dEdGf.transpose(), Wxf) + \
                       gnp.dot(dEdZ.transpose(), Wxc) + \
-                      gnp.dot(dEdGo.transpose(), Wxo)
+                      gnp.dot(dEdGo.transpose(), Wxo)).as_numpy_array()
 
     return dEdWi, dEdWf, dEdWc, dEdWo, dEdX
