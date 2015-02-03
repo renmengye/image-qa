@@ -101,6 +101,7 @@ def forwardPassN(
                     Y[n, t] = 0.0
                     Xend[n] = t
                     break
+    print Xend[n]
     return Y, C, Z, Gi, Gf, Go, Xend
 
 def backPropagateN(dEdY,X,Y,C,Z,Gi,Gf,Go,Xend,
