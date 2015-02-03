@@ -204,12 +204,12 @@ def backPropagateOne(
     memCol = (outputDim, 1)
 
     Ct1g = gnp.as_garray(
-           np.concatenate((np.zeros((1, outputDim)), C[:-1])))
-    Cg = gnp.as_garray(C)
-    Gig = gnp.as_garray(Gi)
-    Gfg = gnp.as_garray(Gf)
-    Gog = gnp.as_garray(Go)
-    Zg = gnp.as_garray(Z)
+           np.concatenate((np.zeros((1, outputDim)), C[:Xend-1])))
+    Cg = gnp.as_garray(C[:Xend])
+    Gig = gnp.as_garray(Gi[:Xend])
+    Gfg = gnp.as_garray(Gf[:Xend])
+    Gog = gnp.as_garray(Go[:Xend])
+    Zg = gnp.as_garray(Z[:Xend])
 
     dGig = Gig * (1 - Gig)
     dGfg = Gfg * (1 - Gfg)
