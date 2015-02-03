@@ -131,8 +131,8 @@ def backPropagateN(
     inputDim = X.shape[2]
     outputDim = Y.shape[2]
     Wxi,Wyi,Wci,Wxf,Wyf,Wcf,Wxc,Wyc,Wxo,Wyo,Wco = sliceWeightsSmall(inputDim, outputDim, W)
-    dEdW = np.zeros((W.shape[0], W.shape[1]))
-    dEdX = np.zeros((X.shape[0], X.shape[1], X.shape[2]))
+    dEdW = gnp.zeros((W.shape[0], W.shape[1]))
+    dEdX = gnp.zeros((X.shape[0], X.shape[1], X.shape[2]))
     Wcig = gnp.as_garray(Wyi)
     Wcfg = gnp.as_garray(Wyf)
     Wcog = gnp.as_garray(Wyo)
@@ -163,13 +163,16 @@ def backPropagateN(
         dEdWf += dEdWftmp
         dEdWc += dEdWctmp
         dEdWo += dEdWotmp
-    dEdW = np.concatenate((
-        dEdWi.as_numpy_array(),
-        dEdWf.as_numpy_array(),
-        dEdWc.as_numpy_array(),
-        dEdWo.as_numpy_array())
+    dEdW = gnp.concatenate((
+        dEdWi,
+        dEdWf,
+        dEdWc,
+        dEdWo)
         ,axis=-1
     )
+
+    dEdW = dEdW.as_numpy_array()
+    dEdX = dEdX.as_numpy_array()
     return dEdW, dEdX
 
 def backPropagateOne(
@@ -266,6 +269,6 @@ def backPropagateOne(
         dEdX[:Xend] = (gnp.dot(dEdGig.transpose(), Wxi) + \
                       gnp.dot(dEdGfg.transpose(), Wxf) + \
                       gnp.dot(dEdZg.transpose(), Wxc) + \
-                      gnp.dot(dEdGog.transpose(), Wxo)).as_numpy_array()
+                      gnp.dot(dEdGog.transpose(), Wxo))
 
     return dEdWi, dEdWf, dEdWc, dEdWo, dEdX

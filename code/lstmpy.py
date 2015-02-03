@@ -114,24 +114,15 @@ def forwardPassOne(
 
     return Y, C, Z, Gi, Gf, Go, Xend
 
-def backPropagateN(
-                   dEdY,
-                   X,
-                   Y,
-                   C,
-                   Z,
-                   Gi,
-                   Gf,
-                   Go,
-                   Xend,
-                   cutOffZeroEnd,
-                   multiErr,
+def backPropagateN(dEdY,X,Y,C,Z,Gi,Gf,Go,Xend,
+                   cutOffZeroEnd,multiErr,
                    outputdEdX,
                    W):
     numEx = X.shape[0]
     inputDim = X.shape[2]
     outputDim = Y.shape[2]
-    Wxi,Wyi,Wci,Wxf,Wyf,Wcf,Wxc,Wyc,Wxo,Wyo,Wco = sliceWeightsSmall(inputDim, outputDim, W)
+    Wxi,Wyi,Wci,Wxf,Wyf,Wcf,Wxc,Wyc,Wxo,Wyo,Wco = \
+        sliceWeightsSmall(inputDim, outputDim, W)
     dEdW = np.zeros((W.shape[0], W.shape[1]))
     dEdX = np.zeros((X.shape[0], X.shape[1], X.shape[2]))
     for n in range(0, numEx):
@@ -142,35 +133,19 @@ def backPropagateN(
                         Xend[n],cutOffZeroEnd,
                         multiErr,outputdEdX,
                         Wxi,Wyi,Wci,Wxf,Wyf,Wcf,Wxc,
-                        Wyc,Wxo,Wyo,Wco,(W.shape[0], W.shape[1]))
+                        Wyc,Wxo,Wyo,Wco,
+                        (W.shape[0], W.shape[1]))
         dEdW += dEdWtmp
     return dEdW, dEdX
 
-def backPropagateOne(
-                    dEdY,
-                    X,
-                    Y,
-                    C,
-                    Z,
-                    Gi,
-                    Gf,
-                    Go,
-                    Xend,
-                    cutOffZeroEnd,
-                    multiErr,
+def backPropagateOne(dEdY,X,Y,C,Z,
+                    Gi,Gf,Go,Xend,
+                    cutOffZeroEnd,multiErr,
                     outputdEdX,
-                    Wxi,
-                    Wyi,
-                    Wci,
-                    Wxf,
-                    Wyf,
-                    Wcf,
-                    Wxc,
-                    Wyc,
-                    Wxo,
-                    Wyo,
-                    Wco,
-                   Wshape):
+                    Wxi,Wyi,Wci,
+                    Wxf,Wyf,Wcf,
+                    Wxc,Wyc,Wxo,Wyo,
+                    Wco,Wshape):
     Xend = int(Xend)
     if cutOffZeroEnd and multiErr:
         dEdY[Xend - 1] += dEdY[-1]
