@@ -229,13 +229,16 @@ def backPropagateOne(
            dCdGi.reshape(Xend, outputDim, 1) * Wyi.reshape(1, Wyi.shape[0], Wyi.shape[1])
     dYdY = dYdGo.reshape(Xend, outputDim, 1) * Wyo.reshape(1, Wyo.shape[0], Wyo.shape[1])
 
+    #dYdC = dYdC.as_numpy_array()
+    dEdYg = gnp.as_garray(dEdY)
+
     for t in reversed(range(0, Xend)):
-        dEdYnow = dEdY[t] if multiErr else 0
+        dEdYnow = dEdYg[t] if multiErr else 0
         if t < Xend - 1:
             dEdYt = gnp.dot(dEdYt, dYdY[t]) + gnp.dot(dEdCt, dCdY[t]) + dEdYnow
             dEdCt = gnp.dot(dEdCt, dCdC[t]) + gnp.dot(dEdYt, dYdC[t])
         else:
-            dEdYt = dEdYnow if multiErr else dEdY
+            dEdYt = dEdYnow if multiErr else dEdYg
             dEdCt = gnp.dot(dEdYt, dYdC[t])
 
         dEdGi[:, t] = dEdCt * dCdGi[t]
