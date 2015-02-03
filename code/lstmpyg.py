@@ -99,6 +99,7 @@ def forwardPassN(
                 if reachedEnd[n, t]:
                     Y[n, -1] = Y[n, t - 1]
                     Y[n, t] = 0.0
+                    Xend[n] = t
                     break
     return Y, C, Z, Gi, Gf, Go, Xend
 
@@ -199,31 +200,28 @@ def backPropagateOne(
 
     # (k -> t)
     one = np.ones((Xend, 1))
-    Yt1 = np.concatenate((np.zeros((1, outputDim)), Y[0:Xend-1]))
-    Ct1 = np.concatenate((np.zeros((1, outputDim)), C[0:Xend-1]))
-    print X[:Xend].shape
-    print X[0:Xend].shape
-    print Xend
-    states1T = np.concatenate((X[0:Xend], Yt1, Ct1, one), axis=-1)
-    states2T = np.concatenate((X[0:Xend], Yt1, one), axis=-1)
-    states3T = np.concatenate((X[0:Xend], Yt1, C[:Xend], one), axis=-1)
-    U = np.tanh(C[0:Xend])
-    dU = 1 - U[0:Xend] * U[0:Xend]
-    dZ = 1 - Z[0:Xend] * Z[0:Xend]
+    Yt1 = np.concatenate((np.zeros((1, outputDim)), Y[:Xend-1]))
+    Ct1 = np.concatenate((np.zeros((1, outputDim)), C[:Xend-1]))
+    states1T = np.concatenate((X[:Xend], Yt1, Ct1, one), axis=-1)
+    states2T = np.concatenate((X[:Xend], Yt1, one), axis=-1)
+    states3T = np.concatenate((X[:Xend], Yt1, C[:Xend], one), axis=-1)
+    U = np.tanh(C[:Xend])
+    dU = 1 - U[:Xend] * U[:Xend]
+    dZ = 1 - Z[:Xend] * Z[:Xend]
 
-    dGi = Gi[0:Xend] * (1 - Gi[0:Xend])
-    dGf = Gf[0:Xend] * (1 - Gf[0:Xend])
-    dGo = Go[0:Xend] * (1 - Go[0:Xend])
+    dGi = Gi[:Xend] * (1 - Gi[:Xend])
+    dGf = Gf[:Xend] * (1 - Gf[:Xend])
+    dGo = Go[:Xend] * (1 - Go[:Xend])
 
     # (j, t)
-    dCdGi = (Z[0:Xend] * dGi)
+    dCdGi = (Z[:Xend] * dGi)
     dCdGf = (Ct1 * dGf)
-    dCdZ = (Gi[0:Xend] * dZ)
-    dYdGo = (U[0:Xend] * dGo)
-    dYdC = (Go[0:Xend] * dU).reshape(Xend, outputDim, 1) * memEyeT + \
+    dCdZ = (Gi[:Xend] * dZ)
+    dYdGo = (U[:Xend] * dGo)
+    dYdC = (Go[:Xend] * dU).reshape(Xend, outputDim, 1) * memEyeT + \
            dYdGo.reshape(Xend, outputDim, 1) * Wco.reshape(1, Wco.shape[0], Wco.shape[1])
     dCdC = dCdGf.reshape(Xend, outputDim, 1) * Wcf.reshape(1, Wcf.shape[0], Wcf.shape[1]) + \
-           Gf[0:Xend].reshape(Xend, outputDim, 1) * memEyeT + \
+           Gf[:Xend].reshape(Xend, outputDim, 1) * memEyeT + \
            dCdGi.reshape(Xend, outputDim, 1) * Wci.reshape(1, Wci.shape[0], Wci.shape[1])
     dCdY = dCdGf.reshape(Xend, outputDim, 1) * Wyf.reshape(1, Wyf.shape[0], Wyf.shape[1]) + \
            dCdZ.reshape(Xend, outputDim, 1) * Wyc.reshape(1, Wyc.shape[0], Wyc.shape[1]) + \
@@ -250,7 +248,7 @@ def backPropagateOne(
     dEdWo += np.dot(dEdGo, states3T)
 
     if outputdEdX:
-        dEdX[0:Xend] = np.dot(dEdGi.transpose(), Wxi) + \
+        dEdX[:Xend] = np.dot(dEdGi.transpose(), Wxi) + \
                        np.dot(dEdGf.transpose(), Wxf) + \
                        np.dot(dEdZ.transpose(), Wxc) + \
                        np.dot(dEdGo.transpose(), Wxo)
