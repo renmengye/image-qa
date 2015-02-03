@@ -32,14 +32,13 @@ def main():
     start = time.time()
 
     for i in range(10):
-        Ag = gnp.as_garray(A)
-        Bg = gnp.as_garray(B)
         A = np.random.rand((1000, 1000))
         B = np.random.rand((1000, 1000))
-        C = np.dot(A, B)
+        Ag = gnp.as_garray(A)
+        Bg = gnp.as_garray(B)
+        C = gnp.dot(Ag, Bg)
 
     print '%.4f ms' % (time.time() - start)
-
 
 if __name__ == '__main__':
     board = LockGPU()
