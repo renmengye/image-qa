@@ -96,9 +96,9 @@ def forwardPassN(
     if cutOffZeroEnd:
         for n in range(0, numEx):
             for t in range(0, timespan):
-	        if reachedEnd[n, t]:
-	            Y[n, -1] = Y[n, t - 1]
-		    break
+                if reachedEnd[n, t]:
+                    Y[n, -1] = Y[n, t - 1]
+                    break
     return Y, C, Z, Gi, Gf, Go, Xend
 
 def backPropagateN(
@@ -215,17 +215,17 @@ def backPropagateOne(
         dYtdGo = U * dGo
 
         # (k, l)
-        dYtdCt = (Go[t] * dU) * memEye+ \
-                 dYtdGo.reshape(memCol) * Wco
+        dYtdCt = gnp.as_garray((Go[t] * dU) * memEye+ \
+                 dYtdGo.reshape(memCol) * Wco)
 
-        dEdYnow = dEdY[t] if multiErr else 0
+        dEdYnow = gnp.as_garray(dEdY[t]) if multiErr else 0
         # (TT, t)
         if t < Xend - 1:
-            dEdYt = np.dot(dEdYt, dYtdYt1) + np.dot(dEdCt, dCtdYt1) + dEdYnow
-            dEdCt = np.dot(dEdCt, dCtdCt1) + np.dot(dEdYt, dYtdCt)
+            dEdYt = gnp.dot(dEdYt, dYtdYt1) + gnp.dot(dEdCt, dCtdYt1) + dEdYnow
+            dEdCt = gnp.dot(dEdCt, dCtdCt1) + gnp.dot(dEdYt, dYtdCt)
         else:
             dEdYt = dEdYnow if multiErr else dEdY
-            dEdCt = np.dot(dEdYt, dYtdCt)
+            dEdCt = gnp.dot(dEdYt, dYtdCt)
 
         dEdGi[:, t] = dEdCt * dCtdGi
         dEdGf[:, t] = dEdCt * dCtdGf
@@ -233,24 +233,24 @@ def backPropagateOne(
         dEdGo[:, t] = dEdYt * dYtdGo
 
         # (k -> t, l -> t-1)
-        dCtdCt1 = dCtdGf.reshape(memCol) * Wcf + \
+        dCtdCt1 = gnp.as_garray(dCtdGf.reshape(memCol) * Wcf + \
                   Gf[t] * memEye + \
-                  dCtdGi.reshape(memCol) * Wci
-        dCtdYt1 = dCtdGf.reshape(memCol) * Wyf + \
+                  dCtdGi.reshape(memCol) * Wci)
+        dCtdYt1 = gnp.as_garray(dCtdGf.reshape(memCol) * Wyf + \
                   dCtdZ.reshape(memCol) * Wyc + \
-                  dCtdGi.reshape(memCol) * Wyi
-        dYtdYt1 = dYtdGo.reshape(memCol) * Wyo
+                  dCtdGi.reshape(memCol) * Wyi)
+        dYtdYt1 = gnp.as_garray(dYtdGo.reshape(memCol) * Wyo)
 
-    dEdWi += np.dot(dEdGi, states1T)
-    dEdWf += np.dot(dEdGf, states1T)
-    dEdWc += np.dot(dEdZ, states2T)
-    dEdWo += np.dot(dEdGo, states3T)
+    dEdWi += gnp.dot(gnp.as_garray(dEdGi), gnp.as_garray(states1T))
+    dEdWf += gnp.dot(gnp.as_garray(dEdGf), gnp.as_garray(states1T))
+    dEdWc += gnp.dot(gnp.as_garray(dEdZ), gnp.as_garray(states2T))
+    dEdWo += gnp.dot(gnp.as_garray(dEdGo), gnp.as_garray(states3T))
 
     if outputdEdX:
-        dEdX[0:Xend] = np.dot(dEdGi.transpose(), Wxi) + \
-                       np.dot(dEdGf.transpose(), Wxf) + \
-                       np.dot(dEdZ.transpose(), Wxc) + \
-                       np.dot(dEdGo.transpose(), Wxo)
+        dEdX[0:Xend] = gnp.dot(gnp.as_garray(dEdGi.transpose()), gnp.as_garray(Wxi)) + \
+                       gnp.dot(gnp.as_garray(dEdGf.transpose()), gnp.as_garray(Wxf)) + \
+                       gnp.dot(gnp.as_garray(dEdZ.transpose()), gnp.as_garray(Wxc)) + \
+                       gnp.dot(gnp.as_garray(dEdGo.transpose()), gnp.as_garray(Wxo))
 
     return dEdW, dEdX
 
