@@ -112,22 +112,25 @@ def forwardPassOne(
                                   Y[t-1], \
                                   np.ones(1)))
         Git = sigmoidFn(gnp.dot(Wi, gnp.as_garray(states1)))
+        Gi[t] = gnp.as_numpy_array(Git)
+
         Gft = sigmoidFn(gnp.dot(Wf, gnp.as_garray(states1)))
+        Gf[t] = gnp.as_numpy_array(Gft)
+
         Zt = gnp.tanh(gnp.dot(Wc, gnp.as_garray(states2)))
-        Ct = Gft * Ct1 + Git * Zt
-        C[t] = gnp.as_numpy_array(Ct)
+        Z[t] = gnp.as_numpy_array(Zt)
+
+        # Ct = Gft * Ct1 + Git * Zt
+        # C[t] = gnp.as_numpy_array(Ct)
+        C[t] = Gf[t] * C[t-1] + Gi[t] * Z[t]
         states3 = np.concatenate((X[t], \
                                   Y[t-1], \
                                   C[t], \
                                   np.ones(1)))
         Got = sigmoidFn(gnp.dot(Wo, gnp.as_garray(states3)))
-        Yt = Got * gnp.tanh(Ct)
-        Ct1 = Ct
-        Y[t] = gnp.as_numpy_array(Yt)
         Go[t] = gnp.as_numpy_array(Got)
-        Z[t] = gnp.as_numpy_array(Zt)
-        Gf[t] = gnp.as_numpy_array(Gft)
-        Gi[t] = gnp.as_numpy_array(Git)
+        Yt = Go[t] * np.tanh(C[t])
+        Y[t] = gnp.as_numpy_array(Yt)
 
     return Y, C, Z, Gi, Gf, Go, Xend
 
