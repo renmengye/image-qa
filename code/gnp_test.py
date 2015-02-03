@@ -5,6 +5,7 @@ import numpy as np
 import cudamat as cm
 from cudamat import gpu_lock2 as gpu_lock
 import time
+import sys
 
 def LockGPU():
   board = gpu_lock.obtain_lock_id()
