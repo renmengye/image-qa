@@ -157,7 +157,7 @@ class LSTM(Stage):
 if __name__ == '__main__':
     lstm = LSTM(
         inputDim=2,
-        outputDim=3,
+        outputDim=2,
         initRange=0.01,
         initSeed=2,
         multiErr=True)

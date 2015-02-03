@@ -185,74 +185,53 @@ def backPropagateOne(
     dEdGf = np.zeros(ddim)
     dEdZ = np.zeros(ddim)
     dEdGo = np.zeros(ddim)
-
-    # (t, k)
-    states1T = np.zeros((Xend,
-               inputDim + 2 * outputDim + 1))
-    states2T = np.zeros((Xend,
-               inputDim + outputDim + 1))
-    states3T = np.zeros((Xend,
-               inputDim + 2 * outputDim + 1))
-
     dEdX = np.zeros((X.shape[0], X.shape[1]))
 
-    memEye = np.eye(outputDim)
-    memCol = (outputDim, 1)
+    memEyeT = np.eye(outputDim).reshape(1, outputDim, outputDim)
 
-    for t in reversed(range(0, int(Xend))):
-        if t == 0:
-            Yt1 = np.zeros(outputDim)
-            Ct1 = np.zeros(outputDim)
-        else:
-            Yt1 = Y[t-1]
-            Ct1 = C[t-1]
+    # (k -> t)
+    one = np.ones((Xend, 1))
+    Yt1 = np.concatenate((np.zeros((1, outputDim)), Y[:Xend-1]))
+    Ct1 = np.concatenate((np.zeros((1, outputDim)), C[:Xend-1]))
+    states1T = np.concatenate((X[:Xend], Yt1, Ct1, one), axis=-1)
+    states2T = np.concatenate((X[:Xend], Yt1, one), axis=-1)
+    states3T = np.concatenate((X[:Xend], Yt1, C[:Xend], one), axis=-1)
+    U = np.tanh(C[:Xend])
+    dU = 1 - U[:Xend] * U[:Xend]
+    dZ = 1 - Z[:Xend] * Z[:Xend]
 
-        states1T[t] = \
-            np.concatenate((X[t], Yt1, Ct1, np.ones(1)))
-        states2T[t] = \
-            np.concatenate((X[t], Yt1, np.ones(1)))
-        states3T[t] = \
-            np.concatenate((X[t], Yt1, C[t], np.ones(1)))
+    dGi = Gi[:Xend] * (1 - Gi[:Xend])
+    dGf = Gf[:Xend] * (1 - Gf[:Xend])
+    dGo = Go[:Xend] * (1 - Go[:Xend])
 
-        # (k -> t)
-        U = np.tanh(C[t])
-        dU = 1 - np.power(U, 2)
-        dZ = 1 - np.power(Z[t], 2)
+    # (j, t)
+    dCdGi = (Z[:Xend] * dGi)
+    dCdGf = (Ct1 * dGf)
+    dCdZ = (Gi[:Xend] * dZ)
+    dYdGo = (U[:Xend] * dGo)
+    dYdC = (Go[:Xend] * dU).reshape(Xend, outputDim, 1) * memEyeT + \
+           dYdGo.reshape(Xend, outputDim, 1) * Wco.reshape(1, Wco.shape[0], Wco.shape[1])
+    dCdC = dCdGf.reshape(Xend, outputDim, 1) * Wcf.reshape(1, Wcf.shape[0], Wcf.shape[1]) + \
+           Gf[:Xend].reshape(Xend, outputDim, 1) * memEyeT + \
+           dCdGi.reshape(Xend, outputDim, 1) * Wci.reshape(1, Wci.shape[0], Wci.shape[1])
+    dCdY = dCdGf.reshape(Xend, outputDim, 1) * Wyf.reshape(1, Wyf.shape[0], Wyf.shape[1]) + \
+           dCdZ.reshape(Xend, outputDim, 1) * Wyc.reshape(1, Wyc.shape[0], Wyc.shape[1]) + \
+           dCdGi.reshape(Xend, outputDim, 1) * Wyi.reshape(1, Wyi.shape[0], Wyi.shape[1])
+    dYdY = dYdGo.reshape(Xend, outputDim, 1) * Wyo.reshape(1, Wyo.shape[0], Wyo.shape[1])
 
-        dGi = Gi[t] * (1 - Gi[t])
-        dGf = Gf[t] * (1 - Gf[t])
-        dGo = Go[t] * (1 - Go[t])
-        dCtdGi = Z[t] * dGi
-        dCtdGf = Ct1 * dGf
-        dCtdZ = Gi[t] * dZ
-        dYtdGo = U * dGo
-
-        # (k, l)
-        dYtdCt = (Go[t] * dU) * memEye+ \
-                 dYtdGo.reshape(memCol) * Wco
-
+    for t in reversed(range(0, Xend)):
         dEdYnow = dEdY[t] if multiErr else 0
-        # (TT, t)
         if t < Xend - 1:
-            dEdYt = np.dot(dEdYt, dYtdYt1) + np.dot(dEdCt, dCtdYt1) + dEdYnow
-            dEdCt = np.dot(dEdCt, dCtdCt1) + np.dot(dEdYt, dYtdCt)
+            dEdYt = np.dot(dEdYt, dYdY[t]) + np.dot(dEdCt, dCdY[t]) + dEdYnow
+            dEdCt = np.dot(dEdCt, dCdC[t]) + np.dot(dEdYt, dYdC[t])
         else:
             dEdYt = dEdYnow if multiErr else dEdY
-            dEdCt = np.dot(dEdYt, dYtdCt)
+            dEdCt = np.dot(dEdYt, dYdC[t])
 
-        dEdGi[:, t] = dEdCt * dCtdGi
-        dEdGf[:, t] = dEdCt * dCtdGf
-        dEdZ[:, t] = dEdCt * dCtdZ
-        dEdGo[:, t] = dEdYt * dYtdGo
-
-        # (k -> t, l -> t-1)
-        dCtdCt1 = dCtdGf.reshape(memCol) * Wcf + \
-                  Gf[t] * memEye + \
-                  dCtdGi.reshape(memCol) * Wci
-        dCtdYt1 = dCtdGf.reshape(memCol) * Wyf + \
-                  dCtdZ.reshape(memCol) * Wyc + \
-                  dCtdGi.reshape(memCol) * Wyi
-        dYtdYt1 = dYtdGo.reshape(memCol) * Wyo
+        dEdGi[:, t] = dEdCt * dCdGi[t]
+        dEdGf[:, t] = dEdCt * dCdGf[t]
+        dEdZ[:, t] = dEdCt * dCdZ[t]
+        dEdGo[:, t] = dEdYt * dYdGo[t]
 
     dEdWi += np.dot(dEdGi, states1T)
     dEdWf += np.dot(dEdGf, states1T)
