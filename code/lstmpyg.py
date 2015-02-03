@@ -142,11 +142,11 @@ def backPropagateN(
     Gig = gnp.as_garray(Gi)
     Gfg = gnp.as_garray(Gf)
     Gog = gnp.as_garray(Go)
-    dEdYg = gnp.as_garray(dEdY)
+    #dEdYg = gnp.as_garray(dEdY)
 
     for n in range(0, numEx):
         dEdWitmp, dEdWftmp, dEdWctmp, dEdWotmp, dEdX[n] = \
-            backPropagateOne(dEdYg[n],Xg[n],Yg[n],
+            backPropagateOne(dEdY[n],Xg[n],Yg[n],
                         Cg[n],Zg[n],Gig[n],
                         Gfg[n],Gog[n],
                         Xend[n],cutOffZeroEnd,
