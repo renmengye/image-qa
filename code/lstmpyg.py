@@ -251,10 +251,10 @@ def backPropagateOne(
     dEdWo = gnp.dot(gnp.as_garray(dEdGo), gnp.as_garray(states3T)).as_numpy_array()
 
     if outputdEdX:
-        dEdX[0:Xend] = gnp.dot(gnp.as_garray(dEdGi.transpose()), gnp.as_garray(Wxi)) + \
+        dEdX[0:Xend] = (gnp.dot(gnp.as_garray(dEdGi.transpose()), gnp.as_garray(Wxi)) + \
                        gnp.dot(gnp.as_garray(dEdGf.transpose()), gnp.as_garray(Wxf)) + \
                        gnp.dot(gnp.as_garray(dEdZ.transpose()), gnp.as_garray(Wxc)) + \
-                       gnp.dot(gnp.as_garray(dEdGo.transpose()), gnp.as_garray(Wxo))
+                       gnp.dot(gnp.as_garray(dEdGo.transpose()), gnp.as_garray(Wxo))).as_numpy_array()
 
     dEdW = np.concatenate((dEdWi, dEdWf, dEdWc, dEdWo), axis=-1)
     return dEdW, dEdX
