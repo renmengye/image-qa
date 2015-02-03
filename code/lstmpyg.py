@@ -103,26 +103,6 @@ def forwardPassN(
                     break
     return Y, C, Z, Gi, Gf, Go, Xend
 
-# def backPropagateN(dEdY,X,Y,C,Z,Gi,Gf,Go,Xend,
-#                    cutOffZeroEnd,multiErr,outputdEdX,W):
-#     numEx = X.shape[0]
-#     inputDim = X.shape[2]
-#     outputDim = Y.shape[2]
-#     Wxi,Wyi,Wci,Wxf,Wyf,Wcf,Wxc,Wyc,Wxo,Wyo,Wco = sliceWeightsSmall(inputDim, outputDim, W)
-#     dEdW = np.zeros((W.shape[0], W.shape[1]))
-#     dEdX = np.zeros((X.shape[0], X.shape[1], X.shape[2]))
-#     for n in range(0, numEx):
-#         dEdWtmp, dEdX[n] = \
-#             backPropagateOne(dEdY[n],X[n],Y[n],
-#                         C[n],Z[n],Gi[n],
-#                         Gf[n],Go[n],
-#                         Xend[n],cutOffZeroEnd,
-#                         multiErr,outputdEdX,
-#                         Wxi,Wyi,Wci,Wxf,Wyf,Wcf,Wxc,
-#                         Wyc,Wxo,Wyo,Wco,(W.shape[0], W.shape[1]))
-#         dEdW += dEdWtmp
-#     return dEdW, dEdX
-
 def backPropagateN(
                    dEdY,X,Y,C,Z,Gi,Gf,Go,
                    Xend,cutOffZeroEnd,multiErr,
@@ -136,24 +116,23 @@ def backPropagateN(
     dEdW = np.zeros(W.shape)
     dEdX = np.zeros(X.shape)
     dEdWi,dEdWf,dEdWc,dEdWo = sliceWeights(inputDim, outputDim, dEdW)
-    # Xg = gnp.as_garray(X)
-    # Yg = gnp.as_garray(Y)
     Cg = gnp.as_garray(C)
     Zg = gnp.as_garray(Z)
     Gig = gnp.as_garray(Gi)
     Gfg = gnp.as_garray(Gf)
     Gog = gnp.as_garray(Go)
-    #dEdYg = gnp.as_garray(dEdY)
+    memEyeT = gnp.as_garray(
+        np.eye(outputDim).reshape(1, outputDim, outputDim))
 
     for n in range(0, numEx):
         dEdWitmp, dEdWftmp, dEdWctmp, dEdWotmp, dEdX[n] = \
             backPropagateOne(dEdY[n],X[n],Y[n],
-                        C[n],Cg[n],Zg[n],Gig[n],
-                        Gfg[n],Gog[n],
+                        C[n],Cg[n,:Xend[n]],Zg[n,:Xend[n]],Gig[n,:Xend[n]],
+                        Gfg[n,:Xend[n]],Gog[n,:Xend[n]],
                         Xend[n],cutOffZeroEnd,
                         multiErr,outputdEdX,
                         Wxi,Wyig,Wcig,Wxf,Wyfg,Wcfg,Wxc,
-                        Wycg,Wxo,Wyog,Wcog)
+                        Wycg,Wxo,Wyog,Wcog, memEyeT)
         dEdWi += dEdWitmp
         dEdWf += dEdWftmp
         dEdWc += dEdWctmp
@@ -163,7 +142,7 @@ def backPropagateN(
 def backPropagateOne(
                     dEdY,X,Y,C,Cg,Z,Gi,Gf,Go,Xend,cutOffZeroEnd,
                     multiErr,outputdEdX,Wxi,Wyi,Wci,Wxf,Wyf,Wcf,
-                    Wxc,Wyc,Wxo,Wyo,Wco):
+                    Wxc,Wyc,Wxo,Wyo,Wco,memEyeT):
     Xend = int(Xend)
     if cutOffZeroEnd and multiErr:
         dEdY[Xend - 1] += dEdY[-1]
@@ -177,7 +156,6 @@ def backPropagateOne(
     dEdZ = np.zeros(ddim)
     dEdGo = np.zeros(ddim)
     dEdX = np.zeros(X.shape)
-    memEyeT = gnp.eye(outputDim).reshape(1, outputDim, outputDim)
 
     # (k -> t)
     one = np.ones((Xend, 1))
@@ -188,28 +166,23 @@ def backPropagateOne(
     states2T = np.concatenate((X[:Xend], Yt1, one), axis=-1)
     states3T = np.concatenate((X[:Xend], Yt1, C[:Xend], one), axis=-1)
 
-    Cg = Cg[:Xend]
-    Zg = Z[:Xend]
-    Gig = Gi[:Xend]
-    Gfg = Gf[:Xend]
-    Gog = Go[:Xend]
     Ug = gnp.tanh(Cg)
     dU = 1 - Ug * Ug
-    dZ = 1 - Zg * Zg
-    dGi = Gig * (1 - Gig)
-    dGf = Gfg * (1 - Gfg)
-    dGo = Gog * (1 - Gog)
+    dZ = 1 - Z * Z
+    dGi = Gi * (1 - Gi)
+    dGf = Gf * (1 - Gf)
+    dGo = Go * (1 - Go)
 
     # (j, t)
-    dCdGig = (Zg * dGi)
+    dCdGig = (Z * dGi)
     dCdGfg = (Ct1g * dGf)
-    dCdZg = (Gig * dZ)
+    dCdZg = (Gi * dZ)
     dYdGog = (Ug * dGo)
 
-    dYdCg = (Gog * dU).reshape(Xend, outputDim, 1) * memEyeT + \
+    dYdCg = (Go * dU).reshape(Xend, outputDim, 1) * memEyeT + \
             dYdGog.reshape(Xend, outputDim, 1) * Wco.reshape(1, Wco.shape[0], Wco.shape[1])
     dCdCg = dCdGfg.reshape(Xend, outputDim, 1) * Wcf.reshape(1, Wcf.shape[0], Wcf.shape[1]) + \
-            Gfg.reshape(Xend, outputDim, 1) * memEyeT + \
+            Gf.reshape(Xend, outputDim, 1) * memEyeT + \
             dCdGig.reshape(Xend, outputDim, 1) * Wci.reshape(1, Wci.shape[0], Wci.shape[1])
     dCdYg = dCdGfg.reshape(Xend, outputDim, 1) * Wyf.reshape(1, Wyf.shape[0], Wyf.shape[1]) + \
             dCdZg.reshape(Xend, outputDim, 1) * Wyc.reshape(1, Wyc.shape[0], Wyc.shape[1]) + \
