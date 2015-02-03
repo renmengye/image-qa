@@ -142,9 +142,9 @@ def backPropagateN(
                         Wxig,Wyi,Wci,Wxfg,Wyf,Wcf,Wxcg,
                         Wyc,Wxog,Wyo,Wco)
         dEdWi += dEdWitmp
-        dEdWf += dEdWitmp
-        dEdWc += dEdWitmp
-        dEdWo += dEdWitmp
+        dEdWf += dEdWftmp
+        dEdWc += dEdWctmp
+        dEdWo += dEdWotmp
         dEdX[n, :Xend[n]] = dEdXtmp.as_numpy_array()
     dEdW = np.concatenate((
         dEdWi.as_numpy_array(),
