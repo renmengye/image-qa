@@ -187,11 +187,11 @@ def backPropagateOne(
     ddim = (outputDim, Xend)
 
     # (j, t)
-    dEdGi = np.zeros(ddim)
-    dEdGf = np.zeros(ddim)
-    dEdZ = np.zeros(ddim)
-    dEdGo = np.zeros(ddim)
-    dEdX = np.zeros((X.shape[0], X.shape[1]))
+    dEdGig = gnp.zeros(ddim)
+    dEdGfg = gnp.zeros(ddim)
+    dEdZg = gnp.zeros(ddim)
+    dEdGog = gnp.zeros(ddim)
+    dEdX = gnp.zeros((X.shape[0], X.shape[1]))
     memEyeT = gnp.eye(outputDim).reshape(1, outputDim, outputDim)
 
     # (k -> t)
@@ -231,34 +231,34 @@ def backPropagateOne(
             dCdGig.reshape(Xend, outputDim, 1) * Wyi.reshape(1, Wyi.shape[0], Wyi.shape[1])
     dYdYg = dYdGog.reshape(Xend, outputDim, 1) * Wyo.reshape(1, Wyo.shape[0], Wyo.shape[1])
 
-    dYdC = dYdCg.as_numpy_array()
-    dCdC = dCdCg.as_numpy_array()
-    dCdY = dCdYg.as_numpy_array()
-    dYdY = dYdYg.as_numpy_array()
-    dCdGi = dCdGig.as_numpy_array()
-    dCdGf = dCdGfg.as_numpy_array()
-    dCdZ = dCdZg.as_numpy_array()
-    dYdGo =dYdGog.as_numpy_array()
+    # dYdC = dYdCg.as_numpy_array()
+    # dCdC = dCdCg.as_numpy_array()
+    # dCdY = dCdYg.as_numpy_array()
+    # dYdY = dYdYg.as_numpy_array()
+    # dCdGi = dCdGig.as_numpy_array()
+    # dCdGf = dCdGfg.as_numpy_array()
+    # dCdZ = dCdZg.as_numpy_array()
+    # dYdGo =dYdGog.as_numpy_array()
 
-    #dEdYg = gnp.as_garray(dEdY)
+    dEdYg = gnp.as_garray(dEdY)
 
     for t in reversed(range(0, Xend)):
-        dEdYnow = dEdY[t] if multiErr else 0
+        dEdYnow = dEdYg[t] if multiErr else 0
         if t < Xend - 1:
-            dEdYt = np.dot(dEdYt, dYdY[t]) + np.dot(dEdCt, dCdY[t]) + dEdYnow
-            dEdCt = np.dot(dEdCt, dCdC[t]) + np.dot(dEdYt, dYdC[t])
+            dEdYt = gnp.dot(dEdYt, dYdYg[t]) + gnp.dot(dEdCt, dCdYg[t]) + dEdYnow
+            dEdCt = gnp.dot(dEdCt, dCdCg[t]) + gnp.dot(dEdYt, dYdCg[t])
         else:
-            dEdYt = dEdYnow if multiErr else dEdY
-            dEdCt = np.dot(dEdYt, dYdC[t])
-        dEdGi[:, t] = dEdCt * dCdGi[t]
-        dEdGf[:, t] = dEdCt * dCdGf[t]
-        dEdZ[:, t] = dEdCt * dCdZ[t]
-        dEdGo[:, t] = dEdYt * dYdGo[t]
+            dEdYt = dEdYnow if multiErr else dEdYg
+            dEdCt = gnp.dot(dEdYt, dYdCg[t])
+        dEdGig[:, t] = dEdCt * dCdGig[t]
+        dEdGfg[:, t] = dEdCt * dCdGfg[t]
+        dEdZg[:, t] = dEdCt * dCdZg[t]
+        dEdGog[:, t] = dEdYt * dYdGog[t]
 
-    dEdGig = gnp.as_garray(dEdGi)
-    dEdGfg = gnp.as_garray(dEdGi)
-    dEdZg = gnp.as_garray(dEdGi)
-    dEdGog = gnp.as_garray(dEdGi)
+    # dEdGig = gnp.as_garray(dEdGi)
+    # dEdGfg = gnp.as_garray(dEdGi)
+    # dEdZg = gnp.as_garray(dEdGi)
+    # dEdGog = gnp.as_garray(dEdGi)
 
     dEdWi = gnp.dot(dEdGig, states1T)
     dEdWf = gnp.dot(dEdGfg, states1T)
