@@ -185,10 +185,10 @@ def backPropagateOne(
     ddim = (outputDim, Xend)
 
     # (j, t)
-    dEdGi = np.zeros(ddim)
-    dEdGf = np.zeros(ddim)
-    dEdZ = np.zeros(ddim)
-    dEdGo = np.zeros(ddim)
+    dEdGi = gnp.zeros(ddim)
+    dEdGf = gnp.zeros(ddim)
+    dEdZ = gnp.zeros(ddim)
+    dEdGo = gnp.zeros(ddim)
     dEdX = np.zeros((X.shape[0], X.shape[1]))
     memEyeT = gnp.eye(outputDim).reshape(1, outputDim, outputDim)
 
