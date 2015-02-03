@@ -134,22 +134,7 @@ def backPropagateN(
     Wxig,Wyig,Wcig,Wxfg,Wyfg,Wcfg,Wxcg,Wycg,Wxog,Wyog,Wcog = sliceWeightsSmall(inputDim, outputDim, Wg)
     dEdW = gnp.zeros((W.shape[0], W.shape[1]))
     dEdX = gnp.zeros((X.shape[0], X.shape[1], X.shape[2]))
-    # Wcig = gnp.as_garray(Wyi)
-    # Wcfg = gnp.as_garray(Wyf)
-    # Wcog = gnp.as_garray(Wyo)
-    # Wyig = gnp.as_garray(Wyi)
-    # Wyfg = gnp.as_garray(Wyf)
-    # Wycg = gnp.as_garray(Wyc)
-    # Wyog = gnp.as_garray(Wyo)
-    # Wxig = gnp.as_garray(Wxi)
-    # Wxfg = gnp.as_garray(Wxf)
-    # Wxcg = gnp.as_garray(Wxc)
-    # Wxog = gnp.as_garray(Wxo)
     dEdWi,dEdWf,dEdWc,dEdWo = sliceWeights(inputDim, outputDim, dEdW)
-    dEdWi = gnp.zeros(dEdWi.shape)
-    dEdWf = gnp.zeros(dEdWf.shape)
-    dEdWc = gnp.zeros(dEdWc.shape)
-    dEdWo = gnp.zeros(dEdWo.shape)
     Xg = gnp.as_garray(X)
     Yg = gnp.as_garray(Y)
     Cg = gnp.as_garray(C)
@@ -172,14 +157,6 @@ def backPropagateN(
         dEdWf += dEdWftmp
         dEdWc += dEdWctmp
         dEdWo += dEdWotmp
-    dEdW = gnp.concatenate((
-        dEdWi,
-        dEdWf,
-        dEdWc,
-        dEdWo)
-        ,axis=-1
-    )
-
     dEdW = dEdW.as_numpy_array()
     dEdX = dEdX.as_numpy_array()
     return dEdW, dEdX
@@ -239,17 +216,6 @@ def backPropagateOne(
             dCdGig.reshape(Xend, outputDim, 1) * Wyi.reshape(1, Wyi.shape[0], Wyi.shape[1])
     dYdYg = dYdGog.reshape(Xend, outputDim, 1) * Wyo.reshape(1, Wyo.shape[0], Wyo.shape[1])
 
-    # dYdC = dYdCg.as_numpy_array()
-    # dCdC = dCdCg.as_numpy_array()
-    # dCdY = dCdYg.as_numpy_array()
-    # dYdY = dYdYg.as_numpy_array()
-    # dCdGi = dCdGig.as_numpy_array()
-    # dCdGf = dCdGfg.as_numpy_array()
-    # dCdZ = dCdZg.as_numpy_array()
-    # dYdGo =dYdGog.as_numpy_array()
-
-    #dEdYg = gnp.as_garray(dEdY)
-
     for t in reversed(range(0, Xend)):
         dEdYnow = dEdY[t] if multiErr else 0
         if t < Xend - 1:
@@ -262,11 +228,6 @@ def backPropagateOne(
         dEdGfg[:, t] = dEdCt * dCdGfg[t]
         dEdZg[:, t] = dEdCt * dCdZg[t]
         dEdGog[:, t] = dEdYt * dYdGog[t]
-
-    # dEdGig = gnp.as_garray(dEdGi)
-    # dEdGfg = gnp.as_garray(dEdGi)
-    # dEdZg = gnp.as_garray(dEdGi)
-    # dEdGog = gnp.as_garray(dEdGi)
 
     dEdWi = gnp.dot(dEdGig, states1T)
     dEdWf = gnp.dot(dEdGfg, states1T)
