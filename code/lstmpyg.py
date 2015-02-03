@@ -146,6 +146,13 @@ def backPropagateN(
         dEdWc += dEdWitmp
         dEdWo += dEdWitmp
         dEdX[n, :Xend[n]] = dEdXtmp.as_numpy_array()
+    dEdW = np.concatenate((
+        dEdWi.as_numpy_array(),
+        dEdWf.as_numpy_array(),
+        dEdWc.as_numpy_array(),
+        dEdWo.as_numpy_array())
+        ,axis=-1
+    )
     return dEdW, dEdX
 
 def backPropagateOne(
