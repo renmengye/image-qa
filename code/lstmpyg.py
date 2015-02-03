@@ -4,7 +4,7 @@ import gnumpy as gnp
 import numpy as np
 
 def sigmoidFn(X):
-    return 1 / (1 + gnp.exp(-X))
+    return 1 / (1 + np.exp(-X))
 
 def sliceWeights(
                 inputDim,
@@ -111,10 +111,10 @@ def forwardPassOne(
         states2 = np.concatenate((X[t], \
                                   Y[t-1], \
                                   np.ones(1)))
-        Git = sigmoidFn(gnp.dot(Wi, gnp.as_garray(states1)))
+        Git = sigmoidFn(gnp.dot(Wi, gnp.as_garray(states1)).as_numpy_array())
         Gi[t] = gnp.as_numpy_array(Git)
 
-        Gft = sigmoidFn(gnp.dot(Wf, gnp.as_garray(states1)))
+        Gft = sigmoidFn(gnp.dot(Wf, gnp.as_garray(states1)).as_numpy_array())
         Gf[t] = gnp.as_numpy_array(Gft)
 
         Zt = gnp.tanh(gnp.dot(Wc, gnp.as_garray(states2)))
@@ -127,7 +127,7 @@ def forwardPassOne(
                                   Y[t-1], \
                                   C[t], \
                                   np.ones(1)))
-        Got = sigmoidFn(gnp.dot(Wo, gnp.as_garray(states3)))
+        Got = sigmoidFn(gnp.dot(Wo, gnp.as_garray(states3)).as_numpy_array())
         Go[t] = gnp.as_numpy_array(Got)
         Yt = Go[t] * np.tanh(C[t])
         Y[t] = gnp.as_numpy_array(Yt)
