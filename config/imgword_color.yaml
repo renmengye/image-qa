@@ -64,7 +64,7 @@ stages:
     - name: lstm1
       type: lstm
       inputDim: 300
-      outputDim: 50
+      outputDim: 300
       initRange: 0.1
       initSeed: 4
       cutOffZeroEnd: true
@@ -78,9 +78,9 @@ stages:
       outputdEdX: true
     - name: softmax
       type: softmax
-      inputDim: 50
+      inputDim: 300
       outputDim: 11
-      initRange: 0.1
+      initRange: 0.01
       initSeed: 7
       learningRate: 0.01
       learningRateAnnealConst: 0.0
