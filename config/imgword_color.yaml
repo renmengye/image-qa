@@ -28,13 +28,13 @@ stages:
       type: timeUnfold
     - name: txtDict
       type: linearDict
-      inputDim: 871
+      inputDim: 42
       outputDim: 300
-      initWeights: ../data/imgword/word-embed-0.npy
+      initWeights: ../data/synth-qa/color/word-embed-0.npy
       learningRate: 0.0
     - name: txtFold
       type: timeFold
-      timespan: 27
+      timespan: 7
     - name: imgLine
       type: sequential
       stages:
@@ -64,7 +64,7 @@ stages:
     - name: lstm1
       type: lstm
       inputDim: 300
-      outputDim: 150
+      outputDim: 50
       initRange: 0.1
       initSeed: 4
       cutOffZeroEnd: true
@@ -78,8 +78,8 @@ stages:
       outputdEdX: true
     - name: softmax
       type: softmax
-      inputDim: 150
-      outputDim: 68
+      inputDim: 50
+      outputDim: 11
       initRange: 0.1
       initSeed: 7
       learningRate: 0.01
