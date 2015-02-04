@@ -20,7 +20,7 @@ def routeFn(name):
     elif name == 'argmax':
         return argmax
     else:
-        raise 'Function ' + name + ' not found.'
+        raise Exception('Function ' + name + ' not found.')
     pass
 
 stageLib = {}

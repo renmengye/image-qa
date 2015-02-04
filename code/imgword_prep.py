@@ -1,5 +1,7 @@
 import numpy as np
 import re
+import sys
+import os
 
 def escapeNumber(line):
     line = re.sub('^21$', 'twenty_one', line)
@@ -74,7 +76,16 @@ if __name__ == '__main__':
     # Image ID
     imgIds = []
 
-    with open('../data/mpi-qa/qa.37.raw.train.txt') as f:
+    if len(sys.argv) > 3:
+        trainQAFilename = sys.argv[1]
+        testQAFilename = sys.argv[2]
+        outputFolder = sys.argv[3]
+    else:
+        trainQAFilename = '../data/mpi-qa/qa.37.raw.train.txt'
+        testQAFilename = '../data/mpi-qa/qa.37.raw.test.txt'
+        outputFolder = '../data/imgword'
+
+    with open(trainQAFilename) as f:
         lines = f.readlines()
 
     newlines = []
@@ -86,7 +97,7 @@ if __name__ == '__main__':
         newlines.append(lines[2 * i + 1])
     numTrain = len(newlines) / 2
 
-    with open('../data/mpi-qa/qa.37.raw.test.txt') as f:
+    with open(testQAFilename) as f:
         lines = f.readlines()
     # Purge multi answer question for now.
     for i in range(len(lines) / 2):
@@ -115,7 +126,8 @@ if __name__ == '__main__':
         answer = escapeNumber(re.sub('\s$', '', newlines[n + 1]))
         pureA.append(answer)
         imgIds.append(number)
-        if len(pureQ[i]) > lineMax: lineMax = len(pureQ[i])
+        l = len(pureQ[i].split())
+        if l > lineMax: lineMax = l
 
     questionDict, questionVocab = buildDict(pureQ, keystart=1)
     answerDict, answerVocab = buildDict(pureA, keystart=0)
@@ -125,13 +137,13 @@ if __name__ == '__main__':
     testInput = np.concatenate((np.reshape(imgIds[numTrain:], (numTest, 1, 1)), testInput), axis=1)
     data = np.array((trainInput, trainTarget, testInput, testTarget, 0), dtype=object)
     vocabDict = np.array((questionDict, questionVocab, answerDict, answerVocab, 0), dtype=object)
-    np.save('../data/imgword/train-37.npy', data)
-    np.save('../data/imgword/vocab-dict.npy', vocabDict)
+    np.save(os.path.join(outputFolder, 'train-37.npy'), data)
+    np.save(os.path.join(outputFolder, 'vocab-dict.npy'), vocabDict)
 
-    with open('../data/imgword/vocabs.txt', 'w+') as f:
+    with open(os.path.join(outputFolder, 'vocabs.txt'), 'w+') as f:
         for word in questionVocab:
             f.write(word + '\n')
 
-    imgW = np.loadtxt('../data/nyu-depth-v2/oxford_hidden7.txt')
-    np.save('../data/imgword/oxford-feat.npy', imgW.transpose())
+    #imgW = np.loadtxt('../data/nyu-depth-v2/oxford_hidden7.txt')
+    #np.save(os.path.join(outputFolder, 'oxford-feat.npy'), imgW.transpose())
     print 'haha'
