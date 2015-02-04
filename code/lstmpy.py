@@ -1,9 +1,6 @@
 from util_func import *
 
-def sliceWeights(
-                inputDim,
-                outputDim,
-                W):
+def sliceWeights(inputDim,outputDim,W):
     s1 = inputDim + outputDim * 2 + 1
     s2 = s1 * 2
     s3 = s2 + inputDim + outputDim + 1
@@ -15,10 +12,7 @@ def sliceWeights(
 
     return Wi, Wf, Wc, Wo
 
-def sliceWeightsSmall(
-                    inputDim,
-                    outputDim,
-                    W):
+def sliceWeightsSmall(inputDim,outputDim,W):
     Wi, Wf, Wc, Wo = sliceWeights(inputDim, outputDim, W)
 
     Wxi = Wi[:, 0 : inputDim]
@@ -35,10 +29,7 @@ def sliceWeightsSmall(
 
     return Wxi, Wyi, Wci, Wxf, Wyf, Wcf, Wxc, Wyc, Wxo, Wyo, Wco
 
-def forwardPassN(
-                X,
-                cutOffZeroEnd,
-                W):
+def forwardPassN(X,cutOffZeroEnd,W):
     numEx = X.shape[0]
     timespan = X.shape[1]
     inputDim = X.shape[2]
@@ -67,14 +58,8 @@ def forwardPassN(
 
     return Y, C, Z, Gi, Gf, Go, Xend
 
-def forwardPassOne(
-                X,
-                reachedEnd,
-                cutOffZeroEnd,
-                Wi,
-                Wf,
-                Wc,
-                Wo):
+def forwardPassOne(X,reachedEnd,cutOffZeroEnd,
+                   Wi,Wf,Wc,Wo):
     timespan = X.shape[0]
     outputDim = Wi.shape[0]
     # Last time step is reserved for final output of the entire input.
@@ -162,7 +147,7 @@ def backPropagateOne(dEdY,X,Y,C,Z,
     dEdGo = np.zeros(ddim)
     dEdX = np.zeros((X.shape[0], X.shape[1]))
 
-    memEyeT = np.eye(outputDim).reshape(1, outputDim, outputDim)
+    memEye = np.eye(outputDim)
 
     # (k -> t)
     one = np.ones((Xend, 1))
@@ -174,39 +159,36 @@ def backPropagateOne(dEdY,X,Y,C,Z,
     U = np.tanh(C[:Xend])
     dU = 1 - U[:Xend] * U[:Xend]
     dZ = 1 - Z[:Xend] * Z[:Xend]
-
     dGi = Gi[:Xend] * (1 - Gi[:Xend])
     dGf = Gf[:Xend] * (1 - Gf[:Xend])
     dGo = Go[:Xend] * (1 - Go[:Xend])
 
     # (j, t)
-    dCdGi = (Z[:Xend] * dGi)
-    dCdGf = (Ct1 * dGf)
-    dCdZ = (Gi[:Xend] * dZ)
-    dYdGo = (U[:Xend] * dGo)
-    dYdC = (Go[:Xend] * dU).reshape(Xend, outputDim, 1) * memEyeT + \
-           dYdGo.reshape(Xend, outputDim, 1) * Wco.reshape(1, Wco.shape[0], Wco.shape[1])
-    dCdC = dCdGf.reshape(Xend, outputDim, 1) * Wcf.reshape(1, Wcf.shape[0], Wcf.shape[1]) + \
-           Gf[:Xend].reshape(Xend, outputDim, 1) * memEyeT + \
-           dCdGi.reshape(Xend, outputDim, 1) * Wci.reshape(1, Wci.shape[0], Wci.shape[1])
-    dCdY = dCdGf.reshape(Xend, outputDim, 1) * Wyf.reshape(1, Wyf.shape[0], Wyf.shape[1]) + \
-           dCdZ.reshape(Xend, outputDim, 1) * Wyc.reshape(1, Wyc.shape[0], Wyc.shape[1]) + \
-           dCdGi.reshape(Xend, outputDim, 1) * Wyi.reshape(1, Wyi.shape[0], Wyi.shape[1])
-    dYdY = dYdGo.reshape(Xend, outputDim, 1) * Wyo.reshape(1, Wyo.shape[0], Wyo.shape[1])
-
+    dCdGi = (Z[:Xend] * dGi).transpose()
+    dCdGf = (Ct1 * dGf).transpose()
+    dCdZ = (Gi[:Xend] * dZ).transpose()
+    dYdGo = (U[:Xend] * dGo).transpose()
     for t in reversed(range(0, Xend)):
         dEdYnow = dEdY[t] if multiErr else 0
+        dYdC = (Go[t] * dU[t]) * memEye + \
+               dYdGo[:,t:t+1] * Wco
         if t < Xend - 1:
-            dEdYt = np.dot(dEdYt, dYdY[t]) + np.dot(dEdCt, dCdY[t]) + dEdYnow
-            dEdCt = np.dot(dEdCt, dCdC[t]) + np.dot(dEdYt, dYdC[t])
+            dEdYt = np.dot(dEdYt, dYdY) + np.dot(dEdCt, dCdY) + dEdYnow
+            dEdCt = np.dot(dEdCt, dCdC) + np.dot(dEdYt, dYdC)
         else:
             dEdYt = dEdYnow if multiErr else dEdY
-            dEdCt = np.dot(dEdYt, dYdC[t])
-
-        dEdGi[:, t] = dEdCt * dCdGi[t]
-        dEdGf[:, t] = dEdCt * dCdGf[t]
-        dEdZ[:, t] = dEdCt * dCdZ[t]
-        dEdGo[:, t] = dEdYt * dYdGo[t]
+            dEdCt = np.dot(dEdYt, dYdC)
+        dEdGi[:, t] = dEdCt * dCdGi[:,t]
+        dEdGf[:, t] = dEdCt * dCdGf[:,t]
+        dEdZ[:, t] = dEdCt * dCdZ[:,t]
+        dEdGo[:, t] = dEdYt * dYdGo[:,t]
+        dCdC = dCdGf[:,t:t+1] * Wcf + \
+               Gf[t] * memEye + \
+               dCdGi[:,t:t+1] * Wci
+        dCdY = dCdGf[:,t:t+1] * Wyf + \
+               dCdZ[:,t:t+1] * Wyc + \
+               dCdGi[:,t:t+1] * Wyi
+        dYdY = dYdGo[:,t:t+1] * Wyo
 
     dEdWi += np.dot(dEdGi, states1T)
     dEdWf += np.dot(dEdGf, states1T)
