@@ -1,5 +1,5 @@
 from util_func import *
-from lstmg import *
+from lstm import *
 from linear_dict import *
 from linear_map import *
 from time_unfold import *
