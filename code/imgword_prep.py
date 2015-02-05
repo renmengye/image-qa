@@ -73,13 +73,21 @@ def buildInputTarget(question, answer, numEx, lineMax, wordDict, answerDict):
     return input_, target_
 
 if __name__ == '__main__':
+
+    """
+    Usage: imgword_prep.py -train trainQAFile -test testQAFile -o outputFolder
+    """
     # Image ID
     imgIds = []
 
-    if len(sys.argv) > 3:
-        trainQAFilename = sys.argv[1]
-        testQAFilename = sys.argv[2]
-        outputFolder = sys.argv[3]
+    if len(sys.argv) > 6:
+        for i in range(1, len(sys.argv)):
+            if sys.argv[i] == '-train':
+                trainQAFilename = sys.argv[i + 1]
+            elif sys.argv[i] == '-test':
+                testQAFilename = sys.argv[i + 1]
+            elif sys.argv[i] == '-o':
+                outputFolder = sys.argv[i + 1]
     else:
         trainQAFilename = '../data/mpi-qa/qa.37.raw.train.txt'
         testQAFilename = '../data/mpi-qa/qa.37.raw.test.txt'
@@ -135,9 +143,11 @@ if __name__ == '__main__':
     trainInput = np.concatenate((np.reshape(imgIds[:numTrain], (numTrain, 1, 1)), trainInput), axis=1)
     testInput, testTarget = buildInputTarget(pureQ[numTrain:], pureA[numTrain:], numTest, lineMax, questionDict, answerDict)
     testInput = np.concatenate((np.reshape(imgIds[numTrain:], (numTest, 1, 1)), testInput), axis=1)
-    data = np.array((trainInput, trainTarget, testInput, testTarget, 0), dtype=object)
+    trainData = np.array((trainInput, trainTarget, 0), dtype=object)
+    testData = np.array((testInput, testTarget, 0), dtype=object)
     vocabDict = np.array((questionDict, questionVocab, answerDict, answerVocab, 0), dtype=object)
-    np.save(os.path.join(outputFolder, 'train-37.npy'), data)
+    np.save(os.path.join(outputFolder, 'train-37.npy'), trainData)
+    np.save(os.path.join(outputFolder, 'test-37.npy'), testData)
     np.save(os.path.join(outputFolder, 'vocab-dict.npy'), vocabDict)
 
     with open(os.path.join(outputFolder, 'vocabs.txt'), 'w+') as f:

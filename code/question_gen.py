@@ -1,4 +1,5 @@
 import os
+import numpy as np
 
 factFolder = '../data/mpi-qa/facts-37-human_seg'
 outputTrainFile = '../data/synth-qa/color/color.train.txt'
@@ -49,16 +50,66 @@ def parseFact(str):
 def genSingleObjColor(database):
     qaTrainList = []
     qaTestList = []
+    colorTrainStats = {}
+    colorTrainQA = {}
+    maxColorGet = 200 # At most generate 200 questions for a single color to avoid uneven distribution.
+    sum = 0
     for i in range(1, len(database) + 1):
         if database.has_key(i):
             for obj in database[i].iteritems():
                 if len(obj[1]) == 1:
-                    if split[i] == 1:
-                        qaTrainList.append('what is the color of the %s in the image%d ?\n' % (obj[0], i))
-                        qaTrainList.append(obj[1][0] + '\n')
+                    objname = obj[0]
+                    objcolor = obj[1][0]
+                    pair = ('what is the color of the %s in the image%d ?\n' % (objname, i), objcolor + '\n', i)
+                    if colorTrainStats.has_key(objcolor):
+                        colorTrainStats[objcolor] += 1
+                        colorTrainQA[objcolor].append(pair)
                     else:
-                        qaTestList.append('what is the color of the %s in the image%d ?\n' % (obj[0], i))
-                        qaTestList.append(obj[1][0] + '\n')
+                        colorTrainStats[objcolor] = 1
+                        colorTrainQA[objcolor] = [pair]
+                    sum += 1
+    print 'Total color stats:'
+    print colorTrainStats
+    for item in colorTrainStats.iteritems():
+        print item[0] + ': ',
+        print item[1] / float(sum)
+
+    # Select color stage
+    colorTrainStats = {}
+    colorTestStats = {}
+    sumTrain = 0
+    sumTest = 0
+    for item in colorTrainQA.iteritems():
+        N = len(item[1])
+        ind = np.random.permutation(N)
+        count = 0
+        colorTrainStats[item[0]] = 0
+        colorTestStats[item[0]] = 0
+        for i in ind:
+            pair = item[1][i]
+            if split[pair[2]] == 1:
+                qaTrainList.append(pair[0])
+                qaTrainList.append(pair[1])
+                colorTrainStats[item[0]] += 1
+                sumTrain += 1
+            else:
+                qaTestList.append(pair[0])
+                qaTestList.append(pair[1])
+                colorTestStats[item[0]] += 1
+                sumTest += 1
+            if count > 400: break
+            count += 1
+
+    print 'Train color stats:'
+    print colorTrainStats
+    for item in colorTrainStats.iteritems():
+        print item[0] + ': ',
+        print item[1] / float(sumTrain)
+    print 'Test color stats:'
+    print colorTestStats
+    for item in colorTestStats.iteritems():
+        print item[0] + ': ',
+        print item[1] / float(sumTest)
     return qaTrainList, qaTestList
 
 if __name__ == '__main__':

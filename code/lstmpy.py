@@ -145,8 +145,8 @@ def backPropagateOne(dEdY,X,Y,C,Z,
     dEdGf = np.zeros(ddim)
     dEdZ = np.zeros(ddim)
     dEdGo = np.zeros(ddim)
-    dEdX = np.zeros((X.shape[0], X.shape[1]))
 
+    dEdX = np.zeros(X.shape)
     memEye = np.eye(outputDim)
 
     # (k -> t)
@@ -166,6 +166,8 @@ def backPropagateOne(dEdY,X,Y,C,Z,
     # (j, t)
     dCdGi = (Z[:Xend] * dGi).transpose()
     dCdGf = (Ct1 * dGf).transpose()
+
+
     dCdZ = (Gi[:Xend] * dZ).transpose()
     dYdGo = (U[:Xend] * dGo).transpose()
     for t in reversed(range(0, Xend)):

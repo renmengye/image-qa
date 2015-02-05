@@ -20,9 +20,17 @@ def calcPrecision(Y, T):
     print 'rate @ 10: %.4f' % (correctAt10 / float(Y.shape[0]))
 
 if __name__ == '__main__':
+    """
+    Usage: test.py id -train trainData.npy -test testData.npy -dict vocabDict.npy
+    """
     taskId = sys.argv[1]
-    dataFile = sys.argv[2]
-    dictFile = sys.argv[3]
+    for i in range(2, len(sys.argv)):
+        if sys.argv[i] == '-train':
+            trainDataFile = sys.argv[i + 1]
+        elif sys.argv[i] == '-test':
+            testDataFile = sys.argv[i + 1]
+        elif sys.argv[i] == '-dict':
+            dictFile = sys.argv[i + 1]
     trainOutFile = os.path.join('../results/%s' % taskId, '%s.train.o.npy' % taskId)
     testOutFile = os.path.join('../results/%s' % taskId, '%s.test.o.npy' % taskId)
     testAnswerFile = os.path.join('../results/%s' % taskId, '%s.test.o.txt' % taskId)
@@ -34,11 +42,12 @@ if __name__ == '__main__':
         configFilename=configFile,
         outputFolder='../results')
     trainer.loadWeights('../results/%s/%s.w.npy' % (taskId, taskId))
-    data = np.load(dataFile)
-    Y = trainer.test(data[0],data[1])
-    T = data[1]
-    TY = trainer.test(data[2],data[3])
-    TT = data[3]
+    trainData = np.load(trainDataFile)
+    testData = np.load(testDataFile)
+    Y = trainer.test(trainData[0],trainData[1])
+    T = trainData[1]
+    TY = trainer.test(testData[2],testData[3])
+    TT = testData[3]
 
     vocabDict = np.load(dictFile)
     answerArray = vocabDict[3]

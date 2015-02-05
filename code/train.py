@@ -17,16 +17,10 @@ for i in range(2, len(sys.argv)):
 trainData = np.load(trainDataFilename)
 trainInput = trainData[0]
 trainTarget = trainData[1]
-testInput = None
-testTarget = None
-if test:
-    testInput = trainData[2]
-    testTarget = trainData[3]
-
 pipeline = Trainer.initFromConfig(
     name=name,
     configFilename=configFilename,
     outputFolder=outputFolder
 )
 
-pipeline.train(trainInput, trainTarget, testInput, testTarget)
+pipeline.train(trainInput, trainTarget)

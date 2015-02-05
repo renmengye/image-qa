@@ -42,19 +42,28 @@ def renderHtml(X, Y, T, questionArray, answerArray, topK):
     return ''.join(htmlList)
 
 if __name__ == '__main__':
+    """
+    Usage: imageqa_render.py id -train trainData.npy -test testData.npy -dict vocabDict.npy
+    """
     taskId = sys.argv[1]
-    dataFile = sys.argv[2]
-    dictFile = sys.argv[3]
+    for i in range(2, len(sys.argv)):
+        if sys.argv[i] == '-train':
+            trainDataFile = sys.argv[i + 1]
+        elif sys.argv[i] == '-test':
+            testDataFile = sys.argv[i + 1]
+        elif sys.argv[i] == '-dict':
+            dictFile = sys.argv[i + 1]
     resultFolder = '../results/%s' % taskId
 
     # Train
     trainOutputFilename = os.path.join(resultFolder, '%s.train.o.npy' % taskId)
     trainHtmlFilename = os.path.join(resultFolder, '%s.train.o.html' % taskId)
     Y = np.load(trainOutputFilename)
-    data = np.load(dataFile)
+    trainData = np.load(trainDataFile)
+    testData = np.load(testDataFile)
     vocabDict = np.load(dictFile)
-    X = data[0]
-    T = data[1]
+    X = trainData[0]
+    T = trainData[1]
     html = renderHtml(X, Y, T, vocabDict[1], vocabDict[3], 10)
     with open(trainHtmlFilename, 'w+') as f:
         f.writelines(html)
@@ -63,8 +72,8 @@ if __name__ == '__main__':
     testOutputFilename = os.path.join(resultFolder, '%s.test.o.npy' % taskId)
     testHtmlFilename = os.path.join(resultFolder, '%s.test.o.html' % taskId)
     TY = np.load(testOutputFilename)
-    TX = data[2]
-    TT = data[3]
+    TX = testData[2]
+    TT = testData[3]
     html = renderHtml(TX, TY, TT, vocabDict[1], vocabDict[3], 10)
     with open(testHtmlFilename, 'w+') as f:
         f.writelines(html)
