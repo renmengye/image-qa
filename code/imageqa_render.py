@@ -72,8 +72,8 @@ if __name__ == '__main__':
     testOutputFilename = os.path.join(resultFolder, '%s.test.o.npy' % taskId)
     testHtmlFilename = os.path.join(resultFolder, '%s.test.o.html' % taskId)
     TY = np.load(testOutputFilename)
-    TX = testData[2]
-    TT = testData[3]
+    TX = testData[0]
+    TT = testData[1]
     html = renderHtml(TX, TY, TT, vocabDict[1], vocabDict[3], 10)
     with open(testHtmlFilename, 'w+') as f:
         f.writelines(html)

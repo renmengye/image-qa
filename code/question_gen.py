@@ -1,9 +1,9 @@
 import os
+import sys
 import numpy as np
+import imgword_prep
 
 factFolder = '../data/mpi-qa/facts-37-human_seg'
-outputTrainFile = '../data/synth-qa/color/color.train.txt'
-outputTestFile = '../data/synth-qa/color/color.test.txt'
 split = []
 def getTrainTestSplit():
     trainIdFilename = '../data/mpi-qa/train.txt'
@@ -51,8 +51,8 @@ def genSingleObjColor(database):
     qaTrainList = []
     qaTestList = []
     colorTrainStats = {}
-    colorTrainQA = {}
-    maxColorGet = 200 # At most generate 200 questions for a single color to avoid uneven distribution.
+    colorQA = {}
+    np.random.seed(1)
     sum = 0
     for i in range(1, len(database) + 1):
         if database.has_key(i):
@@ -60,13 +60,14 @@ def genSingleObjColor(database):
                 if len(obj[1]) == 1:
                     objname = obj[0]
                     objcolor = obj[1][0]
-                    pair = ('what is the color of the %s in the image%d ?\n' % (objname, i), objcolor + '\n', i)
+                    #pair = ('what is the color of the %s in the image%d ?\n' % (objname, i), objcolor + '\n', i)
+                    pair = ('%s in the image%d ?\n' % (objname, i), objcolor + '\n', i)
                     if colorTrainStats.has_key(objcolor):
                         colorTrainStats[objcolor] += 1
-                        colorTrainQA[objcolor].append(pair)
+                        colorQA[objcolor].append(pair)
                     else:
                         colorTrainStats[objcolor] = 1
-                        colorTrainQA[objcolor] = [pair]
+                        colorQA[objcolor] = [pair]
                     sum += 1
     print 'Total color stats:'
     print colorTrainStats
@@ -79,7 +80,7 @@ def genSingleObjColor(database):
     colorTestStats = {}
     sumTrain = 0
     sumTest = 0
-    for item in colorTrainQA.iteritems():
+    for item in colorQA.iteritems():
         N = len(item[1])
         ind = np.random.permutation(N)
         count = 0
@@ -97,7 +98,7 @@ def genSingleObjColor(database):
                 qaTestList.append(pair[1])
                 colorTestStats[item[0]] += 1
                 sumTest += 1
-            if count > 400: break
+            if count > 400: break # At most generate 400 questions for a single color to avoid uneven distribution.
             count += 1
 
     print 'Train color stats:'
@@ -112,10 +113,91 @@ def genSingleObjColor(database):
         print item[1] / float(sumTest)
     return qaTrainList, qaTestList
 
+def genCounting(database):
+    qaTrainList = []
+    qaTestList = []
+    numberStats = {}
+    numberQA = {}
+    np.random.seed(1)
+    sum = 0
+    for i in range(1, len(database) + 1):
+        if database.has_key(i):
+            for obj in database[i].iteritems():
+                objname = obj[0]
+                objnum = len(obj[1])
+                #pair = ('what is the color of the %s in the image%d ?\n' % (objname, i), objcolor + '\n', i)
+                objnums = imgword_prep.escapeNumber(str(objnum))
+                pair = ('%s in the image%d ?\n' % (objname, i), objnums  + '\n', i)
+                if numberStats.has_key(objnum):
+                    numberStats[objnum] += 1
+                    numberQA[objnum].append(pair)
+                else:
+                    numberStats[objnum] = 1
+                    numberQA[objnum] = [pair]
+                sum += 1
+    print 'Total number stats:'
+    print numberStats
+    for item in numberStats.iteritems():
+        print str(item[0]) + ': ',
+        print item[1] / float(sum)
+
+    # Select number stage
+    numberTrainStats = {}
+    numberTestStats = {}
+    sumTrain = 0
+    sumTest = 0
+    for item in numberQA.iteritems():
+        N = len(item[1])
+        ind = np.random.permutation(N)
+        count = 0
+        numberTrainStats[item[0]] = 0
+        numberTestStats[item[0]] = 0
+        for i in ind:
+            pair = item[1][i]
+            if split[pair[2]] == 1:
+                qaTrainList.append(pair[0])
+                qaTrainList.append(pair[1])
+                numberTrainStats[item[0]] += 1
+                sumTrain += 1
+            else:
+                qaTestList.append(pair[0])
+                qaTestList.append(pair[1])
+                numberTestStats[item[0]] += 1
+                sumTest += 1
+            if count > 400: break # At most generate 400 questions for a single color to avoid uneven distribution.
+            count += 1
+
+    print 'Train number stats:'
+    print numberTrainStats
+    for item in numberTrainStats.iteritems():
+        print str(item[0]) + ': ',
+        print item[1] / float(sumTrain)
+    print 'Test number stats:'
+    print numberTestStats
+    for item in numberTestStats.iteritems():
+        print str(item[0]) + ': ',
+        print item[1] / float(sumTest)
+    return qaTrainList, qaTestList
+
+def writeToFile(trainTestList, trainFile, testFile):
+    with open(trainFile, 'w+') as f:
+        f.writelines(trainTestList[0])
+    with open(testFile, 'w+') as f:
+        f.writelines(trainTestList[1])
+
 if __name__ == '__main__':
     split = getTrainTestSplit()
     factFilenames = next(os.walk(factFolder))[2]
     imgDatabase = {}
+    qtype = 'color'
+    if len(sys.argv) > 2:
+        qtype = sys.argv[1]
+        outputFolder = sys.argv[2]
+        outputTrainFile = os.path.join(outputFolder, '%s.train.txt' % qtype)
+        outputTestFile = os.path.join(outputFolder, '%s.test.txt' % qtype)
+    else:
+        outputTrainFile = '../data/synth-qa/color2/color.train.txt'
+        outputTestFile = '../data/synth-qa/color2/color.test.txt'
     for factFilename in factFilenames:
         with open(os.path.join(factFolder,factFilename)) as f:
             lines = f.readlines()
@@ -123,16 +205,15 @@ if __name__ == '__main__':
             if line[0] != '%':
                 imgno, obj, color = parseFact(line)
                 if imgDatabase.has_key(imgno):
-                    if imgDatabase.has_key(obj):
+                    if imgDatabase[imgno].has_key(obj):
                         imgDatabase[imgno][obj].append(color)
                     else:
                         imgDatabase[imgno][obj] = [color]
                 else:
                     imgDatabase[imgno] = {obj: [color]}
-    qaColorTrain, qaColorTest = genSingleObjColor(imgDatabase)
-    with open(outputTrainFile, 'w+') as f:
-        f.writelines(qaColorTrain)
-    with open(outputTestFile, 'w+') as f:
-        f.writelines(qaColorTest)
+    if qtype == 'color':
+        writeToFile(genSingleObjColor(imgDatabase), outputTrainFile, outputTestFile)
+    elif qtype == 'number':
+        writeToFile(genCounting(imgDatabase), outputTrainFile, outputTestFile)
 
     print 'haha'
