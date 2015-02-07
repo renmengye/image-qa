@@ -140,15 +140,22 @@ if __name__ == '__main__':
     questionDict, questionVocab = buildDict(pureQ, keystart=1)
     answerDict, answerVocab = buildDict(pureA, keystart=0)
     trainInput, trainTarget = buildInputTarget(pureQ[:numTrain], pureA[:numTrain], numTrain, lineMax, questionDict, answerDict)
-    trainInput = np.concatenate((np.reshape(imgIds[:numTrain], (numTrain, 1, 1)), trainInput), axis=1)
+    trainInputAll = np.concatenate((np.reshape(imgIds[:numTrain], (numTrain, 1, 1)), trainInput), axis=1)
     testInput, testTarget = buildInputTarget(pureQ[numTrain:], pureA[numTrain:], numTest, lineMax, questionDict, answerDict)
-    testInput = np.concatenate((np.reshape(imgIds[numTrain:], (numTest, 1, 1)), testInput), axis=1)
-    trainData = np.array((trainInput, trainTarget, 0), dtype=object)
-    testData = np.array((testInput, testTarget, 0), dtype=object)
+    testInputAll = np.concatenate((np.reshape(imgIds[numTrain:], (numTest, 1, 1)), testInput), axis=1)
+    trainData = np.array((trainInputAll, trainTarget, 0), dtype=object)
+    testData = np.array((testInputAll, testTarget, 0), dtype=object)
     vocabDict = np.array((questionDict, questionVocab, answerDict, answerVocab, 0), dtype=object)
     np.save(os.path.join(outputFolder, 'train-37.npy'), trainData)
     np.save(os.path.join(outputFolder, 'test-37.npy'), testData)
     np.save(os.path.join(outputFolder, 'vocab-dict.npy'), vocabDict)
+
+    trainInputAll = np.concatenate((trainInput, np.reshape(imgIds[:numTrain], (numTrain, 1, 1))), axis=1)
+    testInputAll = np.concatenate((testInput, np.reshape(imgIds[numTrain:], (numTest, 1, 1))), axis=1)
+    trainData = np.array((trainInputAll, trainTarget, 0), dtype=object)
+    testData = np.array((testInputAll, testTarget, 0), dtype=object)
+    np.save(os.path.join(outputFolder, 'train-last-37.npy'), trainData)
+    np.save(os.path.join(outputFolder, 'test-last-37.npy'), testData)
 
     with open(os.path.join(outputFolder, 'vocabs.txt'), 'w+') as f:
         for word in questionVocab:
