@@ -15,7 +15,8 @@ stages:
       annealConst: 0.0
       outputdEdX: false
     - type: timeUnfold
-    - type: sigmoid
+    - type: map
+      activeFn: sigmoid
       inputDim: 5
       outputDim: 1
       initRange: 0.01

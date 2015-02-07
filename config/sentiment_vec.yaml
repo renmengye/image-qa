@@ -52,7 +52,8 @@ stages:
       weightRegConst: 0.00005
       outputdEdX: true
     - name: sigmoid
-      type: sigmoid
+      type: map
+      activeFn: sigmoid
       inputDim: 30
       outputDim: 1
       initRange: 0.1
