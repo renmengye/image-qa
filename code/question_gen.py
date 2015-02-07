@@ -47,7 +47,7 @@ def parseFact(str):
     color = parts[2].split('\'')[1]
     return imgno, obj, color
 
-def genSingleObjColor(database):
+def genSingleObjColor(database, singleWord=False):
     qaTrainList = []
     qaTestList = []
     colorTrainStats = {}
@@ -60,8 +60,10 @@ def genSingleObjColor(database):
                 if len(obj[1]) == 1:
                     objname = obj[0]
                     objcolor = obj[1][0]
-                    #pair = ('what is the color of the %s in the image%d ?\n' % (objname, i), objcolor + '\n', i)
-                    pair = ('%s in the image%d ?\n' % (objname, i), objcolor + '\n', i)
+                    if singleWord:
+                        pair = ('%s in the image%d ?\n' % (objname, i), objcolor + '\n', i)
+                    else:
+                        pair = ('what is the color of the %s in the image%d ?\n' % (objname, i), objcolor + '\n', i)
                     if colorTrainStats.has_key(objcolor):
                         colorTrainStats[objcolor] += 1
                         colorQA[objcolor].append(pair)
@@ -113,7 +115,7 @@ def genSingleObjColor(database):
         print item[1] / float(sumTest)
     return qaTrainList, qaTestList
 
-def genCounting(database):
+def genCounting(database, singleWord=False):
     qaTrainList = []
     qaTestList = []
     numberStats = {}
@@ -125,9 +127,11 @@ def genCounting(database):
             for obj in database[i].iteritems():
                 objname = obj[0]
                 objnum = len(obj[1])
-                #pair = ('what is the color of the %s in the image%d ?\n' % (objname, i), objcolor + '\n', i)
                 objnums = imgword_prep.escapeNumber(str(objnum))
-                pair = ('%s in the image%d ?\n' % (objname, i), objnums  + '\n', i)
+                if singleWord:
+                    pair = ('%s in the image%d ?\n' % (objname, i), objnums  + '\n', i)
+                else:
+                    pair = ('how many %s in the image%d ?\n' % (objname, i), objnums  + '\n', i)
                 if numberStats.has_key(objnum):
                     numberStats[objnum] += 1
                     numberQA[objnum].append(pair)
@@ -186,6 +190,13 @@ def writeToFile(trainTestList, trainFile, testFile):
         f.writelines(trainTestList[1])
 
 if __name__ == '__main__':
+    """
+    Usage: question_gen {type} {output folder}
+    type:
+        1. color: What is the color of xxx in the image### ?
+        2. number: How many xxx in the image### ?
+        3. all: existing human QA + color + number as train set. Human QA test as test.
+    """
     split = getTrainTestSplit()
     factFilenames = next(os.walk(factFolder))[2]
     imgDatabase = {}
@@ -212,8 +223,18 @@ if __name__ == '__main__':
                 else:
                     imgDatabase[imgno] = {obj: [color]}
     if qtype == 'color':
-        writeToFile(genSingleObjColor(imgDatabase), outputTrainFile, outputTestFile)
+        writeToFile(genSingleObjColor(imgDatabase, singleWord=True), outputTrainFile, outputTestFile)
     elif qtype == 'number':
-        writeToFile(genCounting(imgDatabase), outputTrainFile, outputTestFile)
+        writeToFile(genCounting(imgDatabase, singleWord=True), outputTrainFile, outputTestFile)
+    elif qtype == 'all':
+        counting = genCounting(imgDatabase, singleWord=False)
+        color = genSingleObjColor(imgDatabase, singleWord=False)
+        with open('../data/mpi-qa/qa.37.raw.train.txt') as f:
+            humanTrain = f.readlines()
+        with open('../data/mpi-qa/qa.37.raw.test.txt') as f:
+            humanTest = f.readlines()
+        humanTrain.extend(counting[0])
+        humanTrain.extend(color[0])
+        writeToFile((humanTrain, humanTest), outputTrainFile, outputTestFile)
 
     print 'haha'
