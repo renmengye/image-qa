@@ -46,8 +46,8 @@ if __name__ == '__main__':
     testData = np.load(testDataFile)
     Y = trainer.test(trainData[0],trainData[1])
     T = trainData[1]
-    TY = trainer.test(testData[0],testData[1])
-    TT = testData[1]
+    TY = trainer.test(testData[0][:-10],testData[1][:-10])
+    TT = testData[1][:-10]
 
     vocabDict = np.load(dictFile)
     answerArray = vocabDict[3]

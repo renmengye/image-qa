@@ -64,7 +64,7 @@ stages:
     - name: lstm1
       type: lstm
       inputDim: 300
-      outputDim: 450
+      outputDim: 150
       initRange: 0.1
       initSeed: 4
       cutOffZeroEnd: true
@@ -78,7 +78,7 @@ stages:
       outputdEdX: true
     - name: softmax
       type: softmax
-      inputDim: 450
+      inputDim: 150
       outputDim: 68
       initRange: 0.1
       initSeed: 7
