@@ -1,5 +1,11 @@
-from sentiment3_vec import *
 from sequential import *
+from lstm import *
+from map import *
+from dropout import *
+from time_fold import *
+from time_unfold import *
+from linear_dict import *
+from trainer import *
 
 def evaluateGrad(model, W, eps, costFn, hasDropout):
     dEdW = np.zeros(W.shape)
@@ -18,7 +24,10 @@ def evaluateGrad(model, W, eps, costFn, hasDropout):
     return dEdW
 
 if __name__ == '__main__':
-    trainInput, trainTarget = getTrainData()          # 2250 records
+    data = np.load('../data/sentiment3/train-1.npy')
+    trainInput = data[0]
+    trainTarget = data[1]
+    wordEmbed = np.load('../data/sentiment3/word-embed-0.npy')
 
     np.random.seed(1)
     subset = np.arange(0, 129 * 2)                    # 522 records, 129 positive
@@ -49,10 +58,7 @@ if __name__ == '__main__':
         inputDim=np.max(trainInput)+1,
         outputDim=5,
         needInit=False,
-        initWeights=getWordEmbedding(
-            initSeed=2,
-            initRange=0.42,
-            pcaDim=5)
+        wordEmbed
     )
 
     time_fold = TimeFold(
@@ -83,16 +89,18 @@ if __name__ == '__main__':
         multiErr=False
     )
 
-    sig = Sigmoid(
+    sig = Map(
         inputDim=5,
         outputDim=1,
+        activeFn=SigmoidActiveFn,
         initRange=1,
         initSeed=4
     )
 
-    soft = Softmax(
+    soft = Map(
         inputDim=5,
         outputDim=2,
+        activeFn=SoftmaxActiveFn,
         initRange=1,
         initSeed=5
     )

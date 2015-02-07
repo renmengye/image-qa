@@ -1,12 +1,8 @@
 from lstm import *
-from simplesum import *
-from softmax import *
-from sigmoid import *
+from map import *
 from time_unfold import *
 from time_fold import *
-from time_select import *
 from dropout import *
-from linear_map import *
 from linear_dict import *
 from trainer import *
 from util_func import *
@@ -131,7 +127,7 @@ if __name__ == '__main__':
         weightClip=100,
         weightRegConst=5e-5,
         gradientClip=0.1))
-    pipeline.addStage(Sigmoid(
+    pipeline.addStage(Map(
         inputDim=30,
         outputDim=1,
         initRange=0.1,

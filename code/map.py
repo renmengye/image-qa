@@ -1,10 +1,9 @@
-from util_func import *
 from stage import *
-
-class Softmax(Stage):
+class Map(Stage):
     def __init__(self,
                  inputDim,
                  outputDim,
+                 activeFn,
                  initRange=1.0,
                  initSeed=2,
                  needInit=True,
@@ -30,6 +29,7 @@ class Softmax(Stage):
                  outputdEdX=outputdEdX)
         self.inputDim = inputDim
         self.outputDim = outputDim
+        self.activeFn = activeFn
         self.random = np.random.RandomState(initSeed)
 
         if needInit:
@@ -39,14 +39,15 @@ class Softmax(Stage):
             self.W = initWeights
         self.X = 0
         self.Y = 0
+        self.Z = 0
         pass
 
-    def chkgrd(self):
+    def chkgrd(self, costFn):
         eps = 1e-3
         X = np.array([[0.1, 0.5], [0.2, 0.4], [0.3, -0.3], [-0.1, -0.1]])
         T = np.array([[0], [1], [0], [1]])
         Y = self.forwardPass(X)
-        E, dEdY = crossEntIdx(Y, T)
+        E, dEdY = costFn(Y, T)
         dEdX = self.backPropagate(dEdY)
         dEdW = self.dEdW
         dEdWTmp = np.zeros(self.W.shape)
@@ -55,11 +56,11 @@ class Softmax(Stage):
             for j in range(0, self.W.shape[1]):
                 self.W[i,j] += eps
                 Y = self.forwardPass(X)
-                Etmp1, d1 = crossEntIdx(Y, T)
+                Etmp1, d1 = costFn(Y, T)
 
                 self.W[i,j] -= 2 * eps
                 Y = self.forwardPass(X)
-                Etmp2, d2 = crossEntIdx(Y, T)
+                Etmp2, d2 = costFn(Y, T)
 
                 dEdWTmp[i,j] = (Etmp1 - Etmp2) / 2.0 / eps
                 self.W[i,j] += eps
@@ -67,11 +68,11 @@ class Softmax(Stage):
             for k in range(0, X.shape[-1]):
                 X[t, k] += eps
                 Y = self.forwardPass(X)
-                Etmp1, d1 = crossEntIdx(Y, T)
+                Etmp1, d1 = costFn(Y, T)
 
                 X[t, k] -= 2 * eps
                 Y = self.forwardPass(X)
-                Etmp2, d2 = crossEntIdx(Y, T)
+                Etmp2, d2 = costFn(Y, T)
 
                 dEdXTmp[t, k] += (Etmp1 - Etmp2) / 2.0 / eps
                 X[t, k] += eps
@@ -80,29 +81,45 @@ class Softmax(Stage):
 
     def forwardPass(self, X):
         X2 = np.concatenate((X, np.ones((X.shape[0], 1))), axis=-1)
-        Y = np.inner(X2, self.W)
-        expY = np.exp(Y)
-        expYshape = np.copy(Y.shape)
-        expYshape[-1] = 1
-        Y = expY / np.sum(expY, axis=-1).reshape(expYshape).repeat(Y.shape[-1], axis=-1)
+        Z = np.inner(X2, self.W)
+        Y = self.activeFn.forward(Z)
         self.X = X2
+        self.Z = Z
         self.Y = Y
         return Y
 
     def backPropagate(self, dEdY):
         Y = self.Y
+        Z = self.Z
         X = self.X
-        timespan = Y.shape[0]
-        U = dEdY * Y
-        dEdZ = U - np.sum(U, axis=-1).reshape(timespan, 1) * Y
+        dEdZ = self.activeFn.backward(dEdY, Y, Z)
         self.dEdW = np.dot(dEdZ.transpose(), X)
         dEdX = np.dot(dEdZ, self.W[:, :-1])
         return dEdX if self.outputdEdX else None
 
 if __name__ == '__main__':
-    softmax = Softmax(
+    from active_func import *
+    map_ = Map(
+        inputDim=2,
+        outputDim=1,
+        activeFn=SigmoidActiveFn,
+        initRange=0.01,
+        initSeed=2
+    )
+    map_.chkgrd(costFn=crossEntOne)
+    map_ = Map(
         inputDim=2,
         outputDim=2,
+        activeFn=SoftmaxActiveFn,
         initRange=0.01,
-        initSeed=2)
-    softmax.chkgrd()
+        initSeed=2
+    )
+    map_.chkgrd(costFn=crossEntIdx)
+    map_ = Map(
+        inputDim=2,
+        outputDim=1,
+        activeFn=IdentityActiveFn,
+        initRange=0.01,
+        initSeed=2
+    )
+    map_.chkgrd(costFn=meanSqErr)
