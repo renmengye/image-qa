@@ -81,7 +81,7 @@ stages:
       type: map
       activeFn: softmax
       inputDim: 150
-      outputDim: 68
+      outputDim: 71
       initRange: 0.1
       initSeed: 7
       learningRate: 0.01
