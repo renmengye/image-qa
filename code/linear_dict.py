@@ -34,9 +34,11 @@ class LinearDict(Stage):
         # Zeroth dimension of the weight matrix is reserved
         # for empty word at the end of a sentence.
         if needInit:
-            self.W = self.random.uniform(
-                -initRange/2.0, initRange/2.0, (outputDim, inputDim))
-            self.W[:, 0] = 0
+            self.W = np.concatenate(
+                (np.zeros((outputDim, 1)),
+                 self.random.uniform(
+                -initRange/2.0, initRange/2.0,
+                (outputDim , inputDim))), axis=1)
         else:
             self.W = np.concatenate(
                 (np.zeros((outputDim, 1)), initWeights), axis=1)

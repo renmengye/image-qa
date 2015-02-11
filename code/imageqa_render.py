@@ -23,7 +23,7 @@ def renderHtml(X, Y, T, questionArray, answerArray, topK):
             sentence += questionArray[X[n, t, 0]- 1] + ' '
         sentence += '?'
         htmlList.append('<div style="height:300px;text-align:bottom;overflow:hidden;">Q%d: %s<br/>' % (n + 1, sentence))
-        htmlList.append('Top %d answers: (confidence)<br/>' % topK)
+        #htmlList.append('Top %d answers: (confidence)<br/>' % topK)
         sortIdx = np.argsort(Y[n], axis=0)
         sortIdx = sortIdx[::-1]
         for i in range(0, topK):
@@ -74,6 +74,6 @@ if __name__ == '__main__':
     TY = np.load(testOutputFilename)
     TX = testData[0]
     TT = testData[1]
-    html = renderHtml(TX, TY, TT, vocabDict[1], vocabDict[3], 10)
+    html = renderHtml(TX, TY, TT, vocabDict[1], vocabDict[3], 0)
     with open(testHtmlFilename, 'w+') as f:
         f.writelines(html)

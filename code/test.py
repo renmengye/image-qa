@@ -46,17 +46,17 @@ if __name__ == '__main__':
     testData = np.load(testDataFile)
     Y = trainer.test(trainData[0],trainData[1])
     T = trainData[1]
-    TY = trainer.test(testData[0][:-10],testData[1][:-10])
-    TT = testData[1][:-10]
+    TY = trainer.test(testData[0],testData[1])
+    TT = testData[1]
 
     vocabDict = np.load(dictFile)
     answerArray = vocabDict[3]
     with open(testTruthFile, 'w+') as f:
-        for n in range(0, T.shape[0]):
-            f.write(answerArray[T[n, 0]] + '\n')
+        for n in range(0, TT.shape[0]):
+            f.write(answerArray[TT[n, 0]] + '\n')
     with open(testAnswerFile, 'w+') as f:
-        for n in range(0, Y.shape[0]):
-            f.write(answerArray[np.argmax(Y[n, :])] + '\n')
+        for n in range(0, TY.shape[0]):
+            f.write(answerArray[np.argmax(TY[n, :])] + '\n')
 
     calcPrecision(Y, T)
     calcPrecision(TY, TT)
