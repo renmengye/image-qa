@@ -31,7 +31,7 @@ stages:
       type: linearDict
       inputDim: 871
       outputDim: 300
-      initWeights: ../data/imgword/word-embed-0.npy
+      initWeights: ../data/synth-qa/all/word-embed-0.npy
       learningRate: 0.0
     - name: txtFold
       type: timeFold
@@ -81,7 +81,7 @@ stages:
       type: map
       activeFn: softmax
       inputDim: 150
-      outputDim: 68
+      outputDim: 71
       initRange: 0.1
       initSeed: 7
       learningRate: 0.01
