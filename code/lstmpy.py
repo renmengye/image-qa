@@ -137,6 +137,7 @@ def backPropagateOne(dEdY,X,Y,C,Z,
     inputDim = X.shape[1]
     outputDim = Y.shape[1]
     dEdW = np.zeros(Wshape)
+    if Xend == 0: return dEdW, np.zeros(X.shape)
     dEdWi,dEdWf,dEdWc,dEdWo = sliceWeights(inputDim, outputDim, dEdW)
     ddim = (outputDim, Xend)
 
@@ -147,7 +148,6 @@ def backPropagateOne(dEdY,X,Y,C,Z,
     dEdGo = np.zeros(ddim)
 
     dEdX = np.zeros(X.shape)
-    memEye = np.eye(outputDim)
 
     # (k -> t)
     one = np.ones((Xend, 1))
@@ -172,7 +172,7 @@ def backPropagateOne(dEdY,X,Y,C,Z,
     dYdGo = (U[:Xend] * dGo).transpose()
     for t in reversed(range(0, Xend)):
         dEdYnow = dEdY[t] if multiErr else 0
-        dYdC = (Go[t] * dU[t]) * memEye + \
+        dYdC = np.diag(Go[t] * dU[t]) + \
                dYdGo[:,t:t+1] * Wco
         if t < Xend - 1:
             dEdYt = np.dot(dEdYt, dYdY) + np.dot(dEdCt, dCdY) + dEdYnow
@@ -185,7 +185,7 @@ def backPropagateOne(dEdY,X,Y,C,Z,
         dEdZ[:, t] = dEdCt * dCdZ[:,t]
         dEdGo[:, t] = dEdYt * dYdGo[:,t]
         dCdC = dCdGf[:,t:t+1] * Wcf + \
-               Gf[t] * memEye + \
+               np.diag(Gf[t]) + \
                dCdGi[:,t:t+1] * Wci
         dCdY = dCdGf[:,t:t+1] * Wyf + \
                dCdZ[:,t:t+1] * Wyc + \

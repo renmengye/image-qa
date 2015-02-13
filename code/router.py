@@ -1,4 +1,3 @@
-from util_func import *
 from lstm import *
 from linear_dict import *
 from map import *

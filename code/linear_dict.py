@@ -1,4 +1,3 @@
-from util_func import *
 from stage import *
 
 class LinearDict(Stage):
