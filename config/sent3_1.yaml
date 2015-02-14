@@ -25,31 +25,13 @@ stages:
       initRange: 0.1
       initSeed: 4
       cutOffZeroEnd: true
-      multiErr: true
-      learningRate: 0.8
-      gradientClip: 0.1
-      weightClip: 20.0
-      weightRegConst: 0.00005
-      annealConst: 0.0
-      outputdEdX: false
-    - name: dropout2
-      type: dropout
-      dropoutRate: 0.5
-      initSeed: 5
-    - name: lstm2
-      type: lstm
-      inputDim: 50
-      outputDim: 50
-      initRange: 0.1
-      initSeed: 6
-      cutOffZeroEnd: true
       multiErr: false
       learningRate: 0.8
       gradientClip: 0.1
       weightClip: 20.0
       weightRegConst: 0.00005
       annealConst: 0.0
-      outputdEdX: true
+      outputdEdX: false
     - name: sigmoid
       type: map
       activeFn: sigmoid
