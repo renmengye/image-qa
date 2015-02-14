@@ -12,11 +12,11 @@ def evaluateGrad(model, W, eps, costFn, hasDropout):
     for i in range(W.shape[0]):
         for j in range(W.shape[1]):
             W[i,j] += eps
-            Y = model.forwardPass(X, dropout=hasDropout)
+            Y = model.forward(X, dropout=hasDropout)
             Etmp1, d1 = costFn(Y, T)
 
             W[i,j] -= 2 * eps
-            Y = model.forwardPass(X, dropout=hasDropout)
+            Y = model.forward(X, dropout=hasDropout)
             Etmp2, d2 = costFn(Y, T)
 
             dEdW[i,j] = (Etmp1 - Etmp2) / 2.0 / eps
@@ -131,9 +131,9 @@ if __name__ == '__main__':
     hasDropout = True
     X = trainInput[0:1]
     T = trainTarget[0:1]
-    Y = model.forwardPass(X, dropout=hasDropout)
+    Y = model.forward(X, dropout=hasDropout)
     E, dEdY = costFn(Y, T)
-    dEdX = model.backPropagate(dEdY)
+    dEdX = model.backward(dEdY)
 
     dEdWsoft = soft.dEdW
     dEdWsig = sig.dEdW

@@ -8,13 +8,13 @@ class Parallel(Stage):
         self.splits = splits
         self.outputSplits = []
 
-    def forwardPass(self, X):
+    def forward(self, X):
         self.outputSplits = []
         splY = []
         splX = np.split(X, self.splits, axis=self.axis)
         lastIdx = 0
         for i in range(0, len(self.stages)):
-            Ytmp = self.stages[i].forwardPass(splX[i])
+            Ytmp = self.stages[i].forward(splX[i])
             splY.append(Ytmp)
             if i < len(self.stages) - 1:
                 lastIdx = Ytmp.shape[self.axis] + lastIdx
@@ -22,11 +22,11 @@ class Parallel(Stage):
         Y = np.concatenate(splY, axis=self.axis)
         return Y
 
-    def backPropagate(self, dEdY):
+    def backward(self, dEdY):
         spldEdX = []
         spldEdY = np.split(dEdY, self.outputSplits, axis=self.axis)
         for i in range(0, len(self.stages)):
-            dEdXtmp = self.stages[i].backPropagate(spldEdY[i])
+            dEdXtmp = self.stages[i].backward(spldEdY[i])
             spldEdX.append(dEdXtmp)
         if self.outputdEdX:
             dEdX = np.concatenate(spldEdX, axis=self.axis)

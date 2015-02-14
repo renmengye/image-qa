@@ -46,20 +46,20 @@ class Map(Stage):
         eps = 1e-3
         X = np.array([[0.1, 0.5], [0.2, 0.4], [0.3, -0.3], [-0.1, -0.1]])
         T = np.array([[0], [1], [0], [1]])
-        Y = self.forwardPass(X)
+        Y = self.forward(X)
         E, dEdY = costFn(Y, T)
-        dEdX = self.backPropagate(dEdY)
+        dEdX = self.backward(dEdY)
         dEdW = self.dEdW
         dEdWTmp = np.zeros(self.W.shape)
         dEdXTmp = np.zeros(X.shape)
         for i in range(0, self.W.shape[0]):
             for j in range(0, self.W.shape[1]):
                 self.W[i,j] += eps
-                Y = self.forwardPass(X)
+                Y = self.forward(X)
                 Etmp1, d1 = costFn(Y, T)
 
                 self.W[i,j] -= 2 * eps
-                Y = self.forwardPass(X)
+                Y = self.forward(X)
                 Etmp2, d2 = costFn(Y, T)
 
                 dEdWTmp[i,j] = (Etmp1 - Etmp2) / 2.0 / eps
@@ -67,11 +67,11 @@ class Map(Stage):
         for t in range(0, X.shape[0]):
             for k in range(0, X.shape[-1]):
                 X[t, k] += eps
-                Y = self.forwardPass(X)
+                Y = self.forward(X)
                 Etmp1, d1 = costFn(Y, T)
 
                 X[t, k] -= 2 * eps
-                Y = self.forwardPass(X)
+                Y = self.forward(X)
                 Etmp2, d2 = costFn(Y, T)
 
                 dEdXTmp[t, k] += (Etmp1 - Etmp2) / 2.0 / eps
@@ -79,7 +79,7 @@ class Map(Stage):
         print "haha"
         pass
 
-    def forwardPass(self, X):
+    def forward(self, X):
         X2 = np.concatenate((X, np.ones((X.shape[0], 1))), axis=-1)
         Z = np.inner(X2, self.W)
         Y = self.activeFn.forward(Z)
@@ -88,7 +88,7 @@ class Map(Stage):
         self.Y = Y
         return Y
 
-    def backPropagate(self, dEdY):
+    def backward(self, dEdY):
         Y = self.Y
         Z = self.Z
         X = self.X

@@ -1,4 +1,4 @@
-from util_func import *
+from func import *
 import sys
 import os
 imageFolder = '../../data/nyu-depth-v2/jpg/'

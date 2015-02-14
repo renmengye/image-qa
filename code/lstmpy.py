@@ -1,4 +1,4 @@
-from util_func import *
+from func import *
 
 def sliceWeights(inputDim,outputDim,W):
     s1 = inputDim + outputDim * 2 + 1
@@ -166,10 +166,9 @@ def backPropagateOne(dEdY,X,Y,C,Z,
     # (j, t)
     dCdGi = (Z[:Xend] * dGi).transpose()
     dCdGf = (Ct1 * dGf).transpose()
-
-
     dCdZ = (Gi[:Xend] * dZ).transpose()
     dYdGo = (U[:Xend] * dGo).transpose()
+
     for t in reversed(range(0, Xend)):
         dEdYnow = dEdY[t] if multiErr else 0
         dYdC = np.diag(Go[t] * dU[t]) + \

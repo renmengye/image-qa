@@ -18,8 +18,7 @@ def hardLimit(Y):
     return (Y > 0.5).astype(int)
 
 def sigmoidFn(X):
-    eps = 1e-5
-    return (1 + eps) / (1 + eps + np.exp(-X))
+    return 1 / (1 + np.exp(-X))
 
 def crossEntIdx(Y, T):
     eps = 1e-5

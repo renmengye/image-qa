@@ -17,7 +17,7 @@ class Dropout(Stage):
         self.seed = initSeed
         pass
 
-    def forwardPass(self, X):
+    def forward(self, X):
         if self.dropoutRate > 0.0 and self.dropout:
             if self.debug:
                 self.random = np.random.RandomState(self.seed)
@@ -29,7 +29,7 @@ class Dropout(Stage):
         self.X = X
         return Y
 
-    def backPropagate(self, dEdY, outputdEdX=True):
+    def backward(self, dEdY, outputdEdX=True):
         self.dEdW = 0
         dEdX = None
         if outputdEdX:

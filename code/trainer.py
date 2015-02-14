@@ -1,4 +1,4 @@
-from util_func import *
+from func import *
 import time
 import pickle
 import sys
@@ -131,7 +131,7 @@ class Trainer:
                 numExThisBat = batchEnd - batchStart
 
                 # Forward
-                Y_bat = self.model.forwardPass(X[batchStart:batchEnd], dropout=True)
+                Y_bat = self.model.forward(X[batchStart:batchEnd], dropout=True)
                 T_bat = T[batchStart:batchEnd]
 
                 # Loss
@@ -139,7 +139,7 @@ class Trainer:
                 E += np.sum(Etmp) * numExThisBat / float(N)
 
                 # Backpropagate
-                self.model.backPropagate(dEdY)
+                self.model.backward(dEdY)
 
                 # Update
                 self.model.updateWeights()
@@ -164,7 +164,7 @@ class Trainer:
 
             # Run validation
             if needValid:
-                VY = self.model.forwardPass(VX, dropout=False)
+                VY = self.model.forward(VX, dropout=False)
                 VE, dVE = self.costFn(VY, VT)
                 VE = np.sum(VE)
                 VEtotal[epoch] = VE
@@ -204,7 +204,7 @@ class Trainer:
         while batchStart < N:
             # Batch info
             batchEnd = min(N, batchStart + numExPerBat)
-            Ytmp = self.model.forwardPass(X[batchStart:batchEnd], dropout=False)
+            Ytmp = self.model.forward(X[batchStart:batchEnd], dropout=False)
             if Y is None:
                 Yshape = np.copy(Ytmp.shape)
                 Yshape[0] = N

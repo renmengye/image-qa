@@ -1,4 +1,4 @@
-from util_func import *
+from func import *
 
 class Stage:
     def __init__(self,
@@ -27,7 +27,7 @@ class Stage:
         self.lastdW = 0.0
         self.W = 0.0
 
-    def forwardPass(self, X):
+    def forward(self, X):
         """
         Abstract method. Forward pass input to the stage.
         :param X: The input. At least two dimensional numpy array.
@@ -36,11 +36,10 @@ class Stage:
         """
         return
 
-    def backPropagate(self, dEdY):
+    def backward(self, dEdY):
         """
         Abstract method. Backward propagate error in the stage.
         :param dEdY: The error of the output.
-        :param outputdEdX: Whether calculate the error of the input.
         :return: The error of the input.
         """
         return

@@ -5,7 +5,7 @@ from time_fold import *
 from dropout import *
 from linear_dict import *
 from trainer import *
-from util_func import *
+from func import *
 import sys
 import tsne
 
@@ -31,7 +31,7 @@ def getWordEmbedding(initSeed, initRange, pcaDim=0):
 
 def evaluate(pipeline, input_):
     global word_array
-    output = pipeline.forwardPass(input_.transpose((1, 0, 2)), dropout=False)
+    output = pipeline.forward(input_.transpose((1, 0, 2)), dropout=False)
     with open('../results/sentiment_result.txt', 'w+') as f:
         for n in range(output.shape[0]):
             sentence = '%d ' % hardLimit(output[n])

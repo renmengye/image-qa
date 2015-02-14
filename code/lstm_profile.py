@@ -16,7 +16,7 @@ for i in range(0, 10):
         multiErr=multiErr,
         outputdEdX=True)
     X = np.random.rand(10, timespan, 100)
-    Y = lstm.forwardPass(X)
+    Y = lstm.forward(X)
     dEdY = np.random.rand(10, timespan, 100) if multiErr else np.random.rand(10, 100)
-    dEdY = lstm.backPropagate(dEdY)
+    dEdY = lstm.backward(dEdY)
 print '%.4f s' % (time.time() - start)
