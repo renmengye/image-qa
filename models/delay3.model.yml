@@ -1,0 +1,42 @@
+costFn: crossEntOne
+decisionFn: hardLimit
+model: all
+stages:
+    - name: lstm 
+      type: lstm
+      inputDim: 1
+      outputDim: 5
+      initRange: 0.01
+      initSeed: 2
+      cutOffZeroEnd: false
+      multiErr: true
+      learningRate: 0.8
+      gradientClip: 0.0
+      weightClip: 0.0
+      weightRegConst: 0.0
+      annealConst: 0.0
+      outputdEdX: false
+    - name: unfold
+      type: timeUnfold
+    - name: sigmoid
+      type: map
+      activeFn: sigmoid
+      inputDim: 5
+      outputDim: 1
+      initRange: 0.01
+      initSeed: 3
+      learningRate: 0.01
+      gradientClip: 0.0
+      weightClip: 0.0
+      annealConst: 0.0
+      weightRegConst: 0.0
+    - name: fold
+      type: timeFold
+      timespan: 8
+    - name: all
+      type: sequential
+      stages:
+          - lstm
+          - unfold
+          - sigmoid
+          - fold
