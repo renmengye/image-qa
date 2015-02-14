@@ -54,7 +54,7 @@ stages:
           - lstm1
           - sigmoid
 trainOpt:
-    numEpoch: 100
+    numEpoch: 20
     heldOutRatio: 0.1
     xvalidNo: 0
     needValid: true
