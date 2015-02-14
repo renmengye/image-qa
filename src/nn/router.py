@@ -1,5 +1,5 @@
 from lstm import *
-from linear_dict import *
+from lut import *
 from map import *
 from time_unfold import *
 from time_fold import *
@@ -79,8 +79,8 @@ def routeStage(stageDict):
             weightRegConst=weightRegConst,
             outputdEdX=outputdEdX
         )
-    elif stageDict['type'] == 'linearDict':
-        stage = LinearDict(
+    elif stageDict['type'] == 'lut':
+        stage = LUT(
             name=stageDict['name'],
             inputDim=stageDict['inputDim'],
             outputDim=stageDict['outputDim'],

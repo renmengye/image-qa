@@ -1,4 +1,7 @@
-from trainer import *
+import nn
+import os
+import sys
+import numpy as np
 
 def calcPrecision(Y, T):
     # Calculate precision
@@ -19,6 +22,21 @@ def calcPrecision(Y, T):
     print 'rate @ 5: %.4f' % (correctAt5 / float(Y.shape[0]))
     print 'rate @ 10: %.4f' % (correctAt10 / float(Y.shape[0]))
 
+def test(model, X):
+    N = X.shape[0]
+    numExPerBat = 100
+    batchStart = 0
+    while batchStart < N:
+        # Batch info
+        batchEnd = min(N, batchStart + numExPerBat)
+        Ytmp = model.forward(X[batchStart:batchEnd], dropout=False)
+        if Y is None:
+            Yshape = np.copy(Ytmp.shape)
+            Yshape[0] = N
+            Y = np.zeros(Yshape)
+        Y[batchStart:batchEnd] = Ytmp
+        batchStart += numExPerBat
+
 if __name__ == '__main__':
     """
     Usage: test.py id -train trainData.npy -test testData.npy -dict vocabDict.npy
@@ -35,20 +53,18 @@ if __name__ == '__main__':
     testOutFile = os.path.join('../results/%s' % taskId, '%s.test.o.npy' % taskId)
     testAnswerFile = os.path.join('../results/%s' % taskId, '%s.test.o.txt' % taskId)
     testTruthFile = os.path.join('../results/%s' % taskId, '%s.test.t.txt' % taskId)
-    configFile = '../results/%s/%s.yaml' % (taskId, taskId)
-
-    trainer = Trainer.initFromConfig(
-        name='test',
-        configFilename=configFile,
-        outputFolder='../results')
-    trainer.loadWeights('../results/%s/%s.w.npy' % (taskId, taskId))
+    modelFile = '../results/%s/%s.model.yml' % (taskId, taskId)
+    model = nn.load(modelFile)
+    model.loadWeights('../results/%s/%s.w.npy' % (taskId, taskId))
     trainData = np.load(trainDataFile)
     testData = np.load(testDataFile)
-    Y = trainer.test(trainData[0],trainData[1])
-    T = trainData[1]
-    TY = trainer.test(testData[0],testData[1])
-    TT = testData[1]
 
+    X = trainData[0]
+    Y = test(model, X)
+    T = trainData[1]
+    TX = testData[0]
+    TY = test(model, X)
+    TT = testData[1]
     vocabDict = np.load(dictFile)
     answerArray = vocabDict[3]
     with open(testTruthFile, 'w+') as f:

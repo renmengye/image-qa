@@ -1,7 +1,8 @@
-import lstm as l
-import numpy as np
 import sys
 import time
+import numpy as np
+import lstm as l
+
 
 start = time.time()
 timespan = 100

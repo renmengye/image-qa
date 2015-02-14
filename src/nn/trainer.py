@@ -1,13 +1,10 @@
-from func import *
 import time
 import pickle
 import sys
 import os
-import yaml
 import shutil
-import router
-
 import matplotlib
+from func import *
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 plt.ion()
@@ -17,19 +14,13 @@ class Trainer:
                  name,
                  model,
                  trainOpt,
-                 costFn,
-                 decisionFn=None,
                  outputFolder='',
-                 configFilename=None,
                  seed=1000):
         self.model = model
         self.name = name + time.strftime("-%Y%m%d-%H%M%S")
         print 'Trainer ' + self.name
-        self.costFn = costFn
-        self.decisionFn = decisionFn
         self.outputFolder = os.path.join(outputFolder, self.name)
         self.trainOpt = trainOpt
-        self.configFilename = configFilename
         self.logFilename = os.path.join(self.outputFolder, self.name + '.csv')
         self.modelFilename = os.path.join(self.outputFolder, self.name + '.w')
         self.lossFigFilename = os.path.join(self.outputFolder, self.name + '_loss.png')
@@ -38,26 +29,6 @@ class Trainer:
         self.random = np.random.RandomState(seed)
         pass
 
-    @staticmethod
-    def initFromConfig(name, configFilename, outputFolder=None):
-        with open(configFilename) as f:
-            pipeDict = yaml.load(f)
-
-        for stageDict in pipeDict['stages']:
-            stage = router.routeStage(stageDict)
-
-        pipeline = Trainer(
-            name=name,
-            model=router.getStage(pipeDict['model']),
-            trainOpt=pipeDict['trainOpt'],
-            costFn=router.routeFn(pipeDict['costFn']),
-            decisionFn=router.routeFn(pipeDict['decisionFn']),
-            outputFolder=outputFolder,
-            configFilename=configFilename,
-            seed=pipeDict['seed'] if pipeDict.has_key('seed') else 1000
-        )
-        return pipeline
-
     def shuffleData(self, X, T):
         shuffle = np.arange(0, X.shape[0])
         shuffle = self.random.permutation(shuffle)
@@ -65,16 +36,12 @@ class Trainer:
         T = T[shuffle]
         return X, T
 
-    def train(self,
-              trainInput,
-              trainTarget,
-              testInput=None,
-              testTarget=None):
+    def train(self, trainInput, trainTarget):
         if not os.path.exists(self.outputFolder):
             os.makedirs(self.outputFolder)
-        if self.configFilename is not None:
+        if self.model.configFilename is not None:
             shutil.copyfile(
-                self.configFilename,
+                self.model.configFilename,
                 os.path.join(self.outputFolder, self.name + '.yaml'))
         trainOpt = self.trainOpt
         needValid =  trainOpt['needValid'] if trainOpt.has_key('needValid') else False
@@ -84,10 +51,10 @@ class Trainer:
         if needValid:
             trainInput, trainTarget, validInput, validTarget = \
                 self.splitData(trainInput, trainTarget, heldOutRatio, xvalidNo)
+            VX = validInput
+            VT = validTarget
         X = trainInput
-        VX = validInput
         T = trainTarget
-        VT = validTarget
         N = trainInput.shape[0]
         numEpoch = trainOpt['numEpoch']
         calcError = trainOpt['calcError']
@@ -135,7 +102,7 @@ class Trainer:
                 T_bat = T[batchStart:batchEnd]
 
                 # Loss
-                Etmp, dEdY = self.costFn(Y_bat, T_bat)
+                Etmp, dEdY = self.model.costFn(Y_bat, T_bat)
                 E += np.sum(Etmp) * numExThisBat / float(N)
 
                 # Backpropagate
@@ -165,7 +132,7 @@ class Trainer:
             # Run validation
             if needValid:
                 VY = self.model.forward(VX, dropout=False)
-                VE, dVE = self.costFn(VY, VT)
+                VE, dVE = self.model.costFn(VY, VT)
                 VE = np.sum(VE)
                 VEtotal[epoch] = VE
                 if calcError:
@@ -192,29 +159,6 @@ class Trainer:
 
         if needWriteRecord and not everyEpoch:
             self.writeRecordAll(numEpoch, Etotal, Rtotal, VEtotal, VRtotal)
-
-        if testInput is not None and testTarget is not None:
-            self.test(testInput, testTarget)
-
-    def test(self, X, T):
-        N = X.shape[0]
-        numExPerBat = 100
-        batchStart = 0
-        Y = None
-        while batchStart < N:
-            # Batch info
-            batchEnd = min(N, batchStart + numExPerBat)
-            Ytmp = self.model.forward(X[batchStart:batchEnd], dropout=False)
-            if Y is None:
-                Yshape = np.copy(Ytmp.shape)
-                Yshape[0] = N
-                Y = np.zeros(Yshape)
-            Y[batchStart:batchEnd] = Ytmp
-            batchStart += numExPerBat
-
-        rate, correct, total = self.calcRate(Y, T)
-        print 'SR: %.4f' % rate
-        return Y
 
     def plotFigs(self, epoch, Etotal, VEtotal, calcError, Rtotal=None, VRtotal=None):
         plt.figure(1)
@@ -275,11 +219,6 @@ class Trainer:
         if filename is None:
             filename = self.modelFilename
         np.save(filename, self.model.getWeights())
-        pass
-
-    def loadWeights(self, weightsFilename):
-        weights = np.load(weightsFilename)
-        self.model.loadWeights(weights)
         pass
 
     def savePickle(self, filename=None):

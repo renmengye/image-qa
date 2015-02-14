@@ -1,6 +1,6 @@
 from stage import *
 
-class LinearDict(Stage):
+class LUT(Stage):
     def __init__(self,
                  inputDim,
                  outputDim,
@@ -106,9 +106,9 @@ class LinearDict(Stage):
         return None
 
 if __name__ == '__main__':
-    lindict = LinearDict(
+    lut = LUT(
         inputDim=5,
         outputDim=2,
         initRange=0.01,
         initSeed=2)
-    lindict.chkgrd()
+    lut.chkgrd()

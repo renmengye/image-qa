@@ -1,6 +1,8 @@
-from func import *
 import sys
 import os
+
+from code.nn.func import *
+
 imageFolder = '../../data/nyu-depth-v2/jpg/'
 
 def renderHtml(X, Y, T, questionArray, answerArray, topK):

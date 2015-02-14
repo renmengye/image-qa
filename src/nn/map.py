@@ -98,7 +98,7 @@ class Map(Stage):
         return dEdX if self.outputdEdX else None
 
 if __name__ == '__main__':
-    from active_func import *
+    from code.nn.active_func import *
     map_ = Map(
         inputDim=2,
         outputDim=1,
