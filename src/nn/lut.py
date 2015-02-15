@@ -45,50 +45,6 @@ class LUT(Stage):
         self.Y = 0
         pass
 
-    def chkgrd(self):
-        X = np.array([3])
-        T = np.array([0.1, 0.3])
-        Y = self.forward(X)
-        E, dEdY = meanSqErr(Y, T)
-        dEdX = self.backward(dEdY)
-        dEdW = self.dEdW
-        eps = 1e-3
-        dEdWTmp = np.zeros(self.W.shape)
-        for i in range(0, self.W.shape[0]):
-            for j in range(0, self.W.shape[1]):
-                self.W[i,j] += eps
-                Y = self.forward(X)
-                Etmp1, d1 = meanSqErr(Y, T)
-
-                self.W[i,j] -= 2 * eps
-                Y = self.forward(X)
-                Etmp2, d2 = meanSqErr(Y, T)
-
-                dEdWTmp[i,j] = (Etmp1 - Etmp2) / 2.0 / eps
-                self.W[i,j] += eps
-
-        X = np.array([3, 4, 1, 0])
-        T = np.array([[0.1, 0.4], [-1.2, 1.5], [3.3, -1.1], [2.0, 0.01]])
-        Y = self.forward(X)
-        E, dEdY = meanSqErr(Y, T)
-        dEdW, dEdX = self.backward(dEdY)
-        dEdWTmp = np.zeros(self.W.shape)
-        for i in range(0, self.W.shape[0]):
-            for j in range(0, self.W.shape[1]):
-                self.W[i,j] += eps
-                Y = self.forward(X)
-                Etmp1, d1 = meanSqErr(Y, T)
-
-                self.W[i,j] -= 2 * eps
-                Y = self.forward(X)
-                Etmp2, d2 = meanSqErr(Y, T)
-
-                dEdWTmp[i,j] = (Etmp1 - Etmp2) / 2.0 / eps
-                self.W[i,j] += eps
-
-        print "haha"
-        pass
-
     def forward(self, X):
         X = X.reshape(X.size)
         Y = np.zeros((X.shape[0], self.outputDim))
@@ -104,11 +60,3 @@ class LUT(Stage):
         for n in range(0, X.shape[0]):
             self.dEdW[:, X[n]] += dEdY[n, :]
         return None
-
-if __name__ == '__main__':
-    lut = LUT(
-        inputDim=5,
-        outputDim=2,
-        initRange=0.01,
-        initSeed=2)
-    lut.chkgrd()

@@ -72,45 +72,6 @@ class LSTM(Stage):
         self.Go = 0
         pass
 
-    def chkgrd(self):
-        X = np.array([[[0.1, 1]], [[1, 0.5]], [[0.2, -0.2]], [[1, 0.3]], [[0.3, -0.2]], [[1, -1]], [[-0.1, 2.0]], [[1, -2]]])
-        T = np.array([[[0]], [[0]], [[1.0]], [[1]], [[1]], [[1]], [[0.0]], [[1.0]]])
-        Y = self.forward(X)
-        E, dEdY = simpleSumDeriv(T, Y)
-        dEdX = self.backward(dEdY)
-        dEdW = self.dEdW
-        eps = 1e-3
-        dEdWTmp = np.zeros(self.W.shape)
-        dEdXTmp = np.zeros(X.shape)
-        for i in range(0, self.W.shape[0]):
-            for j in range(0, self.W.shape[1]):
-                self.W[i,j] += eps
-                Y = self.forward(X)
-                Etmp1, d1 = simpleSumDeriv(T, Y)
-
-                self.W[i,j] -= 2 * eps
-                Y = self.forward(X)
-                Etmp2, d2 = simpleSumDeriv(T, Y)
-
-                dEdWTmp[i,j] = (Etmp1 - Etmp2) / 2.0 / eps
-                self.W[i,j] += eps
-        for n in range(0, X.shape[0]):
-            for t in range(0, X.shape[1]):
-                for j in range(0, X.shape[2]):
-                    X[n, t, j] += eps
-                    Y = self.forward(X)
-                    Etmp1, d1 = simpleSumDeriv(T, Y)
-
-                    X[n, t, j] -= 2 * eps
-                    Y = self.forward(X)
-                    Etmp2, d2 = simpleSumDeriv(T, Y)
-
-                    dEdXTmp[n, t, j] = (Etmp1 - Etmp2) / 2.0 / eps
-                    X[n, t, j] += eps
-
-        print "haha"
-        pass
-
     def forward(self, X):
         Y, C, Z, Gi, Gf, Go, Xend = \
             lstmx.forwardPassN(
@@ -135,12 +96,3 @@ class LSTM(Stage):
                                 self.multiErr,self.outputdEdX,
                                 self.W)
         return dEdX if self.outputdEdX else None
-
-if __name__ == '__main__':
-    lstm = LSTM(
-        inputDim=2,
-        outputDim=2,
-        initRange=0.01,
-        initSeed=2,
-        multiErr=True)
-    lstm.chkgrd()

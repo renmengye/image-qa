@@ -89,7 +89,7 @@ class Plotter:
         plt.draw()
         plt.savefig(self.lossFigFilename)
 
-        if self.trainer.trainOpt['calcRate']:
+        if self.trainer.trainOpt['calcError']:
             plt.figure(2)
             plt.clf()
             plt.plot(np.arange(self.epoch + 1),
@@ -117,13 +117,11 @@ class Trainer:
         self.trainOpt = trainOpt
         self.startTime = time.time()
         self.random = np.random.RandomState(seed)
-
         numEpoch = trainOpt['numEpoch']
         self.loss = np.zeros(numEpoch)
         self.validLoss = np.zeros(numEpoch)
         self.rate = np.zeros(numEpoch)
         self.validRate = np.zeros(numEpoch)
-        pass
 
     @staticmethod
     def splitData(trainInput, trainTarget, heldOutRatio, validNumber):
