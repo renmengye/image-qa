@@ -11,6 +11,7 @@ stages:
       cutOffZeroEnd: false
       multiErr: true
       learningRate: 0.8
+      momentum: 0.9
       gradientClip: 0.0
       weightClip: 0.0
       weightRegConst: 0.0
@@ -19,20 +20,23 @@ stages:
     - name: unfold
       type: timeUnfold
     - name: sigmoid
-      type: sigmoid
+      type: map
+      activeFn: sigmoid
       inputDim: 5
       outputDim: 1
       initRange: 0.01
       initSeed: 3
       learningRate: 0.01
+      momentum: 0.9
       gradientClip: 0.0
       weightClip: 0.0
       annealConst: 0.0
       weightRegConst: 0.0
-    - type: timeFold
+    - name: fold
+      type: timeFold
       timespan: 8
     - name: all
-      type:sequential
+      type: sequential
       stages:
           - lstm
           - unfold

@@ -1,8 +1,8 @@
 import yaml
 import router
 
-def load(configFilename):
-    with open(configFilename) as f:
+def load(modelSpecFilename):
+    with open(modelSpecFilename) as f:
         modelDict = yaml.load(f)
 
     for stageDict in modelDict['stages']:
@@ -13,6 +13,6 @@ def load(configFilename):
     model = router.getStage(modelDict['model'])
     model.getCost = costFn
     model.predict = decisionFn
-    model.configFilename = configFilename
+    model.specFilename = modelSpecFilename
 
     return model

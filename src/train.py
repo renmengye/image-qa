@@ -36,7 +36,8 @@ def readFlags():
 
 if __name__ == '__main__':
     name, modelFilename, configFilename, trainDataFilename, outputFolder = readFlags()
-    trainOpt = yaml.load(configFilename)
+    with open(configFilename) as f:
+        trainOpt = yaml.load(f)
     trainData = np.load(trainDataFilename)
     trainInput = trainData[0]
     trainTarget = trainData[1]

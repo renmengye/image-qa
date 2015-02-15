@@ -87,3 +87,10 @@ def simpleSumDeriv(T, Y):
 
 def simpleSumDecision(Y):
     return (simpleSum(Y) > 0.5).astype(int)
+
+def calcRate(model, Y, T):
+    Yfinal = model.predict(Y)
+    correct = np.sum(Yfinal.reshape(Yfinal.size) == T.reshape(T.size))
+    total = Yfinal.size
+    rate = correct / float(total)
+    return rate, correct, total

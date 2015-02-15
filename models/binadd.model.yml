@@ -11,6 +11,7 @@ stages:
       cutOffZeroEnd: false
       multiErr: true
       learningRate: 0.8
+      momentum: 0.9
       gradientClip: 0.0
       weightClip: 0.0
       weightRegConst: 0.0
@@ -26,6 +27,7 @@ stages:
       initRange: 0.01
       initSeed: 3
       learningRate: 0.01
+      momentum: 0.9
       gradientClip: 0.0
       weightClip: 0.0
       annealConst: 0.0
