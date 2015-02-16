@@ -102,6 +102,7 @@ class Plotter:
             plt.title('Train/Valid Error Curve')
             plt.draw()
             plt.savefig(self.errFigFilename)
+        self.epoch += 1
 
 class Trainer:
     def __init__(self,
@@ -133,8 +134,8 @@ class Trainer:
             trainInput = trainInput[s:]
             trainTarget = trainTarget[s:]
         else:
-            trainInput = np.concatenate((trainInput[0:start], trainInput[s:]))
-            trainTarget = np.concatenate((trainTarget[0:start], trainTarget[s:]))
+            trainInput = np.concatenate((trainInput[0:start], trainInput[start + s:]))
+            trainTarget = np.concatenate((trainTarget[0:start], trainTarget[start + s:]))
         return trainInput, trainTarget, validInput, validTarget
 
     def shuffleData(self, X, T):
@@ -246,7 +247,10 @@ class Trainer:
             # Plot train curves
             if trainOpt['plotFigs']:
                 plotter.plot()
-
+        if trainOpt.has_key('sendEmail') and trainOpt['sendEmail']:
+            emailCommand = ('mutt renmengye@gmail.com -s "Experiment Summary %s" -a "%s" -a "%s" < "%s"'
+                 % (self.name, plotter.lossFigFilename, plotter.errFigFilename, logger.outFilename))
+            os.system(emailCommand)
     def save(self, filename=None):
         if filename is None:
             filename = self.modelFilename

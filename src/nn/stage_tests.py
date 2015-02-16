@@ -1,6 +1,8 @@
 from lstm import *
 from map import *
 from lut import *
+from inner_prod import *
+from time_sum import *
 from active_func import *
 import unittest
 import numpy as np
@@ -13,21 +15,25 @@ class StageTests(unittest.TestCase):
         dEdX = self.stage.backward(dEdY)
         dEdW = self.stage.dEdW
         eps = 1e-3
-        dEdWTmp = np.zeros(W.shape)
         dEdXTmp = np.zeros(X.shape)
-        for i in range(0, self.stage.W.shape[0]):
-            for j in range(0, self.stage.W.shape[1]):
-                self.stage.W[i,j] += eps
-                Y = self.stage.forward(X)
-                Etmp1, d1 = self.costFn(Y, T)
 
-                self.stage.W[i,j] -= 2 * eps
-                Y = self.stage.forward(X)
-                Etmp2, d2 = self.costFn(Y, T)
+        if hasattr(W, 'shape'):
+            dEdWTmp = np.zeros(W.shape)
+            for i in range(0, self.stage.W.shape[0]):
+                for j in range(0, self.stage.W.shape[1]):
+                    self.stage.W[i,j] += eps
+                    Y = self.stage.forward(X)
+                    Etmp1, d1 = self.costFn(Y, T)
 
-                dEdWTmp[i,j] = (Etmp1 - Etmp2) / 2.0 / eps
-                self.stage.W[i,j] += eps
+                    self.stage.W[i,j] -= 2 * eps
+                    Y = self.stage.forward(X)
+                    Etmp2, d2 = self.costFn(Y, T)
 
+                    dEdWTmp[i,j] = (Etmp1 - Etmp2) / 2.0 / eps
+                    self.stage.W[i,j] += eps
+        else:
+            dEdW = 0
+            dEdWTmp = 0  
         if self.testInputErr:
             if len(X.shape) == 3:
                 for n in range(0, X.shape[0]):
@@ -231,6 +237,31 @@ class LUT_Tests(StageTests):
         dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
         self.chkgrd(dEdW, dEdWTmp)
 
+class InnerProduct_Tests(StageTests):
+    """Inner product tests"""
+    def setUp(self):
+        self.stage = InnerProduct()
+        self.testInputErr = True
+        self.costFn = meanSqErr
+    def test_grad(self):
+        random = np.random.RandomState(2)
+        X = random.uniform(-0.1, 0.1, (6,2,5))
+        T = random.uniform(-0.1, 0.1, (6,1))
+        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
+        self.chkgrd(dEdX, dEdXTmp)
+
+class TimeSum_Tests(StageTests):
+    def setUp(self):
+        self.stage = TimeSum()
+        self.testInputErr = True
+        self.costFn = meanSqErr
+    def test_grad(self):
+        random = np.random.RandomState(2)
+        X = random.uniform(-0.1, 0.1, (6,3,5))
+        T = random.uniform(-0.1, 0.1, (6,5))
+        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
+        self.chkgrd(dEdX, dEdXTmp)
+
 if __name__ == '__main__':
     suite = unittest.TestSuite()
     suite.addTests(
@@ -249,4 +280,8 @@ if __name__ == '__main__':
         unittest.TestLoader().loadTestsFromTestCase(MapSoftmax_Tests))
     suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(LUT_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(InnerProduct_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(TimeSum_Tests))
     unittest.TextTestRunner(verbosity=2).run(suite)

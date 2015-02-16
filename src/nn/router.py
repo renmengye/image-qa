@@ -3,6 +3,8 @@ from lut import *
 from map import *
 from time_unfold import *
 from time_fold import *
+from time_sum import *
+from inner_prod import *
 from dropout import *
 from sequential import *
 from parallel import *
@@ -11,6 +13,8 @@ from active_func import *
 def routeFn(name):
     if name == 'crossEntOne':
         return crossEntOne
+    if name == 'crossEntOnePenalty':
+        return crossEntOnePenalty
     elif name == 'crossEntIdx':
         return crossEntIdx
     elif name == 'hardLimit':
@@ -23,6 +27,8 @@ def routeFn(name):
         return SoftmaxActiveFn
     elif name == 'identity':
         return IdentityActiveFn
+    elif name == 'meansq':
+        return meanSqErr
     else:
         raise Exception('Function ' + name + ' not found.')
     pass
@@ -118,6 +124,16 @@ def routeStage(stageDict):
     elif stageDict['type'] == 'timeUnfold':
         stage = TimeUnfold(
             name=stageDict['name'])
+    elif stageDict['type'] == 'timeSum':
+        stage = TimeSum(
+            name=stageDict['name'])
+    elif stageDict['type'] == 'innerProd':
+        stage = InnerProduct(
+            name=stageDict['name'],
+            learningRate=learningRate,
+            learningRateAnnealConst=learningRateAnnealConst,
+            momentum=momentum,
+            deltaMomentum=deltaMomentum)
     elif stageDict['type'] == 'timeFold':
         stage = TimeFold(
             name=stageDict['name'],

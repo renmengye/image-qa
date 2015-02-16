@@ -33,6 +33,20 @@ class SigmoidActiveFn():
         dEdZ = dEdY * Y * (1 - Y)
         return dEdZ
 
+class TanhActiveFn():
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def forward(Z):
+        Y = np.tanh(Z)
+        return Y
+
+    @staticmethod
+    def backward(dEdY, Y, Z):
+        dEdZ = dEdY * (1 - Y * Y)
+        return dEdZ
+
 class IdentityActiveFn():
     def __init__(self):
         pass
