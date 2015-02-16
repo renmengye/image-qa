@@ -1,4 +1,4 @@
-numEpoch: 200
+numEpoch: 3
 heldOutRatio: 0.1
 xvalidNo: 0
 needValid: true
