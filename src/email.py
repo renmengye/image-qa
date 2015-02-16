@@ -10,13 +10,14 @@ with open(tosend,'r') as f:
     id_s = f.readlines()
 
 for id_ in id_s:
-    errfig = '../results/%s/%s_err.png' %(id_, id_)
-    lossfig = '../results/%s/%s_loss.png' %(id_,id_)
-    csv = '../results/%s/%s.csv' %(id_,id_)
+    i = id_[:-1] # Remove newline character
+    errfig = '../results/%s/%s_err.png' %(i, i)
+    lossfig = '../results/%s/%s_loss.png' %(i,i)
+    csv = '../results/%s/%s.csv' %(i,i)
     emailCommand = ('mutt renmengye@gmail.com -s "Experiment Summary %s" -a "%s" -a "%s" < "%s"'
-         % (id_, lossfig, errfig, csv))
+         % (i, lossfig, errfig, csv))
     os.system(emailCommand)
-    print 'Sent %s' % id_
+    print 'Sent %s' % i
 
 with open(tosend, 'w') as f:
     f.write('')

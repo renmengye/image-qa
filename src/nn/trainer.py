@@ -115,6 +115,7 @@ class Trainer:
                  seed=1000):
         self.model = model
         self.name = name + time.strftime("-%Y%m%d-%H%M%S")
+        self.resultsFolder = outputFolder
         self.outputFolder = os.path.join(outputFolder, self.name)
         self.modelFilename = os.path.join(self.outputFolder, self.name + '.w.npy')
         self.trainOpt = trainOpt
@@ -249,9 +250,14 @@ class Trainer:
             # Plot train curves
             if trainOpt['plotFigs']:
                 plotter.plot()
+
+        # Send email
         if trainOpt.has_key('sendEmail') and trainOpt['sendEmail']:
-            with open(os.path.join(self.outputFolder, 'tosent.txt'), 'a+') as f:
+            print 'Appended to email list.'
+            tosend = os.path.join(self.resultsFolder, 'tosend.txt')  
+            with open(tosend, 'a+') as f:
                 f.write(self.name + '\n')
+
     def save(self, filename=None):
         if filename is None:
             filename = self.modelFilename
