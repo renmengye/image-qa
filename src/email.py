@@ -1,6 +1,12 @@
 import os
+import sys
 
-with open('../results/tosend.txt') as f:
+tosend = '../results/tosend.txt'
+if not os.path.exists(tosend):
+    print 'No email task detected.'
+    sys.exit()
+
+with open(tosend,'r') as f:
     id_s = f.readlines()
 
 for id_ in id_s:
@@ -10,3 +16,8 @@ for id_ in id_s:
     emailCommand = ('mutt renmengye@gmail.com -s "Experiment Summary %s" -a "%s" -a "%s" < "%s"'
          % (id_, lossfig, errfig, csv))
     os.system(emailCommand)
+    print 'Sent %s' % id_
+
+with open(tosend, 'w') as f:
+    f.write('')
+

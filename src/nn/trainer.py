@@ -93,9 +93,11 @@ class Plotter:
             plt.figure(2)
             plt.clf()
             plt.plot(np.arange(self.epoch + 1),
-                     self.trainer.rate[0 : self.epoch + 1], 'b-x')
+                     1 - self.trainer.rate[0 : self.epoch + 1], 
+                     'b-x')
             plt.plot(np.arange(self.epoch + 1),
-                     self.trainer.validRate[0 : self.epoch + 1], 'g-o')
+                     1 - self.trainer.validRate[0 : self.epoch + 1], 
+                     'g-o')
             plt.legend(['Train', 'Valid'])
             plt.xlabel('Epoch')
             plt.ylabel('Prediction Error')

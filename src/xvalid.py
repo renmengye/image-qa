@@ -12,7 +12,8 @@ if __name__ == '__main__':
     trainData = np.load(trainDataFilename)
     trainInput = trainData[0]
     trainTarget = trainData[1]
-    trainOpt = yaml.load(configFilename)
+    with open(configFilename) as f:
+        trainOpt = yaml.load(f)
 
     for i in range(0, 10):
         trainOpt['xvalidNo'] = i
