@@ -248,9 +248,8 @@ class Trainer:
             if trainOpt['plotFigs']:
                 plotter.plot()
         if trainOpt.has_key('sendEmail') and trainOpt['sendEmail']:
-            emailCommand = ('mutt renmengye@gmail.com -s "Experiment Summary %s" -a "%s" -a "%s" < "%s"'
-                 % (self.name, plotter.lossFigFilename, plotter.errFigFilename, logger.outFilename))
-            os.system(emailCommand)
+            with open(os.path.join(self.outputFolder, 'tosent.txt'), 'a+') as f:
+                f.write(self.name + '\n')
     def save(self, filename=None):
         if filename is None:
             filename = self.modelFilename
