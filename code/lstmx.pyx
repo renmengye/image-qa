@@ -28,7 +28,7 @@ def sliceWeightsSmall(int inputDim,
                     np.ndarray[FLOAT_t, ndim=2] W):
     Wi, Wf, Wc, Wo = sliceWeights(inputDim, outputDim, W)
 
-    Wxi = Wi[:, 0 : outputDim]
+    Wxi = Wi[:, 0 : inputDim]
     Wyi = Wi[:, inputDim : inputDim + outputDim]
     Wci = Wi[:, inputDim + outputDim : inputDim + outputDim + outputDim]
     Wxf = Wf[:, 0 : inputDim]

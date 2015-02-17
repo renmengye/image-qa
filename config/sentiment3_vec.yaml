@@ -4,27 +4,39 @@ stages:
     - type: timeUnfold
     - type: linearDict
       inputDim: 16547
-      outputDim: 4096
-      initSeed: 2
-      initRange: 0.1
-      learningRate: 0.0
-      gradientClip: 5.0
-      weightRegConst: 0.00005
+      outputDim: 300
+      initWeights: ../data/sentiment3/word-embed-0.npy
     - type: timeFold
       timespan: 69
     - type: dropout
       dropoutRate: 0.2
       initSeed: 3
     - type: lstm
-      inputDim: 4096
+      inputDim: 300
       outputDim: 50
       initRange: 0.1
       initSeed: 4
       cutOffZeroEnd: true
+      multiErr: true
+      learningRate: 0.8
+      gradientClip: 0.1
+      weightClip: 20.0
+      weightRegConst: 0.00005
+      annealConst: 0.0
+      outputdEdX: false
+    - type: dropout
+      dropoutRate: 0.5
+      initSeed: 5
+    - type: lstm
+      inputDim: 50
+      outputDim: 50
+      initRange: 0.1
+      initSeed: 6
+      cutOffZeroEnd: true
       multiErr: false
       learningRate: 0.8
       gradientClip: 0.1
-      weightClip: 40.0
+      weightClip: 20.0
       weightRegConst: 0.00005
       annealConst: 0.0
       outputdEdX: false

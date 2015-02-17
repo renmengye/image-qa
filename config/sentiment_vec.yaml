@@ -24,7 +24,7 @@ stages:
       weightClip: 10.0
       weightRegConst: 0.00005
       annealConst: 0.01
-      outputdEdX: false
+      outputdEdX: false    
     - type: dropout
       dropoutRate: 0.5
       initSeed: 5
@@ -68,4 +68,4 @@ trainOpt:
     calcError: true
     stopCost: 0.01
     progress: true
-    displayDw: 7
+    displayDw: -1

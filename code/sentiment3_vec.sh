@@ -1,1 +1,0 @@
-python pipeline_train.py sentiment3_vec -c ../config/sentiment3_vec.yaml -o ../results -d ../data/sentiment3/train-1.npy
