@@ -16,11 +16,12 @@ for id_ in id_s:
     errfig = resultsFolder + '%s/%s_err.png' %(i, i)
     lossfig = resultsFolder + '%s/%s_loss.png' %(i,i)
     csv = resultsFolder + '%s/%s.csv' %(i,i)
-    emailCommand = ('mutt renmengye@gmail.com -s "Experiment Summary %s" -a "%s" -a "%s" < "%s"'
-         % (i, lossfig, errfig, csv))
+    emailCommand = ('mutt renmengye@gmail.com -s "Experiment Summary %s" -a "%s" -a "%s" -a "%s" < "%s"'
+         % (i, lossfig, errfig, csv, csv))
     os.system(emailCommand)
     print 'Sent %s' % i
 
 with open(tosend, 'w') as f:
     f.write('')
 
+print 'Finished.'
