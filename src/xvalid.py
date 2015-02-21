@@ -21,7 +21,7 @@ if __name__ == '__main__':
     for i in range(0, 10):
         trainInput_, trainTarget_, testInput_, testTarget_ = \
         vt.splitData(trainInput, trainTarget, 0.1, i)
-        trainOpt['heldOutRatio'] = 0.05
+        trainOpt['heldOutRatio'] = 0.1
         trainOpt['xvalidNo'] = 0
         trainOpt['needValid'] = true
 
