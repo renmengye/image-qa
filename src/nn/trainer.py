@@ -3,6 +3,8 @@ import sys
 import os
 import shutil
 import matplotlib
+import valid_tool as vt
+from tester import *
 from func import *
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -126,27 +128,7 @@ class Trainer:
         self.validLoss = np.zeros(numEpoch)
         self.rate = np.zeros(numEpoch)
         self.validRate = np.zeros(numEpoch)
-
-    @staticmethod
-    def splitData(trainInput, trainTarget, heldOutRatio, validNumber):
-        s = np.round(trainInput.shape[0] * heldOutRatio)
-        start = s * validNumber
-        validInput = trainInput[start : start + s]
-        validTarget = trainTarget[start : start + s]
-        if validNumber == 0:
-            trainInput = trainInput[s:]
-            trainTarget = trainTarget[s:]
-        else:
-            trainInput = np.concatenate((trainInput[0:start], trainInput[start + s:]))
-            trainTarget = np.concatenate((trainTarget[0:start], trainTarget[start + s:]))
-        return trainInput, trainTarget, validInput, validTarget
-
-    def shuffleData(self, X, T):
-        shuffle = np.arange(0, X.shape[0])
-        shuffle = self.random.permutation(shuffle)
-        X = X[shuffle]
-        T = T[shuffle]
-        return X, T
+        self.stoppedEpoch = 0
 
     def initFolder(self):
         if not os.path.exists(self.outputFolder):
@@ -159,12 +141,12 @@ class Trainer:
     def initData(self, X, T):
         VX = None
         VT = None
-        X, T = self.shuffleData(X, T)
+        X, T = vt.shuffleData(X, T, self.random)
         if self.trainOpt['needValid']:
             X, T, VX, VT = \
-                self.splitData(X, T,
-                               self.trainOpt['heldOutRatio'],
-                               self.trainOpt['xvalidNo'])
+                vt.splitData(X, T,
+                            self.trainOpt['heldOutRatio'],
+                            self.trainOpt['xvalidNo'])
         return X, T, VX, VT
 
     def train(self, trainInput, trainTarget):
@@ -179,6 +161,8 @@ class Trainer:
         logger = Logger(self, csv=trainOpt['writeRecord'])
         logger.logMsg('Trainer ' + self.name)
         plotter = Plotter(self)
+        bestVE = None
+        nAfterBest = 0
 
         # Train loop through epochs
         for epoch in range(0, numEpoch):
@@ -187,7 +171,7 @@ class Trainer:
             total = 0
 
             if trainOpt['shuffle']:
-                X, T = self.shuffleData(X, T)
+                X, T = vt.shuffleData(X, T, self.random)
 
             batchStart = 0
             while batchStart < N:
@@ -228,7 +212,7 @@ class Trainer:
             self.loss[epoch] = E
 
             # Run validation
-            if self.trainOpt['needValid']:
+            if trainOpt['needValid']:
                 VY = self.model.forward(VX, dropout=False)
                 VE, dVE = self.model.getCost(VY, VT)
                 VE = np.sum(VE)
@@ -236,16 +220,23 @@ class Trainer:
                 if calcError:
                     Vrate, correct, total = calcRate(self.model, VY, VT)
                     self.validRate[epoch] = Vrate
+                if bestVE is None or VE < bestVE:
+                    bestVE = VE
+                    nAfterBest = 0
+                    # Save trainer if VE is best
+                    if trainOpt['saveModel']:
+                        self.save()
+                else:
+                    nAfterBest += 1
+                    # Stop training if above tolerance level
+                    if nAfterBest > trainOpt['tolerance']:
+                        break
 
             # Anneal learning rate
             self.model.updateLearningParams(epoch)
 
             # Print statistics
             logger.logTrainStats()
-
-            # Save trainer
-            if trainOpt['saveModel']:
-                self.save()
 
             # Plot train curves
             if trainOpt['plotFigs']:
@@ -257,6 +248,9 @@ class Trainer:
             tosend = os.path.join(self.resultsFolder, 'tosend.txt')  
             with open(tosend, 'a+') as f:
                 f.write(self.name + '\n')
+
+        # Record final epoch number
+        self.stoppedEpoch = epoch
 
     def save(self, filename=None):
         if filename is None:

@@ -22,21 +22,6 @@ def calcPrecision(Y, T):
     print 'rate @ 5: %.4f' % (correctAt5 / float(Y.shape[0]))
     print 'rate @ 10: %.4f' % (correctAt10 / float(Y.shape[0]))
 
-def test(model, X):
-    N = X.shape[0]
-    numExPerBat = 100
-    batchStart = 0
-    while batchStart < N:
-        # Batch info
-        batchEnd = min(N, batchStart + numExPerBat)
-        Ytmp = model.forward(X[batchStart:batchEnd], dropout=False)
-        if Y is None:
-            Yshape = np.copy(Ytmp.shape)
-            Yshape[0] = N
-            Y = np.zeros(Yshape)
-        Y[batchStart:batchEnd] = Ytmp
-        batchStart += numExPerBat
-
 if __name__ == '__main__':
     """
     Usage: test.py id -train trainData.npy -test testData.npy -dict vocabDict.npy
@@ -55,15 +40,16 @@ if __name__ == '__main__':
     testTruthFile = os.path.join('../results/%s' % taskId, '%s.test.t.txt' % taskId)
     modelFile = '../results/%s/%s.model.yml' % (taskId, taskId)
     model = nn.load(modelFile)
-    model.loadWeights('../results/%s/%s.w.npy' % (taskId, taskId))
+    model.loadWeights(
+        np.load('../results/%s/%s.w.npy' % (taskId, taskId)))
     trainData = np.load(trainDataFile)
     testData = np.load(testDataFile)
 
     X = trainData[0]
-    Y = test(model, X)
+    Y = nn.test(model, X)
     T = trainData[1]
     TX = testData[0]
-    TY = test(model, X)
+    TY = nn.test(model, TX)
     TT = testData[1]
     vocabDict = np.load(dictFile)
     answerArray = vocabDict[3]
