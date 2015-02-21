@@ -1,0 +1,12 @@
+numEpoch: 2000
+batchSize: 25
+shuffle: true
+writeRecord: true
+saveModel: true
+plotFigs: true
+everyEpoch: true
+calcError: true
+stopCost: 0.01
+progress: true
+tolerance: 10
+sendEmail: true
