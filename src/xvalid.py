@@ -46,5 +46,5 @@ if __name__ == '__main__':
         trainer.train(trainInput_, trainTarget_)
         testOutput = nn.test(model, testInput_)
         testRate, correct, total = nn.calcRate(model, testOutput, testTarget_)
-        with open(os.path.join(outputFolder, 'result.txt'), 'w+') as f:
+        with open(os.path.join(trainer.outputFolder, 'result.txt'), 'w+') as f:
             f.write('Test rate: %f' % testRate)

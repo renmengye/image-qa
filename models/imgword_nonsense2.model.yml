@@ -30,7 +30,7 @@ stages:
       type: lut
       inputDim: 871
       outputDim: 300
-      initRange: 0.21
+      initRange: 1.0
       initSeed: 2
       learningRate: 0.0
     - name: txtFold
