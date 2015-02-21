@@ -1,7 +1,7 @@
 import nn
+import nn.valid_tool as vt
 import yaml
 import numpy as np
-import valid_tool as vt
 from train import readFlags
 
 '''
