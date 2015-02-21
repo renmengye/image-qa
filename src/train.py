@@ -35,10 +35,10 @@ def readFlags():
     if modelFilename is None:
         raise Exception('Model file not specified')
 
-    return name, modelFilename, configFilename, trainDataFilename, outputFolder
+    return name, modelFilename, configFilename, trainDataFilename, testDataFilename, outputFolder
 
 if __name__ == '__main__':
-    name, modelFilename, configFilename, trainDataFilename, outputFolder = readFlags()
+    name, modelFilename, configFilename, trainDataFilename, testDataFilename, outputFolder = readFlags()
     with open(configFilename) as f:
         trainOpt = yaml.load(f)
     trainData = np.load(trainDataFilename)
@@ -71,7 +71,7 @@ if __name__ == '__main__':
         testTarget = testData[1]
         model = nn.load(modelFilename)
         model.loadWeights(np.load(trainer.modelFilename))
-        testOutput = nn.test(model, testInput, testTarget)
+        testOutput = nn.test(model, testInput)
         testRate, c, t = nn.calcRate(model, testOutput, testTarget)
         with open(os.path.join(trainer.outputFolder, 'result.txt'), 'w+') as f:
             f.write('Test rate: %f' % testRate)

@@ -9,7 +9,7 @@ Usage: python xvalid.py {name} -d {train data} -m {model spec} -c {config} -o {o
 '''
 
 if __name__ == '__main__':
-    name, modelFilename, configFilename, trainDataFilename, outputFolder = readFlags()
+    name, modelFilename, configFilename, trainDataFilename, testDataFilename, outputFolder = readFlags()
     trainData = np.load(trainDataFilename)
     trainInput = trainData[0]
     trainTarget = trainData[1]
