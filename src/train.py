@@ -73,5 +73,5 @@ if __name__ == '__main__':
         model.loadWeights(np.load(trainer.modelFilename))
         testOutput = nn.test(model, testInput, testTarget)
         testRate, c, t = nn.calcRate(model, testOutput, testTarget)
-        with open(os.path.join(outputFolder, 'result.txt'), 'w+') as f:
+        with open(os.path.join(trainer.outputFolder, 'result.txt'), 'w+') as f:
             f.write('Test rate: %f' % testRate)
