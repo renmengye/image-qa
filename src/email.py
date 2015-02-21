@@ -16,8 +16,11 @@ for id_ in id_s:
     errfig = resultsFolder + '%s/%s_err.png' %(i, i)
     lossfig = resultsFolder + '%s/%s_loss.png' %(i,i)
     csv = resultsFolder + '%s/%s.csv' %(i,i)
+    result = resultsFolder + '%s/result.txt'
+    if not os.path.exists(result):
+        result = csv
     emailCommand = ('mutt renmengye@gmail.com -s "Experiment Summary %s" -a "%s" -a "%s" -a "%s" < "%s"'
-         % (i, lossfig, errfig, csv, csv))
+         % (i, lossfig, errfig, csv, result))
     os.system(emailCommand)
     print 'Sent %s' % i
 

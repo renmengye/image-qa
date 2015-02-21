@@ -60,10 +60,3 @@ def crossEntOne(Y, T):
 
 def argmax(Y):
     return np.argmax(Y, axis=-1)
-
-def calcRate(model, Y, T):
-    Yfinal = model.predict(Y)
-    correct = np.sum(Yfinal.reshape(Yfinal.size) == T.reshape(T.size))
-    total = Yfinal.size
-    rate = correct / float(total)
-    return rate, correct, total
