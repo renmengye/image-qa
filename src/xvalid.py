@@ -23,7 +23,7 @@ if __name__ == '__main__':
         vt.splitData(trainInput, trainTarget, 0.1, i)
         trainOpt['heldOutRatio'] = 0.1
         trainOpt['xvalidNo'] = 0
-        trainOpt['needValid'] = true
+        trainOpt['needValid'] = True
 
         model = nn.load(modelFilename)
         trainer = nn.Trainer(
