@@ -55,7 +55,7 @@ if __name__ == '__main__':
 
     # Retrain with all the data
     trainOpt['needValid'] = False
-    trainOpt['numEpoch'] = trainer.stoppedEpoch
+    trainOpt['numEpoch'] = trainer.stoppedEpoch + 1
     model = nn.load(modelFilename)
     trainer = nn.Trainer(
         name=name,

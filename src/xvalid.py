@@ -36,7 +36,7 @@ if __name__ == '__main__':
 
         # Train again with all data, without validation
         trainOpt['needValid'] = False
-        trainOpt['numEpoch'] = trainer.stoppedEpoch
+        trainOpt['numEpoch'] = trainer.stoppedEpoch + 1
         trainer = nn.Trainer(
             name=name + ('-%d' % i),
             model=model,

@@ -162,6 +162,7 @@ class Trainer:
         logger.logMsg('Trainer ' + self.name)
         plotter = Plotter(self)
         bestVE = None
+        bestEpoch = 0
         nAfterBest = 0
 
         # Train loop through epochs
@@ -223,6 +224,7 @@ class Trainer:
                 if bestVE is None or VE < bestVE:
                     bestVE = VE
                     nAfterBest = 0
+                    bestEpoch = epoch
                     # Save trainer if VE is best
                     if trainOpt['saveModel']:
                         self.save()
@@ -231,6 +233,8 @@ class Trainer:
                     # Stop training if above tolerance level
                     if nAfterBest > trainOpt['tolerance']:
                         break
+            else:
+                self.save()
 
             # Anneal learning rate
             self.model.updateLearningParams(epoch)
@@ -250,7 +254,7 @@ class Trainer:
                 f.write(self.name + '\n')
 
         # Record final epoch number
-        self.stoppedEpoch = epoch
+        self.stoppedEpoch = bestEpoch if trainOpt['needValid'] else epoch
 
     def save(self, filename=None):
         if filename is None:
