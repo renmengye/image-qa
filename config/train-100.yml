@@ -11,3 +11,4 @@ everyEpoch: true
 calcError: true
 stopCost: 0.01
 progress: true
+sendEmail: true
