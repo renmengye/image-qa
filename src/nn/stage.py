@@ -26,6 +26,10 @@ class Stage:
         self.dEdW = 0.0
         self.lastdW = 0.0
         self.W = 0.0
+        self.Y = 0.0
+
+    def getValue(self):
+        return self.Y
 
     def forward(self, X):
         """
