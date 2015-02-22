@@ -101,12 +101,35 @@ class QuestionGenerator:
 
         # Find the subject (first NP) and change determiner to 'the'
         traverseFindTopClass(root, 'NP')
+        topNoun = None
         if found[0]:
             np = stack[0][-1]
             while np.className != 'DT' and len(np.children) > 0:
                 np = np.children[0]
-            if np.className == 'DT':
+            if np.className == 'DT' and np.text.lower() == 'a':
                 np.text = 'the'
+            np = stack[0][-1]
+            def lookForNoun(np):
+                if len(np.children) > 0:
+                    for child in np.children:
+                        answer = lookForNoun(child)
+                        if (answer != None):
+                            return answer
+                    return None
+                else:
+                    if np.className == 'NN' or np.className == 'NNS':
+                        return np
+                    else:
+                        return None
+            topNoun = lookForNoun(np)
+
+        # Find the top verb
+        found[0] = False
+        stack[0] = []
+        traverseFindTopClass(root, 'VP')
+        topVP = None
+        if found[0]:
+            topVP = stack[0][-1]
 
         # First look for the position of WHNP
         found[0] = False
@@ -127,10 +150,28 @@ class QuestionGenerator:
             #print item.className,
             if item.className == 'SBAR':
                 insideSBar = True
-            if item.className == 'NP':
-                insideNP = True
-                # Testing
-                whPosition = whStack.index(item)
+            # if item.className == 'SBAR':
+            #     whPosition = whStack.index(item)
+            elif item.className == 'NP':
+                #insideNP = True
+                # Testing!!!!
+                # Now if inside the NP, then move the entire NP
+                # cont = False
+                # for child in item.children:
+                #     if child.className == 'VP':
+                #         if child is not topVP:
+                #             #print 'VP inside NP'
+                #             return False
+                #         else:
+                #             cont = True
+                # if not cont:
+                #     whPosition = whStack.index(item)
+                pass
+
+        # Look for VP
+        found[0] = False
+        stack[0] = []
+        traverseFindTopClass(root, 'VP')
 
         node = root
         parent = root
@@ -139,26 +180,31 @@ class QuestionGenerator:
             node = node.children[0]
         if parent.className == 'WHNP':
         #if root.toSentence().startswith('how many'):
-            print 'WH already at the front'
-            return False
+            #print 'WH already at the front'
+            if found[0]:
+            # Add in missing verbs if possible
+                vpnode = stack[0][-1]
+                vpchild = vpnode.children[0]
+                frontWord = None
+                if vpchild.className == 'VBG': # only doing present, no is/are
+                    verb = 'are' if topNoun != None and topNoun.className == 'NNS' else 'is'
+                    verbnode = TreeNode('VB', verb, [], vpchild.level)
+                    vpnode.children.insert(0, verbnode)
+            return True
         else:
-            print 'The first node is ' + parent.className
-            print root
+            pass
+            #print 'The first node is ' + parent.className
+            #print root
         if insideSBar:
             #print 'Inside SBar'
             return False
-        # if insideNP:
-        #     #print 'Inside NP'
-        #     return False
+        if insideNP:
+            #print 'Inside NP'
+            return False
 
-
-        # Look for VP
-        found[0] = False
-        stack[0] = []
-        traverseFindTopClass(root, 'VP')
 
         if not found[0]:
-            print 'Not found VP'
+            #print 'Not found VP'
             return True
         else:
             vpnode = stack[0][-1]
@@ -222,15 +268,19 @@ class QuestionGenerator:
                 frontWord = vpchild
                 vpnode.children.remove(vpchild)
                 pass
+            elif vpchild.className == 'VBG': # only doing present, no is/are
+                verb = 'are' if topNoun != None and topNoun.className == 'NNS' else 'is'
+                frontWord = TreeNode('VBZ', verb, [], 0)
             if frontWord is not None:
                 # Remove WHNP from its parent
                 whStack[whPosition-1].children.remove(whStack[whPosition])
-                bigS = TreeNode('S', '', [whStack[-1], stack[0][1]], 0)
+                bigS = TreeNode('S', '', [whStack[whPosition], stack[0][1]], 0)
                 stack[0][0].children = [bigS]
                 bigS.children[1].children.insert(0, frontWord)
+                #print root
             else:
-                print 'Not found front word'
-
+                pass
+                #print 'Not found front word'
 
         # reassign levels to the new tree
         root.relevel(0)
@@ -264,11 +314,13 @@ class QuestionGenerator:
 
     def lookupLexname(self, word):
         if self.lexnameDict.has_key(word):
+            #print self.lexnameDict[word]
             return self.lexnameDict[word]
         else:
             synsets = wordnet.synsets(word) # Just pick the first definition
             if len(synsets) > 0:
                 self.lexnameDict[word] = synsets[0].lexname()
+                #print self.lexnameDict[word]
                 return self.lexnameDict[word]
             else:
                 return None
@@ -278,8 +330,25 @@ class QuestionGenerator:
         answer = ['']
         rootsReplaceWhat = [[]] # Unlike in 'how many', here we enumerate all possible 'what's
         def traverse(node):
-            for child in node.children:
-                traverse(child)
+            # For now, not asking any questions inside PP!
+            #if node.className != 'PP':
+            cont = True
+            # Avoid 'what of bike riders' or 'a group of who'
+            # if node.className == 'NP' and \
+            # len(node.children) > 1 and \
+            # node.children[1].className == 'PP' and \
+            # (node.children[1].children[0].text == 'of' or\
+            #     node.children[1].children[0].text == 'with' or\
+            #     node.children[1].children[0].text == 'in'):            
+            if node.className == 'NP' and \
+            len(node.children) > 1 and \
+            node.children[1].className == 'PP':
+                node.children.remove(node.children[1])
+                #cont = False
+            if cont:
+                for child in node.children:
+                    traverse(child)
+
             if node.className == 'NP':
                 replace = False
                 whword = ''
@@ -355,7 +424,7 @@ class QuestionGenerator:
             if r.children[0].children[-1].className != '.':
                 r.children[0].children.append(TreeNode('.', '?', [], 2))
             else:
-                r2.children[0].children[-1].text = '?'
+                r.children[0].children[-1].text = '?'
             if found[0]:
                 self.whMovement(r)
                 yield (r.toSentence().lower(), self.escapeNumber(answer[0].lower()))
@@ -527,15 +596,18 @@ def questionGen():
                 #print rootsList[0]
                 numSentences += 1
                 originalSent = parser.rootsList[0].toSentence()
-                #qaiter = gen.askHowMany(parser.rootsList[0])
-                qaiter = gen.askWhoWhat(parser.rootsList[0])
                 hasItem = False
-                for qaitem in qaiter:
+                for qaitem in gen.askWhoWhat(parser.rootsList[0]):
+                    questionCount += 1
+                    hasItem = True
+                    print ('Question %d:' % questionCount), qaitem[0], 'Answer:', qaitem[1]
+                for qaitem in gen.askHowMany(parser.rootsList[0]):
                     questionCount += 1
                     hasItem = True
                     print ('Question %d:' % questionCount), qaitem[0], 'Answer:', qaitem[1]
                 if hasItem:
                     print 'Original:', originalSent
+                    print '-' * 20
                 del(parser.rootsList[0])
                 if questionCount > 500:
                     break
@@ -548,9 +620,7 @@ def testHook():
     #s = stanfordParse('There are two ovens in a kitchen restaurant , and one of them is being used .')
     #s = stanfordParse('A bathroom with two sinks a bathtub and a shower with lots of lighting from the windows .')
     #s = stanfordParse('A man waits at the crosswalk with his bicycle .')
-    s = stanfordParse('A black cat sits on a bathroom floor next to some laundry .')
-
-
+    s = stanfordParse('A shirtless man wearing a pink towel in the kitchen with a woman drinking wine .')
 
     #print s
     s = s.split('\n')
@@ -560,13 +630,14 @@ def testHook():
         #print s[i]
         parser.parse(s[i] + '\n')
     tree = parser.rootsList[0]
-    #print tree
+    print tree
     qaiter = gen.askWhoWhat(tree)
+    for qaitem in qaiter:
+        print ('Question:'), qaitem[0], 'Answer:', qaitem[1]
+    qaiter = gen.askHowMany(tree)
     for qaitem in qaiter:
         print ('Question:'), qaitem[0], 'Answer:', qaitem[1]
 
 if __name__ == '__main__':
-    testHook()
-    #questionGen()
-
-
+    #testHook()
+    questionGen()
