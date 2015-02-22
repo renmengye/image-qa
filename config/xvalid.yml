@@ -8,5 +8,5 @@ everyEpoch: true
 calcError: true
 stopCost: 0.01
 progress: true
-tolerance: 10
+tolerance: 20
 sendEmail: true

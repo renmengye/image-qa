@@ -216,12 +216,11 @@ class Trainer:
             if trainOpt['needValid']:
                 VY = self.model.forward(VX, dropout=False)
                 VE, dVE = self.model.getCost(VY, VT)
-                VE = np.sum(VE)
                 self.validLoss[epoch] = VE
                 if calcError:
                     Vrate, correct, total = calcRate(self.model, VY, VT)
                     self.validRate[epoch] = Vrate
-                if bestVE is None or VE < bestVE:
+                if (bestVE is None) or (VE < bestVE):
                     bestVE = VE
                     nAfterBest = 0
                     bestEpoch = epoch
@@ -234,7 +233,8 @@ class Trainer:
                     if nAfterBest > trainOpt['tolerance']:
                         break
             else:
-                self.save()
+                if trainOpt['saveModel']:
+                    self.save()
 
             # Anneal learning rate
             self.model.updateLearningParams(epoch)
