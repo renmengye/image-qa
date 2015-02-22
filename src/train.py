@@ -54,19 +54,19 @@ if __name__ == '__main__':
     )
     trainer.train(trainInput, trainTarget)
 
-    # Retrain with all the data
-    trainOpt['needValid'] = False
-    trainOpt['numEpoch'] = trainer.stoppedEpoch + 1
-    model = nn.load(modelFilename)
-    trainer = nn.Trainer(
-        name=name,
-        model=model,
-        trainOpt=trainOpt,
-        outputFolder=outputFolder
-    )
-    trainer.train(trainInput, trainTarget)
-
     if testDataFilename is not None:
+        # Retrain with all the data
+        trainOpt['needValid'] = False
+        trainOpt['numEpoch'] = trainer.stoppedEpoch + 1
+        model = nn.load(modelFilename)
+        trainer = nn.Trainer(
+            name=name,
+            model=model,
+            trainOpt=trainOpt,
+            outputFolder=outputFolder
+        )
+        trainer.train(trainInput, trainTarget)
+
         testData = np.load(testDataFilename)
         testInput = testData[0]
         testTarget = testData[1]

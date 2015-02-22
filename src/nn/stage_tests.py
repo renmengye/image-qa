@@ -201,7 +201,7 @@ class MapSigmoid_Tests(StageTests):
         self.chkgrd(dEdW, dEdWTmp)
         self.chkgrd(dEdX, dEdXTmp)
 
-class MapSoftmax_Tests(StageTests):
+class MapSigmoid_CrossEnt_Tests(StageTests):
     """Sigmoid map tests"""
     def setUp(self):
         self.stage = Map(
@@ -211,11 +211,49 @@ class MapSoftmax_Tests(StageTests):
             initSeed=1,
             activeFn=SigmoidActiveFn)
         self.testInputErr = True
+        self.costFn = crossEntOne
+    def test_grad(self):
+        random = np.random.RandomState(2)
+        X = random.uniform(-0.1, 0.1, (6,5))
+        T = random.uniform(0, 1, (6,3)).astype(int)
+        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
+        self.chkgrd(dEdW, dEdWTmp)
+        self.chkgrd(dEdX, dEdXTmp)
+
+class MapSoftmax_Tests(StageTests):
+    """Sigmoid map tests"""
+    def setUp(self):
+        self.stage = Map(
+            inputDim=5,
+            outputDim=3,
+            initRange=0.1,
+            initSeed=1,
+            activeFn=SoftmaxActiveFn)
+        self.testInputErr = True
         self.costFn = meanSqErr
     def test_grad(self):
         random = np.random.RandomState(2)
         X = random.uniform(-0.1, 0.1, (6,5))
         T = random.uniform(-0.1, 0.1, (6,3))
+        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
+        self.chkgrd(dEdW, dEdWTmp)
+        self.chkgrd(dEdX, dEdXTmp)
+
+class MapSoftmax_CrossEnt_Tests(StageTests):
+    """Linear map tests"""
+    def setUp(self):
+        self.stage = Map(
+            inputDim=5,
+            outputDim=3,
+            initRange=0.1,
+            initSeed=1,
+            activeFn=SoftmaxActiveFn)
+        self.testInputErr = True
+        self.costFn = crossEntIdx
+    def test_grad(self):
+        random = np.random.RandomState(2)
+        X = random.uniform(-0.1, 0.1, (6,5))
+        T = random.uniform(0, 2, (6)).astype(int)
         dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
         self.chkgrd(dEdW, dEdWTmp)
         self.chkgrd(dEdX, dEdXTmp)
@@ -277,7 +315,11 @@ if __name__ == '__main__':
     suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(MapSigmoid_Tests))
     suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(MapSigmoid_CrossEnt_Tests))
+    suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(MapSoftmax_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(MapSoftmax_CrossEnt_Tests))
     suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(LUT_Tests))
     suite.addTests(

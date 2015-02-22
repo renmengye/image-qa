@@ -14,35 +14,16 @@ def sigmoidFn(X):
 
 def crossEntIdx(Y, T):
     eps = 1e-5
-    if len(Y.shape) == 1:
-        E = -np.log(Y[T] + eps)
-        dEdY = np.zeros(Y.shape)
-        dEdY[T] = -1 / (Y[T] + eps)
-    elif len(Y.shape) == 2:
-        T = T.reshape(T.size)
-        N = Y.shape[0]
-        E = 0.0
-        for n in range(0, N):
-            E  += -np.log(Y[n, T[n]] + eps)
-        E /= float(N)
-        dEdY = np.zeros(Y.shape)
-        for n in range(0, N):
-            dEdY[n, T[n]] = -1 / (Y[n, T[n]] + eps)
-        dEdY /= float(N)
-    elif len(Y.shape) == 3:
-        N = Y.shape[0]
-        timespan = Y.shape[1]
-        T = T.reshape(T.shape[0], T.shape[1])
-        E = np.zeros(N)
-        for n in range(0, N):
-            for t in range(0, timespan):
-                E[n] += -np.log(Y[n, t, T[n, t]] + eps)
-        E /= float(N) * float(timespan)
-        dEdY = np.zeros(Y.shape, float)
-        for n in range(0, N):
-            for t in range(0, timespan):
-                dEdY[n, t, T[n, t]] += -1 / (Y[n, t, T[n, t]] + eps)
-        dEdY /= float(N) * float(timespan)
+    Y2 = Y.reshape(Y.size / Y.shape[-1], Y.shape[-1])
+    T2 = T.reshape(T.size)
+    E = 0.0
+    dEdY = np.zeros(Y2.shape, float)
+    for n in range(0, Y2.shape[0]):
+        E += -np.log(Y2[n, T2[n]] + eps)
+        dEdY[n, T2[n]] = -1 / (Y2[n, T2[n]] + eps)
+    E /= Y2.shape[0]
+    dEdY /= Y2.shape[0]
+    dEdY = dEdY.reshape(Y.shape)
     return E, dEdY
 
 def crossEntOne(Y, T):

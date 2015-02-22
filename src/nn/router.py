@@ -27,7 +27,7 @@ def routeFn(name):
         return SoftmaxActiveFn
     elif name == 'identity':
         return IdentityActiveFn
-    elif name == 'meansq':
+    elif name == 'mse':
         return meanSqErr
     else:
         raise Exception('Function ' + name + ' not found.')

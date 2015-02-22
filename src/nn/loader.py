@@ -1,5 +1,6 @@
 import yaml
 import router
+from model import *
 
 def load(modelSpecFilename):
     with open(modelSpecFilename) as f:
@@ -10,9 +11,9 @@ def load(modelSpecFilename):
 
     costFn=router.routeFn(modelDict['costFn'])
     decisionFn=router.routeFn(modelDict['decisionFn'])
-    model = router.getStage(modelDict['model'])
-    model.getCost = costFn
-    model.predict = decisionFn
-    model.specFilename = modelSpecFilename
+    model = Model(router.getStage(modelDict['model']),
+        costFn=costFn,
+        decisionFn=decisionFn,
+        specFilename=modelSpecFilename)
 
     return model
