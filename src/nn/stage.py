@@ -31,6 +31,9 @@ class Stage:
     def getValue(self):
         return self.Y
 
+    def getGradient(self):
+        return self.dEdW
+
     def forward(self, X):
         """
         Abstract method. Forward pass input to the stage.
@@ -49,12 +52,15 @@ class Stage:
         return
 
     def updateWeights(self):
+        self._updateWeights(self.dEdW)
+
+    def _updateWeights(self, dEdW):
         if self.gradientClip > 0.0:
-            self.dEdWnorm = np.sqrt(np.sum(np.power(self.dEdW, 2)))
+            self.dEdWnorm = np.sqrt(np.sum(np.power(dEdW, 2)))
             if self.dEdWnorm > self.gradientClip:
-                self.dEdW *= self.gradientClip / self.dEdWnorm
+                dEdW *= self.gradientClip / self.dEdWnorm
         if self.currentLearningRate > 0.0:
-            self.lastdW = -self.currentLearningRate * self.dEdW + \
+            self.lastdW = -self.currentLearningRate * dEdW + \
                            self.momentum * self.lastdW
             self.W += self.lastdW
         if self.weightRegConst > 0.0:
@@ -88,4 +94,3 @@ class Stage:
 
     def loadWeights(self, W):
         self.W = W
-        return

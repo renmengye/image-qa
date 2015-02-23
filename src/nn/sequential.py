@@ -40,4 +40,3 @@ class Sequential(Stage):
     def loadWeights(self, W):
         for i in range(W.shape[0]):
             self.stages[i].loadWeights(W[i])
-        return
