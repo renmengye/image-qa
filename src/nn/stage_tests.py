@@ -3,7 +3,6 @@ from map import *
 from lut import *
 from inner_prod import *
 from time_sum import *
-from active_func import *
 from recurrent import *
 import unittest
 import numpy as np
@@ -11,9 +10,9 @@ import numpy as np
 class StageTests(unittest.TestCase):
     def calcgrd(self, X, T):
         W = self.stage.W
-        Y = self.stage.forward(X)
+        Y = self.model.forward(X)
         E, dEdY = self.costFn(Y, T)
-        dEdX = self.stage.backward(dEdY)
+        dEdX = self.model.backward(dEdY)
         dEdW = self.stage.dEdW
         eps = 1e-3
         dEdXTmp = np.zeros(X.shape)
@@ -23,11 +22,11 @@ class StageTests(unittest.TestCase):
             for i in range(0, self.stage.W.shape[0]):
                 for j in range(0, self.stage.W.shape[1]):
                     self.stage.W[i,j] += eps
-                    Y = self.stage.forward(X)
+                    Y = self.model.forward(X)
                     Etmp1, d1 = self.costFn(Y, T)
 
                     self.stage.W[i,j] -= 2 * eps
-                    Y = self.stage.forward(X)
+                    Y = self.model.forward(X)
                     Etmp2, d2 = self.costFn(Y, T)
 
                     dEdWTmp[i,j] = (Etmp1 - Etmp2) / 2.0 / eps
@@ -41,11 +40,11 @@ class StageTests(unittest.TestCase):
                     for t in range(0, X.shape[1]):
                         for j in range(0, X.shape[2]):
                             X[n, t, j] += eps
-                            Y = self.stage.forward(X)
+                            Y = self.model.forward(X)
                             Etmp1, d1 = self.costFn(Y, T)
 
                             X[n, t, j] -= 2 * eps
-                            Y = self.stage.forward(X)
+                            Y = self.model.forward(X)
                             Etmp2, d2 = self.costFn(Y, T)
 
                             dEdXTmp[n, t, j] = (Etmp1 - Etmp2) / 2.0 / eps
@@ -55,11 +54,11 @@ class StageTests(unittest.TestCase):
                 for n in range(0, X.shape[0]):
                     for j in range(0, X.shape[1]):
                         X[n, j] += eps
-                        Y = self.stage.forward(X)
+                        Y = self.model.forward(X)
                         Etmp1, d1 = self.costFn(Y, T)
 
                         X[n, j] -= 2 * eps
-                        Y = self.stage.forward(X)
+                        Y = self.model.forward(X)
                         Etmp2, d2 = self.costFn(Y, T)
 
                         dEdXTmp[n, j] = (Etmp1 - Etmp2) / 2.0 / eps
@@ -68,11 +67,11 @@ class StageTests(unittest.TestCase):
             elif len(X.shape) == 1:
                 for j in range(0, X.shape[0]):
                     X[j] += eps
-                    Y = self.stage.forward(X)
+                    Y = self.model.forward(X)
                     Etmp1, d1 = self.costFn(Y, T)
 
                     X[j] -= 2 * eps
-                    Y = self.stage.forward(X)
+                    Y = self.model.forward(X)
                     Etmp2, d2 = self.costFn(Y, T)
 
                     dEdXTmp[j] = (Etmp1 - Etmp2) / 2.0 / eps
@@ -101,6 +100,7 @@ class LSTM_MultiErr_Tests(StageTests):
             initSeed=1,
             multiErr=True,
             cutOffZeroEnd=False)
+        self.model = self.stage
         self.testInputErr = True
         self.costFn = meanSqErr
     def test_grad(self):
@@ -121,6 +121,7 @@ class LSTM_MultiErrCutZero_Tests(StageTests):
             initSeed=1,
             multiErr=True,
             cutOffZeroEnd=True)
+        self.model = self.stage
         self.testInputErr = True
         self.costFn = meanSqErr
     def test_grad(self):
@@ -145,6 +146,7 @@ class LSTM_SingleErr_Tests(StageTests):
             initSeed=1,
             multiErr=False,
             cutOffZeroEnd=False)
+        self.model = self.stage
         self.testInputErr = True
         self.costFn = meanSqErr
     def test_grad(self):
@@ -165,6 +167,7 @@ class LSTM_SingleErrCutZero_Tests(StageTests):
             initSeed=1,
             multiErr=False,
             cutOffZeroEnd=True)
+        self.model = self.stage
         self.testInputErr = True
         self.costFn = meanSqErr
     def test_grad(self):
@@ -186,6 +189,7 @@ class MapIdentity_Tests(StageTests):
             initRange=0.1,
             initSeed=1,
             activeFn=IdentityActiveFn)
+        self.model = self.stage
         self.testInputErr = True
         self.costFn = meanSqErr
     def test_grad(self):
@@ -205,6 +209,7 @@ class MapSigmoid_Tests(StageTests):
             initRange=0.1,
             initSeed=1,
             activeFn=SigmoidActiveFn)
+        self.model = self.stage
         self.testInputErr = True
         self.costFn = meanSqErr
     def test_grad(self):
@@ -224,6 +229,7 @@ class MapSigmoid_CrossEnt_Tests(StageTests):
             initRange=0.1,
             initSeed=1,
             activeFn=SigmoidActiveFn)
+        self.model = self.stage
         self.testInputErr = True
         self.costFn = crossEntOne
     def test_grad(self):
@@ -243,6 +249,7 @@ class MapSoftmax_Tests(StageTests):
             initRange=0.1,
             initSeed=1,
             activeFn=SoftmaxActiveFn)
+        self.model = self.stage
         self.testInputErr = True
         self.costFn = meanSqErr
     def test_grad(self):
@@ -262,6 +269,7 @@ class MapSoftmax_CrossEnt_Tests(StageTests):
             initRange=0.1,
             initSeed=1,
             activeFn=SoftmaxActiveFn)
+        self.model = self.stage
         self.testInputErr = True
         self.costFn = crossEntIdx
     def test_grad(self):
@@ -280,6 +288,7 @@ class LUT_Tests(StageTests):
             outputDim=3,
             initRange=0.1,
             initSeed=1)
+        self.model = self.stage
         self.testInputErr = False
         self.costFn = meanSqErr
     def test_grad(self):
@@ -293,6 +302,7 @@ class InnerProduct_Tests(StageTests):
     """Inner product tests"""
     def setUp(self):
         self.stage = InnerProduct()
+        self.model = self.stage
         self.testInputErr = True
         self.costFn = meanSqErr
     def test_grad(self):
@@ -305,6 +315,7 @@ class InnerProduct_Tests(StageTests):
 class TimeSum_Tests(StageTests):
     def setUp(self):
         self.stage = TimeSum()
+        self.model = self.stage
         self.testInputErr = True
         self.costFn = meanSqErr
     def test_grad(self):
@@ -314,8 +325,17 @@ class TimeSum_Tests(StageTests):
         dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
         self.chkgrd(dEdX, dEdXTmp)
 
+# A serious hack. Do not modify.
 class MapSigmoid_Recurrent_Tests(StageTests):
     def setUp(self):
+        self.stage2 = Map_Recurrent(
+            inputDim=5,
+            outputDim=3,
+            initRange=0.1,
+            initSeed=1,
+            name='sigmoid',
+            activeFn=SigmoidActiveFn(),
+            inputsStr=[])
         self.stage = Map_Recurrent(
             inputDim=5,
             outputDim=3,
@@ -324,12 +344,76 @@ class MapSigmoid_Recurrent_Tests(StageTests):
             name='sigmoid',
             activeFn=SigmoidActiveFn(),
             inputsStr=[])
+        self.model = self.stage
         self.testInputErr = True
         self.costFn = meanSqErr
     def test_grad(self):
         random = np.random.RandomState(2)
         X = random.uniform(-0.1, 0.1, (5))
         T = random.uniform(-0.1, 0.1, (3))
+        self.stage.setDimension(1)
+        Y = self.stage.forward(X)
+        self.stage.saveVariable()
+        self.stage.exCount = 0
+        self.stage.dEdZ = np.zeros((1, 3))
+        self.stage.inputs = [self.stage2]
+        self.stage2.Y = np.zeros(5)
+        E, dEdY = self.costFn(Y, T)
+        self.stage.dEdY = dEdY
+        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
+        self.stage.graphBackward()
+        dEdW = self.stage.dEdW
+        dEdX = self.stage.dEdX
+        self.chkgrd(dEdW, dEdWTmp)
+        self.chkgrd(dEdX, dEdXTmp)
+
+class Sum_Recurrent_Tests(StageTests):
+    def setUp(self):
+        self.stage = Sum_Recurrent(
+            outputDim=3,
+            name='sum',
+            inputsStr=[],
+            numComponents=2)
+        self.model = self.stage
+        self.testInputErr = True
+        self.costFn = meanSqErr
+    def test_grad(self):
+        random = np.random.RandomState(2)
+        X = random.uniform(-0.1, 0.1, (6))
+        T = random.uniform(-0.1, 0.1, (3))
+        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
+        self.chkgrd(dEdX, dEdXTmp)
+
+class ComponentProduct_Recurrent_Tests(StageTests):
+    def setUp(self):
+        self.stage = ComponentProduct_Recurrent(
+            outputDim=3,
+            name='product',
+            inputsStr=[])
+        self.model = self.stage
+        self.testInputErr = True
+        self.costFn = meanSqErr
+    def test_grad(self):
+        random = np.random.RandomState(2)
+        X = random.uniform(-0.1, 0.1, (6))
+        T = random.uniform(-0.1, 0.1, (3))
+        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
+        self.chkgrd(dEdX, dEdXTmp)
+
+class Active_Recurrent_Tests(StageTests):
+    def setUp(self):
+        self.stage = Active_Recurrent(
+            inputDim=6,
+            name='active',
+            inputsStr=[],
+            activeFn=TanhActiveFn())
+        self.model = self.stage
+        self.testInputErr = True
+        self.costFn = meanSqErr
+    def test_grad(self):
+        random = np.random.RandomState(2)
+        X = random.uniform(-0.1, 0.1, (6))
+        T = random.uniform(-0.1, 0.1, (6))
         dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
         self.chkgrd(dEdX, dEdXTmp)
 
@@ -361,4 +445,10 @@ if __name__ == '__main__':
         unittest.TestLoader().loadTestsFromTestCase(TimeSum_Tests))
     suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(MapSigmoid_Recurrent_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(Sum_Recurrent_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(ComponentProduct_Recurrent_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(Active_Recurrent_Tests))
     unittest.TextTestRunner(verbosity=2).run(suite)

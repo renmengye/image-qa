@@ -96,7 +96,9 @@ def forwardPassOne(X,reachedEnd,cutOffZeroEnd,
                                   np.ones(1)))
         Go[t, :] = sigmoidFn(np.dot(Wo, states3))
         Y[t, :] = Go[t, :] * np.tanh(C[t, :])
-
+    if cutOffZeroEnd and not reachedEnd[-1]:
+        Y[-1] = Y[-2]
+        Xend = timespan
     return Y, C, Z, Gi, Gf, Go, Xend
 
 def backPropagateN(dEdY,X,Y,C,Z,Gi,Gf,Go,Xend,
