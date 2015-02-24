@@ -4,6 +4,7 @@ from lut import *
 from inner_prod import *
 from time_sum import *
 from active_func import *
+from recurrent import *
 import unittest
 import numpy as np
 
@@ -63,6 +64,19 @@ class StageTests(unittest.TestCase):
 
                         dEdXTmp[n, j] = (Etmp1 - Etmp2) / 2.0 / eps
                         X[n, j] += eps
+
+            elif len(X.shape) == 1:
+                for j in range(0, X.shape[0]):
+                    X[j] += eps
+                    Y = self.stage.forward(X)
+                    Etmp1, d1 = self.costFn(Y, T)
+
+                    X[j] -= 2 * eps
+                    Y = self.stage.forward(X)
+                    Etmp2, d2 = self.costFn(Y, T)
+
+                    dEdXTmp[j] = (Etmp1 - Etmp2) / 2.0 / eps
+                    X[j] += eps
         else:
             dEdX = None
             dEdXTmp = None
@@ -300,6 +314,25 @@ class TimeSum_Tests(StageTests):
         dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
         self.chkgrd(dEdX, dEdXTmp)
 
+class MapSigmoid_Recurrent_Tests(StageTests):
+    def setUp(self):
+        self.stage = Map_Recurrent(
+            inputDim=5,
+            outputDim=3,
+            initRange=0.1,
+            initSeed=1,
+            name='sigmoid',
+            activeFn=SigmoidActiveFn(),
+            inputsStr=[])
+        self.testInputErr = True
+        self.costFn = meanSqErr
+    def test_grad(self):
+        random = np.random.RandomState(2)
+        X = random.uniform(-0.1, 0.1, (5))
+        T = random.uniform(-0.1, 0.1, (3))
+        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
+        self.chkgrd(dEdX, dEdXTmp)
+
 if __name__ == '__main__':
     suite = unittest.TestSuite()
     suite.addTests(
@@ -326,4 +359,6 @@ if __name__ == '__main__':
         unittest.TestLoader().loadTestsFromTestCase(InnerProduct_Tests))
     suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(TimeSum_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(MapSigmoid_Recurrent_Tests))
     unittest.TextTestRunner(verbosity=2).run(suite)
