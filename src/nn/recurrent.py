@@ -3,6 +3,10 @@ import time
 from stage import *
 from active_func import *
 
+class Counter:
+    def __init__(self):
+        self.count = 0
+
 class RecurrentSubstage(Stage):
     def __init__(self, name,
                  inputsStr,
@@ -38,7 +42,7 @@ class RecurrentSubstage(Stage):
         self.X = 0
         self.Yall = None
         self.Xall = None
-        self.exCount = 0
+        self.counter = None
         pass
 
     def addInput(self, stage):
@@ -50,19 +54,25 @@ class RecurrentSubstage(Stage):
     def getInput(self):
         # fetch input from each input stage
         # concatenate input into one vector
-        self.splX = []
-        for stage in self.inputs:
-            X = stage.Y
-            self.splX.append(X)
-        return np.concatenate(self.splX, axis=-1)
+        if len(self.inputs) > 1:
+            self.splX = []
+            for stage in self.inputs:
+                X = stage.Y
+                self.splX.append(X)
+            return np.concatenate(self.splX, axis=-1)
+        else:
+            return self.inputs[0].Y
 
     def sendError(self):
         # iterate over input list and send dEdX
-        s = 0
-        for stage in self.inputs:
-            s2 = s + stage.Y.size
-            stage.dEdY += (self.dEdX[s : s2])
-            s = s2
+        if len(self.inputs) > 1:
+            s = 0
+            for stage in self.inputs:
+                s2 = s + stage.Y.size
+                stage.dEdY += (self.dEdX[s : s2])
+                s = s2
+        else:
+            self.inputs[0].dEdY += self.dEdX
 
     def clearError(self):
         self.dEdY = 0.0
@@ -72,31 +82,26 @@ class RecurrentSubstage(Stage):
 
     def setDimension(self, N):
         self.N = N
-        self.exCount = 0
         self.Yall = np.zeros((self.N, self.outputDim))
         self.Xall = np.zeros((self.N, self.inputDim))
 
     def saveVariable(self):
-        self.Yall[self.exCount] = self.Y
-        self.Xall[self.exCount] = self.X
+        self.Yall[self.counter.count] = self.Y
+        self.Xall[self.counter.count] = self.X
 
     def retrieveVariable(self):
-        self.Y = self.Yall[self.exCount]
-        self.X = self.Xall[self.exCount]
+        self.Y = self.Yall[self.counter.count]
+        self.X = self.Xall[self.counter.count]
 
     def graphForward(self):
         self.X = self.getInput()
         self.Y = self.forward(self.X)
         self.saveVariable()
-        self.exCount += 1
 
     def graphBackward(self):
-        if self.exCount == self.N:
-            self.exCount = 0
         self.retrieveVariable()
         self.dEdX = self.backward(self.dEdY)
         self.sendError()
-        self.exCount += 1
 
     def forward(self, X):
         """Subclasses need to implement this"""
@@ -105,14 +110,6 @@ class RecurrentSubstage(Stage):
     def backward(self, dEdY):
         """Subclasses need to implement this"""
         pass
-
-    def updateWeights(self):
-        """Update weights is prohibited here"""
-        raise Exception('Weights update not allowed in recurrent substages.')
-        pass
-
-    def updateWeightsSync(self, dEdW):
-        self._updateWeights(dEdW)
 
 class Active_Recurrent(RecurrentSubstage):
     def __init__(self,
@@ -142,6 +139,7 @@ class Map_Recurrent(RecurrentSubstage):
                  activeFn,
                  inputsStr,
                  initRange=1.0,
+                 biasInitConst=-1.0,
                  initSeed=2,
                  needInit=True,
                  initWeights=0,
@@ -171,8 +169,12 @@ class Map_Recurrent(RecurrentSubstage):
         self.random = np.random.RandomState(initSeed)
 
         if needInit:
-            self.W = self.random.uniform(
-                -initRange/2.0, initRange/2.0, (outputDim, inputDim + 1))
+            if biasInitConst >= 0.0:
+                self.W = np.concatenate((self.random.uniform(
+                    -initRange/2.0, initRange/2.0, (outputDim, inputDim)), np.ones((outputDim, 1)) * biasInitConst), axis=-1)
+            else:
+                self.W = self.random.uniform(
+                    -initRange/2.0, initRange/2.0, (outputDim, inputDim + 1))
         else:
             self.W = initWeights
         self.X = 0
@@ -182,37 +184,25 @@ class Map_Recurrent(RecurrentSubstage):
         self.dEdZ = None
         pass
 
-    def forward(self, X):
-        X2 = np.concatenate((X, np.ones(1)), axis=-1)
-        Z = np.inner(X2, self.W)
-        Y = self.activeFn.forward(Z)
-        self.X = X2
-        self.Z = Z
-        self.Y = Y
-        return Y
-
-    def setDimension(self, N):
-        RecurrentSubstage.setDimension(self, N)
-        self.Zall = np.zeros((self.N, self.outputDim))
-
-    def saveVariable(self):
-        RecurrentSubstage.saveVariable(self)
-        self.Zall[self.exCount] = self.Z
-
-    def retrieveVariable(self):
-        RecurrentSubstage.retrieveVariable(self)
-        self.Z = self.Zall[self.exCount]
+    def getGradient(self):
+        if self.dEdZ is not None:
+            self.dEdW = np.dot(self.dEdZ.transpose(), self.Xall)
+        return self.dEdW
 
     def graphBackward(self):
         if self.dEdZ is None:
             self.dEdZ = np.zeros(self.Yall.shape)
         RecurrentSubstage.graphBackward(self)
-        if self.exCount == self.N:
-            self.dEdW = np.dot(self.dEdZ.transpose(), self.Xall)
+
+    def forward(self, X):
+        self.X = np.concatenate((X, np.ones(1)), axis=-1)
+        Z = np.inner(self.X, self.W)
+        self.Y = self.activeFn.forward(Z)
+        return self.Y
 
     def backward(self, dEdY):
-        dEdZ = self.activeFn.backward(dEdY, self.Y, self.Z)
-        self.dEdZ[self.exCount] = dEdZ
+        dEdZ = self.activeFn.backward(dEdY, self.Y, 0)
+        self.dEdZ[self.counter.count] = dEdZ
         dEdX = np.dot(dEdZ, self.W[:, :-1])
         return dEdX if self.outputdEdX else None
 
@@ -235,11 +225,10 @@ class Input_Recurrent(RecurrentSubstage):
 class Output_Recurrent(RecurrentSubstage):
     def __init__(self, name, outputDim):
         RecurrentSubstage.__init__(self, name=name, inputsStr=[], inputDim=outputDim, outputDim=outputDim)
-    def forward(self, X):
-        return X
-
-    def backward(self, dEdY):
-        return dEdY
+    def graphForward(self):
+        self.Y = self.getInput()
+    def graphBackward(self):
+        pass
 
 class Zero_Recurrent(RecurrentSubstage):
     def __init__(self, name, inputDim):
@@ -291,12 +280,14 @@ class Recurrent(Stage):
         self.outputDim = outputDim
         self.Xend = 0
         self.X = 0
+        self.counter = Counter()
         for t in range(timespan):
             self.stages.append([])
             inputStage = Input_Recurrent(name='input', inputDim=inputDim)
             self.stages[t].append(inputStage)
             self.stageDict[('input-%d' % t)] = inputStage
             for stage in stages:
+                stage.counter = self.counter
                 if t == 0:
                     stageNew = stage
                 else:
@@ -324,6 +315,11 @@ class Recurrent(Stage):
                         stageInput = self.stageDict[('%s-%d' % (stageName, t + stageTime))]
                     stage.addInput(stageInput)
 
+        self.dEdW = []
+        for stage in self.stages[0]:
+            self.dEdW.append(0.0)
+
+
     def forward(self, X):
         N = X.shape[0]
         self.Xend = np.zeros(N, dtype=int) + X.shape[1]
@@ -332,41 +328,46 @@ class Recurrent(Stage):
             Y = np.zeros((N, self.timespan, self.outputDim))
         else:
             Y = np.zeros((N, self.outputDim))
+        self.counter.count = 0
+        for t in range(self.timespan):
+            for s in range(1, len(self.stages[t])):
+                self.stages[t][s].setDimension(N)
         for n in range(N):
             for t in range(X.shape[1]):
                 if reachedEnd[n, t]:
                     self.Xend[n] = t
                     break
-                self.stages[t][0].setValue(X[n, t, :])
+                self.stages[t][0].Y = X[n, t, :]
                 for s in range(1, len(self.stages[t])):
-                    if n == 0:
-                        self.stages[t][s].setDimension(N)
                     self.stages[t][s].graphForward()
                 if self.multiOutput:
                     Y[n, t, :] = self.stages[t][-1].Y
             if not self.multiOutput:
                 Y[n, :] = self.stages[self.Xend[n] - 1][-1].Y
+            self.counter.count += 1
+
+        self.counter.count = 0
         self.Y = Y
         self.X = X
         return Y
 
     def backward(self, dEdY):
-        self.dEdW = []
-        for i in range(len(self.stages[0])):
-            self.dEdW.append(0.0)
-
         if self.outputdEdX:
             dEdX = np.zeros(self.X.shape)
         for n in range(self.X.shape[0]):
-            if not self.multiOutput:
-                self.stages[self.Xend[n] - 1][-1].dEdX = dEdY[n, :]
-                self.stages[self.Xend[n] - 1][-1].sendError()
-            for t in reversed(range(self.Xend[n])):
-                if self.multiOutput:
-                    self.stages[t][-1].dEdX = dEdY[n, t, :]
-                    self.stages[t][-1].sendError()
-                for s in reversed(range(1, len(self.stages[0]) - 1)):
-                    self.stages[t][s].graphBackward()
+            if self.Xend[n] == 0:
+                dEdX[n, t] = np.zeros(self.X.shape[-1])
+            else:
+                if not self.multiOutput:
+                    self.stages[self.Xend[n] - 1][-1].dEdX = dEdY[n, :]
+                    self.stages[self.Xend[n] - 1][-1].sendError()
+                for t in reversed(range(self.Xend[n])):
+                    if self.multiOutput:
+                        self.stages[t][-1].dEdX = dEdY[n, t, :]
+                        self.stages[t][-1].sendError()
+                    for s in reversed(range(1, len(self.stages[0]) - 1)):
+                        self.stages[t][s].graphBackward()
+            self.counter.count += 1
 
             # Collect input error
             if self.outputdEdX:
@@ -374,7 +375,7 @@ class Recurrent(Stage):
                     dEdX[n, t] = self.stages[t][0].dEdY
 
             # Clear error and ready for next example
-            for t in range(self.Xend[n]):
+            for t in range(self.timespan):
                 for stage in self.stages[t]:
                     stage.dEdY = 0.0
 
@@ -382,7 +383,8 @@ class Recurrent(Stage):
             if type(self.stages[0][s].W) is np.ndarray:
                 tmp = np.zeros((self.timespan, self.stages[0][s].W.shape[0], self.stages[0][s].W.shape[1]))
                 for t in range(self.timespan):
-                    tmp[t] = self.stages[t][s].dEdW
+                    tmp[t] = self.stages[t][s].getGradient()
+                    self.stages[t][s].dEdW = 0.0
                 self.dEdW[s] = np.sum(tmp, axis=0)
 
         # For gradient check purpose, synchronize the sum of gradient to the time=0 stage
@@ -391,29 +393,27 @@ class Recurrent(Stage):
         return dEdX if self.outputdEdX else None
 
     def updateWeights(self):
-        for stageName in self.stages[0].keys():
-            if stageName != 'input' or 'output':
-                # Because all stages are "shallow copied", the weights are shared.
-                self.stages[0][stageName].updateWeightsSync(self.dEdW[stageName])
+        for s in range(1, len(self.stages[0])-1):
+            # Because all stages are "shallow copied", the weights are shared.
+            self.stages[0][s].updateWeights()
+        for t in range(1, self.timespan):
+            for s in range(1, len(self.stages[0])-1):
+                self.stages[t][s].W = self.stages[0][s].W
 
     def updateLearningParams(self, numEpoch):
-        for stageName in self.stages[0].keys():
-            if stageName != 'input' or 'output':
-                # Since only the first stage updates the weights,
-                # learning params just need to update in the first stage.
-                self.stages[0][stageName].updateLearningParams()
+        for s in range(1, len(self.stages[0])-1):
+            # Since only the first stage updates the weights,
+            # learning params just need to update in the first stage.
+            self.stages[0][s].updateLearningParams(numEpoch)
 
     def getWeights(self):
         weights = []
-        for stageName in self.stages[0].keys():
-            weights.append(self.stages[0][stageName].getWeights())
+        for s in range(1, len(self.stages[0])-1):
+            weights.append(self.stages[0][s].getWeights())
         return np.array(weights, dtype=object)
 
     def loadWeights(self, W):
         i = 0
-        for stageName in self.stages[0].keys():
-            self.stages[0][stageName].loadWeights(W[i])
+        for s in range(1, len(self.stages[0])-1):
+            self.stages[0][s].loadWeights(W[i])
             i += 1
-
-if __name__ == '__main__':
-    pass

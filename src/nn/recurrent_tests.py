@@ -1,5 +1,4 @@
 from recurrent import *
-from func import *
 from lstm import *
 import stage_tests
 import unittest
@@ -60,7 +59,7 @@ class Recurrent_Tests(stage_tests.StageTests):
                 Y2[n, t, :] = self.sigm.forward(np.concatenate((X[n, t, :], Y2[n, t-1, :], Y2[n, t-2, :])))
         return Y2
 
-class LSTM_Recurrent_Tests(unittest.TestCase):
+class LSTM_Recurrent_Random_Tests(unittest.TestCase):
     def test_singleErr(self):
         self.func(False)
 
@@ -78,63 +77,84 @@ class LSTM_Recurrent_Tests(unittest.TestCase):
                 inputDim=D+D2+D2,
                 outputDim=D2,
                 activeFn=SigmoidActiveFn(),
-                initRange=1,
-                initSeed=5
+                initRange=0.1,
+                initSeed=5,
+                biasInitConst=1.0,
+                learningRate=0.8,
+                momentum=0.9
             )
+        
         F = Map_Recurrent(
                 name='F',
                 inputsStr=['input(0)', 'Y(-1)', 'C(-1)'],
                 inputDim=D+D2+D2,
                 outputDim=D2,
                 activeFn=SigmoidActiveFn(),
-                initRange=1,
-                initSeed=6
+                initRange=0.1,
+                initSeed=6,
+                biasInitConst=1.0,
+                learningRate=0.8,
+                momentum=0.9
             )
+        
         Z = Map_Recurrent(
                 name='Z',
                 inputsStr=['input(0)', 'Y(-1)'],
                 inputDim=D+D2,
                 outputDim=D2,
                 activeFn=TanhActiveFn(),
-                initRange=1,
-                initSeed=7
+                initRange=0.1,
+                initSeed=7,
+                biasInitConst=0.0,
+                learningRate=0.8,
+                momentum=0.9
             )
+        
         FC = ComponentProduct_Recurrent(
                 name='F.C',
                 inputsStr=['F(0)', 'C(-1)'],
                 outputDim=D2
             )
+        
         IZ = ComponentProduct_Recurrent(
                 name='I.Z',
                 inputsStr=['I(0)', 'Z(0)'],
                 outputDim=D2
             )
+        
         C = Sum_Recurrent(
                 name='C',
                 inputsStr=['F.C(0)', 'I.Z(0)'],
                 numComponents=2,
                 outputDim=D2
             )
+        
         O = Map_Recurrent(
                 name='O',
                 inputsStr=['input(0)', 'Y(-1)', 'C(0)'],
                 inputDim=D+D2+D2,
                 outputDim=D2,
                 activeFn=SigmoidActiveFn(),
-                initRange=1,
-                initSeed=8
+                initRange=0.1,
+                initSeed=8,
+                biasInitConst=1.0,
+                learningRate=0.8,
+                momentum=0.9
             )
+        
         U = Active_Recurrent(
                 name='U',
                 inputsStr=['C(0)'],
                 inputDim=D2,
                 activeFn=TanhActiveFn()
             )
+        
         Y = ComponentProduct_Recurrent(
                 name='Y',
                 inputsStr=['O(0)', 'U(0)'],
                 outputDim=D2
             )
+        
         lstm = Recurrent(
                 name='lstm',
                 stages=[I, F, Z, FC, IZ, C, O, U, Y],
@@ -144,47 +164,58 @@ class LSTM_Recurrent_Tests(unittest.TestCase):
                 outputStageName='Y',
                 multiOutput=multiOutput,
                 outputdEdX=True)
-        random = np.random.RandomState(1)
-        X = random.rand(N, Time, D)
-        if multiOutput:
-            T = random.rand(N, Time, D2)
-        else:
-            T = random.rand(N, D2)
-        #start = time.time()
-        Y = lstm.forward(X)
-        #print time.time()-start
-        E, dEdY = meanSqErr(Y, T)
-        #start = time.time()
-        dEdX = lstm.backward(dEdY)
-        #print time.time()-start
+
         W = np.concatenate((I.getWeights(), F.getWeights(), Z.getWeights(), O.getWeights()), axis=-1)
         lstm2 = LSTM(
+            name='lstm2',
             inputDim=D,
             outputDim=D2,
             needInit=False,
             initWeights=W,
             cutOffZeroEnd=True,
-            multiErr=multiOutput
+            multiErr=multiOutput,
+            learningRate=0.8,
+            momentum=0.9
         )
-        #start = time.time()
-        if multiOutput:
-            Y2 = lstm2.forward(X)[:,:-1]
-        else:
-            Y2 = lstm2.forward(X)
-        #print time.time()-start
-        #start = time.time()
-        E, dEdY2 = meanSqErr(Y2, T)
-        if multiOutput:
-            dEdX2 = lstm2.backward(np.concatenate((dEdY2, np.zeros((N, 1, D2))), axis=1))
-        else:
-            dEdX2 = lstm2.backward(dEdY2)
-        #print time.time()-start
+        W2 = lstm2.W
+        self.chkEqual(W, W2)
 
-        dEdW = np.concatenate((I.getGradient(), F.getGradient(), Z.getGradient(), O.getGradient()), axis=-1)
-        dEdW2 = lstm2.getGradient()
-        self.chkEqual(Y, Y2)
-        self.chkEqual(dEdX, dEdX2)
-        self.chkEqual(dEdW, dEdW2)
+        random = np.random.RandomState(1)
+        costFn = crossEntOne
+        for i in range(10):
+            X = random.rand(N, Time, D)
+            if multiOutput:
+                T = random.rand(N, Time, D2)
+            else:
+                T = random.rand(N, D2)
+
+            Y = lstm.forward(X)
+            E, dEdY = costFn(Y, T)
+            dEdX = lstm.backward(dEdY)
+            if multiOutput:
+                Y2 = lstm2.forward(X)[:,:-1]
+            else:
+                Y2 = lstm2.forward(X)
+            E, dEdY2 = costFn(Y2, T)
+            if multiOutput:
+                dEdX2 = lstm2.backward(np.concatenate((dEdY2, np.zeros((N, 1, D2))), axis=1))
+            else:
+                dEdX2 = lstm2.backward(dEdY2)
+
+            I2 = lstm.stageDict['I-4']
+            F2 = lstm.stageDict['F-4']
+            Z2 = lstm.stageDict['Z-4']
+            O2 = lstm.stageDict['O-4']
+            dEdW = np.concatenate((I.dEdW, F.dEdW, Z.dEdW, O.dEdW), axis=-1)
+            dEdW2 = lstm2.dEdW
+            lstm.updateWeights()
+            lstm2.updateWeights()
+            self.chkEqual(Y, Y2)
+            self.chkEqual(dEdX, dEdX2)
+            self.chkEqual(dEdW, dEdW2)
+            W = np.concatenate((I2.W, F2.W, Z2.W, O2.W), axis=-1)
+            W2 = lstm2.W
+            self.chkEqual(W, W2)
 
     def chkEqual(self, a, b):
         tolerance = 1e-4
@@ -196,9 +227,10 @@ class LSTM_Recurrent_Tests(unittest.TestCase):
                 (np.abs(a[i] / b[i] - 1) < tolerance))
 
 if __name__ == '__main__':
-    suite = unittest.TestSuite()
-    suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(Recurrent_Tests))
-    suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(LSTM_Recurrent_Tests))
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    # suite = unittest.TestSuite()
+    # suite.addTests(
+    #     unittest.TestLoader().loadTestsFromTestCase(Recurrent_Tests))
+    # suite.addTests(
+    #     unittest.TestLoader().loadTestsFromTestCase(LSTM_Recurrent_Random_Tests))
+    # unittest.TextTestRunner(verbosity=2).run(suite)
+    unittest.main()

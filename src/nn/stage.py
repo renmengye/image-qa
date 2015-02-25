@@ -55,6 +55,9 @@ class Stage:
         self._updateWeights(self.dEdW)
 
     def _updateWeights(self, dEdW):
+        # print self.name
+        # print self.currentLearningRate
+        # print self.momentum
         if self.gradientClip > 0.0:
             self.dEdWnorm = np.sqrt(np.sum(np.power(dEdW, 2)))
             if self.dEdWnorm > self.gradientClip:
@@ -66,12 +69,10 @@ class Stage:
         if self.weightRegConst > 0.0:
             a = self.currentLearningRate * self.weightRegConst
             self.W -= a * self.W
-            pass
         if self.weightClip > 0.0:
             self.Wnorm = np.sqrt(np.sum(np.power(self.W, 2)))
             if self.Wnorm > self.weightClip:
                 self.W *= self.weightClip / self.Wnorm
-        return
 
     def updateLearningParams(self, numEpoch):
         self.currentLearningRate = self.startLearningRate / \

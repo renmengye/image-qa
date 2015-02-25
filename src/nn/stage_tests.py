@@ -325,48 +325,6 @@ class TimeSum_Tests(StageTests):
         dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
         self.chkgrd(dEdX, dEdXTmp)
 
-# A serious hack. Do not modify.
-class MapSigmoid_Recurrent_Tests(StageTests):
-    def setUp(self):
-        self.stage2 = Map_Recurrent(
-            inputDim=5,
-            outputDim=3,
-            initRange=0.1,
-            initSeed=1,
-            name='sigmoid',
-            activeFn=SigmoidActiveFn(),
-            inputsStr=[])
-        self.stage = Map_Recurrent(
-            inputDim=5,
-            outputDim=3,
-            initRange=0.1,
-            initSeed=1,
-            name='sigmoid',
-            activeFn=SigmoidActiveFn(),
-            inputsStr=[])
-        self.model = self.stage
-        self.testInputErr = True
-        self.costFn = meanSqErr
-    def test_grad(self):
-        random = np.random.RandomState(2)
-        X = random.uniform(-0.1, 0.1, (5))
-        T = random.uniform(-0.1, 0.1, (3))
-        self.stage.setDimension(1)
-        Y = self.stage.forward(X)
-        self.stage.saveVariable()
-        self.stage.exCount = 0
-        self.stage.dEdZ = np.zeros((1, 3))
-        self.stage.inputs = [self.stage2]
-        self.stage2.Y = np.zeros(5)
-        E, dEdY = self.costFn(Y, T)
-        self.stage.dEdY = dEdY
-        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
-        self.stage.graphBackward()
-        dEdW = self.stage.dEdW
-        dEdX = self.stage.dEdX
-        self.chkgrd(dEdW, dEdWTmp)
-        self.chkgrd(dEdX, dEdXTmp)
-
 class Sum_Recurrent_Tests(StageTests):
     def setUp(self):
         self.stage = Sum_Recurrent(
@@ -443,8 +401,6 @@ if __name__ == '__main__':
         unittest.TestLoader().loadTestsFromTestCase(InnerProduct_Tests))
     suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(TimeSum_Tests))
-    suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(MapSigmoid_Recurrent_Tests))
     suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(Sum_Recurrent_Tests))
     suite.addTests(
