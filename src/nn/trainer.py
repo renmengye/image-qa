@@ -4,7 +4,7 @@ import os
 import shutil
 import matplotlib
 import valid_tool as vt
-from tester import *
+import tester
 from func import *
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -200,7 +200,7 @@ class Trainer:
 
                 # Prediction error
                 if calcError:
-                    rate_, correct_, total_ = calcRate(self.model, Y_bat, T_bat)
+                    rate_, correct_, total_ = tester.calcRate(self.model, Y_bat, T_bat)
                     correct += correct_
                     total += total_
 
@@ -214,11 +214,11 @@ class Trainer:
 
             # Run validation
             if trainOpt['needValid']:
-                VY = self.model.forward(VX, dropout=False)
+                VY = tester.test(self.model, VX)
                 VE, dVE = self.model.getCost(VY, VT)
                 self.validLoss[epoch] = VE
                 if calcError:
-                    Vrate, correct, total = calcRate(self.model, VY, VT)
+                    Vrate, correct, total = tester.calcRate(self.model, VY, VT)
                     self.validRate[epoch] = Vrate
                 if (bestVE is None) or (VE < bestVE):
                     bestVE = VE

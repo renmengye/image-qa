@@ -69,6 +69,7 @@ stages:
       type: lstm
       inputDim: 300
       outputDim: 150
+      timespan: 2
       initRange: 0.1
       initSeed: 4
       cutOffZeroEnd: true

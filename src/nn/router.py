@@ -1,4 +1,4 @@
-from lstm import *
+# from lstm import *
 from lut import *
 from map import *
 from time_unfold import *
@@ -9,12 +9,11 @@ from dropout import *
 from sequential import *
 from parallel import *
 from active_func import *
+from lstm_recurrent import *
 
 def routeFn(name):
     if name == 'crossEntOne':
         return crossEntOne
-    if name == 'crossEntOnePenalty':
-        return crossEntOnePenalty
     elif name == 'crossEntIdx':
         return crossEntIdx
     elif name == 'hardLimit':
@@ -65,17 +64,37 @@ def routeStage(stageDict):
     if stageDict.has_key('weightRegConst') else 0.0
     outputdEdX=stageDict['outputdEdX']\
     if stageDict.has_key('outputdEdX') else True
+    # if stageDict['type'] == 'lstm':
+    #     stage = LSTM_Recurrent(
+    #         name=stageDict['name'],
+    #         inputDim=stageDict['inputDim'],
+    #         outputDim=stageDict['outputDim'],
+    #         initSeed=initSeed,
+    #         initRange=initRange,
+    #         initWeights=initWeights,
+    #         needInit=needInit,
+    #         cutOffZeroEnd=stageDict['cutOffZeroEnd'],
+    #         multiErr=stageDict['multiErr'],
+    #         learningRate=learningRate,
+    #         learningRateAnnealConst=learningRateAnnealConst,
+    #         momentum=momentum,
+    #         deltaMomentum=deltaMomentum,
+    #         gradientClip=gradientClip,
+    #         weightClip=weightClip,
+    #         weightRegConst=weightRegConst,
+    #         outputdEdX=outputdEdX
+    #     )
     if stageDict['type'] == 'lstm':
-        stage = LSTM(
+        stage = LSTM_Recurrent(
             name=stageDict['name'],
             inputDim=stageDict['inputDim'],
             outputDim=stageDict['outputDim'],
+            timespan=stageDict['timespan'],
             initSeed=initSeed,
             initRange=initRange,
             initWeights=initWeights,
             needInit=needInit,
-            cutOffZeroEnd=stageDict['cutOffZeroEnd'],
-            multiErr=stageDict['multiErr'],
+            multiOutput=stageDict['multiErr'],
             learningRate=learningRate,
             learningRateAnnealConst=learningRateAnnealConst,
             momentum=momentum,

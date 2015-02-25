@@ -240,7 +240,7 @@ class Sum_Recurrent(RecurrentSubstage):
 
 class Recurrent(Stage):
     """
-    Recurrent container.
+    Recurrent stage.
     Propagate through time.
     """
     def __init__(self, stages, timespan, outputStageName, inputDim, outputDim, multiOutput=True, name=None, outputdEdX=True):
@@ -252,6 +252,7 @@ class Recurrent(Stage):
         self.multiOutput = multiOutput
         self.inputDim = inputDim
         self.outputDim = outputDim
+        self.outputStageName = outputStageName
         self.Xend = 0
         self.XendAll = 0
         self.X = 0
@@ -260,18 +261,39 @@ class Recurrent(Stage):
             inputStage = Input_Recurrent(name='input', inputDim=inputDim)
             self.stages[t].append(inputStage)
             self.stageDict[('input-%d' % t)] = inputStage
-            for stage in stages:
-                if t == 0:
-                    stageNew = stage
-                else:
-                    stageNew = copy.copy(stage)
-                self.stages[t].append(stageNew)
-                self.stageDict[('%s-%d' % (stage.name, t))] = stageNew
-            outputStage = Output_Recurrent(name='output', outputDim=outputDim)
+
+        for stage in stages:
+            self.register(stage)
+
+        self.link()
+        self.dEdW = []
+        for stage in self.stages[0]:
+            self.dEdW.append(0.0)
+
+    def register(self, stage):
+        """
+        Register a substage
+        :param stage: new recurrent substage
+        :return:
+        """
+        for t in range(self.timespan):
+            if t == 0:
+                stageNew = stage
+            else:
+                stageNew = copy.copy(stage)
+            self.stages[t].append(stageNew)
+            self.stageDict[('%s-%d' % (stage.name, t))] = stageNew
+
+    def link(self):
+        """
+        Link substages with their input strings
+        :return:
+        """
+        for t in range(self.timespan):
+            outputStage = Output_Recurrent(name='output', outputDim=self.outputDim)
             self.stages[t].append(outputStage)
             self.stageDict[('output-%d' % t)] = outputStage
-            outputStage.addInput(self.stageDict[('%s-%d' % (outputStageName, t))])
-        for t in range(timespan):
+            outputStage.addInput(self.stageDict[('%s-%d' % (self.outputStageName, t))])
             for stage in self.stages[t]:
                 for inputStageStr in stage.inputsStr:
                     stageName = inputStageStr[:inputStageStr.index('(')]
@@ -288,11 +310,6 @@ class Recurrent(Stage):
                     else:
                         stageInput = self.stageDict[('%s-%d' % (stageName, t + stageTime))]
                     stage.addInput(stageInput)
-
-        self.dEdW = []
-        for stage in self.stages[0]:
-            self.dEdW.append(0.0)
-
 
     def forward(self, X):
         N = X.shape[0]

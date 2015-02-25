@@ -21,6 +21,7 @@ stages:
       type: lstm
       inputDim: 30
       outputDim: 30
+      timespan: 38
       initRange: 0.1
       initSeed: 4
       cutOffZeroEnd: true
@@ -31,21 +32,17 @@ stages:
       gradientClip: 0.1
       weightClip: 10.0
       weightRegConst: 0.00005
-<<<<<<< HEAD:config/sentiment_vec.yaml
       annealConst: 0.01
       outputdEdX: false    
-    - type: dropout
-=======
-      outputdEdX: false
     - name: dropout2
       type: dropout
->>>>>>> bab8dbd4148b4acf63007847636a80d23475e83f:models/sentiment_vec.model.yml
       dropoutRate: 0.5
       initSeed: 5
     - name: lstm2
       type: lstm
       inputDim: 30
       outputDim: 30
+      timespan: 38
       initRange: 0.1
       initSeed: 6
       cutOffZeroEnd: true
@@ -70,26 +67,6 @@ stages:
       gradientClip: 0.1
       weightClip: 1
       weightRegConst: 0.00005
-<<<<<<< HEAD:config/sentiment_vec.yaml
-trainOpt:
-    numEpoch: 2000
-    heldOutRatio: 0.1
-    xvalidNo: 0
-    needValid: true
-    momentum: 0.9
-    batchSize: 20
-    learningRateDecay: 1.0
-    momentumEnd: 0.9
-    shuffle: true
-    writeRecord: true
-    saveModel: true
-    plotFigs: true
-    everyEpoch: true
-    calcError: true
-    stopCost: 0.01
-    progress: true
-    displayDw: -1
-=======
     - name: all
       type: sequential
       stages:
@@ -101,4 +78,3 @@ trainOpt:
           - dropout2
           - lstm2
           - sigmoid
->>>>>>> bab8dbd4148b4acf63007847636a80d23475e83f:models/sentiment_vec.model.yml

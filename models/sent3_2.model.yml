@@ -21,6 +21,7 @@ stages:
       type: lstm
       inputDim: 300
       outputDim: 50
+      timespan: 69
       initRange: 0.1
       initSeed: 4
       cutOffZeroEnd: true
@@ -39,6 +40,7 @@ stages:
       type: lstm
       inputDim: 50
       outputDim: 50
+      timespan: 69
       initRange: 0.1
       initSeed: 6
       cutOffZeroEnd: true

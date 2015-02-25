@@ -64,6 +64,7 @@ stages:
       activeFn: softmax
       inputDim: 300
       outputDim: 68
+      timespan: 27
       initRange: 0.1
       initSeed: 7
       learningRate: 0.01
