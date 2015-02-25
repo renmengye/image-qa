@@ -95,4 +95,5 @@ class LSTM(Stage):
                                 self.Xend,self.cutOffZeroEnd,
                                 self.multiErr,self.outputdEdX,
                                 self.W)
+        self.dEdX = dEdX
         return dEdX if self.outputdEdX else None

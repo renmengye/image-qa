@@ -201,10 +201,15 @@ class LSTM_Recurrent_Real_Tests(unittest.TestCase):
         target_ = trainTarget[0:N]
         Y1 = model1.forward(input_)
         Y2 = model2.forward(input_)
+        self.chkEqual(Y1, Y2)
+
         E, dEdY1 = model1.getCost(Y1, target_)
         E, dEdY2 = model2.getCost(Y2, target_)
         model1.backward(dEdY1)
         model2.backward(dEdY2)
+        dEdX1 = lstm.dEdX
+        dEdX2 = lstm2.dEdX
+        self.chkEqual(dEdX1, dEdX2)
 
         dEdW = np.concatenate((I.dEdW, F.dEdW, Z.dEdW, O.dEdW), axis=-1)
         self.chkEqual(dEdW, lstm2.dEdW)

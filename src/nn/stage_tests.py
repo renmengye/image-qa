@@ -337,8 +337,8 @@ class Sum_Recurrent_Tests(StageTests):
         self.costFn = meanSqErr
     def test_grad(self):
         random = np.random.RandomState(2)
-        X = random.uniform(-0.1, 0.1, (6))
-        T = random.uniform(-0.1, 0.1, (3))
+        X = random.uniform(-0.1, 0.1, (3,6))
+        T = random.uniform(-0.1, 0.1, (3,3))
         dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
         self.chkgrd(dEdX, dEdXTmp)
 
@@ -353,9 +353,31 @@ class ComponentProduct_Recurrent_Tests(StageTests):
         self.costFn = meanSqErr
     def test_grad(self):
         random = np.random.RandomState(2)
-        X = random.uniform(-0.1, 0.1, (6))
-        T = random.uniform(-0.1, 0.1, (3))
+        X = random.uniform(-0.1, 0.1, (3,6))
+        T = random.uniform(-0.1, 0.1, (3,3))
         dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
+        self.chkgrd(dEdX, dEdXTmp)
+
+class MapSigmoid_Recurrent_Tests(StageTests):
+    def setUp(self):
+        self.stage = Map_Recurrent(
+            name='sigmoid',
+            activeFn=SigmoidActiveFn(),
+            inputDim=6,
+            outputDim=3,
+            inputsStr=[],
+            initRange=0.1,
+            initSeed=1,
+            )
+        self.model = self.stage
+        self.testInputErr = True
+        self.costFn = meanSqErr
+    def test_grad(self):
+        random = np.random.RandomState(2)
+        X = random.uniform(-0.1, 0.1, (3,6))
+        T = random.uniform(-0.1, 0.1, (3,3))
+        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
+        self.chkgrd(dEdW, dEdWTmp)
         self.chkgrd(dEdX, dEdXTmp)
 
 class Active_Recurrent_Tests(StageTests):
@@ -370,8 +392,8 @@ class Active_Recurrent_Tests(StageTests):
         self.costFn = meanSqErr
     def test_grad(self):
         random = np.random.RandomState(2)
-        X = random.uniform(-0.1, 0.1, (6))
-        T = random.uniform(-0.1, 0.1, (6))
+        X = random.uniform(-0.1, 0.1, (3,6))
+        T = random.uniform(-0.1, 0.1, (3,6))
         dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
         self.chkgrd(dEdX, dEdXTmp)
 
@@ -405,6 +427,8 @@ if __name__ == '__main__':
         unittest.TestLoader().loadTestsFromTestCase(Sum_Recurrent_Tests))
     suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(ComponentProduct_Recurrent_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(MapSigmoid_Recurrent_Tests))
     suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(Active_Recurrent_Tests))
     unittest.TextTestRunner(verbosity=2).run(suite)

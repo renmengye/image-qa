@@ -184,6 +184,10 @@ class Map_Recurrent(RecurrentSubstage):
         self.dEdZ = None
         pass
 
+    def setDimension(self, N):
+        RecurrentSubstage.setDimension(self, N)
+        self.dEdZ = None
+
     def getGradient(self):
         if self.dEdZ is not None:
             self.dEdW = np.dot(self.dEdZ.transpose(), self.Xall)

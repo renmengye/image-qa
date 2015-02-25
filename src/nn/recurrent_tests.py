@@ -53,10 +53,9 @@ class Recurrent_Tests(stage_tests.StageTests):
 
     def realForward(self, X):
         Y2 = np.zeros((self.N, self.T, self.D2))
-        self.sigm.setDimension(self.N)
-        for n in range(self.N):
-            for t in range(self.T):
-                Y2[n, t, :] = self.sigm.forward(np.concatenate((X[n, t, :], Y2[n, t-1, :], Y2[n, t-2, :])))
+        for t in range(self.T):
+            Y2[:, t, :] = self.sigm.forward(
+                np.concatenate((X[:, t, :], Y2[:, t-1, :], Y2[:, t-2, :]), axis=-1))
         return Y2
 
 class LSTM_Recurrent_Random_Tests(unittest.TestCase):
