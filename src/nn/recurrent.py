@@ -440,3 +440,6 @@ class Recurrent(Stage):
         for s in range(1, len(self.stages[0])-1):
             self.stages[0][s].loadWeights(W[i])
             i += 1
+        for t in range(self.timespan):
+            for s in range(1, len(self.stages[0])-1):
+                self.stages[t][s].W = self.stages[0][s].W
