@@ -1,4 +1,4 @@
-# from lstm import *
+from lstm import *
 from lut import *
 from map import *
 from time_unfold import *
@@ -24,6 +24,8 @@ def routeFn(name):
         return SigmoidActiveFn
     elif name == 'softmax':
         return SoftmaxActiveFn
+    elif name == 'tanh':
+        return TanhActiveFn
     elif name == 'identity':
         return IdentityActiveFn
     elif name == 'mse':
@@ -47,7 +49,9 @@ def routeStage(stageDict):
     initWeights=np.load(stageDict['initWeights'])\
     if stageDict.has_key('initWeights') else 0
     needInit=False\
-    if stageDict.has_key('initWeights') else True
+    if stageDict.has_key('initWeights') else True    
+    biasInitConst=stageDict['biasInitConst']\
+    if stageDict.has_key('biasInitConst') else -1.0
     learningRate=stageDict['learningRate']\
     if stageDict.has_key('learningRate') else 0.0
     learningRateAnnealConst=stageDict['learningRateAnnealConst']\
@@ -64,27 +68,28 @@ def routeStage(stageDict):
     if stageDict.has_key('weightRegConst') else 0.0
     outputdEdX=stageDict['outputdEdX']\
     if stageDict.has_key('outputdEdX') else True
-    # if stageDict['type'] == 'lstm':
-    #     stage = LSTM_Recurrent(
-    #         name=stageDict['name'],
-    #         inputDim=stageDict['inputDim'],
-    #         outputDim=stageDict['outputDim'],
-    #         initSeed=initSeed,
-    #         initRange=initRange,
-    #         initWeights=initWeights,
-    #         needInit=needInit,
-    #         cutOffZeroEnd=stageDict['cutOffZeroEnd'],
-    #         multiErr=stageDict['multiErr'],
-    #         learningRate=learningRate,
-    #         learningRateAnnealConst=learningRateAnnealConst,
-    #         momentum=momentum,
-    #         deltaMomentum=deltaMomentum,
-    #         gradientClip=gradientClip,
-    #         weightClip=weightClip,
-    #         weightRegConst=weightRegConst,
-    #         outputdEdX=outputdEdX
-    #     )
-    if stageDict['type'] == 'lstm':
+
+    if stageDict['type'] == 'lstm_old':
+        stage = LSTM(
+            name=stageDict['name'],
+            inputDim=stageDict['inputDim'],
+            outputDim=stageDict['outputDim'],
+            initSeed=initSeed,
+            initRange=initRange,
+            initWeights=initWeights,
+            needInit=needInit,
+            cutOffZeroEnd=stageDict['cutOffZeroEnd'],
+            multiErr=stageDict['multiErr'],
+            learningRate=learningRate,
+            learningRateAnnealConst=learningRateAnnealConst,
+            momentum=momentum,
+            deltaMomentum=deltaMomentum,
+            gradientClip=gradientClip,
+            weightClip=weightClip,
+            weightRegConst=weightRegConst,
+            outputdEdX=outputdEdX
+        )
+    elif stageDict['type'] == 'lstm':
         stage = LSTM_Recurrent(
             name=stageDict['name'],
             inputDim=stageDict['inputDim'],
@@ -94,7 +99,7 @@ def routeStage(stageDict):
             initRange=initRange,
             initWeights=initWeights,
             needInit=needInit,
-            multiOutput=stageDict['multiErr'],
+            multiOutput=stageDict['multiErr'] if stageDict.has_key('multiErr') else stageDict['multiOutput'],
             learningRate=learningRate,
             learningRateAnnealConst=learningRateAnnealConst,
             momentum=momentum,
@@ -184,6 +189,68 @@ def routeStage(stageDict):
             stages=realStages,
             axis=stageDict['axis'],
             splits=stageDict['splits'],
+            outputdEdX=outputdEdX
+        )
+    elif stageDict['type'] == 'mapRecurrent':
+        inputList = stageDict['inputsStr'].split(',')
+        for i in range(len(inputList)):
+            inputList[i] = inputList[i].strip()
+        stage = Map_Recurrent(
+            name=stageDict['name'],
+            inputsStr=inputList,
+            outputDim=stageDict['outputDim'],
+            activeFn=routeFn(stageDict['activeFn']),
+            initRange=initRange,
+            initSeed=initSeed,
+            biasInitConst=biasInitConst,
+            learningRate=learningRate,
+            momentum=momentum,
+            gradientClip=gradientClip,
+            weightClip=weightClip,
+            weightRegConst=weightRegConst
+        )
+    elif stageDict['type'] == 'sumRecurrent':
+        inputList = stageDict['inputsStr'].split(',')
+        for i in range(len(inputList)):
+            inputList[i] = inputList[i].strip()
+        stage = Sum_Recurrent(
+            name=stageDict['name'],
+            inputsStr=inputList,
+            numComponents=stageDict['numComponents'],
+            outputDim=stageDict['outputDim']
+        )
+    elif stageDict['type'] == 'componentProdRecurrent':
+        inputList = stageDict['inputsStr'].split(',')
+        for i in range(len(inputList)):
+            inputList[i] = inputList[i].strip()
+        stage = ComponentProduct_Recurrent(
+            name=stageDict['name'],
+            inputsStr=inputList,
+            outputDim=stageDict['outputDim']
+        )
+    elif stageDict['type'] == 'activeRecurrent':
+        inputList = stageDict['inputsStr'].split(',')
+        for i in range(len(inputList)):
+            inputList[i] = inputList[i].strip()
+        stage = Active_Recurrent(
+            name=stageDict['name'],
+            inputsStr=inputList,
+            outputDim=stageDict['outputDim'],
+            activeFn=routeFn(stageDict['activeFn'])
+        )
+    elif stageDict['type'] == 'recurrent':
+        stages = stageDict['stages']
+        realStages = []
+        for i in range(len(stages)):
+            realStages.append(stageLib[stages[i]])
+        stage = Recurrent(
+            name=stageDict['name'],
+            inputDim=stageDict['inputDim'],
+            outputDim=stageDict['outputDim'],
+            timespan=stageDict['timespan'],
+            stages=realStages,
+            multiOutput=stageDict['multiOutput'],
+            outputStageName=stageDict['outputStageName'],
             outputdEdX=outputdEdX
         )
     else:

@@ -9,8 +9,8 @@ import numpy as np
 
 class StageTests(unittest.TestCase):
     def calcgrd(self, X, T):
-        W = self.stage.W
         Y = self.model.forward(X)
+        W = self.stage.W
         E, dEdY = self.costFn(Y, T)
         dEdX = self.model.backward(dEdY)
         dEdW = self.stage.dEdW
@@ -363,7 +363,6 @@ class MapSigmoid_Recurrent_Tests(StageTests):
         self.stage = Map_Recurrent(
             name='sigmoid',
             activeFn=SigmoidActiveFn(),
-            inputDim=6,
             outputDim=3,
             inputsStr=[],
             initRange=0.1,
@@ -383,7 +382,7 @@ class MapSigmoid_Recurrent_Tests(StageTests):
 class Active_Recurrent_Tests(StageTests):
     def setUp(self):
         self.stage = Active_Recurrent(
-            inputDim=6,
+            outputDim=6,
             name='active',
             inputsStr=[],
             activeFn=TanhActiveFn())

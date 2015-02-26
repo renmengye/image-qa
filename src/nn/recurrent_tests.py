@@ -12,7 +12,6 @@ class Recurrent_Tests(stage_tests.StageTests):
         self.sigm = Map_Recurrent(
                 name='sigm',
                 inputsStr=['input(0)', 'sigm(-1)', 'sigm(-2)'],
-                inputDim=self.D+self.D2+self.D2,
                 outputDim=self.D2,
                 activeFn=SigmoidActiveFn(),
                 initRange=1,
@@ -73,7 +72,6 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
         I = Map_Recurrent(
                 name='I',
                 inputsStr=['input(0)', 'Y(-1)', 'C(-1)'],
-                inputDim=D+D2+D2,
                 outputDim=D2,
                 activeFn=SigmoidActiveFn(),
                 initRange=0.1,
@@ -86,7 +84,6 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
         F = Map_Recurrent(
                 name='F',
                 inputsStr=['input(0)', 'Y(-1)', 'C(-1)'],
-                inputDim=D+D2+D2,
                 outputDim=D2,
                 activeFn=SigmoidActiveFn(),
                 initRange=0.1,
@@ -99,7 +96,6 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
         Z = Map_Recurrent(
                 name='Z',
                 inputsStr=['input(0)', 'Y(-1)'],
-                inputDim=D+D2,
                 outputDim=D2,
                 activeFn=TanhActiveFn(),
                 initRange=0.1,
@@ -131,7 +127,6 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
         O = Map_Recurrent(
                 name='O',
                 inputsStr=['input(0)', 'Y(-1)', 'C(0)'],
-                inputDim=D+D2+D2,
                 outputDim=D2,
                 activeFn=SigmoidActiveFn(),
                 initRange=0.1,
@@ -144,7 +139,7 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
         U = Active_Recurrent(
                 name='U',
                 inputsStr=['C(0)'],
-                inputDim=D2,
+                outputDim=D2,
                 activeFn=TanhActiveFn()
             )
         

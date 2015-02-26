@@ -13,25 +13,93 @@ stages:
     - name: fold
       type: timeFold
       timespan: 69
-    - name: dropout1
+    - name: dropout
       type: dropout
       dropoutRate: 0.2
       initSeed: 3
-    - name: lstm1
-      type: lstm
+    - name: lstm.i_gate
+      type: mapRecurrent
+      inputsStr: 'input(0), lstm.out(-1), lstm.mem(-1)'
+      outputDim: 50
+      activeFn: sigmoid
+      initRange: 0.1
+      initSeed: 4
+      biasInitConst: 1.0
+      learningRate: 0.8
+      momentum: 0.9
+      gradientClip: 0.1
+    - name: lstm.f_gate
+      type: mapRecurrent
+      inputsStr: 'input, lstm.out(-1), lstm.mem(-1)'
+      outputDim: 50
+      activeFn: sigmoid
+      initRange: 0.1
+      initSeed: 5
+      biasInitConst: 1.0
+      learningRate: 0.8
+      momentum: 0.9
+      gradientClip: 0.1
+    - name: lstm.o_gate
+      type: mapRecurrent
+      inputsStr: 'input, lstm.out(-1), lstm.mem'
+      outputDim: 50
+      activeFn: sigmoid
+      initRange: 0.1
+      initSeed: 6
+      biasInitConst: 1.0
+      learningRate: 0.8
+      momentum: 0.9
+      gradientClip: 0.1
+    - name: lstm.mem_in
+      type: mapRecurrent
+      inputsStr: 'input, lstm.out(-1)'
+      outputDim: 50
+      activeFn: tanh
+      initRange: 0.1
+      initSeed: 7
+      biasInitConst: 0.0
+      learningRate: 0.8
+      momentum: 0.9
+      gradientClip: 0.1
+    - name: lstm.FC
+      type: componentProdRecurrent
+      inputsStr: 'lstm.f_gate, lstm.mem(-1)'
+      outputDim: 50
+    - name: lstm.IZ
+      type: componentProdRecurrent
+      inputsStr: 'lstm.i_gate, lstm.mem_in'
+      outputDim: 50
+    - name: lstm.mem
+      type: sumRecurrent
+      inputsStr: 'lstm.FC, lstm.IZ'
+      numComponents: 2
+      outputDim: 50
+    - name: lstm.out_in
+      type: activeRecurrent
+      inputsStr: 'lstm.mem'
+      outputDim: 50
+      activeFn: tanh
+    - name: lstm.out
+      type: componentProdRecurrent
+      inputsStr: 'lstm.o_gate, lstm.mem'
+      outputDim: 50
+    - name: lstm
+      type: recurrent
       inputDim: 300
       outputDim: 50
       timespan: 69
-      initRange: 0.1
-      initSeed: 4
-      cutOffZeroEnd: true
-      multiErr: false
-      learningRate: 0.8
-      gradientClip: 0.1
-      weightClip: 20.0
-      weightRegConst: 0.00005
-      annealConst: 0.0
-      outputdEdX: false
+      multiOutput: false
+      outputStageName: 'lstm.out'
+      stages:
+          - lstm.i_gate
+          - lstm.f_gate
+          - lstm.mem_in
+          - lstm.FC
+          - lstm.IZ
+          - lstm.mem
+          - lstm.o_gate
+          - lstm.out_in
+          - lstm.out
     - name: sigmoid
       type: map
       activeFn: sigmoid
@@ -50,6 +118,6 @@ stages:
           - unfold
           - dict
           - fold
-          - dropout1
-          - lstm1
+          - dropout
+          - lstm
           - sigmoid

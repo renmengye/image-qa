@@ -40,91 +40,6 @@ class LSTM_Recurrent_Real_Tests(unittest.TestCase):
             dropoutRate=0.2,
             initSeed=2
         )
-        #
-        # I = Map_Recurrent(
-        #         name='I',
-        #         inputsStr=['input(0)', 'Y(-1)', 'C(-1)'],
-        #         inputDim=D+D2+D2,
-        #         outputDim=D2,
-        #         activeFn=SigmoidActiveFn(),
-        #         initRange=0.1,
-        #         initSeed=5,
-        #         biasInitConst=1.0,
-        #         learningRate=0.8,
-        #         momentum=0.9
-        #     )
-        #
-        # F = Map_Recurrent(
-        #         name='F',
-        #         inputsStr=['input(0)', 'Y(-1)', 'C(-1)'],
-        #         inputDim=D+D2+D2,
-        #         outputDim=D2,
-        #         activeFn=SigmoidActiveFn(),
-        #         initRange=0.1,
-        #         initSeed=6,
-        #         biasInitConst=1.0,
-        #         learningRate=0.8,
-        #         momentum=0.9
-        #     )
-        #
-        # Z = Map_Recurrent(
-        #         name='Z',
-        #         inputsStr=['input(0)', 'Y(-1)'],
-        #         inputDim=D+D2,
-        #         outputDim=D2,
-        #         activeFn=TanhActiveFn(),
-        #         initRange=0.1,
-        #         initSeed=7,
-        #         biasInitConst=0.0,
-        #         learningRate=0.8,
-        #         momentum=0.9
-        #     )
-        #
-        # FC = ComponentProduct_Recurrent(
-        #         name='F.C',
-        #         inputsStr=['F(0)', 'C(-1)'],
-        #         outputDim=D2
-        #     )
-        #
-        # IZ = ComponentProduct_Recurrent(
-        #         name='I.Z',
-        #         inputsStr=['I(0)', 'Z(0)'],
-        #         outputDim=D2
-        #     )
-        #
-        # C = Sum_Recurrent(
-        #         name='C',
-        #         inputsStr=['F.C(0)', 'I.Z(0)'],
-        #         numComponents=2,
-        #         outputDim=D2
-        #     )
-        #
-        # O = Map_Recurrent(
-        #         name='O',
-        #         inputsStr=['input(0)', 'Y(-1)', 'C(0)'],
-        #         inputDim=D+D2+D2,
-        #         outputDim=D2,
-        #         activeFn=SigmoidActiveFn(),
-        #         initRange=0.1,
-        #         initSeed=8,
-        #         biasInitConst=1.0,
-        #         learningRate=0.8,
-        #         momentum=0.9
-        #     )
-        #
-        # U = Active_Recurrent(
-        #         name='U',
-        #         inputsStr=['C(0)'],
-        #         inputDim=D2,
-        #         activeFn=TanhActiveFn()
-        #     )
-        #
-        # Y = ComponentProduct_Recurrent(
-        #         name='Y',
-        #         inputsStr=['O(0)', 'U(0)'],
-        #         outputDim=D2
-        #     )
-
         lstm = LSTM_Recurrent(
                 name='lstm',
                 timespan=Time,
@@ -200,6 +115,8 @@ class LSTM_Recurrent_Real_Tests(unittest.TestCase):
         input_ = trainInput[0:N, 0:Time]
         target_ = trainTarget[0:N]
         Y1 = model1.forward(input_)
+
+        lstm2.W = W
         Y2 = model2.forward(input_)
         self.chkEqual(Y1, Y2)
 

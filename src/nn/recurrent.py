@@ -10,7 +10,6 @@ class Counter:
 class RecurrentSubstage(Stage):
     def __init__(self, name,
                  inputsStr,
-                 inputDim,
                  outputDim,
                  learningRate=0.0,
                  learningRateAnnealConst=0.0,
@@ -32,7 +31,7 @@ class RecurrentSubstage(Stage):
                  outputdEdX=outputdEdX)
         self.inputs = None
         self.inputsStr = inputsStr # Before binding with actual objects
-        self.inputDim = inputDim
+        self.inputDim = None
         self.outputDim = outputDim
         self.dEdY = 0.0
         self.dEdX = 0.0
@@ -93,16 +92,16 @@ class RecurrentSubstage(Stage):
 
 class Active_Recurrent(RecurrentSubstage):
     def __init__(self,
-                 inputDim,
                  activeFn,
                  inputsStr,
+                 outputDim,
+                 inputDim=None,
                  outputdEdX=True,
                  name=None):
         RecurrentSubstage.__init__(self,
                  name=name,
                  inputsStr=inputsStr,
-                 inputDim=inputDim,
-                 outputDim=inputDim,
+                 outputDim=outputDim,
                  outputdEdX=outputdEdX)
         self.activeFn = activeFn
     def forward(self, X):
@@ -114,7 +113,6 @@ class Active_Recurrent(RecurrentSubstage):
 
 class Map_Recurrent(RecurrentSubstage):
     def __init__(self,
-                 inputDim,
                  outputDim,
                  activeFn,
                  inputsStr,
@@ -135,7 +133,6 @@ class Map_Recurrent(RecurrentSubstage):
         RecurrentSubstage.__init__(self,
                  name=name,
                  inputsStr=inputsStr,
-                 inputDim=inputDim + 1,
                  outputDim=outputDim,
                  learningRate=learningRate,
                  learningRateAnnealConst=learningRateAnnealConst,
@@ -147,21 +144,28 @@ class Map_Recurrent(RecurrentSubstage):
                  outputdEdX=outputdEdX)
         self.activeFn = activeFn
         self.random = np.random.RandomState(initSeed)
-
-        if needInit:
-            if biasInitConst >= 0.0:
-                self.W = np.concatenate((self.random.uniform(
-                    -initRange/2.0, initRange/2.0, (outputDim, inputDim)), np.ones((outputDim, 1)) * biasInitConst), axis=-1)
-            else:
-                self.W = self.random.uniform(
-                    -initRange/2.0, initRange/2.0, (outputDim, inputDim + 1))
-        else:
+        if not needInit:
             self.W = initWeights
+        else:
+            self.W = None
+        self.initRange = initRange
+        self.biasInitConst = biasInitConst
         self.X = 0
         self.Y = 0
         pass
 
+    def initWeights(self):
+        if self.biasInitConst >= 0.0:
+            self.W = np.concatenate((self.random.uniform(
+                -self.initRange/2.0, self.initRange/2.0, (self.outputDim, self.inputDim)),
+                np.ones((self.outputDim, 1)) * self.biasInitConst), axis=-1)
+        else:
+            self.W = self.random.uniform(
+                -self.initRange/2.0, self.initRange/2.0, (self.outputDim, self.inputDim + 1))
+
     def forward(self, X):
+        if self.inputDim is None: self.inputDim = X.shape[-1]
+        if self.W is None: self.initWeights()
         self.X = np.concatenate((X, np.ones((X.shape[0], 1))), axis=-1)
         Z = np.inner(self.X, self.W)
         self.Y = self.activeFn.forward(Z)
@@ -174,8 +178,8 @@ class Map_Recurrent(RecurrentSubstage):
         return dEdX if self.outputdEdX else None
 
 class Input_Recurrent(RecurrentSubstage):
-    def __init__(self, name, inputDim):
-        RecurrentSubstage.__init__(self, name=name, inputsStr=[], inputDim=inputDim, outputDim=inputDim)
+    def __init__(self, name, outputDim):
+        RecurrentSubstage.__init__(self, name=name, inputsStr=[], outputDim=outputDim)
 
     def setValue(self, value):
         self.Y = value
@@ -190,8 +194,8 @@ class Input_Recurrent(RecurrentSubstage):
         return dEdY
 
 class Output_Recurrent(RecurrentSubstage):
-    def __init__(self, name, outputDim):
-        RecurrentSubstage.__init__(self, name=name, inputsStr=[], inputDim=outputDim, outputDim=outputDim)
+    def __init__(self, name, outputDim=0):
+        RecurrentSubstage.__init__(self, name=name, inputsStr=[], outputDim=outputDim)
     def graphForward(self):
         self.Y = self.getInput()
         self.dEdX = np.zeros(self.Y.shape)
@@ -199,8 +203,8 @@ class Output_Recurrent(RecurrentSubstage):
         pass
 
 class Zero_Recurrent(RecurrentSubstage):
-    def __init__(self, name, inputDim):
-        RecurrentSubstage.__init__(self, name=name, inputsStr=[], inputDim=inputDim, outputDim=inputDim)
+    def __init__(self, name, outputDim):
+        RecurrentSubstage.__init__(self, name=name, inputsStr=[], outputDim=outputDim)
         self.N = 0
     def setDimension(self, N):
         self.Y = np.zeros((N, self.outputDim))
@@ -212,7 +216,6 @@ class ComponentProduct_Recurrent(RecurrentSubstage):
             self,
             name=name,
             inputsStr=inputsStr,
-            inputDim=outputDim * 2,
             outputDim=outputDim)
     def forward(self, X):
         self.X = X
@@ -228,7 +231,6 @@ class Sum_Recurrent(RecurrentSubstage):
             self,
             name=name,
             inputsStr=inputsStr,
-            inputDim=outputDim * numComponents,
             outputDim=outputDim)
         self.numComponents = numComponents
     def forward(self, X):
@@ -243,7 +245,15 @@ class Recurrent(Stage):
     Recurrent stage.
     Propagate through time.
     """
-    def __init__(self, stages, timespan, outputStageName, inputDim, outputDim, multiOutput=True, name=None, outputdEdX=True):
+    def __init__(self,
+                 stages,
+                 timespan,
+                 outputStageName,
+                 inputDim,
+                 outputDim,
+                 multiOutput=True,
+                 name=None,
+                 outputdEdX=True):
         Stage.__init__(self, name=name, outputdEdX=outputdEdX)
         self.stages = []
         self.stageDict = {}
@@ -258,7 +268,7 @@ class Recurrent(Stage):
         self.X = 0
         for t in range(timespan):
             self.stages.append([])
-            inputStage = Input_Recurrent(name='input', inputDim=inputDim)
+            inputStage = Input_Recurrent(name='input', outputDim=self.inputDim)
             self.stages[t].append(inputStage)
             self.stageDict[('input-%d' % t)] = inputStage
 
@@ -269,6 +279,7 @@ class Recurrent(Stage):
         self.dEdW = []
         for stage in self.stages[0]:
             self.dEdW.append(0.0)
+        self.testRun()
 
     def register(self, stage):
         """
@@ -290,26 +301,37 @@ class Recurrent(Stage):
         :return:
         """
         for t in range(self.timespan):
-            outputStage = Output_Recurrent(name='output', outputDim=self.outputDim)
+            outputStage = Output_Recurrent(name='output')
             self.stages[t].append(outputStage)
             self.stageDict[('output-%d' % t)] = outputStage
             outputStage.addInput(self.stageDict[('%s-%d' % (self.outputStageName, t))])
             for stage in self.stages[t]:
                 for inputStageStr in stage.inputsStr:
-                    stageName = inputStageStr[:inputStageStr.index('(')]
-                    stageTime = int(
-                        inputStageStr[inputStageStr.index('(') + 1 : inputStageStr.index(')')])
+                    if '(' in inputStageStr:
+                        stageName = inputStageStr[:inputStageStr.index('(')]
+                        stageTime = int(
+                            inputStageStr[inputStageStr.index('(') + 1 : inputStageStr.index(')')])
+                    else:
+                        stageName = inputStageStr
+                        stageTime = 0
                     if stageTime > 0:
                         raise Exception('Recurrent model definition is non-causal')
                     # stageNameTime = '%s-%d' % (stageName, stageTime)
                     if t + stageTime < 0:
                         stageInput = Zero_Recurrent(
                             name=('%s-%d'%('zero',t)),
-                            inputDim=self.stageDict[stageName + '-0'].outputDim)
+                            outputDim=self.stageDict[stageName + '-0'].outputDim)
                         self.zeros.append(stageInput)
                     else:
                         stageInput = self.stageDict[('%s-%d' % (stageName, t + stageTime))]
                     stage.addInput(stageInput)
+
+    def testRun(self):
+        X = np.random.rand(2, self.timespan, self.inputDim)
+        self.forward(X)
+        for t in range(1, self.timespan):
+            for s in range(1, len(self.stages[0])-1):
+                self.stages[t][s].W = self.stages[0][s].W
 
     def forward(self, X):
         N = X.shape[0]
