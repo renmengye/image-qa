@@ -90,6 +90,9 @@ class RecurrentSubstage(Stage):
         """Subclasses need to implement this"""
         pass
 
+    def copy(self):
+        return copy.copy(self)
+
 class Active_Recurrent(RecurrentSubstage):
     def __init__(self,
                  activeFn,
@@ -291,7 +294,7 @@ class Recurrent(Stage):
             if t == 0:
                 stageNew = stage
             else:
-                stageNew = copy.copy(stage)
+                stageNew = stage.copy()
             self.stages[t].append(stageNew)
             self.stageDict[('%s-%d' % (stage.name, t))] = stageNew
 
