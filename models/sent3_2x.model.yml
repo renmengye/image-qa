@@ -1,0 +1,198 @@
+costFn: crossEntOne
+decisionFn: hardLimit
+model: all
+stages:
+    - name: unfold
+      type: timeUnfold
+    - name: dict
+      type: lut
+      inputDim: 16547
+      outputDim: 300
+      initWeights: ../data/sentiment3/word-embed-0.npy
+      learningRate: 0.0
+    - name: fold
+      type: timeFold
+      timespan: 69
+    - name: dropout
+      type: dropout
+      dropoutRate: 0.2
+      initSeed: 3
+    - name: 'lstm1.i_gate'
+      type: mapRecurrent
+      inputsStr: 'input, lstm1.out(-1), lstm1.mem(-1)'
+      outputDim: 50
+      activeFn: sigmoid
+      initRange: 0.1
+      initSeed: 4
+      biasInitConst: 1.0
+      learningRate: 0.8
+      momentum: 0.9
+      gradientClip: 0.1
+    - name: 'lstm1.f_gate'
+      type: mapRecurrent
+      inputsStr: 'input, lstm1.out(-1), lstm1.mem(-1)'
+      outputDim: 50
+      activeFn: sigmoid
+      initRange: 0.1
+      initSeed: 5
+      biasInitConst: 1.0
+      learningRate: 0.8
+      momentum: 0.9
+      gradientClip: 0.1
+    - name: 'lstm1.o_gate'
+      type: mapRecurrent
+      inputsStr: 'input, lstm1.out(-1), lstm1.mem'
+      outputDim: 50
+      activeFn: sigmoid
+      initRange: 0.1
+      initSeed: 6
+      biasInitConst: 1.0
+      learningRate: 0.8
+      momentum: 0.9
+      gradientClip: 0.1
+    - name: 'lstm1.mem_in'
+      type: mapRecurrent
+      inputsStr: 'input, lstm1.out(-1)'
+      outputDim: 50
+      activeFn: tanh
+      initRange: 0.1
+      initSeed: 7
+      biasInitConst: 0.0
+      learningRate: 0.8
+      momentum: 0.9
+      gradientClip: 0.1
+    - name: 'lstm1.FC'
+      type: componentProdRecurrent
+      inputsStr: 'lstm1.f_gate, lstm1.mem(-1)'
+      outputDim: 50
+    - name: 'lstm1.IZ'
+      type: componentProdRecurrent
+      inputsStr: 'lstm1.i_gate, lstm1.mem_in'
+      outputDim: 50
+    - name: 'lstm1.mem'
+      type: sumRecurrent
+      inputsStr: 'lstm1.FC, lstm1.IZ'
+      numComponents: 2
+      outputDim: 50
+    - name: 'lstm1.out_in'
+      type: activeRecurrent
+      inputsStr: 'lstm1.mem'
+      outputDim: 50
+      activeFn: tanh
+    - name: 'lstm1.out'
+      type: componentProdRecurrent
+      inputsStr: 'lstm1.o_gate, lstm1.out_in'
+      outputDim: 50
+    - name: 'lstm2.i_gate'
+      type: mapRecurrent
+      inputsStr: 'input, lstm1.out, lstm2.out(-1), lstm2.mem(-1)'
+      outputDim: 50
+      activeFn: sigmoid
+      initRange: 0.1
+      initSeed: 4
+      biasInitConst: 1.0
+      learningRate: 0.8
+      momentum: 0.9
+      gradientClip: 0.1
+    - name: 'lstm2.f_gate'
+      type: mapRecurrent
+      inputsStr: 'input, lstm1.out, lstm2.out(-1), lstm2.mem(-1)'
+      outputDim: 50
+      activeFn: sigmoid
+      initRange: 0.1
+      initSeed: 5
+      biasInitConst: 1.0
+      learningRate: 0.8
+      momentum: 0.9
+      gradientClip: 0.1
+    - name: 'lstm2.o_gate'
+      type: mapRecurrent
+      inputsStr: 'input, lstm1.out, lstm2.out(-1), lstm2.mem'
+      outputDim: 50
+      activeFn: sigmoid
+      initRange: 0.1
+      initSeed: 6
+      biasInitConst: 1.0
+      learningRate: 0.8
+      momentum: 0.9
+      gradientClip: 0.1
+    - name: 'lstm2.mem_in'
+      type: mapRecurrent
+      inputsStr: 'input, lstm1.out, lstm2.out(-1)'
+      outputDim: 50
+      activeFn: tanh
+      initRange: 0.1
+      initSeed: 7
+      biasInitConst: 0.0
+      learningRate: 0.8
+      momentum: 0.9
+      gradientClip: 0.1
+    - name: 'lstm2.FC'
+      type: componentProdRecurrent
+      inputsStr: 'lstm2.f_gate, lstm2.mem(-1)'
+      outputDim: 50
+    - name: 'lstm2.IZ'
+      type: componentProdRecurrent
+      inputsStr: 'lstm2.i_gate, lstm2.mem_in'
+      outputDim: 50
+    - name: 'lstm2.mem'
+      type: sumRecurrent
+      inputsStr: 'lstm2.FC, lstm2.IZ'
+      numComponents: 2
+      outputDim: 50
+    - name: 'lstm2.out_in'
+      type: activeRecurrent
+      inputsStr: 'lstm2.mem'
+      outputDim: 50
+      activeFn: tanh
+    - name: 'lstm2.out'
+      type: componentProdRecurrent
+      inputsStr: 'lstm2.o_gate, lstm2.out_in'
+      outputDim: 50
+    - name: lstm
+      type: recurrent
+      inputDim: 300
+      outputDim: 50
+      timespan: 69
+      multiOutput: false
+      outputStageName: 'lstm2.out'
+      stages:
+          - lstm1.i_gate
+          - lstm1.f_gate
+          - lstm1.mem_in
+          - lstm1.FC
+          - lstm1.IZ
+          - lstm1.mem
+          - lstm1.o_gate
+          - lstm1.out_in
+          - lstm1.out
+          - lstm2.i_gate
+          - lstm2.f_gate
+          - lstm2.mem_in
+          - lstm2.FC
+          - lstm2.IZ
+          - lstm2.mem
+          - lstm2.o_gate
+          - lstm2.out_in
+          - lstm2.out
+    - name: sigmoid
+      type: map
+      activeFn: sigmoid
+      inputDim: 50
+      outputDim: 1
+      initRange: 0.1
+      initSeed: 7
+      learningRate: 0.01
+      gradientClip: 0.1
+      weightClip: 5.0
+      annealConst: 0.0
+      weightRegConst: 0.00005
+    - name: all
+      type: sequential
+      stages:
+          - unfold
+          - dict
+          - fold
+          - dropout
+          - lstm
+          - sigmoid
