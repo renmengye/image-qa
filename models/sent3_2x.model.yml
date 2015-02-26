@@ -28,6 +28,7 @@ stages:
       learningRate: 0.8
       momentum: 0.9
       gradientClip: 0.1
+      weightClip: 20.0
     - name: 'lstm1.f_gate'
       type: mapRecurrent
       inputsStr: 'input, lstm1.out(-1), lstm1.mem(-1)'
@@ -39,6 +40,7 @@ stages:
       learningRate: 0.8
       momentum: 0.9
       gradientClip: 0.1
+      weightClip: 20.0
     - name: 'lstm1.o_gate'
       type: mapRecurrent
       inputsStr: 'input, lstm1.out(-1), lstm1.mem'
@@ -50,6 +52,7 @@ stages:
       learningRate: 0.8
       momentum: 0.9
       gradientClip: 0.1
+      weightClip: 20.0
     - name: 'lstm1.mem_in'
       type: mapRecurrent
       inputsStr: 'input, lstm1.out(-1)'
@@ -61,6 +64,7 @@ stages:
       learningRate: 0.8
       momentum: 0.9
       gradientClip: 0.1
+      weightClip: 20.0
     - name: 'lstm1.FC'
       type: componentProdRecurrent
       inputsStr: 'lstm1.f_gate, lstm1.mem(-1)'
@@ -94,6 +98,7 @@ stages:
       learningRate: 0.8
       momentum: 0.9
       gradientClip: 0.1
+      weightClip: 20.0
     - name: 'lstm2.f_gate'
       type: mapRecurrent
       inputsStr: 'input, lstm1.out, lstm2.out(-1), lstm2.mem(-1)'
@@ -105,6 +110,7 @@ stages:
       learningRate: 0.8
       momentum: 0.9
       gradientClip: 0.1
+      weightClip: 20.0
     - name: 'lstm2.o_gate'
       type: mapRecurrent
       inputsStr: 'input, lstm1.out, lstm2.out(-1), lstm2.mem'
@@ -116,6 +122,7 @@ stages:
       learningRate: 0.8
       momentum: 0.9
       gradientClip: 0.1
+      weightClip: 20.0
     - name: 'lstm2.mem_in'
       type: mapRecurrent
       inputsStr: 'input, lstm1.out, lstm2.out(-1)'
@@ -127,6 +134,7 @@ stages:
       learningRate: 0.8
       momentum: 0.9
       gradientClip: 0.1
+      weightClip: 20.0
     - name: 'lstm2.FC'
       type: componentProdRecurrent
       inputsStr: 'lstm2.f_gate, lstm2.mem(-1)'
