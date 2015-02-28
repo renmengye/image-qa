@@ -19,7 +19,7 @@ if __name__ == '__main__':
         vocabFile = sys.argv[1]
         outputFile = sys.argv[2]
         pcaDim = int(sys.argv[3])
-        trainspose = sys.argv[4] == 'transpose'
+        transpose = sys.argv[4] == 'transpose'
     else:
         vocabFile = '../data/sentiment3/vocabs-vec-1.npy'
         pcaDim = 0

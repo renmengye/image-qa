@@ -9,4 +9,4 @@ saveModel: false
 plotFigs: false
 calcError: true
 progress: false
-tolerance: 100
+patience: 100

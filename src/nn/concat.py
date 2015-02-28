@@ -10,13 +10,20 @@ class Concat(Container):
         self.splits = splits
         self.outputSplits = []
 
-    def forward(self, X):
+    def forward(self, X, dropout=True):
         self.outputSplits = []
         splY = []
         splX = np.split(X, self.splits, axis=self.axis)
         lastIdx = 0
         for i in range(0, len(self.stages)):
-            Ytmp = self.stages[i].forward(splX[i])
+            stage = self.stages[i]
+            if isinstance(stage, Container):
+                Ytmp = stage.forward(splX[i], dropout)
+            elif hasattr(stage, 'dropout'):
+                stage.dropout = dropout
+                Ytmp = stage.forward(splX[i])
+            else:
+                Ytmp = stage.forward(splX[i])
             splY.append(Ytmp)
             if i < len(self.stages) - 1:
                 lastIdx = Ytmp.shape[self.axis] + lastIdx

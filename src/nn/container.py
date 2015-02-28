@@ -7,6 +7,18 @@ class Container(Stage):
                  outputdEdX=outputdEdX)
         self.stages = stages
 
+    def forward(self, X, dropout=True):
+        X1 = X
+        for stage in self.stages:
+            if isinstance(stage, Container):
+                X1 = stage.forward(X1, dropout)
+            elif hasattr(stage, 'dropout'):
+                stage.dropout = dropout
+                X1 = stage.forward(X1)
+            else:
+                X1 = stage.forward(X1)
+        return X1
+
     def updateWeights(self):
         for stage in self.stages:
             stage.updateWeights()

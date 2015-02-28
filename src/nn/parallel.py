@@ -7,12 +7,19 @@ class Parallel(Container):
     def __init__(self, name, stages, axis, outputdEdX=True):
         Container.__init__(self, name=name, stages=stages, outputdEdX=outputdEdX)
         self.axis = axis
+        self.splY = None
 
-    def forward(self, X):
+    def forward(self, X, dropout=True):
         self.splY = []
-        for s in self.stages:
-            self.splY.append(s.forward(X))
-            #print self.splY[-1].shape
+        for stage in self.stages:
+            if isinstance(stage, Container):
+                Ytmp = stage.forward(X, dropout)
+            elif hasattr(stage, 'dropout'):
+                stage.dropout = dropout
+                Ytmp = stage.forward(X)
+            else:
+                Ytmp = stage.forward(X)
+            self.splY.append(Ytmp)
         return np.concatenate(self.splY, axis=self.axis)
 
     def backward(self, dEdY):

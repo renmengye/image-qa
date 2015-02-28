@@ -6,7 +6,7 @@ def appendList(resultsFolder, name):
     print 'Appended to email list.'
     tosend = os.path.join(resultsFolder, 'tosend.txt')  
     with open(tosend, 'a+') as f:
-        f.write(self.name + '\n')
+        f.write(name + '\n')
 
 if __name__ == '__main__':
     resultsFolder = '/u/mren/code/image-qa/results/'
@@ -34,4 +34,4 @@ if __name__ == '__main__':
     with open(tosend, 'w') as f:
         f.write('')
 
-    print 'Finished.'
+    print 'Finished sending all emails.'
