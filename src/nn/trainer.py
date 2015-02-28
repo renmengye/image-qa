@@ -161,7 +161,7 @@ class Trainer:
         logger = Logger(self, csv=trainOpt['writeRecord'])
         logger.logMsg('Trainer ' + self.name)
         plotter = Plotter(self)
-        bestVE = None
+        bestVscore = None
         bestEpoch = 0
         nAfterBest = 0
 
@@ -220,8 +220,19 @@ class Trainer:
                 if calcError:
                     Vrate, correct, total = tester.calcRate(self.model, VY, VT)
                     self.validRate[epoch] = Vrate
-                if (bestVE is None) or (VE < bestVE):
-                    bestVE = VE
+
+                # Check stopping criterion
+                if not trainOpt.has_key('criterion'):
+                    Vscore = VE
+                else:
+                    if trainOpt['criterion'] == 'loss':
+                        Vscore = VE
+                    elif trainOpt['criterion'] == 'rate':
+                        Vscore = 1 - Vrate
+                    else:
+                        raise Exception('Unknown stopping criterion "%s"' % trainOpt['criterion'])
+                if (bestVscore is None) or (Vscore < bestVscore):
+                    bestVscore = Vscore
                     nAfterBest = 0
                     bestEpoch = epoch
                     # Save trainer if VE is best
@@ -229,8 +240,8 @@ class Trainer:
                         self.save()
                 else:
                     nAfterBest += 1
-                    # Stop training if above tolerance level
-                    if nAfterBest > trainOpt['tolerance']:
+                    # Stop training if above patience level
+                    if nAfterBest > trainOpt['patience']:
                         break
             else:
                 if trainOpt['saveModel']:
@@ -245,13 +256,6 @@ class Trainer:
             # Plot train curves
             if trainOpt['plotFigs']:
                 plotter.plot()
-
-        # Send email
-        if trainOpt.has_key('sendEmail') and trainOpt['sendEmail']:
-            print 'Appended to email list.'
-            tosend = os.path.join(self.resultsFolder, 'tosend.txt')  
-            with open(tosend, 'a+') as f:
-                f.write(self.name + '\n')
 
         # Record final epoch number
         self.stoppedEpoch = bestEpoch if trainOpt['needValid'] else epoch

@@ -10,5 +10,5 @@ plotFigs: true
 calcError: true
 stopCost: 0.01
 progress: true
-tolerance: 20
+patience: 20
 sendEmail: true

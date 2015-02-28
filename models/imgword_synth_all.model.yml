@@ -49,7 +49,7 @@ stages:
           - txtDict
           - txtFold
     - name: imgtxt
-      type: parallel
+      type: concat
       stages:
           - imgLine
           - txtLine

@@ -135,13 +135,12 @@ class LSTM_Recurrent(Recurrent):
     def splitWeights(self, W):
         D = self.inputDim
         D2 = self.outputDim
-        s = D + D2 + D2
+        s = D + D2 + D2 + 1
+        s2 = D + D2 + 1
         IW = W[:, :s]
         FW = W[:, s:s + s]
-        s = s + s
-        ZW = W[:, s:s + D + D2]
-        s = D + D2
-        OW = W[:, s:s + D + D2 + D2]
+        ZW = W[:, s + s:s + s + s2]
+        OW = W[:, s + s +s2:s + s + s2 + s]
         return IW, FW, ZW, OW
 
     def loadWeights(self, W):

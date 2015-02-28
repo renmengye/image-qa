@@ -8,6 +8,9 @@ from inner_prod import *
 from dropout import *
 from sequential import *
 from parallel import *
+from concat import *
+from const_weights import *
+from cos_sim import *
 from active_func import *
 from lstm_recurrent import *
 
@@ -16,6 +19,8 @@ def routeFn(name):
         return crossEntOne
     elif name == 'crossEntIdx':
         return crossEntIdx
+    elif name == 'rankingLoss':
+        return rankingLoss
     elif name == 'hardLimit':
         return hardLimit
     elif name == 'argmax':
@@ -179,6 +184,39 @@ def routeStage(stageDict):
             stages=realStages,
             outputdEdX=outputdEdX
         )
+    elif stageDict['type'] == 'concat':
+        stages = stageDict['stages']
+        realStages = []
+        for i in range(len(stages)):
+            realStages.append(stageLib[stages[i]])
+        stage = Concat(
+            name=stageDict['name'],
+            stages=realStages,
+            axis=stageDict['axis'],
+            splits=stageDict['splits'],
+            outputdEdX=outputdEdX
+        )
+    elif stageDict['type'] == 'constWeights':
+        stage = ConstWeights(
+            name=stageDict['name'],
+            inputDim=stageDict['inputDim'],
+            outputDim=stageDict['outputDim'],
+            initSeed=initSeed,
+            initRange=initRange,
+            initWeights=initWeights,
+            needInit=needInit,
+            learningRate=learningRate,
+            learningRateAnnealConst=learningRateAnnealConst,
+            momentum=momentum,
+            deltaMomentum=deltaMomentum,
+            gradientClip=gradientClip,
+            weightClip=weightClip,
+            weightRegConst=weightRegConst
+        )
+    elif stageDict['type'] == 'cosSimilarity':
+        stage = CosSimilarity(
+            bankDim=stageDict['bankDim']
+        )
     elif stageDict['type'] == 'parallel':
         stages = stageDict['stages']
         realStages = []
@@ -187,9 +225,7 @@ def routeStage(stageDict):
         stage = Parallel(
             name=stageDict['name'],
             stages=realStages,
-            axis=stageDict['axis'],
-            splits=stageDict['splits'],
-            outputdEdX=outputdEdX
+            axis=stageDict['axis']
         )
     elif stageDict['type'] == 'mapRecurrent':
         inputList = stageDict['inputsStr'].split(',')

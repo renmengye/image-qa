@@ -1,4 +1,4 @@
-costFn: crossEntIdx 
+costFn: rankingLoss
 decisionFn: argmax
 model: all
 stages:
@@ -23,22 +23,18 @@ stages:
       weightClip: 50.0
     - name: imgFold
       type: timeFold
-      timespan: 1 
+      timespan: 1
     - name: txtUnfold
       type: timeUnfold
     - name: txtDict
       type: lut
-      inputDim: 42
+      inputDim: 871
       outputDim: 300
-      initSeed: 2
-      initRange: 0.1
-      learningRate: 0.8
-      momentum: 0.9
-      gradientClip: 0.1
-      weightClip: 30.0
+      initWeights: ../data/imgword/word-embed-0-q.npy
+      learningRate: 0.0
     - name: txtFold
       type: timeFold
-      timespan: 1
+      timespan: 27
     - name: imgLine
       type: sequential
       stages:
@@ -68,9 +64,9 @@ stages:
     - name: lstm1
       type: lstm
       inputDim: 300
-      outputDim: 150
-      timespan: 2
-      initRange: 0.1
+      outputDim: 300
+      timespan: 28
+      initRange: 0.2
       initSeed: 4
       cutOffZeroEnd: true
       multiErr: false
@@ -78,26 +74,35 @@ stages:
       learningRateAnnealConst: 0.0
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 50.0
+      weightClip: 100.0
       weightRegConst: 0.00005
       outputdEdX: true
-    - name: softmax
-      type: map
-      activeFn: softmax
-      inputDim: 150
-      outputDim: 21
-      initRange: 0.01
-      initSeed: 7
-      learningRate: 0.01
-      learningRateAnnealConst: 0.0
-      momentum: 0.9
-      gradientClip: 0.1
-      weightClip: 5.0
-      weightRegConst: 0.00005
-    - name: all
+    - name: output
       type: sequential
       stages:
           - imgtxt
           - dropout1
           - lstm1
-          - softmax
+    - name: answer
+      type: constWeights
+      inputDim: 300
+      outputDim: 68
+      #initSeed: 200
+      #initRange: 0.1
+      initWeights: ../data/imgword/word-embed-0-a.npy
+      learningRate: 0.0
+      momentum: 0.0
+    - name: collector
+      type: parallel
+      stages:
+          - answer
+          - output
+      axis: 0
+    - name: cosine
+      type: cosSimilarity
+      bankDim: 68
+    - name: all
+      type: sequential
+      stages:
+          - collector
+          - cosine

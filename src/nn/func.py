@@ -41,3 +41,19 @@ def crossEntOne(Y, T):
 
 def argmax(Y):
     return np.argmax(Y, axis=-1)
+
+def rankingLoss(Y, T):
+    alpha = 0.1
+    dEdY = np.zeros(Y.shape)
+    E = 0
+    for n in range(T.size):
+        cost = Y[n] - Y[n, T[n]] + alpha
+        valid = (cost > 0).astype(int)
+        nvalid = np.sum(valid) - 1
+        cost = cost * valid
+        dEdY[n] = valid
+        dEdY[n, T[n]] = -nvalid
+        E += np.sum(cost) - alpha
+    E /= T.size
+    dEdY /= T.size
+    return E, dEdY

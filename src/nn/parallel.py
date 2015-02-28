@@ -1,56 +1,33 @@
-from stage import *
+from container import *
 
-class Parallel(Stage):
-    def __init__(self, stages, axis, splits, name=None, outputdEdX=True):
-        Stage.__init__(self, name=name, outputdEdX=outputdEdX)
-        self.stages = stages
+class Parallel(Container):
+    """
+    Pass the input two all substages, and concatenate the output.
+    """
+    def __init__(self, name, stages, axis, outputdEdX=True):
+        Container.__init__(self, name=name, stages=stages, outputdEdX=outputdEdX)
         self.axis = axis
-        self.splits = splits
-        self.outputSplits = []
+        self.splY = None
 
-    def forward(self, X):
-        self.outputSplits = []
-        splY = []
-        splX = np.split(X, self.splits, axis=self.axis)
-        lastIdx = 0
-        for i in range(0, len(self.stages)):
-            Ytmp = self.stages[i].forward(splX[i])
-            splY.append(Ytmp)
-            if i < len(self.stages) - 1:
-                lastIdx = Ytmp.shape[self.axis] + lastIdx
-                self.outputSplits.append(lastIdx)
-        Y = np.concatenate(splY, axis=self.axis)
-        return Y
+    def forward(self, X, dropout=True):
+        self.splY = []
+        for stage in self.stages:
+            if isinstance(stage, Container):
+                Ytmp = stage.forward(X, dropout)
+            elif hasattr(stage, 'dropout'):
+                stage.dropout = dropout
+                Ytmp = stage.forward(X)
+            else:
+                Ytmp = stage.forward(X)
+            self.splY.append(Ytmp)
+        return np.concatenate(self.splY, axis=self.axis)
 
     def backward(self, dEdY):
-        spldEdX = []
-        spldEdY = np.split(dEdY, self.outputSplits, axis=self.axis)
-        for i in range(0, len(self.stages)):
-            dEdXtmp = self.stages[i].backward(spldEdY[i])
-            spldEdX.append(dEdXtmp)
-        if self.outputdEdX:
-            dEdX = np.concatenate(spldEdX, axis=self.axis)
-            return dEdX
-        else:
-            return None
-
-    def updateWeights(self):
-        for stage in self.stages:
-            stage.updateWeights()
-        return
-
-    def updateLearningParams(self, numEpoch):
-        for stage in self.stages:
-            stage.updateLearningParams(numEpoch)
-        return
-
-    def getWeights(self):
-        weights = []
-        for stage in self.stages:
-            weights.append(stage.getWeights())
-        return np.array(weights, dtype=object)
-
-    def loadWeights(self, W):
-        for i in range(W.shape[0]):
-            self.stages[i].loadWeights(W[i])
-        return
+        start = 0
+        for (s, Y) in zip(self.stages, self.splY):
+            if self.axis == 0:
+                s.backward(dEdY[start:start+Y.shape[0]])
+                start += Y.shape[0]
+            elif self.axis == 1:
+                s.backward(dEdY[:,start:start+Y.shape[1]])
+                start += Y.shape[1]
