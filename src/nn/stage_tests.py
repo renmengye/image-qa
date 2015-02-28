@@ -4,6 +4,7 @@ from lut import *
 from inner_prod import *
 from time_sum import *
 from recurrent import *
+from cos_sim import *
 import unittest
 import numpy as np
 
@@ -396,6 +397,21 @@ class Active_Recurrent_Tests(StageTests):
         dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
         self.chkgrd(dEdX, dEdXTmp)
 
+class CosSimilarity_Tests(StageTests):
+    def setUp(self):
+        self.stage = CosSimilarity(
+            bankDim=6,
+            name='cos')
+        self.model = self.stage
+        self.testInputErr = True
+        self.costFn = rankingLoss
+    def test_grad(self):
+        random = np.random.RandomState(2)
+        X = random.uniform(-1, 1, (10, 12))
+        T = random.uniform(0, 6, (4)).astype(int)
+        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
+        self.chkgrd(dEdX, dEdXTmp)
+
 if __name__ == '__main__':
     suite = unittest.TestSuite()
     suite.addTests(
@@ -430,4 +446,6 @@ if __name__ == '__main__':
         unittest.TestLoader().loadTestsFromTestCase(MapSigmoid_Recurrent_Tests))
     suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(Active_Recurrent_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(CosSimilarity_Tests))
     unittest.TextTestRunner(verbosity=2).run(suite)
