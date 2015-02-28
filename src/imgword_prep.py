@@ -157,8 +157,12 @@ if __name__ == '__main__':
     np.save(os.path.join(outputFolder, 'train-last-37.npy'), trainData)
     np.save(os.path.join(outputFolder, 'test-last-37.npy'), testData)
 
-    with open(os.path.join(outputFolder, 'vocabs.txt'), 'w+') as f:
+    with open(os.path.join(outputFolder, 'question_vocabs.txt'), 'w+') as f:
         for word in questionVocab:
+            f.write(word + '\n')
+
+    with open(os.path.join(outputFolder, 'answer_vocabs.txt'), 'w+') as f:
+        for word in answerVocab:
             f.write(word + '\n')
 
     #imgW = np.loadtxt('../data/nyu-depth-v2/oxford_hidden7.txt')

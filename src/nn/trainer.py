@@ -246,13 +246,6 @@ class Trainer:
             if trainOpt['plotFigs']:
                 plotter.plot()
 
-        # Send email
-        if trainOpt.has_key('sendEmail') and trainOpt['sendEmail']:
-            print 'Appended to email list.'
-            tosend = os.path.join(self.resultsFolder, 'tosend.txt')  
-            with open(tosend, 'a+') as f:
-                f.write(self.name + '\n')
-
         # Record final epoch number
         self.stoppedEpoch = bestEpoch if trainOpt['needValid'] else epoch
 

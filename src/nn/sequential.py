@@ -1,10 +1,6 @@
-from stage import *
+from container import *
 
-class Sequential(Stage):
-    def __init__(self, stages, name=None, outputdEdX=True):
-        Stage.__init__(self, name=name, outputdEdX=outputdEdX)
-        self.stages = stages
-
+class Sequential(Container):
     def forward(self, X, dropout=True):
         X1 = X
         for stage in self.stages:
@@ -20,23 +16,3 @@ class Sequential(Stage):
             dEdY = stage.backward(dEdY)
             if dEdY is None: break
         return dEdY if self.outputdEdX else None
-
-    def updateWeights(self):
-        for stage in self.stages:
-            stage.updateWeights()
-        return
-
-    def updateLearningParams(self, numEpoch):
-        for stage in self.stages:
-            stage.updateLearningParams(numEpoch)
-        return
-
-    def getWeights(self):
-        weights = []
-        for stage in self.stages:
-            weights.append(stage.getWeights())
-        return np.array(weights, dtype=object)
-
-    def loadWeights(self, W):
-        for i in range(W.shape[0]):
-            self.stages[i].loadWeights(W[i])

@@ -3,6 +3,7 @@ import numpy as np
 import os
 import sys
 import yaml
+import email
 
 '''
 Usage: python train.py {name} -d {train data} -m {model spec} -c {config} -o {output folder}
@@ -53,6 +54,9 @@ if __name__ == '__main__':
         outputFolder=outputFolder
     )
     trainer.train(trainInput, trainTarget)
+    # Send email
+    if trainOpt.has_key('sendEmail') and trainOpt['sendEmail']:
+        email.appendList(outputFolder, trainer.name)
 
     if testDataFilename is not None:
         # Retrain with all the data
@@ -76,3 +80,6 @@ if __name__ == '__main__':
         testRate, c, t = nn.calcRate(model, testOutput, testTarget)
         with open(os.path.join(trainer.outputFolder, 'result.txt'), 'w+') as f:
             f.write('Test rate: %f' % testRate)
+        # Send email
+        if trainOpt.has_key('sendEmail') and trainOpt['sendEmail']:
+            email.appendList(outputFolder, trainer.name)

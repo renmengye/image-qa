@@ -1,5 +1,4 @@
 from stage import *
-import numpy as np
 
 class CosSimilarity(Stage):
     """
