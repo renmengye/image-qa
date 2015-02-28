@@ -13,10 +13,10 @@ with open(tosend,'r') as f:
 
 for id_ in id_s:
     i = id_[:-1] # Remove newline character
-    errfig = resultsFolder + '%s/%s_err.png' %(i, i)
-    lossfig = resultsFolder + '%s/%s_loss.png' %(i,i)
-    csv = resultsFolder + '%s/%s.csv' %(i,i)
-    result = resultsFolder + '%s/result.txt'
+    errfig = resultsFolder + '%s/%s_err.png' % (i, i)
+    lossfig = resultsFolder + '%s/%s_loss.png' % (i,i)
+    csv = resultsFolder + '%s/%s.csv' % (i,i)
+    result = resultsFolder + '%s/result.txt' % i
     if not os.path.exists(result):
         result = csv
     emailCommand = ('mutt renmengye@gmail.com -s "Experiment Summary %s" -a "%s" -a "%s" -a "%s" < "%s"'
