@@ -43,7 +43,7 @@ if __name__ == '__main__':
     name, modelFilename, configFilename, trainDataFilename, testDataFilename, outputFolder = readFlags()
     with open(configFilename) as f:
         trainOpt = yaml.load(f)
-    trainOpt['numEpoch'] = 1
+    #trainOpt['numEpoch'] = 1
     trainData = np.load(trainDataFilename)
     trainInput = trainData[0]
     trainTarget = trainData[1]
