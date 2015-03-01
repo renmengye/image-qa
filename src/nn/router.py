@@ -232,7 +232,8 @@ def routeStage(stageDict):
         stage = Parallel(
             name=stageDict['name'],
             stages=realStages,
-            axis=stageDict['axis']
+            axis=stageDict['axis'],
+            outputdEdX=outputdEdX
         )
     elif stageDict['type'] == 'mapRecurrent':
         inputList = stageDict['inputsStr'].split(',')
