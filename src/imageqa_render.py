@@ -1,7 +1,7 @@
 import sys
 import os
 
-from code.nn.func import *
+from nn.func import *
 
 imageFolder = '../../data/nyu-depth-v2/jpg/'
 

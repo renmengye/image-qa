@@ -43,7 +43,7 @@ if __name__ == '__main__':
     name, modelFilename, configFilename, trainDataFilename, testDataFilename, outputFolder = readFlags()
     with open(configFilename) as f:
         trainOpt = yaml.load(f)
-    #trainOpt['numEpoch'] = 1
+    trainOpt['numEpoch'] = 1
     trainData = np.load(trainDataFilename)
     trainInput = trainData[0]
     trainTarget = trainData[1]
@@ -63,9 +63,15 @@ if __name__ == '__main__':
         testData = np.load(testDataFilename)
         testInput = testData[0]
         testTarget = testData[1]
-        # testOutput = nn.test(model, testInput)
-        # testRate, c, t = nn.calcRate(model, testOutput, testTarget)
-        # print 'before retrain: ', testRate
+        testOutput = nn.test(model, testInput)
+        testRate, c, t = nn.calcRate(model, testOutput, testTarget)
+        print 'Before retrain test rate: ', testRate
+
+        # model2 = nn.load(modelFilename)
+        # model2.loadWeights(np.load(trainer.modelFilename))
+        # testOutput2 = nn.test(model2, testInput)
+        # testRate2, c, t = nn.calcRate(model2, testOutput2, testTarget)
+        # print 'After reload test rate: ', testRate2
 
         # Retrain with all the data
         trainOpt['needValid'] = False
@@ -83,6 +89,7 @@ if __name__ == '__main__':
         model.loadWeights(np.load(trainer.modelFilename))
         testOutput = nn.test(model, testInput)
         testRate, c, t = nn.calcRate(model, testOutput, testTarget)
+        print 'After retrain test rate: ', testRate
 
         with open(os.path.join(trainer.outputFolder, 'result.txt'), 'w+') as f:
             f.write('Test rate: %f' % testRate)

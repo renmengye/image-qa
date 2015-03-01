@@ -22,25 +22,6 @@ def calcPrecision(Y, T):
     print 'rate @ 5: %.4f' % (correctAt5 / float(Y.shape[0]))
     print 'rate @ 10: %.4f' % (correctAt10 / float(Y.shape[0]))
 
-# def calcPrecisionRank(Y, T):
-#     # Calculate precision
-#     correctAt1 = 0
-#     correctAt5 = 0
-#     correctAt10 = 0
-#     for n in range(0, Y.shape[0]):
-#         sortIdx = np.argsort(Y[n], axis=0)
-#         sortIdx = sortIdx[::-1]
-#         for i in range(0, 10):
-#             if sortIdx[i] == T[n, 0]:
-#                 if i == 0:
-#                     correctAt1 += 1
-#                 if i <= 4:
-#                     correctAt5 += 1
-#                 correctAt10 += 1
-#     print 'rate @ 1: %.4f' % (correctAt1 / float(Y.shape[0]))
-#     print 'rate @ 5: %.4f' % (correctAt5 / float(Y.shape[0]))
-#     print 'rate @ 10: %.4f' % (correctAt10 / float(Y.shape[0]))
-
 if __name__ == '__main__':
     """
     Usage: test.py id -train trainData.npy -test testData.npy -dict vocabDict.npy -method logprob/rank
@@ -70,19 +51,19 @@ if __name__ == '__main__':
     TX = testData[0]
     TY = nn.test(model, TX)
     TT = testData[1]
-    # vocabDict = np.load(dictFile)
-    # answerArray = vocabDict[3]
-    # with open(testTruthFile, 'w+') as f:
-    #     for n in range(0, TT.shape[0]):
-    #         f.write(answerArray[TT[n, 0]] + '\n')
-    # with open(testAnswerFile, 'w+') as f:
-    #     for n in range(0, TY.shape[0]):
-    #         f.write(answerArray[np.argmax(TY[n, :])] + '\n')
-    # calcPrecision(Y, T)
-    # calcPrecision(TY, TT)
-    # np.save(trainOutFile, Y)
-    # np.save(testOutFile, TY)
-    Y = nn.test(model, X)
-    print nn.calcRate(model, Y, T)
-    TY = nn.test(model, TX)
-    print nn.calcRate(model, TY, TT)
+    vocabDict = np.load(dictFile)
+    answerArray = vocabDict[3]
+    with open(testTruthFile, 'w+') as f:
+        for n in range(0, TT.shape[0]):
+            f.write(answerArray[TT[n, 0]] + '\n')
+    with open(testAnswerFile, 'w+') as f:
+        for n in range(0, TY.shape[0]):
+            f.write(answerArray[np.argmax(TY[n, :])] + '\n')
+    calcPrecision(Y, T)
+    calcPrecision(TY, TT)
+    np.save(trainOutFile, Y)
+    np.save(testOutFile, TY)
+    # Y = nn.test(model, X)
+    # print nn.calcRate(model, Y, T)
+    # TY = nn.test(model, TX)
+    # print nn.calcRate(model, TY, TT)

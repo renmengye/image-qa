@@ -27,7 +27,7 @@ class LSTM_Recurrent(Recurrent):
 
         self.I = Map_Recurrent(
                  name=name + '.I',
-                 inputsStr=['input(0)', name + '.Y(-1)', name + '.C(-1)'],
+                 inputsStr=['input(0)', name + '.H(-1)', name + '.C(-1)'],
                  #inputDim=D+D2+D2,
                  outputDim=D2,
                  activeFn=SigmoidActiveFn(),
@@ -42,7 +42,7 @@ class LSTM_Recurrent(Recurrent):
 
         self.F = Map_Recurrent(
                  name=name + '.F',
-                 inputsStr=['input(0)', name + '.Y(-1)', name + '.C(-1)'],
+                 inputsStr=['input(0)', name + '.H(-1)', name + '.C(-1)'],
                  #inputDim=D+D2+D2,
                  outputDim=D2,
                  activeFn=SigmoidActiveFn(),
@@ -57,7 +57,7 @@ class LSTM_Recurrent(Recurrent):
 
         self.Z = Map_Recurrent(
                  name=name + '.Z',
-                 inputsStr=['input(0)', name + '.Y(-1)'],
+                 inputsStr=['input(0)', name + '.H(-1)'],
                  #inputDim=D+D2,
                  outputDim=D2,
                  activeFn=TanhActiveFn(),
@@ -72,7 +72,7 @@ class LSTM_Recurrent(Recurrent):
 
         self.O = Map_Recurrent(
                  name=name + '.O',
-                 inputsStr=['input(0)', name + '.Y(-1)', name + '.C(0)'],
+                 inputsStr=['input(0)', name + '.H(-1)', name + '.C(0)'],
                  #inputDim=D+D2+D2,
                  outputDim=D2,
                  activeFn=SigmoidActiveFn(),
@@ -110,16 +110,16 @@ class LSTM_Recurrent(Recurrent):
                  outputDim=D2,
                  activeFn=TanhActiveFn())
 
-        self.Y = ComponentProduct_Recurrent(
-                 name=name + '.Y',
+        self.H = ComponentProduct_Recurrent(
+                 name=name + '.H',
                  inputsStr=[name + '.O(0)', name + '.U(0)'],
                  outputDim=D2)
 
-        stages = [self.I, self.F, self.Z, self.FC, self.IZ, self.C, self.O, self.U, self.Y]
+        stages = [self.I, self.F, self.Z, self.FC, self.IZ, self.C, self.O, self.U, self.H]
         Recurrent.__init__(self,
                            stages=stages,
                            timespan=timespan,
-                           outputStageName=name + '.Y',
+                           outputStageName=name + '.H',
                            inputDim=inputDim,
                            outputDim=outputDim,
                            multiOutput=multiOutput,
@@ -149,3 +149,6 @@ class LSTM_Recurrent(Recurrent):
         self.F.W = FW
         self.Z.W = ZW
         self.O.W = OW
+        for t in range(1, self.timespan):
+            for s in range(1, len(self.stages[t]) -1):
+                self.stages[t][s].W = self.stages[0][s].W
