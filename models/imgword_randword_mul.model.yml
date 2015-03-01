@@ -1,4 +1,4 @@
-costFn: rankingLoss
+costFn: crossEntIdx 
 decisionFn: argmax
 model: all
 stages:
@@ -14,7 +14,7 @@ stages:
       type: map
       activeFn: identity
       inputDim: 4096
-      outputDim: 300
+      outputDim: 150
       initRange: 0.1
       initSeed: 1
       learningRate: 0.8
@@ -36,28 +36,6 @@ stages:
     - name: txtFold
       type: timeFold
       timespan: 27
-    - name: imgLine
-      type: sequential
-      stages:
-          - imgUnfold
-          - imgFeat
-          - imgMap
-          - imgFold
-    - name: txtLine
-      type: sequential
-      stages:
-          - txtUnfold
-          - txtDict
-          - txtFold
-    - name: imgtxt
-      type: concat
-      stages:
-          - imgLine
-          - txtLine
-      axis: 1
-      splits:
-          - 1
-      outputdEdX: false
     - name: dropout1
       type: dropout
       dropoutRate: 0.2
@@ -65,8 +43,8 @@ stages:
     - name: lstm1
       type: lstm
       inputDim: 300
-      outputDim: 300
-      timespan: 28
+      outputDim: 150
+      timespan: 27
       initRange: 0.2
       initSeed: 4
       cutOffZeroEnd: true
@@ -78,35 +56,48 @@ stages:
       weightClip: 100.0
       weightRegConst: 0.00005
       outputdEdX: true
-    - name: output
+    - name: imgLine
       type: sequential
       stages:
-          - imgtxt
+          - imgUnfold
+          - imgFeat
+          - imgMap
+    - name: txtLine
+      type: sequential
+      stages:
+          - txtUnfold
+          - txtDict
+          - txtFold
           - dropout1
           - lstm1
-      outputdEdX: false
-    - name: answer
-      type: constWeights
-      inputDim: 300
-      outputDim: 68
-      initSeed: 200
-      initRange: 0.1
-      #initWeights: ../data/imgword/word-embed-0-a.npy
-      learningRate: 0.0
-      momentum: 0.0
-    - name: collector
-      type: parallel
+    - name: imgtxt
+      type: concat
       stages:
-          - answer
-          - output
+          - imgLine
+          - txtLine
+      axis: 1
+      axis2: 1
+      splits:
+          - 1
       outputdEdX: false
-      axis: 0
-    - name: cosine
-      type: cosSimilarity
-      bankDim: 68
+    - name: mulGate
+      type: componentProd
+    - name: softmax
+      type: map
+      activeFn: softmax
+      inputDim: 150
+      outputDim: 68
+      initRange: 0.1
+      initSeed: 7
+      learningRate: 0.01
+      learningRateAnnealConst: 0.0
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 5.0
+      weightRegConst: 0.00005
     - name: all
       type: sequential
       stages:
-          - collector
-          - cosine
-      outputdEdX: false
+          - imgtxt
+          - mulGate
+          - softmax

@@ -11,6 +11,7 @@ from parallel import *
 from concat import *
 from const_weights import *
 from cos_sim import *
+from component_prod import *
 from active_func import *
 from lstm_recurrent import *
 
@@ -193,6 +194,7 @@ def routeStage(stageDict):
             name=stageDict['name'],
             stages=realStages,
             axis=stageDict['axis'],
+            axis2=stageDict['axis2'] if stageDict.has_key('axis2') else stageDict['axis'],
             splits=stageDict['splits'],
             outputdEdX=outputdEdX
         )
@@ -215,7 +217,12 @@ def routeStage(stageDict):
         )
     elif stageDict['type'] == 'cosSimilarity':
         stage = CosSimilarity(
+            name=stageDict['name'],
             bankDim=stageDict['bankDim']
+        )
+    elif stageDict['type'] == 'componentProd':
+        stage = ComponentProduct(
+            name=stageDict['name']
         )
     elif stageDict['type'] == 'parallel':
         stages = stageDict['stages']

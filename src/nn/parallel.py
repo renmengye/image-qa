@@ -24,10 +24,14 @@ class Parallel(Container):
 
     def backward(self, dEdY):
         start = 0
+        dEdX = 0.0
         for (s, Y) in zip(self.stages, self.splY):
             if self.axis == 0:
-                s.backward(dEdY[start:start+Y.shape[0]])
+                dEdXTmp = s.backward(dEdY[start:start+Y.shape[0]])
                 start += Y.shape[0]
             elif self.axis == 1:
-                s.backward(dEdY[:,start:start+Y.shape[1]])
+                dEdXTmp = s.backward(dEdY[:,start:start+Y.shape[1]])
                 start += Y.shape[1]
+            if self.outputdEdX:
+                dEdX += dEdXTmp
+        return dEdX if self.outputdEdX else None

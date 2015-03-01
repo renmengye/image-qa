@@ -4,8 +4,12 @@ class Concat(Container):
     """
     Split the input to different substages, and concatenate the output
     """
-    def __init__(self, stages, axis, splits, name=None, outputdEdX=True):
+    def __init__(self, stages, axis, splits, axis2=None, name=None, outputdEdX=True):
         Container.__init__(self, stages=stages, name=name, outputdEdX=outputdEdX)
+        if axis2 is None:
+            self.axis2 = axis
+        else:
+            self.axis2 = axis2
         self.axis = axis
         self.splits = splits
         self.outputSplits = []
@@ -28,12 +32,12 @@ class Concat(Container):
             if i < len(self.stages) - 1:
                 lastIdx = Ytmp.shape[self.axis] + lastIdx
                 self.outputSplits.append(lastIdx)
-        Y = np.concatenate(splY, axis=self.axis)
+        Y = np.concatenate(splY, axis=self.axis2)
         return Y
 
     def backward(self, dEdY):
         spldEdX = []
-        spldEdY = np.split(dEdY, self.outputSplits, axis=self.axis)
+        spldEdY = np.split(dEdY, self.outputSplits, axis=self.axis2)
         for i in range(0, len(self.stages)):
             dEdXtmp = self.stages[i].backward(spldEdY[i])
             spldEdX.append(dEdXtmp)

@@ -98,6 +98,7 @@ stages:
           - answer
           - output
       axis: 0
+      outputdEdX: false
     - name: cosine
       type: cosSimilarity
       bankDim: 68
@@ -106,3 +107,4 @@ stages:
       stages:
           - collector
           - cosine
+      outputdEdX: false
