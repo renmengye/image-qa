@@ -11,6 +11,7 @@ class RecurrentSubstage(Stage):
     def __init__(self, name,
                  inputsStr,
                  outputDim,
+                 defaultValue=None,
                  learningRate=0.0,
                  learningRateAnnealConst=0.0,
                  momentum=0.0,
@@ -29,6 +30,10 @@ class RecurrentSubstage(Stage):
                  gradientClip=gradientClip,
                  weightRegConst=weightRegConst,
                  outputdEdX=outputdEdX)
+        if defaultValue is None:
+            self.defaultValue = np.zeros((outputDim))
+        else:
+            self.defaultValue = defaultValue
         self.inputs = None
         self.inputsStr = inputsStr # Before binding with actual objects
         self.inputDim = None
@@ -98,6 +103,7 @@ class Active_Recurrent(RecurrentSubstage):
                  activeFn,
                  inputsStr,
                  outputDim,
+                 defaultValue=None,
                  inputDim=None,
                  outputdEdX=True,
                  name=None):
@@ -105,6 +111,7 @@ class Active_Recurrent(RecurrentSubstage):
                  name=name,
                  inputsStr=inputsStr,
                  outputDim=outputDim,
+                 defaultValue=defaultValue,
                  outputdEdX=outputdEdX)
         self.activeFn = activeFn
     def forward(self, X):
@@ -132,11 +139,13 @@ class Map_Recurrent(RecurrentSubstage):
                  gradientClip=0.0,
                  weightRegConst=0.0,
                  outputdEdX=True,
+                 defaultValue=None,
                  name=None):
         RecurrentSubstage.__init__(self,
                  name=name,
                  inputsStr=inputsStr,
                  outputDim=outputDim,
+                 defaultValue=defaultValue,
                  learningRate=learningRate,
                  learningRateAnnealConst=learningRateAnnealConst,
                  momentum=momentum,
@@ -205,21 +214,26 @@ class Output_Recurrent(RecurrentSubstage):
     def graphBackward(self):
         pass
 
-class Zero_Recurrent(RecurrentSubstage):
-    def __init__(self, name, outputDim):
+class Constant_Recurrent(RecurrentSubstage):
+    """Stage emitting constant value for all samples."""
+    def __init__(self, name, outputDim, value):
         RecurrentSubstage.__init__(self, name=name, inputsStr=[], outputDim=outputDim)
-        self.N = 0
-    def setDimension(self, N):
-        self.Y = np.zeros((N, self.outputDim))
-        self.N = N
+        self.value = np.reshape(value, (1, value.size))
+    def forward(self, X):
+        return np.tile(self.value, (X.shape[0], 1))
+    def graphForward(self):
+        self.Y = self.forward(self.X)
 
 class ComponentProduct_Recurrent(RecurrentSubstage):
-    def __init__(self, name, inputsStr, outputDim):
+    """Stage multiplying first half of the input with second half"""
+    def __init__(self, name, inputsStr, outputDim,
+                 defaultValue=None):
         RecurrentSubstage.__init__(
             self,
             name=name,
             inputsStr=inputsStr,
-            outputDim=outputDim)
+            outputDim=outputDim,
+            defaultValue=defaultValue)
     def forward(self, X):
         self.X = X
         self.Y = X[:,:X.shape[1]/2] * X[:,X.shape[1]/2:]
@@ -229,12 +243,15 @@ class ComponentProduct_Recurrent(RecurrentSubstage):
         return np.concatenate((self.X[:,self.X.shape[1]/2:] * dEdY, self.X[:,:self.X.shape[1]/2] * dEdY), axis=-1)
 
 class Sum_Recurrent(RecurrentSubstage):
-    def __init__(self, name, inputsStr, numComponents, outputDim):
+    """Stage summing first hald of the input with second half."""
+    def __init__(self, name, inputsStr, numComponents, outputDim, 
+                 defaultValue=None):
         RecurrentSubstage.__init__(
             self,
             name=name,
             inputsStr=inputsStr,
-            outputDim=outputDim)
+            outputDim=outputDim,
+            defaultValue=defaultValue)
         self.numComponents = numComponents
     def forward(self, X):
         self.Y = np.sum(X.reshape(X.shape[0], self.numComponents, X.shape[1]/self.numComponents), axis=1)
@@ -260,7 +277,7 @@ class Recurrent(Stage):
         Stage.__init__(self, name=name, outputdEdX=outputdEdX)
         self.stages = []
         self.stageDict = {}
-        self.zeros = []
+        self.constStages = []
         self.timespan = timespan
         self.multiOutput = multiOutput
         self.inputDim = inputDim
@@ -318,18 +335,20 @@ class Recurrent(Stage):
                         stageName = inputStageStr
                         stageTime = 0
                     if stageTime > 0:
-                        raise Exception('Recurrent model definition is non-causal')
+                        raise Exception('Recurrent model definition is non-causal.')
                     # stageNameTime = '%s-%d' % (stageName, stageTime)
                     if t + stageTime < 0:
-                        stageInput = Zero_Recurrent(
-                            name=('%s-%d'%('zero',t)),
-                            outputDim=self.stageDict[stageName + '-0'].outputDim)
-                        self.zeros.append(stageInput)
+                        stageInput = Constant_Recurrent(
+                            name=('%s-%s-%d'%('const', stageName, t)),
+                            outputDim=self.stageDict[stageName + '-0'].outputDim,
+                            value=self.stageDict[('%s-%d') % (stageName, 0)].defaultValue)
+                        self.constStages.append(stageInput)
                     else:
                         stageInput = self.stageDict[('%s-%d' % (stageName, t + stageTime))]
                     stage.addInput(stageInput)
 
     def testRun(self):
+        """Test run through the recurrent net to initialize all the weights."""
         X = np.random.rand(2, self.timespan, self.inputDim)
         self.forward(X)
         for t in range(1, self.timespan):
@@ -344,14 +363,14 @@ class Recurrent(Stage):
             Y = np.zeros((N, self.timespan, self.outputDim))
         else:
             Y = np.zeros((N, self.outputDim))
-        for z in self.zeros:
-            z.setDimension(N)
         for n in range(N):
             for t in range(X.shape[1]):
                 if reachedEnd[n, t]:
                     self.Xend[n] = t
                     break
         self.XendAll = np.max(self.Xend)
+        for s in self.constStages:
+            s.Y = np.tile(s.value, (X.shape[0], 1))
         for t in range(self.XendAll):
             self.stages[t][0].Y = X[:, t, :]
             for s in range(1, len(self.stages[t])):
@@ -398,7 +417,7 @@ class Recurrent(Stage):
         for t in range(self.timespan):
             for stage in self.stages[t]:
                 stage.dEdY = 0.0
-        for stage in self.zeros:
+        for stage in self.constStages:
             stage.dEdY = 0.0
 
         for s in range(1, len(self.stages[0]) - 1):

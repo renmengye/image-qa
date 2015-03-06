@@ -74,6 +74,8 @@ def routeStage(stageDict):
     if stageDict.has_key('weightRegConst') else 0.0
     outputdEdX=stageDict['outputdEdX']\
     if stageDict.has_key('outputdEdX') else True
+    defaultValue=(np.zeros(stageDict['outputDim']) + stageDict['defaultValue'])\
+    if stageDict.has_key('defaultValue') else None
 
     if stageDict['type'] == 'lstm_old':
         stage = LSTM(
@@ -101,6 +103,7 @@ def routeStage(stageDict):
             inputDim=stageDict['inputDim'],
             outputDim=stageDict['outputDim'],
             timespan=stageDict['timespan'],
+            defaultValue=defaultValue,
             initSeed=initSeed,
             initRange=initRange,
             initWeights=initWeights,
@@ -243,6 +246,7 @@ def routeStage(stageDict):
             name=stageDict['name'],
             inputsStr=inputList,
             outputDim=stageDict['outputDim'],
+            defaultValue=defaultValue,
             activeFn=routeFn(stageDict['activeFn']),
             initRange=initRange,
             initSeed=initSeed,
@@ -261,7 +265,8 @@ def routeStage(stageDict):
             name=stageDict['name'],
             inputsStr=inputList,
             numComponents=stageDict['numComponents'],
-            outputDim=stageDict['outputDim']
+            outputDim=stageDict['outputDim'],
+            defaultValue=defaultValue
         )
     elif stageDict['type'] == 'componentProdRecurrent':
         inputList = stageDict['inputsStr'].split(',')
@@ -270,7 +275,8 @@ def routeStage(stageDict):
         stage = ComponentProduct_Recurrent(
             name=stageDict['name'],
             inputsStr=inputList,
-            outputDim=stageDict['outputDim']
+            outputDim=stageDict['outputDim'],
+            defaultValue=defaultValue
         )
     elif stageDict['type'] == 'activeRecurrent':
         inputList = stageDict['inputsStr'].split(',')
@@ -280,7 +286,8 @@ def routeStage(stageDict):
             name=stageDict['name'],
             inputsStr=inputList,
             outputDim=stageDict['outputDim'],
-            activeFn=routeFn(stageDict['activeFn'])
+            activeFn=routeFn(stageDict['activeFn']),
+            defaultValue=defaultValue
         )
     elif stageDict['type'] == 'recurrent':
         stages = stageDict['stages']

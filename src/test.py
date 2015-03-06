@@ -24,7 +24,7 @@ def calcPrecision(Y, T):
 
 if __name__ == '__main__':
     """
-    Usage: test.py id -train trainData.npy -test testData.npy -dict vocabDict.npy -method logprob/rank
+    Usage: test.py id -train trainData.npy -test testData.npy -dict vocabDict.npy
     """
     taskId = sys.argv[1]
     for i in range(2, len(sys.argv)):
@@ -63,7 +63,3 @@ if __name__ == '__main__':
     calcPrecision(TY, TT)
     np.save(trainOutFile, Y)
     np.save(testOutFile, TY)
-    # Y = nn.test(model, X)
-    # print nn.calcRate(model, Y, T)
-    # TY = nn.test(model, TX)
-    # print nn.calcRate(model, TY, TT)

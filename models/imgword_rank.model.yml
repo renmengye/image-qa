@@ -66,7 +66,8 @@ stages:
       inputDim: 300
       outputDim: 300
       timespan: 28
-      initRange: 0.2
+      defaultValue: 0.0
+      initRange: 0.1
       initSeed: 4
       cutOffZeroEnd: true
       multiErr: false
@@ -87,8 +88,6 @@ stages:
       type: constWeights
       inputDim: 300
       outputDim: 68
-      #initSeed: 200
-      #initRange: 0.1
       initWeights: ../data/imgword/word-embed-0-a.npy
       learningRate: 0.0
       momentum: 0.0

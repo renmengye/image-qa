@@ -5,6 +5,7 @@ class LSTM_Recurrent(Recurrent):
                  inputDim,
                  outputDim,
                  timespan,
+                 defaultValue=None,
                  initRange=1.0,
                  initSeed=2,
                  needInit=True,
@@ -113,7 +114,8 @@ class LSTM_Recurrent(Recurrent):
         self.H = ComponentProduct_Recurrent(
                  name=name + '.H',
                  inputsStr=[name + '.O(0)', name + '.U(0)'],
-                 outputDim=D2)
+                 outputDim=D2,
+                 defaultValue=defaultValue)
 
         stages = [self.I, self.F, self.Z, self.FC, self.IZ, self.C, self.O, self.U, self.H]
         Recurrent.__init__(self,
