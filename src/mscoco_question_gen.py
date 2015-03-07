@@ -2,6 +2,7 @@ import os
 import subprocess
 import time
 import re
+import copy
 from nltk.stem.wordnet import WordNetLemmatizer
 from nltk.corpus import wordnet
 
@@ -142,6 +143,7 @@ class QuestionGenerator:
         insideSBar = False
         # Check if inside NP, violates A-over-A principal
         insideNP = False
+        insideVP = False
 
         whStack = stack[0][:]
         whPosition = len(whStack) - 1
@@ -152,8 +154,13 @@ class QuestionGenerator:
                 insideSBar = True
             # if item.className == 'SBAR':
             #     whPosition = whStack.index(item)
-            elif item.className == 'NP':
-                #insideNP = True
+            elif item.className == 'NP' and item.level > 1:
+                ##lexname = self.lookupLexname(item.children[0].text)
+                ##if item.children[0].className != 'VBG' and lexname != 'noun.act':
+                insideNP = True
+            elif insideNP and item.className == 'VP':
+                insideVP = True
+
                 # Testing!!!!
                 # Now if inside the NP, then move the entire NP
                 # cont = False
@@ -187,7 +194,7 @@ class QuestionGenerator:
                 vpchild = vpnode.children[0]
                 frontWord = None
                 if vpchild.className == 'VBG': # only doing present, no is/are
-                    verb = 'are' if topNoun != None and topNoun.className == 'NNS' else 'is'
+                    verb = 'are' if root.answer.className == 'NNS' else 'is'
                     verbnode = TreeNode('VB', verb, [], vpchild.level)
                     vpnode.children.insert(0, verbnode)
             return True
@@ -198,7 +205,7 @@ class QuestionGenerator:
         if insideSBar:
             #print 'Inside SBar'
             return False
-        if insideNP:
+        if insideVP:
             #print 'Inside NP'
             return False
 
@@ -330,48 +337,77 @@ class QuestionGenerator:
         answer = ['']
         rootsReplaceWhat = [[]] # Unlike in 'how many', here we enumerate all possible 'what's
         def traverse(node):
-            # For now, not asking any questions inside PP!
             #if node.className != 'PP':
             cont = True
-            # Avoid 'what of bike riders' or 'a group of who'
-            # if node.className == 'NP' and \
-            # len(node.children) > 1 and \
-            # node.children[1].className == 'PP' and \
-            # (node.children[1].children[0].text == 'of' or\
-            #     node.children[1].children[0].text == 'with' or\
-            #     node.children[1].children[0].text == 'in'):            
-            if node.className == 'NP' and \
-            len(node.children) > 1 and \
+            # For now, not asking any questions inside PP!
+            if node.className == 'PP':
+                cont = False
+            if (node.level > 1 and node.className == 'S') or node.className == 'SBAR':
+                # Ignore subsentences.
+                cont = False
+            ccNoun = False
+            for child in node.children:
+                if child.className == 'CC':
+                    ccNoun = True
+                    break
+            if node.className == 'NP' and ccNoun:
+                cont = False            
+            if len(node.children) > 1 and \
             node.children[1].className == 'PP':
                 node.children.remove(node.children[1])
-                #cont = False
+            # if node.className == 'NP' and \
+            # len(node.children) > 1 and \
+            # node.children[1].className == 'PP':
+            #     node.children.remove(node.children[1])
+                # cont = False
             if cont:
                 for child in node.children:
                     traverse(child)
 
-            if node.className == 'NP':
-                replace = False
-                whword = ''
+            if node.className == 'NP' and not ccNoun:
+                replace = None
+                whword = None
                 for child in node.children:
                     if child.className == 'NN' or child.className == 'NNS':
                         lexname = self.lookupLexname(child.text)
+                        # print child.text
+                        # print lexname
                         if lexname is not None:
                             if lexname == 'noun.person':
                                 whword = 'who'
-                            else:
+                            elif lexname == 'noun.animal' or \
+                            lexname == 'noun.artifact' or \
+                            lexname == 'noun.body' or \
+                            lexname == 'noun.food' or \
+                            lexname == 'noun.object' or \
+                            lexname == 'noun.plant' or \
+                            lexname == 'noun.possession' or \
+                            lexname == 'noun.shape':
                                 whword = 'what'
-                            answer[0] = child.text
-                            found[0] = True
-                            replace = True
-                if replace:
+                            if whword is not None:
+                                answer[0] = child.text
+                                found[0] = True
+                                replace = child
+                if replace != None:
                     what = TreeNode('WP', whword, [], node.level + 1)
-                    children = [what]
-                    children_bak = node.children
-                    node.children = children
-                    node.className = 'WHNP'
-                    copy = root.copy()
-                    copy.answer = answer[0]
-                    rootsReplaceWhat[0].append(copy)
+                    children_bak = copy.copy(node.children)
+                    toremove = []
+
+                    for child in node.children:
+                        lexname = self.lookupLexname(child.text)
+                        if child != replace and lexname != 'noun.act':
+                            # print 'removed', child.text
+                            toremove.append(child)
+                    for item in toremove:
+                        node.children.remove(item)
+                    if len(node.children) == 1:
+                        node.children = [what]
+                        node.className = 'WHNP'
+                    else:
+                        node.children[node.children.index(replace)] = TreeNode('WHNP', '', [what], node.level + 2)
+                    rootcopy = root.copy()
+                    rootcopy.answer = replace
+                    rootsReplaceWhat[0].append(rootcopy)
                     node.className = 'NP'
                     node.children = children_bak
 
@@ -384,17 +420,19 @@ class QuestionGenerator:
                 else:
                     r2.children[0].children[-1].text = '?'
                 if found[0]:
+                    #print r2
                     self.whMovement(r2)
-                    yield (r2.toSentence().lower(), self.escapeNumber(r2.answer.lower()))
+                    #print r2
+                    yield (r2.toSentence().lower(), self.escapeNumber(r2.answer.text.lower()))
                 else:
                     pass
             found[0] = False
-            answer[0] = ''
+            answer[0] = None
             rootsReplaceWhat[0] = []
 
     def askHowMany(self, root):
         found = [False] # A hack for closure support in python 2.7
-        answer = ['']
+        answer = [None]
         def traverse(node):
             if not found[0]:
                 for child in node.children:
@@ -405,7 +443,7 @@ class QuestionGenerator:
                     for child in node.children:
                         if child.className == 'CD':
                             found[0] = True
-                            answer[0] = child.text
+                            answer[0] = child
                             count = child
                     if found[0] and count is not None:
                         how = TreeNode('WRB', 'how', [], node.level + 2)
@@ -426,16 +464,61 @@ class QuestionGenerator:
             else:
                 r.children[0].children[-1].text = '?'
             if found[0]:
+                r.answer = answer[0]
                 self.whMovement(r)
-                yield (r.toSentence().lower(), self.escapeNumber(answer[0].lower()))
+                yield (r.toSentence().lower(), self.escapeNumber(answer[0].text.lower()))
             else:
                 pass
                 #return None
             found[0] = False
-            answer[0] = ''
+            answer[0] = None
 
-    def ask(self, root):
-        pass
+    def askColor(self, root):
+        found = [False]
+        answer = [None]
+        obj = [None]
+        qa = [[]]
+        def traverse(node):
+            for child in node.children:
+                traverse(child)
+            if node.className == 'NP':
+                #obj = None
+                count = None
+                for child in node.children:
+                    print child.text
+                    if child.className == 'JJ' and \
+                    (child.text == 'red' or\
+                    child.text == 'yellow' or\
+                    child.text == 'orange' or\
+                    child.text == 'brown' or\
+                    child.text == 'green' or\
+                    child.text == 'blue' or\
+                    child.text == 'purple' or\
+                    child.text == 'black' or\
+                    child.text == 'white' or\
+                    child.text == 'gray' or\
+                    child.text == 'grey' or\
+                    child.text == 'violet'):
+                        found[0] = True
+                        answer[0] = child
+                    if child.className == 'NN' or child.className == 'NNS':
+                        obj[0] = child
+                if found[0] and obj[0] is not None:
+                    # what = TreeNode('WHNP', '', [TreeNode('WP', 'what', [], 0)], 0)
+                    # verb = TreeNode('VB', 'is', [], 0)
+                    # the = TreeNode('DT', 'the', [], 0)
+                    # color = TreeNode('NN', 'color', [], 0)
+                    # the2 = TreeNode('DT', 'the', [], 0)
+                    # of = TreeNode('PP', 'of', [], 0)
+                    # np = TreeNode('NP', '', [the, color, of, the2, obj[0]])
+                    # s = TreeNode('S', '', [verb, np], 0)
+                    # r = TreeNode('ROOT', '', [what, s], 0)
+                    qa[0].append((('what is the color of the %s ?' % obj[0].text).lower(), answer[0].text.lower()))
+                    found[0] = False
+                    obj[0] = None
+                    answer[0] = None
+        traverse(root)
+        return qa[0]
 
 def stanfordParse(sentence):
     with open('tmp.txt', 'w+') as f:
@@ -597,11 +680,19 @@ def questionGen():
                 numSentences += 1
                 originalSent = parser.rootsList[0].toSentence()
                 hasItem = False
-                for qaitem in gen.askWhoWhat(parser.rootsList[0]):
-                    questionCount += 1
-                    hasItem = True
-                    print ('Question %d:' % questionCount), qaitem[0], 'Answer:', qaitem[1]
-                for qaitem in gen.askHowMany(parser.rootsList[0]):
+                # for qaitem in gen.askWhoWhat(parser.rootsList[0]):
+                #     questionCount += 1
+                #     hasItem = True
+                #     if qaitem[0] == 'what ?':
+                #         question = 'what is this ?'
+                #     else:
+                #         question = qaitem[0]
+                #     print ('Question %d:' % questionCount), question, 'Answer:', qaitem[1]
+                # for qaitem in gen.askHowMany(parser.rootsList[0]):
+                #     questionCount += 1
+                #     hasItem = True
+                #     print ('Question %d:' % questionCount), qaitem[0], 'Answer:', qaitem[1]
+                for qaitem in gen.askColor(parser.rootsList[0]):
                     questionCount += 1
                     hasItem = True
                     print ('Question %d:' % questionCount), qaitem[0], 'Answer:', qaitem[1]
@@ -609,8 +700,8 @@ def questionGen():
                     print 'Original:', originalSent
                     print '-' * 20
                 del(parser.rootsList[0])
-                if questionCount > 500:
-                    break
+                # if questionCount > 2000:
+                #     break
             parser.parse(line)
     # Approx. 3447.5 sentences per second
     print 'Number of sentences parsed:', numSentences
@@ -620,7 +711,7 @@ def testHook():
     #s = stanfordParse('There are two ovens in a kitchen restaurant , and one of them is being used .')
     #s = stanfordParse('A bathroom with two sinks a bathtub and a shower with lots of lighting from the windows .')
     #s = stanfordParse('A man waits at the crosswalk with his bicycle .')
-    s = stanfordParse('A shirtless man wearing a pink towel in the kitchen with a woman drinking wine .')
+    s = stanfordParse('A brown horse is grazing grass near a red house .')
 
     #print s
     s = s.split('\n')
@@ -637,7 +728,12 @@ def testHook():
     qaiter = gen.askHowMany(tree)
     for qaitem in qaiter:
         print ('Question:'), qaitem[0], 'Answer:', qaitem[1]
+    qaiter = gen.askColor(tree)
+    for qaitem in qaiter:
+        print ('Question:'), qaitem[0], 'Answer:', qaitem[1]
 
 if __name__ == '__main__':
-    #testHook()
-    questionGen()
+    testHook()
+
+    #print QuestionGenerator().lookupLexname('grazing')
+    #questionGen()
