@@ -10,82 +10,96 @@ Usage: python train.py {name} -d {train data} -m {model spec} -c {config} -o {ou
 '''
 
 def readFlags():
+    params = {}
     if len(sys.argv) < 2:
         raise Exception('Name not specified')
-    name = sys.argv[1]
-    outputFolder = None
-    configFilename = None
-    trainDataFilename = None
-    testDataFilename = None
-    modelFilename = None
+    params['name'] = sys.argv[1]
+
+    params['outputFolder'] = None
+    params['configFilename'] = None
+    params['trainDataFilename'] = None
+    params['testDataFilename'] = None
+    params['validDataFilename'] = None
+    params['allDataFilename'] = None
+    params['modelFilename'] = None
     for i in range(2, len(sys.argv) - 1):
         if sys.argv[i] == '-o' or sys.argv[i] == '-out':
-            outputFolder = sys.argv[i + 1]
-        elif sys.argv[i] == '-d' or sys.argv[i] == '-data':
-            trainDataFilename = sys.argv[i + 1]
+            params['outputFolder'] = sys.argv[i + 1]
+        elif sys.argv[i] == '-d' or sys.argv[i] == '-train':
+            params['trainDataFilename'] = sys.argv[i + 1]
         elif sys.argv[i] == '-t' or sys.argv[i] == '-test':
-            testDataFilename = sys.argv[i + 1]
+            params['testDataFilename'] = sys.argv[i + 1]
+        elif sys.argv[i] == '-v' or sys.argv[i] == '-valid':
+            params['validDataFilename'] = sys.argv[i + 1]
+        elif sys.argv[i] == '-a' or sys.argv[i] == '-alldata':
+            params['allDataFilename'] = sys.argv[i + 1]
         elif sys.argv[i] == '-m' or sys.argv[i] == '-model':
-            modelFilename = sys.argv[i + 1]
+            params['modelFilename'] = sys.argv[i + 1]
         elif sys.argv[i] == '-c' or sys.argv[i] == '-config':
-            configFilename = sys.argv[i + 1]
+            params['configFilename'] = sys.argv[i + 1]
 
-    if configFilename is None:
+    if params['configFilename'] is None:
         raise Exception('Config file not specified')
-    if trainDataFilename is None:
+    if params['trainDataFilename'] is None:
         raise Exception('Data file not specified')
-    if modelFilename is None:
+    if params['modelFilename'] is None:
         raise Exception('Model file not specified')
 
-    return name, modelFilename, configFilename, trainDataFilename, testDataFilename, outputFolder
+    return params
 
 if __name__ == '__main__':
-    name, modelFilename, configFilename, trainDataFilename, testDataFilename, outputFolder = readFlags()
-    with open(configFilename) as f:
+    params = readFlags()
+    with open(params['configFilename']) as f:
         trainOpt = yaml.load(f)
-    #trainOpt['numEpoch'] = 1
-    trainData = np.load(trainDataFilename)
+    trainData = np.load(params['trainDataFilename'])
     trainInput = trainData[0]
     trainTarget = trainData[1]
-    model = nn.load(modelFilename)
+    if params['validDataFilename'] is not None:
+        validData = np.load(params['validDataFilename'])
+        validInput = validData[0]
+        validTarget = validData[1]
+    else:
+        validInput = None
+        validTarget = None
+    model = nn.load(params['modelFilename'])
     trainer = nn.Trainer(
-        name=name+'-v',
+        name=params['name']+'-v',
         model=model,
         trainOpt=trainOpt,
-        outputFolder=outputFolder
+        outputFolder=params['outputFolder']
     )
-    trainer.train(trainInput, trainTarget)
+    trainer.train(trainInput, trainTarget, validInput, validTarget)
     # Send email
     if trainOpt.has_key('sendEmail') and trainOpt['sendEmail']:
-        email.appendList(outputFolder, trainer.name)
+        email.appendList(params['outputFolder'], trainer.name)
 
-    if testDataFilename is not None:
-        testData = np.load(testDataFilename)
+    if params['testDataFilename'] is not None:
+        testData = np.load(params['testDataFilename'])
         testInput = testData[0]
         testTarget = testData[1]
         testOutput = nn.test(model, testInput)
         testRate, c, t = nn.calcRate(model, testOutput, testTarget)
         print 'Before retrain test rate: ', testRate
 
-        # model2 = nn.load(modelFilename)
-        # model2.loadWeights(np.load(trainer.modelFilename))
-        # testOutput2 = nn.test(model2, testInput)
-        # testRate2, c, t = nn.calcRate(model2, testOutput2, testTarget)
-        # print 'After reload test rate: ', testRate2
-
         # Retrain with all the data
         trainOpt['needValid'] = False
         trainOpt['numEpoch'] = trainer.stoppedEpoch + 1
-        model = nn.load(modelFilename)
+        model = nn.load(params['modelFilename'])
         trainer = nn.Trainer(
-            name=name,
+            name=params['name'],
             model=model,
             trainOpt=trainOpt,
-            outputFolder=outputFolder
+            outputFolder=params['outputFolder']
         )
-        trainer.train(trainInput, trainTarget)
+        if params['allDataFilename'] is not None:
+            allData = np.load(params['allDataFilename'])
+            allInput = allData[0]
+            allTarget = allData[1]
+            trainer.train(allInput, allTarget)
+        else:
+            trainer.train(trainInput, trainTarget)
 
-        model = nn.load(modelFilename)
+        model = nn.load(params['modelFilename'])
         model.loadWeights(np.load(trainer.modelFilename))
         testOutput = nn.test(model, testInput)
         testRate, c, t = nn.calcRate(model, testOutput, testTarget)
@@ -95,4 +109,4 @@ if __name__ == '__main__':
             f.write('Test rate: %f' % testRate)
         # Send email
         if trainOpt.has_key('sendEmail') and trainOpt['sendEmail']:
-            email.appendList(outputFolder, trainer.name)
+            email.appendList(params['outputFolder'], trainer.name)

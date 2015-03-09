@@ -138,21 +138,29 @@ class Trainer:
                 self.model.specFilename,
                 os.path.join(self.outputFolder, self.name + '.model.yml'))
 
-    def initData(self, X, T):
+    def initData(self, X, T, split=True):
         VX = None
         VT = None
         X, T = vt.shuffleData(X, T, self.random)
-        if self.trainOpt['needValid']:
+        if split:
             X, T, VX, VT = \
                 vt.splitData(X, T,
                             self.trainOpt['heldOutRatio'],
                             self.trainOpt['xvalidNo'])
         return X, T, VX, VT
 
-    def train(self, trainInput, trainTarget):
+    def train(self, trainInput, trainTarget, validInput=None, validTarget=None):
         self.initFolder()
         trainOpt = self.trainOpt
-        X, T, VX, VT = self.initData(trainInput, trainTarget)
+        if validInput is None and validTarget is None:
+            X, T, VX, VT = self.initData(\
+                trainInput, trainTarget, \
+                split=self.trainOpt['needValid'])
+        else:
+            X = trainInput
+            T = trainTarget
+            VX = validInput
+            VT = validTarget
         N = X.shape[0]
         numEpoch = trainOpt['numEpoch']
         calcError = trainOpt['calcError']
