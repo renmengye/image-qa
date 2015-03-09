@@ -15,7 +15,8 @@ class Recurrent_Tests(stage_tests.StageTests):
                 outputDim=self.D2,
                 activeFn=SigmoidActiveFn(),
                 initRange=1,
-                initSeed=5
+                initSeed=5,
+                learningRate=0.9
             )
         self.stage = self.sigm
         self.model = Recurrent(

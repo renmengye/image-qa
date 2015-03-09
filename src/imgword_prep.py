@@ -89,8 +89,8 @@ if __name__ == '__main__':
             elif sys.argv[i] == '-o':
                 outputFolder = sys.argv[i + 1]
     else:
-        trainQAFilename = '../data/mpi-qa/qa.37.raw.train.txt'
-        testQAFilename = '../data/mpi-qa/qa.37.raw.test.txt'
+        trainQAFilename = '../../../data/mpi-qa/qa.37.raw.train.txt'
+        testQAFilename = '../../../data/mpi-qa/qa.37.raw.test.txt'
         outputFolder = '../data/imgword'
 
     with open(trainQAFilename) as f:

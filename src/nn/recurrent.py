@@ -189,6 +189,37 @@ class Map_Recurrent(RecurrentSubstage):
         dEdX = np.dot(dEdZ, self.W[:, :-1])
         return dEdX if self.outputdEdX else None
 
+class Selector_Recurrent(RecurrentSubstage):
+    def __init__(self, 
+                 name, 
+                 inputsStr, 
+                 start, 
+                 end, 
+                 axis=-1):
+        RecurrentSubstage.__init__(
+                 self,
+                 name=name, 
+                 inputsStr=inputsStr,
+                 outputDim=end-start)
+        self.start = start
+        self.end = end
+        self.axis = axis
+
+    def forward(self, X):
+        self.X = X
+        if self.axis == 0:
+            return X[self.start:self.end]
+        else:
+            return X[:, self.start:self.end]
+
+    def backward(self, dEdY):
+        dEdX = np.zeros(self.X.shape)
+        if self.axis == 0:
+            dEdX[self.start:self.end] = dEdY
+        else:
+            dEdX[:, self.start:self.end] = dEdY
+        return dEdX
+
 class Input_Recurrent(RecurrentSubstage):
     def __init__(self, name, outputDim):
         RecurrentSubstage.__init__(self, name=name, inputsStr=[], outputDim=outputDim)
@@ -259,6 +290,79 @@ class Sum_Recurrent(RecurrentSubstage):
     def backward(self, dEdY):
         self.dEdW = 0.0
         return np.tile(dEdY, 2)
+
+class LUT_Recurrent(RecurrentSubstage):
+    def __init__(self,
+                 inputsStr,
+                 inputDim,
+                 outputDim,
+                 initRange=1.0,
+                 initSeed=2,
+                 needInit=True,
+                 initWeights=0,
+                 sparse=False,
+                 learningRate=0.0,
+                 learningRateAnnealConst=0.0,
+                 momentum=0.0,
+                 deltaMomentum=0.0,
+                 weightClip=0.0,
+                 gradientClip=0.0,
+                 weightRegConst=0.0,
+                 name=None):
+        RecurrentSubstage.__init__(self,
+                 name=name,
+                 inputsStr=inputsStr,
+                 learningRate=learningRate,
+                 outputDim=outputDim,
+                 learningRateAnnealConst=learningRateAnnealConst,
+                 momentum=momentum,
+                 deltaMomentum=deltaMomentum,
+                 weightClip=weightClip,
+                 gradientClip=gradientClip,
+                 weightRegConst=weightRegConst,
+                 outputdEdX=False)
+        self.outputDim = outputDim
+        self.inputDim = inputDim
+        self.initRange = initRange
+        self.random = np.random.RandomState(initSeed)
+
+        # Zeroth dimension of the weight matrix is reserved
+        # for empty word at the end of a sentence.
+        if needInit:
+            self.W = None
+        else:
+            if sparse:
+                initWeights = np.array(initWeights.todense())
+            self.W = np.concatenate(
+                (np.zeros((outputDim, 1)), initWeights), axis=1)
+        self.X = 0
+        self.Y = 0
+        pass
+
+    def initWeights(self):
+        self.W = np.concatenate(
+            (np.zeros((self.outputDim, 1)),
+             self.random.uniform(
+            -self.initRange/2.0, self.initRange/2.0,
+            (self.outputDim , self.inputDim))), axis=1)
+
+    def forward(self, X):
+        if self.W is None: self.initWeights()
+        X = X.reshape(X.size)
+        Y = np.zeros((X.shape[0], self.outputDim))
+        for n in range(0, X.shape[0]):
+            Y[n, :] = self.W[:, X[n]]
+        self.X = X
+        self.Y = Y
+        return Y
+
+    def backward(self, dEdY):
+        X = self.X
+        if self.learningRate > 0.0:
+            self.dEdW = np.zeros(self.W.shape)
+            for n in range(0, X.shape[0]):
+                self.dEdW[:, X[n]] += dEdY[n, :]
+        return None
 
 class Recurrent(Stage):
     """
@@ -430,7 +534,8 @@ class Recurrent(Stage):
 
         # For gradient check purpose, synchronize the sum of gradient to the time=0 stage
         for s in range(1, len(self.stages[0]) - 1):
-            self.stages[0][s].dEdW = self.dEdW[s]
+            if self.stages[0][s].learningRate > 0.0:
+                self.stages[0][s].dEdW = self.dEdW[s]
         self.dEdX = dEdX
         return dEdX if self.outputdEdX else None
 
@@ -440,7 +545,8 @@ class Recurrent(Stage):
             self.stages[0][s].updateWeights()
         for t in range(1, self.timespan):
             for s in range(1, len(self.stages[0])-1):
-                self.stages[t][s].W = self.stages[0][s].W
+                if self.stages[t][s].learningRate > 0.0:
+                    self.stages[t][s].W = self.stages[0][s].W
 
     def updateLearningParams(self, numEpoch):
         for s in range(1, len(self.stages[0])-1):

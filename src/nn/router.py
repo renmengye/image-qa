@@ -1,8 +1,7 @@
 from lstm import *
 from lut import *
 from map import *
-from time_unfold import *
-from time_fold import *
+from reshape import *
 from time_sum import *
 from inner_prod import *
 from dropout import *
@@ -14,6 +13,8 @@ from cos_sim import *
 from component_prod import *
 from active_func import *
 from lstm_recurrent import *
+
+import pickle
 
 def routeFn(name):
     if name == 'crossEntOne':
@@ -52,8 +53,16 @@ def routeStage(stageDict):
     if stageDict.has_key('initSeed') else 0
     initRange=stageDict['initRange']\
     if stageDict.has_key('initRange') else 1.0
-    initWeights=np.load(stageDict['initWeights'])\
-    if stageDict.has_key('initWeights') else 0
+    
+    if stageDict.has_key('initWeights'):
+        if stageDict.has_key('sparse') and stageDict['sparse']:
+            with open(stageDict['initWeights'], 'rb') as f:
+                initWeights = pickle.load(f)
+        else:
+            initWeights = np.load(stageDict['initWeights'])
+    else:
+        initWeights = 0
+    
     needInit=False\
     if stageDict.has_key('initWeights') else True    
     biasInitConst=stageDict['biasInitConst']\
@@ -126,6 +135,7 @@ def routeStage(stageDict):
             initSeed=initSeed,
             initRange=initRange,
             initWeights=initWeights,
+            sparse=stageDict['sparse'] if stageDict.has_key('sparse') else False,
             needInit=needInit,
             learningRate=learningRate,
             learningRateAnnealConst=learningRateAnnealConst,

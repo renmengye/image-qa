@@ -3,6 +3,7 @@ from map import *
 from lut import *
 from inner_prod import *
 from time_sum import *
+from reshape import *
 from recurrent import *
 from cos_sim import *
 import unittest
@@ -288,7 +289,8 @@ class LUT_Tests(StageTests):
             inputDim=5,
             outputDim=3,
             initRange=0.1,
-            initSeed=1)
+            initSeed=1,
+            learningRate=0.9)
         self.model = self.stage
         self.testInputErr = False
         self.costFn = meanSqErr
@@ -323,6 +325,20 @@ class TimeSum_Tests(StageTests):
         random = np.random.RandomState(2)
         X = random.uniform(-0.1, 0.1, (6,3,5))
         T = random.uniform(-0.1, 0.1, (6,5))
+        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
+        self.chkgrd(dEdX, dEdXTmp)
+
+class Reshape_Tests(StageTests):
+    def setUp(self):
+        self.stage = Reshape(
+            reshapeFn='(x[0], x[1] / 2, 2)')
+        self.model = self.stage
+        self.testInputErr = True
+        self.costFn = meanSqErr
+    def test_grad(self):
+        random = np.random.RandomState(2)
+        X = random.uniform(-0.1, 0.1, (6, 10))
+        T = random.uniform(-0.1, 0.1, (6, 5, 2))
         dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
         self.chkgrd(dEdX, dEdXTmp)
 
@@ -367,8 +383,7 @@ class MapSigmoid_Recurrent_Tests(StageTests):
             outputDim=3,
             inputsStr=[],
             initRange=0.1,
-            initSeed=1,
-            )
+            initSeed=1)
         self.model = self.stage
         self.testInputErr = True
         self.costFn = meanSqErr
@@ -379,6 +394,26 @@ class MapSigmoid_Recurrent_Tests(StageTests):
         dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
         self.chkgrd(dEdW, dEdWTmp)
         self.chkgrd(dEdX, dEdXTmp)
+
+class LUT_Recurrent_Tests(StageTests):
+    def setUp(self):
+        self.stage = LUT_Recurrent(
+            name='lut',
+            inputDim=5,
+            outputDim=3,
+            inputsStr=[],
+            initRange=0.1,
+            initSeed=1,
+            learningRate=0.9)
+        self.model = self.stage
+        self.testInputErr = False
+        self.costFn = meanSqErr
+    def test_grad(self):
+        random = np.random.RandomState(2)
+        X = np.array([1,2,3,4,5], dtype=int)
+        T = random.uniform(-0.1, 0.1, (5,3))
+        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
+        self.chkgrd(dEdW, dEdWTmp)
 
 class Active_Recurrent_Tests(StageTests):
     def setUp(self):
@@ -412,6 +447,24 @@ class CosSimilarity_Tests(StageTests):
         dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
         self.chkgrd(dEdX, dEdXTmp)
 
+class Selector_Recurrent_Tests(StageTests):
+    def setUp(self):
+        self.stage = Selector_Recurrent(
+            name='sel',
+            inputsStr=[],
+            start=5,
+            end=10,
+            axis=-1)
+        self.model = self.stage
+        self.testInputErr = True
+        self.costFn = meanSqErr
+    def test_grad(self):
+        random = np.random.RandomState(2)
+        X = random.uniform(-0.1, 0.1, (3,15))
+        T = random.uniform(-0.1, 0.1, (3,5))
+        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
+        self.chkgrd(dEdX, dEdXTmp)
+
 if __name__ == '__main__':
     suite = unittest.TestSuite()
     suite.addTests(
@@ -439,13 +492,19 @@ if __name__ == '__main__':
     suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(TimeSum_Tests))
     suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(Reshape_Tests))
+    suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(Sum_Recurrent_Tests))
     suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(ComponentProduct_Recurrent_Tests))
     suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(MapSigmoid_Recurrent_Tests))
     suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(LUT_Recurrent_Tests))
+    suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(Active_Recurrent_Tests))
     suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(CosSimilarity_Tests))
+    suite.addTests(
+          unittest.TestLoader().loadTestsFromTestCase(Selector_Recurrent_Tests))
     unittest.TextTestRunner(verbosity=2).run(suite)

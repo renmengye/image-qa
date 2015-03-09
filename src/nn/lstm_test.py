@@ -2,8 +2,7 @@ from sequential import *
 from lstm import *
 from map import *
 from dropout import *
-from time_fold import *
-from time_unfold import *
+from reshape import *
 from lut import *
 from model import *
 from lstm_recurrent import *

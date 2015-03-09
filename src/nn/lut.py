@@ -8,6 +8,7 @@ class LUT(Stage):
                  initSeed=2,
                  needInit=True,
                  initWeights=0,
+                 sparse=False,
                  learningRate=0.0,
                  learningRateAnnealConst=0.0,
                  momentum=0.0,
@@ -39,6 +40,8 @@ class LUT(Stage):
                 -initRange/2.0, initRange/2.0,
                 (outputDim , inputDim))), axis=1)
         else:
+            if sparse:
+                initWeights = np.array(initWeights.todense())
             self.W = np.concatenate(
                 (np.zeros((outputDim, 1)), initWeights), axis=1)
         self.X = 0
@@ -56,7 +59,8 @@ class LUT(Stage):
 
     def backward(self, dEdY):
         X = self.X
-        self.dEdW = np.zeros(self.W.shape)
-        for n in range(0, X.shape[0]):
-            self.dEdW[:, X[n]] += dEdY[n, :]
+        if self.learningRate > 0.0:
+            self.dEdW = np.zeros(self.W.shape)
+            for n in range(0, X.shape[0]):
+                self.dEdW[:, X[n]] += dEdY[n, :]
         return None

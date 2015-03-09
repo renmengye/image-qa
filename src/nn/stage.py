@@ -13,7 +13,7 @@ class Stage:
                  outputdEdX=True):
         self.name = name
         self.startLearningRate = learningRate
-        self.currentLearningRate = learningRate
+        self.learningRate = learningRate
         self.learningRateAnnealConst = learningRateAnnealConst
         self.momentum = momentum
         self.deltaMomentum = deltaMomentum
@@ -56,18 +56,18 @@ class Stage:
 
     def _updateWeights(self, dEdW):
         # print self.name
-        # print self.currentLearningRate
+        # print self.learningRate
         # print self.momentum
         if self.gradientClip > 0.0:
             self.dEdWnorm = np.sqrt(np.sum(np.power(dEdW, 2)))
             if self.dEdWnorm > self.gradientClip:
                 dEdW *= self.gradientClip / self.dEdWnorm
-        if self.currentLearningRate > 0.0:
-            self.lastdW = -self.currentLearningRate * dEdW + \
+        if self.learningRate > 0.0:
+            self.lastdW = -self.learningRate * dEdW + \
                            self.momentum * self.lastdW
             self.W += self.lastdW
         if self.weightRegConst > 0.0:
-            a = self.currentLearningRate * self.weightRegConst
+            a = self.learningRate * self.weightRegConst
             self.W -= a * self.W
         if self.weightClip > 0.0:
             self.Wnorm = np.sqrt(np.sum(np.power(self.W, 2)))
@@ -75,7 +75,7 @@ class Stage:
                 self.W *= self.weightClip / self.Wnorm
 
     def updateLearningParams(self, numEpoch):
-        self.currentLearningRate = self.startLearningRate / \
+        self.learningRate = self.startLearningRate / \
                                    (1.0 + self.learningRateAnnealConst * numEpoch)
         self.momentum -= self.deltaMomentum
 
