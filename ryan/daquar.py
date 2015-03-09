@@ -24,10 +24,7 @@ def prepare_data(
     n_samples = len(seqs)
     x = np.zeros((maxlen, n_samples), dtype='int64')
     x_mask = np.zeros((maxlen, n_samples), dtype='float32')
-    #f = np.zeros((len(feat_list), feat_list[0].shape[1]), \
-    #    dtype='float32')
     y = np.zeros((n_samples), dtype='int64')
-    
     for idx, s in enumerate(seqs):
         x[:lengths[idx], idx] = s
         x_mask[:lengths[idx]+1, idx] = 1.
@@ -35,15 +32,6 @@ def prepare_data(
     f = np.zeros((y.shape[0], 196, 512), dtype='float32')
     for idx, ff in enumerate(feat_list):
         f[idx] = feat_list[idx]
-    #for idx, ff in enumerate(feat_list):
-    #    f[idx, :] = np.array(ff.todense())
-    #f = f.reshape((y.shape[0], 14*14, 512))
-    #if zero_pad:
-    #    f_pad = np.zeros((f.shape[0], f.shape[1]+1, f.shape[2]),\
-    #    dtype=float32)
-    #    f_pad[:,:-1,:] = f
-    #    f = f_pad
-
     return x, x_mask, f, y
 
 def escapeNumber(line):

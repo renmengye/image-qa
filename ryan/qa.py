@@ -7,9 +7,8 @@ from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
 
 import cPickle as pkl
 import numpy
-
+import sys
 import copy
-import os
 import time
 
 from scipy import optimize, stats
@@ -569,7 +568,8 @@ def train(dim_word=100, # word vector dimensionality
           dictionary=None, # word dictionary
           use_dropout=False,
           use_dropout_lstm=False,
-          reload_=False):
+          reload_=False,
+          test_=False):
 
     # Model options
     model_options = locals().copy()
@@ -631,9 +631,25 @@ def train(dim_word=100, # word vector dimensionality
     lr = tensor.scalar(name='lr')
     f_grad_shared, f_update = \
         eval(optimizer)(lr, tparams, grads, inps, cost)
+    
+    if test_:
+        print 'Test'
+        use_noise.set_value(0.)
+        test_correct = 0
+        test_total = 0
+        test_iter = HomogeneousData(test, maxlen=maxlen)
+        for tbatch in test_iter:
+            tx, tx_mask, tctx, ty = prepare_data(\
+                tbatch, test[1], worddict)
+            tlogprob = f_pred_probs(tx, tx_mask, tctx)
+            tout = numpy.argmax(tlogprob, axis=-1)
+            test_correct += numpy.sum((tout == ty).astype('int64'))
+            test_total += ty.size
+        tr = test_correct / float(test_total)
+        print 'Test Acc %.5f' % tr
+        sys.exit()
 
     print 'Optimization'
-
     train_iter = HomogeneousData(train, batch_size=batch_size, maxlen=maxlen)
     history_errs = []
     # reload history
@@ -655,75 +671,28 @@ def train(dim_word=100, # word vector dimensionality
     for eidx in xrange(max_epochs):
         n_samples = 0
 
-        #print 'Epoch ', eidx
-
         for batch in train_iter:
             n_samples += len(batch)
             uidx += 1
             use_noise.set_value(1.)
 
-            pd_start = time.time()
-
             # Input question, mask, image context, answer.
             x, mask, ctx, y = prepare_data(batch,
                                            train[1],
                                            worddict)
-            pd_duration = time.time() - pd_start
 
             if x == None:
                 print 'Minibatch with zero sample under length ', maxlen
                 continue
 
-            ud_start = time.time()
             probs = f_pred_probs(x, mask, ctx)
             choice = numpy.argmax(probs, axis=-1)
-            #cost_total += f_cost(y, tout) * y.size
             cost = f_grad_shared(x, mask, ctx, y)
             cost_total += cost * y.size
             ex_total += y.size
             correct_total += numpy.sum((choice == y).astype('int64'))
-
             f_update()
-            ud_duration = time.time() - ud_start
 
-            if numpy.isnan(cost) or numpy.isinf(cost):
-                print 'NaN detected'
-                return 1., 1., 1.
-
-            #if numpy.mod(uidx, dispFreq) == 0:
-            #    print 'Epoch ', eidx, \
-            #          'Update ', uidx, \
-            #          'Cost ', cost, \
-            #          'PD ', pd_duration, 'UD ', ud_duration
-
-            #if numpy.mod(uidx, saveFreq) == 0:
-            #    print 'Saving...'
-            #    if best_p != None:
-            #        params = copy.copy(best_p)
-            #    else:
-            #        params = unzip(tparams)
-            #    numpy.savez(saveto, history_errs=history_errs, **params)
-            #    pkl.dump(model_options, open('%s.pkl'%saveto, 'wb'))
-            #    pass
-
-            # Validate
-            #if numpy.mod(uidx, validFreq) == 0:
-            #    use_noise.set_value(0.)
-            #    train_err = 0
-            #    valid_err = 0
-            #    test_err = 0
-            #    valid_iter = HomogeneousData(\
-            #        valid, batch_size=100, maxlen=maxlen)
-            #    vcorrect = 0
-            #    vtotal = 0
-            #    for vbatch in valid_iter:
-            #        vx, vx_mask, vctx, vy = prepare_data(\
-            #            vbatch, valid[1], worddict)
-            #        vlogprob = f_pred_probs(vx, vx_mask, vctx)
-            #        vout = numpy.argmax(vlogprob, axis=-1)
-            #        vcorrect += numpy.sum((vout == vy).astype('int64'))
-            #        vtotal += vy.size
-            #    print 'Valid Accuracy', vcorrect / float(vtotal)
         print 'Epoch %4d' % eidx, \
               'Cost %.5f' % (cost_total / float(ex_total)), \
               'Train Acc %.5f' % (correct_total / float(ex_total)),
@@ -754,9 +723,16 @@ def train(dim_word=100, # word vector dimensionality
         if bad_counter > patience:
             print 'Early stop!'
             break
-
+    
 if __name__ == '__main__':
-    train(dataset='daquar', \
-        n_answers=63, \
-        use_dropout=True, \
-        use_dropout_lstm=True);
+    dropout = True
+    #train(dataset='daquar', \
+    #    n_answers=63, \
+    #    use_dropout=dropout, \
+    #    use_dropout_lstm=dropout);
+    train(dataset='daquar',
+        n_answers=63,
+        use_dropout=dropout,
+        use_dropout_lstm=dropout,
+        reload_=True,
+        test_=True);
