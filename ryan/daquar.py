@@ -122,7 +122,9 @@ def extract_qa(lines):
         questions.append(line)
         answer = escapeNumber(re.sub('\s$', '', lines[n + 1]))
         answers.append(answer)
-        imgIds.append(number)
+
+        # Important! Here image id is 0-based.
+        imgIds.append(number - 1)
         l = len(questions[i].split())
         if l > lineMax: lineMax = l
     return (questions, answers, imgIds)

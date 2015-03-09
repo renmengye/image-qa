@@ -696,15 +696,15 @@ def train(dim_word=100, # word vector dimensionality
             #          'Cost ', cost, \
             #          'PD ', pd_duration, 'UD ', ud_duration
 
-            if numpy.mod(uidx, saveFreq) == 0:
-                print 'Saving...'
-                if best_p != None:
-                    params = copy.copy(best_p)
-                else:
-                    params = unzip(tparams)
-                numpy.savez(saveto, history_errs=history_errs, **params)
-                pkl.dump(model_options, open('%s.pkl'%saveto, 'wb'))
-                pass
+            #if numpy.mod(uidx, saveFreq) == 0:
+            #    print 'Saving...'
+            #    if best_p != None:
+            #        params = copy.copy(best_p)
+            #    else:
+            #        params = unzip(tparams)
+            #    numpy.savez(saveto, history_errs=history_errs, **params)
+            #    pkl.dump(model_options, open('%s.pkl'%saveto, 'wb'))
+            #    pass
 
             # Validate
             #if numpy.mod(uidx, validFreq) == 0:
@@ -741,22 +741,22 @@ def train(dim_word=100, # word vector dimensionality
             vtotal += vy.size
         vr = vcorrect / float(vtotal)
         history_errs.append(1-vr)
-        print 'Valid Acc %.5f' % vr),
+        print 'Valid Acc %.5f' % vr,
         print 'Time', int(time.time() - ep_start)
         if uidx == 0 or 1-vr <= numpy.array(history_errs).min():
             best_p = unzip(tparams)
             bad_counter = 0
             numpy.savez(saveto, history_errs=history_errs, **best_p)
-            pkl.dump(model_options, open('%s.pkl'%saveto, 'wb')
+            pkl.dump(model_options, open('%s.pkl'%saveto, 'wb'))
         else:
             bad_counter += 1
-            params = copy.copy(best_p)
-        else:
-            params = unzip(tparams)
 
         if bad_counter > patience:
             print 'Early stop!'
             break
 
 if __name__ == '__main__':
-    train(dataset='daquar', n_answers=63);
+    train(dataset='daquar', \
+        n_answers=63, \
+        use_dropout=True, \
+        use_dropout_lstm=True);
