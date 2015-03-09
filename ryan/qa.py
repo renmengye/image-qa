@@ -476,7 +476,7 @@ def build_model(tparams, options):
     probs = tensor.nnet.softmax(scores)
 
     # Cost function
-    cost = -tensor.log(probs[tensor.arange(n_samples), y] + 1e-8).mean()
+    cost = -tensor.log(probs[tensor.arange(y.size), y] + 1e-8).mean()
 
     opt_outs = dict()
     if options['selector']:
@@ -486,14 +486,14 @@ def build_model(tparams, options):
 
 # OPTIMIZERS
 # name(hyperp, tparams, grads, inputs (list), cost) = f_grad_shared, f_update
-def adam(lr, tparams, grads, inp, cost):
+def adam(lr, tparams, grads, inps, cost):
     """
     Adam: A Method for Stochastic Optimization (Diederik Kingma, Jimmy Ba)
     """
     gshared = [theano.shared(p.get_value() * numpy.float32(0.), name='%s_grad'%k) for k, p in tparams.iteritems()]
     gsup = [(gs, g) for gs, g in zip(gshared, grads)]
 
-    f_grad_shared = theano.function(inp, cost, updates=gsup)
+    f_grad_shared = theano.function(inps, cost, updates=gsup)
 
     # Magic numbers
     lr0 = 0.0002
@@ -527,7 +527,7 @@ def adam(lr, tparams, grads, inp, cost):
         updates.append((p, p_t))
     updates.append((i, i_t))
 
-    f_update = theano.function([lr], [], updates=updates, on_unused_input='ignore')
+    f_update = theano.function([], [], updates=updates, on_unused_input='ignore')
 
     return f_grad_shared, f_update
 
@@ -544,7 +544,6 @@ def validate_options(options):
 
     return options
 
-
 def train(dim_word=100, # word vector dimensionality
           ctx_dim=512, # context vector dimensionality
           dim=1000, # the number of LSTM units
@@ -556,14 +555,14 @@ def train(dim_word=100, # word vector dimensionality
           dispFreq=100,
           decay_c=0.,
           alpha_c=0.,
-          lrate=0.8,
+          lrate=0.01,
           selector=False,
           n_words=23461,
           maxlen=100, # maximum length of the description/question
           optimizer='adam',
           batch_size = 16,
           valid_batch_size = 16,
-          saveto='model.npz',
+          saveto='params.npz',
           validFreq=-1,
           saveFreq=-1, # save the parameters after every saveFreq updates
           dataset='flickr8k',
@@ -602,17 +601,17 @@ def train(dim_word=100, # word vector dimensionality
 
     tparams = init_tparams(params)
 
-    trng, use_noise, \
-          inps, alphas, \
-          cost, \
-          opts_out, \
-          probs = \
-          build_model(tparams, model_options)
-
+    trng, \
+    use_noise, \
+    inps, \
+    alphas, \
+    cost, \
+    opts_out, \
+    probs = \
+    build_model(tparams, model_options)
     # before any regularizer
-    f_log_probs = theano.function(inps, -cost, profile=False)
-    f_pred_probs = theano.function((inps[0], inps[1], inps[2]), probs, profile=False)
-
+    f_pred_probs = \
+        theano.function((inps[0], inps[1], inps[2]), probs, profile=False)
     cost = cost.mean()
     if decay_c > 0.:
         decay_c = theano.shared(numpy.float32(decay_c), name='decay_c')
@@ -630,7 +629,8 @@ def train(dim_word=100, # word vector dimensionality
     # gradient computation
     grads = tensor.grad(cost, wrt=itemlist(tparams))
     lr = tensor.scalar(name='lr')
-    f_grad_shared, f_update = eval(optimizer)(lr, tparams, grads, inps, cost)
+    f_grad_shared, f_update = \
+        eval(optimizer)(lr, tparams, grads, inps, cost)
 
     print 'Optimization'
 
@@ -646,13 +646,16 @@ def train(dim_word=100, # word vector dimensionality
         validFreq = len(train[0])/batch_size
     if saveFreq == -1:
         saveFreq = len(train[0])/batch_size
-    print 'Valid freq:', validFreq
     
     uidx = 0
+    cost_total = 0.
+    ex_total = 0
+    correct_total = 0
+    ep_start = time.time()
     for eidx in xrange(max_epochs):
         n_samples = 0
 
-        print 'Epoch ', eidx
+        #print 'Epoch ', eidx
 
         for batch in train_iter:
             n_samples += len(batch)
@@ -672,42 +675,88 @@ def train(dim_word=100, # word vector dimensionality
                 continue
 
             ud_start = time.time()
+            probs = f_pred_probs(x, mask, ctx)
+            choice = numpy.argmax(probs, axis=-1)
+            #cost_total += f_cost(y, tout) * y.size
             cost = f_grad_shared(x, mask, ctx, y)
-            
-            f_update(lrate)
+            cost_total += cost * y.size
+            ex_total += y.size
+            correct_total += numpy.sum((choice == y).astype('int64'))
+
+            f_update()
             ud_duration = time.time() - ud_start
 
             if numpy.isnan(cost) or numpy.isinf(cost):
                 print 'NaN detected'
                 return 1., 1., 1.
 
-            if numpy.mod(uidx, dispFreq) == 0:
-                print 'Epoch ', eidx, 'Update ', uidx, 'Cost ', cost, 'PD ', pd_duration, 'UD ', ud_duration
+            #if numpy.mod(uidx, dispFreq) == 0:
+            #    print 'Epoch ', eidx, \
+            #          'Update ', uidx, \
+            #          'Cost ', cost, \
+            #          'PD ', pd_duration, 'UD ', ud_duration
 
-            #TODO: Add saving here
             if numpy.mod(uidx, saveFreq) == 0:
+                print 'Saving...'
+                if best_p != None:
+                    params = copy.copy(best_p)
+                else:
+                    params = unzip(tparams)
+                numpy.savez(saveto, history_errs=history_errs, **params)
+                pkl.dump(model_options, open('%s.pkl'%saveto, 'wb'))
                 pass
 
             # Validate
-            #print uidx, validFreq
-            if numpy.mod(uidx, validFreq) == 0:
-                use_noise.set_value(0.)
-                train_err = 0
-                valid_err = 0
-                test_err = 0
-                valid_iter = HomogeneousData(valid, batch_size=100, maxlen=maxlen)
-                vcorrect = 0
-                vtotal = 0
-                for vbatch in valid_iter:
-                    vx, vx_mask, vctx, vy = prepare_data(vbatch, valid[1], worddict)
-                    vlogprob = f_pred_probs(vx, vx_mask, vctx)
-                    vout = numpy.argmax(vlogprob, axis=-1)
-                    #print 'vx', vx.shape
-                    #print 'vlogprob', vlogprob.shape
-                    #print vout
-                    vcorrect += numpy.sum((vout == vy).astype('int64'))
-                    vtotal += vy.size
-                print 'VA', vcorrect / float(vtotal)
+            #if numpy.mod(uidx, validFreq) == 0:
+            #    use_noise.set_value(0.)
+            #    train_err = 0
+            #    valid_err = 0
+            #    test_err = 0
+            #    valid_iter = HomogeneousData(\
+            #        valid, batch_size=100, maxlen=maxlen)
+            #    vcorrect = 0
+            #    vtotal = 0
+            #    for vbatch in valid_iter:
+            #        vx, vx_mask, vctx, vy = prepare_data(\
+            #            vbatch, valid[1], worddict)
+            #        vlogprob = f_pred_probs(vx, vx_mask, vctx)
+            #        vout = numpy.argmax(vlogprob, axis=-1)
+            #        vcorrect += numpy.sum((vout == vy).astype('int64'))
+            #        vtotal += vy.size
+            #    print 'Valid Accuracy', vcorrect / float(vtotal)
+        print 'Epoch %4d' % eidx, \
+              'Cost %.5f' % (cost_total / float(ex_total)), \
+              'Train Acc %.5f' % (correct_total / float(ex_total)),
+        use_noise.set_value(0.)
+        valid_iter = HomogeneousData(\
+            valid, batch_size=100, maxlen=maxlen)
+        vcorrect = 0
+        vtotal = 0
+        for vbatch in valid_iter:
+            vx, vx_mask, vctx, vy = prepare_data(\
+                vbatch, valid[1], worddict)
+            vlogprob = f_pred_probs(vx, vx_mask, vctx)
+            vout = numpy.argmax(vlogprob, axis=-1)
+            vcorrect += numpy.sum((vout == vy).astype('int64'))
+            vtotal += vy.size
+        vr = vcorrect / float(vtotal)
+        history_errs.append(1-vr)
+        print 'Valid Acc %.5f' % vr),
+        print 'Time', int(time.time() - ep_start)
+        if uidx == 0 or 1-vr <= numpy.array(history_errs).min():
+            best_p = unzip(tparams)
+            bad_counter = 0
+            numpy.savez(saveto, history_errs=history_errs, **best_p)
+            pkl.dump(model_options, open('%s.pkl'%saveto, 'wb')
+        else:
+            bad_counter += 1
+            params = copy.copy(best_p)
+        else:
+            params = unzip(tparams)
+
+        if bad_counter > patience:
+            print 'Early stop!'
+            break
 
 if __name__ == '__main__':
     train(dataset='daquar', n_answers=63);
