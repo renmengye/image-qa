@@ -150,9 +150,9 @@ stages:
       defaultValue: 0.00510204081632653
       initRange: 0.1
       initSeed: 6
-      learningRate: 0.8
+      learningRate: 0.1
       momentum: 0.9
-      gradientClip: 0.1
+      gradientClip: 0.05
       weightClip: 100
     - name: 'attModel'
       type: recurrent
