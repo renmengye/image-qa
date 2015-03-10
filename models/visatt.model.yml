@@ -53,7 +53,7 @@ stages:
       learningRate: 0.8
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 100
+      weightClip: 300
     - name: 'attCtxMLP2'
       type: mapRecurrent
       inputsStr: 'attCtxMLP1'
@@ -64,7 +64,7 @@ stages:
       learningRate: 0.8
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 100
+      weightClip: 300
     - name: 'lstm.I'
       type: mapRecurrent
       inputsStr: 'txtDict, attCtxMLP2, lstm.C(-1), lstm.H(-1)'
@@ -75,7 +75,7 @@ stages:
       learningRate: 0.8
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 100
+      weightClip: 300
     - name: 'lstm.F'
       type: mapRecurrent
       inputsStr: 'txtDict, attCtxMLP2, lstm.C(-1), lstm.H(-1)'
@@ -86,7 +86,7 @@ stages:
       learningRate: 0.8
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 100
+      weightClip: 300
     - name: 'lstm.Z'
       type: mapRecurrent
       inputsStr: 'txtDict, attCtxMLP2, lstm.H(-1)'
@@ -97,7 +97,7 @@ stages:
       learningRate: 0.8
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 100
+      weightClip: 300
     - name: 'lstm.O'
       type: mapRecurrent
       inputsStr: 'txtDict, attCtxMLP2, lstm.C, lstm.H(-1)'
@@ -108,7 +108,7 @@ stages:
       learningRate: 0.8
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 100
+      weightClip: 300
     - name: 'lstm.O'
       type: mapRecurrent
       inputsStr: 'txtDict, attCtxMLP2, lstm.C, lstm.H(-1)'
@@ -119,7 +119,7 @@ stages:
       learningRate: 0.8
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 100
+      weightClip: 300
     - name: 'lstm.FC'
       type: componentProdRecurrent
       inputsStr: 'lstm.F, lstm.C(-1)'
@@ -193,7 +193,7 @@ stages:
       learningRate: 0.01
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 100
+      weightClip: 10
     - name: 'all'
       type: sequential
       stages:
