@@ -50,9 +50,9 @@ stages:
       activeFn: tanh
       initRange: 0.1
       initSeed: 4
-      learningRate: 0.8
+      learningRate: 0.1
       momentum: 0.9
-      gradientClip: 0.1
+      gradientClip: 0.05
       weightClip: 300
     - name: 'attCtxMLP2'
       type: mapRecurrent
@@ -61,9 +61,9 @@ stages:
       activeFn: tanh
       initRange: 0.1
       initSeed: 5
-      learningRate: 0.8
+      learningRate: 0.1
       momentum: 0.9
-      gradientClip: 0.1
+      gradientClip: 0.05
       weightClip: 300
     - name: 'lstm.I'
       type: mapRecurrent
@@ -72,9 +72,9 @@ stages:
       activeFn: sigmoid
       initRange: 0.1
       initSeed: 6
-      learningRate: 0.8
+      learningRate: 0.1
       momentum: 0.9
-      gradientClip: 0.1
+      gradientClip: 0.05
       weightClip: 300
     - name: 'lstm.F'
       type: mapRecurrent
@@ -83,9 +83,9 @@ stages:
       activeFn: sigmoid
       initRange: 0.1
       initSeed: 6
-      learningRate: 0.8
+      learningRate: 0.1
       momentum: 0.9
-      gradientClip: 0.1
+      gradientClip: 0.05
       weightClip: 300
     - name: 'lstm.Z'
       type: mapRecurrent
@@ -94,9 +94,9 @@ stages:
       activeFn: tanh
       initRange: 0.1
       initSeed: 6
-      learningRate: 0.8
+      learningRate: 0.1
       momentum: 0.9
-      gradientClip: 0.1
+      gradientClip: 0.05
       weightClip: 300
     - name: 'lstm.O'
       type: mapRecurrent
@@ -105,9 +105,9 @@ stages:
       activeFn: sigmoid
       initRange: 0.1
       initSeed: 6
-      learningRate: 0.8
+      learningRate: 0.1
       momentum: 0.9
-      gradientClip: 0.1
+      gradientClip: 0.05
       weightClip: 300
     - name: 'lstm.O'
       type: mapRecurrent
@@ -116,9 +116,9 @@ stages:
       activeFn: sigmoid
       initRange: 0.1
       initSeed: 6
-      learningRate: 0.8
+      learningRate: 0.1
       momentum: 0.9
-      gradientClip: 0.1
+      gradientClip: 0.05
       weightClip: 300
     - name: 'lstm.FC'
       type: componentProdRecurrent

@@ -594,7 +594,7 @@ class Recurrent(Stage):
         for s in range(1, len(self.stages[0]) - 1):
             if self.stages[0][s].learningRate > 0.0:
                 self.stages[0][s].dEdW = self.dEdW[s]
-        self.dEdX = dEdX
+        #self.dEdX = dEdX
         return dEdX if self.outputdEdX else None
 
     def updateWeights(self):

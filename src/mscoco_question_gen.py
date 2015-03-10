@@ -7,6 +7,7 @@ from nltk.stem.wordnet import WordNetLemmatizer
 from nltk.corpus import wordnet
 
 parseFilename = '../../../data/mscoco/mscoco_caption.parse.txt'
+imgidFilename = '../../.../data/mscoco/mscoco_imgid.txt'
 lemmatizer = WordNetLemmatizer()
 
 class TreeNode:
@@ -482,10 +483,7 @@ class QuestionGenerator:
             for child in node.children:
                 traverse(child)
             if node.className == 'NP':
-                #obj = None
-                count = None
                 for child in node.children:
-                    print child.text
                     if child.className == 'JJ' and \
                     (child.text == 'red' or\
                     child.text == 'yellow' or\
@@ -504,15 +502,6 @@ class QuestionGenerator:
                     if child.className == 'NN' or child.className == 'NNS':
                         obj[0] = child
                 if found[0] and obj[0] is not None:
-                    # what = TreeNode('WHNP', '', [TreeNode('WP', 'what', [], 0)], 0)
-                    # verb = TreeNode('VB', 'is', [], 0)
-                    # the = TreeNode('DT', 'the', [], 0)
-                    # color = TreeNode('NN', 'color', [], 0)
-                    # the2 = TreeNode('DT', 'the', [], 0)
-                    # of = TreeNode('PP', 'of', [], 0)
-                    # np = TreeNode('NP', '', [the, color, of, the2, obj[0]])
-                    # s = TreeNode('S', '', [verb, np], 0)
-                    # r = TreeNode('ROOT', '', [what, s], 0)
                     qa[0].append((('what is the color of the %s ?' % obj[0].text).lower(), answer[0].text.lower()))
                     found[0] = False
                     obj[0] = None
@@ -670,9 +659,14 @@ class TreeParser:
 def questionGen():
     startTime = time.time()
     questionCount = 0
+    questionWhatCount = 0
+    questionHowmanyCount = 0
+    questionColorCount = 0
     numSentences = 0
     parser = TreeParser()
     gen = QuestionGenerator()
+    # with open(imgidFilename) as f:
+    #     imgids = f.readlines()
     with open(parseFilename) as f:
         for line in f:
             if len(parser.rootsList) > 0:
@@ -680,22 +674,22 @@ def questionGen():
                 numSentences += 1
                 originalSent = parser.rootsList[0].toSentence()
                 hasItem = False
-                # for qaitem in gen.askWhoWhat(parser.rootsList[0]):
-                #     questionCount += 1
-                #     hasItem = True
-                #     if qaitem[0] == 'what ?':
-                #         question = 'what is this ?'
-                #     else:
-                #         question = qaitem[0]
-                #     print ('Question %d:' % questionCount), question, 'Answer:', qaitem[1]
-                # for qaitem in gen.askHowMany(parser.rootsList[0]):
-                #     questionCount += 1
-                #     hasItem = True
-                #     print ('Question %d:' % questionCount), qaitem[0], 'Answer:', qaitem[1]
-                for qaitem in gen.askColor(parser.rootsList[0]):
+                for qaitem in gen.askWhoWhat(parser.rootsList[0].copy()):
                     questionCount += 1
                     hasItem = True
-                    print ('Question %d:' % questionCount), qaitem[0], 'Answer:', qaitem[1]
+                    if qaitem[0] == 'what ?':
+                        question = 'what is this ?'
+                    else:
+                        question = qaitem[0]
+                    print ('Question %d:' % questionCount), question.replace('?', 'in the image%d' % imgid), 'Answer:', qaitem[1]
+                for qaitem in gen.askHowMany(parser.rootsList[0].copy()):
+                    questionCount += 1
+                    hasItem = True
+                    print ('Question %d:' % questionCount), qaitem[0].replace('?', 'in the image%d' % imgid), 'Answer:', qaitem[1]
+                for qaitem in gen.askColor(parser.rootsList[0].copy()):
+                    questionCount += 1
+                    hasItem = True
+                    print ('Question %d:' % questionCount), qaitem[0].replace('?', 'in the image%d' % imgid), 'Answer:', qaitem[1]
                 if hasItem:
                     print 'Original:', originalSent
                     print '-' * 20
@@ -722,13 +716,13 @@ def testHook():
         parser.parse(s[i] + '\n')
     tree = parser.rootsList[0]
     print tree
-    qaiter = gen.askWhoWhat(tree)
+    qaiter = gen.askWhoWhat(tree.copy())
     for qaitem in qaiter:
         print ('Question:'), qaitem[0], 'Answer:', qaitem[1]
-    qaiter = gen.askHowMany(tree)
+    qaiter = gen.askHowMany(tree.copy())
     for qaitem in qaiter:
         print ('Question:'), qaitem[0], 'Answer:', qaitem[1]
-    qaiter = gen.askColor(tree)
+    qaiter = gen.askColor(tree.copy())
     for qaitem in qaiter:
         print ('Question:'), qaitem[0], 'Answer:', qaitem[1]
 
