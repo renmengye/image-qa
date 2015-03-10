@@ -465,6 +465,61 @@ class Selector_Recurrent_Tests(StageTests):
         dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
         self.chkgrd(dEdX, dEdXTmp)
 
+class SumProduct_Recurrent_Tests(StageTests):
+    def setUp(self):
+        self.stage = SumProduct_Recurrent(
+            name='sp', 
+            inputsStr=[], 
+            sumAxis=1, 
+            outputDim=10
+            )
+        self.model = self.stage
+        self.testInputErr = True
+        self.costFn = meanSqErr
+    def test_grad(self):
+        random = np.random.RandomState(2)
+        X = [random.uniform(-0.1, 0.1, (3, 10, 1)), 
+             random.uniform(-0.1, 0.1, (3, 10, 5))]
+        T = random.uniform(-0.1, 0.1, (3, 5))
+        #dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
+        
+        Y = self.model.forward(X)
+        W = self.stage.W
+        E, dEdY = self.costFn(Y, T)
+        dEdX = self.model.backward(dEdY)
+
+        eps = 1e-3
+        dEdXTmp = np.zeros(X[0].shape)
+        for n in range(0, 3):
+            for t in range(0, 10):
+                X[0][n, t] += eps
+                Y = self.model.forward(X)
+                Etmp1, d1 = self.costFn(Y, T)
+
+                X[0][n, t] -= 2 * eps
+                Y = self.model.forward(X)
+                Etmp2, d2 = self.costFn(Y, T)
+
+                dEdXTmp[n, t] = (Etmp1 - Etmp2) / 2.0 / eps
+                X[0][n, t] += eps
+        self.chkgrd(dEdX[0], dEdXTmp)
+        dEdXTmp = np.zeros(X[1].shape)
+        for n in range(0, 3):
+            for t in range(0, 10):
+                for j in range (0, 5):
+                    X[1][n, t, j] += eps
+                    Y = self.model.forward(X)
+                    Etmp1, d1 = self.costFn(Y, T)
+
+                    X[1][n, t, j] -= 2 * eps
+                    Y = self.model.forward(X)
+                    Etmp2, d2 = self.costFn(Y, T)
+
+                    dEdXTmp[n, t, j] = (Etmp1 - Etmp2) / 2.0 / eps
+                    X[1][n, t, j] += eps
+        self.chkgrd(dEdX[1], dEdXTmp)
+
+
 if __name__ == '__main__':
     suite = unittest.TestSuite()
     suite.addTests(
@@ -507,4 +562,6 @@ if __name__ == '__main__':
         unittest.TestLoader().loadTestsFromTestCase(CosSimilarity_Tests))
     suite.addTests(
           unittest.TestLoader().loadTestsFromTestCase(Selector_Recurrent_Tests))
+    suite.addTests(
+          unittest.TestLoader().loadTestsFromTestCase(SumProduct_Recurrent_Tests))
     unittest.TextTestRunner(verbosity=2).run(suite)

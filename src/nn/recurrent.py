@@ -3,10 +3,6 @@ import time
 from stage import *
 from active_func import *
 
-class Counter:
-    def __init__(self):
-        self.count = 0
-
 class RecurrentSubstage(Stage):
     def __init__(self, name,
                  inputsStr,
@@ -85,7 +81,9 @@ class RecurrentSubstage(Stage):
         self.forward(self.getInput())
 
     def graphBackward(self):
-        self.sendError(self.backward(self.dEdY))
+        dEdX = self.backward(self.dEdY)
+        if self.outputdEdX:
+            self.sendError(dEdX)
 
     def forward(self, X):
         """Subclasses need to implement this"""
@@ -208,9 +206,10 @@ class Selector_Recurrent(RecurrentSubstage):
     def forward(self, X):
         self.X = X
         if self.axis == 0:
-            return X[self.start:self.end]
+            self.Y = X[self.start:self.end]
         else:
-            return X[:, self.start:self.end]
+            self.Y = X[:, self.start:self.end]
+        return self.Y
 
     def backward(self, dEdY):
         dEdX = np.zeros(self.X.shape)
@@ -332,7 +331,7 @@ class LUT_Recurrent(RecurrentSubstage):
             self.W = None
         else:
             if sparse:
-                initWeights = np.array(initWeights.todense())
+                initWeights = np.array(initWeights.transpose().todense())
             self.W = np.concatenate(
                 (np.zeros((outputDim, 1)), initWeights), axis=1)
         self.X = 0
@@ -364,6 +363,48 @@ class LUT_Recurrent(RecurrentSubstage):
                 self.dEdW[:, X[n]] += dEdY[n, :]
         return None
 
+class Reshape_Recurrent(RecurrentSubstage):
+    def __init__(self, name, inputsStr, reshapeFn):
+        # Please don't put recurrent connection here.
+        RecurrentSubstage.__init__(self, name=name, inputsStr=inputsStr, outputDim=0)
+        self.reshapeFn = eval('lambda x: ' + reshapeFn)
+        self.Xshape = 0
+
+    def forward(self, X):
+        self.Xshape = X.shape
+        self.Y = np.reshape(X, self.reshapeFn(X.shape))
+        return self.Y
+
+    def backward(self, dEdY):
+        return np.reshape(dEdY, self.Xshape)
+
+class SumProduct_Recurrent(RecurrentSubstage):
+    def __init__(self, name, inputsStr, sumAxis, outputDim):
+        RecurrentSubstage.__init__(self, name=name, inputsStr=inputsStr, outputDim=outputDim)
+        self.sumAxis = sumAxis
+
+    def getInput(self):
+        # Assume that the input size is always 2
+        # Rewrite get input logic into two separate arrays
+        return [self.inputs[0].Y, self.inputs[1].Y]
+
+    def sendError(self, dEdX):
+        self.inputs[0].dEdY += dEdX[0]
+        self.inputs[1].dEdY += dEdX[1]
+
+    def forward(self, X):
+        self.X = X
+        self.Y = np.sum(X[0] * X[1], axis=self.sumAxis)
+        return self.Y
+
+    def backward(self, dEdY):
+        # Need to generalize, but now, let's assume it's the attention model.
+        dEdX = []
+        dEdY = dEdY.reshape(dEdY.shape[0], 1, dEdY.shape[1])
+        dEdX.append(np.sum(dEdY * self.X[1], axis=2))
+        dEdX.append(dEdY * self.X[0])
+        return dEdX
+
 class Recurrent(Stage):
     """
     Recurrent stage.
@@ -375,6 +416,7 @@ class Recurrent(Stage):
                  outputStageName,
                  inputDim,
                  outputDim,
+                 inputType='float',
                  multiOutput=True,
                  name=None,
                  outputdEdX=True):
@@ -385,6 +427,7 @@ class Recurrent(Stage):
         self.timespan = timespan
         self.multiOutput = multiOutput
         self.inputDim = inputDim
+        self.inputType = inputType
         self.outputDim = outputDim
         self.outputStageName = outputStageName
         self.Xend = 0
@@ -453,7 +496,10 @@ class Recurrent(Stage):
 
     def testRun(self):
         """Test run through the recurrent net to initialize all the weights."""
-        X = np.random.rand(2, self.timespan, self.inputDim)
+        if self.inputType == 'float':
+            X = np.random.rand(2, self.timespan, self.inputDim)
+        elif self.inputType == 'int':
+            X = np.round(np.random.rand(2, self.timespan, self.inputDim) * 5)
         self.forward(X)
         for t in range(1, self.timespan):
             for s in range(1, len(self.stages[0])-1):
@@ -526,11 +572,11 @@ class Recurrent(Stage):
 
         for s in range(1, len(self.stages[0]) - 1):
             if type(self.stages[0][s].W) is np.ndarray:
-                tmp = np.zeros((self.timespan, self.stages[0][s].W.shape[0], self.stages[0][s].W.shape[1]))
+                #tmp = np.zeros((self.timespan, self.stages[0][s].W.shape[0], self.stages[0][s].W.shape[1]))
                 for t in range(self.timespan):
-                    tmp[t] = self.stages[t][s].getGradient()
+                    #tmp[t] = self.stages[t][s].getGradient()
+                    self.dEdW[s] += self.stages[t][s].getGradient()
                     self.stages[t][s].dEdW = 0.0
-                self.dEdW[s] = np.sum(tmp, axis=0)
 
         # For gradient check purpose, synchronize the sum of gradient to the time=0 stage
         for s in range(1, len(self.stages[0]) - 1):

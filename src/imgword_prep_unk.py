@@ -141,6 +141,19 @@ def combine(wordids, imgids):
         (np.array(imgids).reshape(len(imgids), 1, 1), \
         wordids), axis=1)
 
+def combineAttention(wordids, imgids):
+    imgid_t = []
+    for n in range(0, wordids.shape[0]):
+        for t in range(0, wordids.shape[1]):
+            if wordids[n,t] == 0:
+                imgid_t.append(0)
+            else:
+                imgid_t.append(imgids[n])
+
+    return np.concatenate(
+            (np.array(imgid_t).reshape(len(imgids), wordids.shape[1], 1),
+            wordids), axis=-1)
+
 if __name__ == '__main__':
     """
     Usage: imgword_prep.py -train trainQAFile -test testQAFile -o outputFolder
@@ -216,4 +229,29 @@ if __name__ == '__main__':
         os.path.join(outputFolder, 'vocab-dict-unk-all.npy'),\
         np.array((worddict_all, idict_all, 
             ansdict_all, iansdict_all, 0), dtype=object))
+
+    trainInput = combineAttention(\
+        lookupQID(t_questions, worddict), t_imgids)
+    validInput = combineAttention(\
+        lookupQID(v_questions, worddict), v_imgids)
+    testInput = combineAttention(\
+        lookupQID(r_questions, worddict), r_imgids)
+    allInput = combineAttention(\
+        lookupQID(questions, worddict_all), imgids)
+    np.save(\
+        os.path.join(outputFolder, 'train-37-unk-att.npy'),\
+        np.array((trainInput, trainTarget, 0),\
+            dtype=object))
+    np.save(\
+        os.path.join(outputFolder, 'valid-37-unk-att.npy'),\
+        np.array((validInput, validTarget, 0),\
+            dtype=object))
+    np.save(\
+        os.path.join(outputFolder, 'test-37-unk-att.npy'),\
+        np.array((testInput, testTarget, 0),\
+            dtype=object))
+    np.save(\
+        os.path.join(outputFolder, 'all-37-unk-att.npy'),\
+        np.array((allInput, allTarget, 0),\
+            dtype=object))
 
