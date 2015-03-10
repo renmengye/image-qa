@@ -177,7 +177,7 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
 
         random = np.random.RandomState(1)
         costFn = crossEntOne
-        for i in range(10):
+        for i in range(3):
             X = random.rand(N, Time, D)
             if multiOutput:
                 T = random.rand(N, Time, D2)
@@ -191,11 +191,15 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
                 Y2 = lstm2.forward(X)[:,:-1]
             else:
                 Y2 = lstm2.forward(X)
+
             E, dEdY2 = costFn(Y2, T)
             if multiOutput:
                 dEdX2 = lstm2.backward(np.concatenate((dEdY2, np.zeros((N, 1, D2))), axis=1))
             else:
                 dEdX2 = lstm2.backward(dEdY2)
+
+            # print i, 'Y', Y/Y2
+            # print i, 'dEdY', dEdY/dEdY2
 
             I2 = lstm.stageDict['I-4']
             F2 = lstm.stageDict['F-4']
@@ -207,9 +211,13 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
             lstm2.updateWeights()
             self.chkEqual(Y, Y2)
             self.chkEqual(dEdX, dEdX2)
+            # print i, '1', dEdW
+            # print i, '2', dEdW2
+            # print i, '3', dEdW/dEdW2
             self.chkEqual(dEdW, dEdW2)
             W = np.concatenate((I2.W, F2.W, Z2.W, O2.W), axis=-1)
             W2 = lstm2.W
+            # print i, '4', W/W2
             self.chkEqual(W, W2)
 
     def chkEqual(self, a, b):

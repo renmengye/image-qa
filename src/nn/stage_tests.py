@@ -83,10 +83,9 @@ class StageTests(unittest.TestCase):
             dEdXTmp = None
         return dEdW, dEdWTmp, dEdX, dEdXTmp
 
-    def chkgrd(self, dE, dETmp):
+    def chkgrd(self, dE, dETmp, tolerance=1e-4):
         dE = dE.reshape(dE.size)
         dETmp = dETmp.reshape(dE.size)
-        tolerance = 1e-4
         for i in range(dE.size):
             self.assertTrue(
                 (dE[i] == 0 and dETmp[i] == 0) or

@@ -54,7 +54,7 @@ stages:
       momentum: 0.9
       gradientClip: 0.05
       weightClip: 300
-    - name: 'attCtxMLP2'
+    - name: 'attCtxOut'
       type: mapRecurrent
       inputsStr: 'attCtxMLP1'
       outputDim: 150
@@ -64,62 +64,55 @@ stages:
       learningRate: 0.1
       momentum: 0.9
       gradientClip: 0.05
-      weightClip: 300
+      weightClip: 100
     - name: 'lstm.I'
       type: mapRecurrent
-      inputsStr: 'txtDict, attCtxMLP2, lstm.C(-1), lstm.H(-1)'
+      inputsStr: 'txtDict, attCtxOut, lstm.C(-1), lstm.H(-1)'
       outputDim: 150
       activeFn: sigmoid
       initRange: 0.1
       initSeed: 6
+      biasInitConst: 1.0
       learningRate: 0.1
       momentum: 0.9
       gradientClip: 0.05
-      weightClip: 300
+      weightClip: 100
     - name: 'lstm.F'
       type: mapRecurrent
-      inputsStr: 'txtDict, attCtxMLP2, lstm.C(-1), lstm.H(-1)'
+      inputsStr: 'txtDict, attCtxOut, lstm.C(-1), lstm.H(-1)'
       outputDim: 150
       activeFn: sigmoid
       initRange: 0.1
       initSeed: 6
+      biasInitConst: 1.0
       learningRate: 0.1
       momentum: 0.9
       gradientClip: 0.05
-      weightClip: 300
+      weightClip: 100
     - name: 'lstm.Z'
       type: mapRecurrent
-      inputsStr: 'txtDict, attCtxMLP2, lstm.H(-1)'
+      inputsStr: 'txtDict, attCtxOut, lstm.H(-1)'
       outputDim: 150
       activeFn: tanh
       initRange: 0.1
       initSeed: 6
+      biasInitConst: 0.0
       learningRate: 0.1
       momentum: 0.9
       gradientClip: 0.05
-      weightClip: 300
+      weightClip: 100
     - name: 'lstm.O'
       type: mapRecurrent
-      inputsStr: 'txtDict, attCtxMLP2, lstm.C, lstm.H(-1)'
+      inputsStr: 'txtDict, attCtxOut, lstm.C, lstm.H(-1)'
       outputDim: 150
       activeFn: sigmoid
       initRange: 0.1
       initSeed: 6
+      biasInitConst: 1.0
       learningRate: 0.1
       momentum: 0.9
       gradientClip: 0.05
-      weightClip: 300
-    - name: 'lstm.O'
-      type: mapRecurrent
-      inputsStr: 'txtDict, attCtxMLP2, lstm.C, lstm.H(-1)'
-      outputDim: 150
-      activeFn: sigmoid
-      initRange: 0.1
-      initSeed: 6
-      learningRate: 0.1
-      momentum: 0.9
-      gradientClip: 0.05
-      weightClip: 300
+      weightClip: 100
     - name: 'lstm.FC'
       type: componentProdRecurrent
       inputsStr: 'lstm.F, lstm.C(-1)'
@@ -153,7 +146,7 @@ stages:
       learningRate: 0.1
       momentum: 0.9
       gradientClip: 0.05
-      weightClip: 100
+      weightClip: 50
     - name: 'attModel'
       type: recurrent
       stages:
@@ -165,7 +158,7 @@ stages:
           - 'attReshape'
           - 'attCtx'
           - 'attCtxMLP1'
-          - 'attCtxMLP2'
+          - 'attCtxOut'
           - 'lstm.I'
           - 'lstm.F'
           - 'lstm.Z'

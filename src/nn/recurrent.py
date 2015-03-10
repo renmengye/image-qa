@@ -185,7 +185,9 @@ class Map_Recurrent(RecurrentSubstage):
         dEdZ = self.activeFn.backward(dEdY, self.Y, 0)
         self.dEdW = np.dot(dEdZ.transpose(), self.X)
         dEdX = np.dot(dEdZ, self.W[:, :-1])
+        #self.dEdX = dEdX
         return dEdX if self.outputdEdX else None
+
 
 class Selector_Recurrent(RecurrentSubstage):
     def __init__(self, 
@@ -415,6 +417,7 @@ class SumProduct_Recurrent(RecurrentSubstage):
         dEdY = dEdY.reshape(dEdY.shape[0], 1, dEdY.shape[1])
         dEdX.append(np.sum(dEdY * self.X[1], axis=2))
         dEdX.append(dEdY * self.X[0])
+        #self.dEdX = dEdX
         return dEdX
 
 class Recurrent(Stage):
@@ -512,10 +515,15 @@ class Recurrent(Stage):
             X = np.random.rand(2, self.timespan, self.inputDim)
         elif self.inputType == 'int':
             X = np.round(np.random.rand(2, self.timespan, self.inputDim) * 5)
+        
         self.forward(X)
         for t in range(1, self.timespan):
-            for s in range(1, len(self.stages[0])-1):
+            for s in range(1, len(self.stages[0]) - 1):
                 self.stages[t][s].W = self.stages[0][s].W
+        for t in range(self.timespan):
+            for s in range(len(self.stages[0])):
+                self.stages[t][s].X = 0
+                self.stages[t][s].Y = 0
 
     def forward(self, X):
         N = X.shape[0]
@@ -579,22 +587,24 @@ class Recurrent(Stage):
         for t in range(self.timespan):
             for stage in self.stages[t]:
                 stage.dEdY = 0.0
+                #stage.dEdX = 0.0
         for stage in self.constStages:
             stage.dEdY = 0.0
-
+            #stage.dEdX = 0.0
+        
+        # Sum error through time
         for s in range(1, len(self.stages[0]) - 1):
             if type(self.stages[0][s].W) is np.ndarray:
-                #tmp = np.zeros((self.timespan, self.stages[0][s].W.shape[0], self.stages[0][s].W.shape[1]))
+                self.dEdW[s] = np.zeros(self.stages[0][s].W.shape)
                 for t in range(self.timespan):
-                    #tmp[t] = self.stages[t][s].getGradient()
-                    self.dEdW[s] += self.stages[t][s].getGradient()
+                    self.dEdW[s] += self.stages[t][s].dEdW
                     self.stages[t][s].dEdW = 0.0
 
         # For gradient check purpose, synchronize the sum of gradient to the time=0 stage
         for s in range(1, len(self.stages[0]) - 1):
             if self.stages[0][s].learningRate > 0.0:
                 self.stages[0][s].dEdW = self.dEdW[s]
-        #self.dEdX = dEdX
+        self.dEdX = dEdX
         return dEdX if self.outputdEdX else None
 
     def updateWeights(self):
