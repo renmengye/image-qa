@@ -64,3 +64,15 @@ class LUT(Stage):
             for n in range(0, X.shape[0]):
                 self.dEdW[:, X[n]] += dEdY[n, :]
         return None
+
+    def loadWeights(self, W):
+        if self.learningRate == 0.0:
+            return
+        else:
+            Stage.loadWeights(self, W)
+
+    def getWeights(self):
+        if self.learningRate == 0.0:
+            return 0
+        else:
+            return W

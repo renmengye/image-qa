@@ -13,7 +13,7 @@ def sigmoidFn(X):
     return 1 / (1 + np.exp(-X))
 
 def crossEntIdx(Y, T):
-    eps = 1e-5
+    eps = 1e-8
     Y2 = Y.reshape(Y.size / Y.shape[-1], Y.shape[-1])
     T2 = T.reshape(T.size)
     E = 0.0
@@ -27,7 +27,7 @@ def crossEntIdx(Y, T):
     return E, dEdY
 
 def crossEntOne(Y, T):
-    eps = 1e-5
+    eps = 1e-8
     T = T.reshape(Y.shape)
     cost = -T * np.log(Y + eps) - (1 - T) * np.log(1 - Y + eps)
     dcost = -T / (Y + eps) + (1 - T) / (1 - Y + eps)

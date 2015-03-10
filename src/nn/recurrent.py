@@ -363,6 +363,18 @@ class LUT_Recurrent(RecurrentSubstage):
                 self.dEdW[:, X[n]] += dEdY[n, :]
         return None
 
+    def loadWeights(self, W):
+        if self.learningRate == 0.0:
+            return
+        else:
+            Stage.loadWeights(self, W)
+
+    def getWeights(self):
+        if self.learningRate == 0.0:
+            return 0
+        else:
+            return W
+
 class Reshape_Recurrent(RecurrentSubstage):
     def __init__(self, name, inputsStr, reshapeFn):
         # Please don't put recurrent connection here.

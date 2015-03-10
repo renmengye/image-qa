@@ -188,6 +188,12 @@ stages:
       inputDim: 150
       outputDim: 63
       activeFn: softmax
+      initRange: 0.1
+      initSeed: 6
+      learningRate: 0.01
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 100
     - name: 'all'
       type: sequential
       stages:
