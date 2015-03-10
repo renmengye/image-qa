@@ -1,0 +1,207 @@
+costFn: crossEntIdx
+decisionFn: argmax
+model: all
+
+stages:
+    - name: 'timeUnfold'
+      type: timeUnfold
+    - name: 'imgFeat'
+      type: lut
+      inputDim: 1449
+      outputDim: 100352
+      initWeights: '../../../data/nyu-depth/hidden5_4_conv.pkl'
+      sparse: true
+      learningRate: 0.0
+      outputdEdX: false
+    - name: 'txtFeat'
+      type: lut
+      inputDim: 871
+      outputDim: 150
+      initRange: 0.1
+      initSeed: 3
+      learningRate: 0.0
+      outputdEdX: false
+    - name: 'imgTxtInput'
+      type: concat
+      axis: -1
+      splits:
+          - 1
+      stages:
+          - 'imgFeat'
+          - 'txtFeat'
+    - name: 'timeFold'
+      type: timeFold
+      timespan: 27
+    - name: 'imgSel'
+      type: selectorRecurrent
+      inputsStr: 'input'
+      start: 0
+      end: 100352
+    - name: 'txtSel'
+      type: selectorRecurrent
+      inputsStr: 'input'
+      start: 100352
+      end: 100502
+    - name: 'imgRehape'
+      type: reshapeRecurrent
+      inputsStr: 'imgSel'
+      reshapeFn: '(x[0], 196, x[1]/196)'
+    - name: 'attReshape'
+      type: reshapeRecurrent
+      inputsStr: 'att(-1)'
+      reshapeFn: '(x[0], x[1], 1)'
+    - name: 'attCtx'
+      type: sumProdRecurrent
+      inputsStr: 'attReshape, imgRehape'
+      sumAxis: 1
+      outputDim: 512
+    - name: 'attCtxMLP1'
+      type: mapRecurrent
+      inputsStr: 'attCtx'
+      outputDim: 150
+      activeFn: tanh
+      initRange: 0.1
+      initSeed: 4
+      learningRate: 0.3
+      momentum: 0.9
+      gradientClip: 0.05
+      weightClip: 100
+    - name: 'attCtxOut'
+      type: mapRecurrent
+      inputsStr: 'attCtxMLP1'
+      outputDim: 150
+      activeFn: tanh
+      initRange: 0.1
+      initSeed: 5
+      learningRate: 0.3
+      momentum: 0.9
+      gradientClip: 0.05
+      weightClip: 100
+    - name: 'lstm.I'
+      type: mapRecurrent
+      inputsStr: 'txtSel, attCtxOut, lstm.C(-1), lstm.H(-1)'
+      outputDim: 150
+      activeFn: sigmoid
+      initRange: 0.1
+      initSeed: 6
+      biasInitConst: 1.0
+      learningRate: 0.3
+      momentum: 0.9
+      gradientClip: 0.05
+      weightClip: 100
+    - name: 'lstm.F'
+      type: mapRecurrent
+      inputsStr: 'txtSel, attCtxOut, lstm.C(-1), lstm.H(-1)'
+      outputDim: 150
+      activeFn: sigmoid
+      initRange: 0.1
+      initSeed: 6
+      biasInitConst: 1.0
+      learningRate: 0.3
+      momentum: 0.9
+      gradientClip: 0.05
+      weightClip: 100
+    - name: 'lstm.Z'
+      type: mapRecurrent
+      inputsStr: 'txtSel, attCtxOut, lstm.H(-1)'
+      outputDim: 150
+      activeFn: tanh
+      initRange: 0.1
+      initSeed: 6
+      biasInitConst: 0.0
+      learningRate: 0.3
+      momentum: 0.9
+      gradientClip: 0.05
+      weightClip: 100
+    - name: 'lstm.O'
+      type: mapRecurrent
+      inputsStr: 'txtSel, attCtxOut, lstm.C, lstm.H(-1)'
+      outputDim: 150
+      activeFn: sigmoid
+      initRange: 0.1
+      initSeed: 6
+      biasInitConst: 1.0
+      learningRate: 0.3
+      momentum: 0.9
+      gradientClip: 0.05
+      weightClip: 100
+    - name: 'lstm.FC'
+      type: componentProdRecurrent
+      inputsStr: 'lstm.F, lstm.C(-1)'
+      outputDim: 150
+    - name: 'lstm.IZ'
+      type: componentProdRecurrent
+      inputsStr: 'lstm.I, lstm.Z'
+      outputDim: 150
+    - name: 'lstm.C'
+      type: sumRecurrent
+      inputsStr: 'lstm.FC, lstm.IZ'
+      numComponents: 2
+      outputDim: 150
+    - name: 'lstm.U'
+      type: activeRecurrent
+      inputsStr: 'lstm.C'
+      activeFn: tanh
+      outputDim: 150
+    - name: 'lstm.H'
+      type: componentProdRecurrent
+      inputsStr: 'lstm.O, lstm.U'
+      outputDim: 150
+    - name: 'att'
+      type: mapRecurrent
+      inputsStr: 'lstm.H'
+      outputDim: 196
+      activeFn: softmax
+      defaultValue: 0.00510204081632653
+      initRange: 0.1
+      initSeed: 6
+      learningRate: 0.3
+      momentum: 0.9
+      gradientClip: 0.05
+      weightClip: 50
+    - name: 'attModel'
+      type: recurrent
+      stages:
+          - 'imgSel'
+          - 'txtSel'
+          - 'imgRehape'
+          - 'attReshape'
+          - 'attCtx'
+          - 'attCtxMLP1'
+          - 'attCtxOut'
+          - 'lstm.I'
+          - 'lstm.F'
+          - 'lstm.Z'
+          - 'lstm.FC'
+          - 'lstm.IZ'
+          - 'lstm.C'
+          - 'lstm.O'
+          - 'lstm.U'
+          - 'lstm.H'
+          - 'att'
+      outputStageName: 'lstm.H'
+      inputDim: 100502
+      inputType: int
+      outputDim: 150
+      timespan: 27
+      multiOutput: false
+      outputdEdX: false
+    - name: 'answer'
+      type: map
+      inputDim: 150
+      outputDim: 63
+      activeFn: softmax
+      initRange: 0.1
+      initSeed: 6
+      learningRate: 0.01
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 10
+    - name: 'all'
+      type: sequential
+      stages:
+          - 'timeUnfold'
+          - 'imgTxtInput'
+          - 'timeFold'
+          - 'attModel'
+          - 'answer'
