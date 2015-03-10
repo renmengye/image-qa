@@ -590,7 +590,6 @@ def train(dim_word=100, # word vector dimensionality
     for kk, vv in worddict.iteritems():
         word_idict[vv] = kk
     word_idict[0] = '<eos>'
-    word_idict[1] = 'UNK'
 
     print 'Building model'
     params = init_params(model_options)

@@ -119,13 +119,11 @@ def extract_qa(lines):
 
 def build_dict(lines, keystart):
     # From word to number.
-    word_dict = {}
+    word_dict = {'UNK': keystart}
     # From number to word, numbers need to minus one to convert to list indices.
-    word_array = []
-    # Word frequency
-    word_freq = []
+    word_array = ['UNK']
     # Key is 1-based, 0 is reserved for sentence end.
-    key = keystart
+    key = keystart + 1
     for i in range(0, len(lines)):
         line = lines[i].replace(',', '')
         words = line.split(' ')
@@ -133,14 +131,9 @@ def build_dict(lines, keystart):
             if not word_dict.has_key(words[j]):
                 word_dict[words[j]] = key
                 word_array.append(words[j])
-                word_freq.append(1)
                 key += 1
             else:
                 k = word_dict[words[j]]
-                word_freq[k - 1] += 1
-    word_dict['UNK'] = key
-    word_array.append('UNK')
-
     return  word_dict, word_array
 
 def combine(questions, answers, imgids):
@@ -180,7 +173,7 @@ def load_data(load_train=True,
         t_imgids, v_imgids = data_split(imgids, imgids, split)
 
         # Build a dictionary only for training questions.
-        worddict, idict = build_dict(t_questions, 0)
+        worddict, idict = build_dict(t_questions, 1)
         ansdict, iansdict = build_dict(t_answers, 0)
         
         train = (combine(\
