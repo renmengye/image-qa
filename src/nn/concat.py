@@ -15,6 +15,8 @@ class Concat(Container):
         self.outputSplits = []
 
     def forward(self, X, dropout=True):
+        # print self.name
+        # print X.shape
         self.outputSplits = []
         splY = []
         splX = np.split(X, self.splits, axis=self.axis)

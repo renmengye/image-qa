@@ -211,6 +211,9 @@ class Selector_Recurrent(RecurrentSubstage):
             self.Y = X[self.start:self.end]
         else:
             self.Y = X[:, self.start:self.end]
+        # print self.name
+        # print self.X.shape
+        # print self.Y.shape
         return self.Y
 
     def backward(self, dEdY):
@@ -333,26 +336,28 @@ class LUT_Recurrent(RecurrentSubstage):
             self.W = None
         else:
             if sparse:
-                initWeights = np.array(initWeights.transpose().todense())
+                initWeights = np.array(initWeights.todense())
             self.W = np.concatenate(
-                (np.zeros((outputDim, 1)), initWeights), axis=1)
+                (np.zeros((1, outputDim)), initWeights), axis=0)
         self.X = 0
         self.Y = 0
         pass
 
     def initWeights(self):
         self.W = np.concatenate(
-            (np.zeros((self.outputDim, 1)),
+            (np.zeros((1, self.outputDim)),
              self.random.uniform(
             -self.initRange/2.0, self.initRange/2.0,
-            (self.outputDim , self.inputDim))), axis=1)
+            (self.inputDim, self.outputDim))), axis=0)
 
     def forward(self, X):
         if self.W is None: self.initWeights()
         X = X.reshape(X.size)
         Y = np.zeros((X.shape[0], self.outputDim))
-        for n in range(0, X.shape[0]):
-            Y[n, :] = self.W[:, X[n]]
+        # for n in range(0, X.shape[0]):
+        #     Y[n, :] = self.W[:, X[n]]
+        #print X
+        Y = self.W[X, :]
         self.X = X
         self.Y = Y
         return Y
@@ -361,8 +366,9 @@ class LUT_Recurrent(RecurrentSubstage):
         X = self.X
         if self.learningRate > 0.0:
             self.dEdW = np.zeros(self.W.shape)
-            for n in range(0, X.shape[0]):
-                self.dEdW[:, X[n]] += dEdY[n, :]
+            # for n in range(0, X.shape[0]):
+            #     self.dEdW[:, X[n]] += dEdY[n, :]
+            self.dEdW[X, :] += dEdY
         return None
 
     def loadWeights(self, W):
@@ -386,6 +392,8 @@ class Reshape_Recurrent(RecurrentSubstage):
 
     def forward(self, X):
         self.Xshape = X.shape
+        # print X.shape
+        # print self.reshapeFn(X.shape)
         self.Y = np.reshape(X, self.reshapeFn(X.shape))
         return self.Y
 
@@ -514,7 +522,7 @@ class Recurrent(Stage):
         if self.inputType == 'float':
             X = np.random.rand(2, self.timespan, self.inputDim)
         elif self.inputType == 'int':
-            X = np.round(np.random.rand(2, self.timespan, self.inputDim) * 5)
+            X = np.round(np.random.rand(2, self.timespan, self.inputDim) * 5).astype(int)
         
         self.forward(X)
         for t in range(1, self.timespan):
@@ -526,6 +534,8 @@ class Recurrent(Stage):
                 self.stages[t][s].Y = 0
 
     def forward(self, X):
+        # print 'recurrent'
+        # print X.shape
         N = X.shape[0]
         self.Xend = np.zeros(N, dtype=int) + X.shape[1]
         reachedEnd = np.sum(X, axis=-1) == 0.0

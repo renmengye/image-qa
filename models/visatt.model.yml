@@ -1,6 +1,7 @@
 costFn: crossEntIdx
 decisionFn: argmax
 model: all
+
 stages:
     - name: 'imgSel'
       type: selectorRecurrent

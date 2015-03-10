@@ -16,7 +16,7 @@ class Sequential_Tests(unittest.TestCase):
         self.trainTarget = random.uniform(0, 1, (5, 1)).astype(int)
 
     def test_grad(self):
-        wordEmbed = np.random.rand(5, np.max(self.trainInput))
+        wordEmbed = np.random.rand(np.max(self.trainInput), 5)
         timespan = self.trainInput.shape[1]
         time_unfold = TimeUnfold()
 

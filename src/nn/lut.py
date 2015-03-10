@@ -35,24 +35,25 @@ class LUT(Stage):
         # for empty word at the end of a sentence.
         if needInit:
             self.W = np.concatenate(
-                (np.zeros((outputDim, 1)),
+                (np.zeros((1, outputDim)),
                  self.random.uniform(
                 -initRange/2.0, initRange/2.0,
-                (outputDim , inputDim))), axis=1)
+                (inputDim, outputDim))), axis=0)
         else:
             if sparse:
                 initWeights = np.array(initWeights.todense())
             self.W = np.concatenate(
-                (np.zeros((outputDim, 1)), initWeights), axis=1)
+                (np.zeros((1, outputDim)), initWeights), axis=0)
         self.X = 0
         self.Y = 0
         pass
 
     def forward(self, X):
         X = X.reshape(X.size)
-        Y = np.zeros((X.shape[0], self.outputDim))
-        for n in range(0, X.shape[0]):
-            Y[n, :] = self.W[:, X[n]]
+        #Y = np.zeros((X.shape[0], self.outputDim))
+        # for n in range(0, X.shape[0]):
+        #     Y[n, :] = self.W[:, X[n]]
+        Y = self.W[X, :]
         self.X = X
         self.Y = Y
         return Y
@@ -61,8 +62,9 @@ class LUT(Stage):
         X = self.X
         if self.learningRate > 0.0:
             self.dEdW = np.zeros(self.W.shape)
-            for n in range(0, X.shape[0]):
-                self.dEdW[:, X[n]] += dEdY[n, :]
+            # for n in range(0, X.shape[0]):
+            #     self.dEdW[:, X[n]] += dEdY[n, :]
+            self.dEdW[X] += dEdY
         return None
 
     def loadWeights(self, W):
