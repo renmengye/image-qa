@@ -34,6 +34,7 @@ class RecurrentSubstage(Stage):
         self.inputsStr = inputsStr # Before binding with actual objects
         self.inputDim = None
         self.outputDim = outputDim
+        #self.tmpError = []
         self.dEdY = 0.0
         self.dEdX = 0.0
         self.splX = None
@@ -48,6 +49,7 @@ class RecurrentSubstage(Stage):
         else:
             self.inputs.append(stage)
 
+    @profile
     def getInput(self):
         # fetch input from each input stage
         # concatenate input into one vector
@@ -60,6 +62,7 @@ class RecurrentSubstage(Stage):
         else:
             return self.inputs[0].Y
 
+    @profile
     def sendError(self, dEdX):
         # iterate over input list and send dEdX
         if len(self.inputs) > 1:
@@ -67,20 +70,32 @@ class RecurrentSubstage(Stage):
             for stage in self.inputs:
                 s2 = s + stage.Y.shape[-1]
                 stage.dEdY += dEdX[:, s : s2]
+                # print self.name
+                # print dEdX.shape
+                #stage.tmpError.append(dEdX[:, s : s2])
                 s = s2
         else:
             self.inputs[0].dEdY += dEdX
+            #self.inputs[0].tmpError.append(dEdX)
 
     def clearError(self):
         self.dEdY = 0.0
 
     def getOutputError(self):
         return self.dEdY
-
+    
+    @profile
     def graphForward(self):
-        self.forward(self.getInput())
+        X = self.getInput()
+        self.forward(X)
+        self.tmpError = []
 
+    @profile
     def graphBackward(self):
+        #errors = np.array(self.tmpError)
+        # print self.name
+        # print 'error', errors.shape
+        #self.dEdY = np.sum(self.tmpError, axis=0)
         dEdX = self.backward(self.dEdY)
         if self.outputdEdX:
             self.sendError(dEdX)
@@ -172,7 +187,8 @@ class Map_Recurrent(RecurrentSubstage):
         else:
             self.W = self.random.uniform(
                 -self.initRange/2.0, self.initRange/2.0, (self.outputDim, self.inputDim + 1))
-
+    
+    @profile
     def forward(self, X):
         if self.inputDim is None: self.inputDim = X.shape[-1]
         if self.W is None: self.initWeights()
@@ -233,6 +249,9 @@ class Input_Recurrent(RecurrentSubstage):
 
     def getInput(self):
         return self.X
+
+    def sendError(self, dEdX):
+        pass
 
     def forward(self, X):
         return X
@@ -353,16 +372,17 @@ class LUT_Recurrent(RecurrentSubstage):
              self.random.uniform(
             -self.initRange/2.0, self.initRange/2.0,
             (self.inputDim, self.outputDim))), axis=0)
-
+    
+    @profile
     def forward(self, X):
         if self.W is None: self.initWeights()
         X = X.reshape(X.size)
-        if self.sparse:
-            Y = np.zeros((X.shape[0], self.outputDim))
-            for n in range(0, X.shape[0]):
-                 Y[n] = self.W[X[n]]
-        else:
-            Y = self.W[X, :]
+        #if self.sparse:
+        Y = np.zeros((X.shape[0], self.outputDim))
+        for n in range(0, X.shape[0]):
+             Y[n] = self.W[X[n]]
+        #else:
+        #    Y = self.W[X, :]
         self.X = X
         self.Y = Y
         return Y
@@ -403,6 +423,8 @@ class Reshape_Recurrent(RecurrentSubstage):
         return self.Y
 
     def backward(self, dEdY):
+        # print self.Xshape
+        # print dEdY.shape
         return np.reshape(dEdY, self.Xshape)
 
 class SumProduct_Recurrent(RecurrentSubstage):
@@ -418,6 +440,8 @@ class SumProduct_Recurrent(RecurrentSubstage):
     def sendError(self, dEdX):
         self.inputs[0].dEdY += dEdX[0]
         self.inputs[1].dEdY += dEdX[1]
+        #self.inputs[0].tmpError.append(dEdX[0])
+        #self.inputs[1].tmpError.append(dEdX[1])
 
     def forward(self, X):
         self.X = X
@@ -538,6 +562,7 @@ class Recurrent(Stage):
                 self.stages[t][s].X = 0
                 self.stages[t][s].Y = 0
 
+    @profile
     def forward(self, X):
         # print 'recurrent'
         # print X.shape
@@ -573,6 +598,7 @@ class Recurrent(Stage):
         self.X = X
         return Y
 
+    @profile
     def backward(self, dEdY):
         N = self.X.shape[0]
         dEdX = np.zeros(self.X.shape)
@@ -590,7 +616,7 @@ class Recurrent(Stage):
                     self.stages[self.Xend[n] - 1][-1].sendError(err)
 
         for t in reversed(range(self.XendAll)):
-            for s in reversed(range(1, len(self.stages[0]) - 1)):
+            for s in reversed(range(0, len(self.stages[0]) - 1)):
                 self.stages[t][s].graphBackward()
 
         # Collect input error
@@ -602,6 +628,7 @@ class Recurrent(Stage):
         for t in range(self.timespan):
             for stage in self.stages[t]:
                 stage.dEdY = 0.0
+                #stage.tmpError = []
                 #stage.dEdX = 0.0
         for stage in self.constStages:
             stage.dEdY = 0.0
@@ -609,11 +636,12 @@ class Recurrent(Stage):
         
         # Sum error through time
         for s in range(1, len(self.stages[0]) - 1):
-            if type(self.stages[0][s].W) is np.ndarray:
-                self.dEdW[s] = np.zeros(self.stages[0][s].W.shape)
+            if type(self.stages[0][s].W) is np.ndarray and self.stages[0][s].learningRate > 0.0:
+                tmp = np.zeros((self.timespan, self.stages[0][s].W.shape[0], self.stages[0][s].W.shape[1]))
                 for t in range(self.timespan):
-                    self.dEdW[s] += self.stages[t][s].dEdW
+                    tmp[t] = self.stages[t][s].getGradient()
                     self.stages[t][s].dEdW = 0.0
+                self.dEdW[s] = np.sum(tmp, axis=0)
 
         # For gradient check purpose, synchronize the sum of gradient to the time=0 stage
         for s in range(1, len(self.stages[0]) - 1):

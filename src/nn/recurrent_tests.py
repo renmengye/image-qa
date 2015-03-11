@@ -210,6 +210,8 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
             lstm.updateWeights()
             lstm2.updateWeights()
             self.chkEqual(Y, Y2)
+
+            #print i, 'haha', dEdX/dEdX2
             self.chkEqual(dEdX, dEdX2)
             # print i, '1', dEdW
             # print i, '2', dEdW2
