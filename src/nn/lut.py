@@ -30,6 +30,7 @@ class LUT(Stage):
         self.inputDim = inputDim
         self.outputDim = outputDim
         self.random = np.random.RandomState(initSeed)
+        self.needInit = needInit
 
         # Zeroth dimension of the weight matrix is reserved
         # for empty word at the end of a sentence.
