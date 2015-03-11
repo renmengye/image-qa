@@ -74,13 +74,13 @@ class LUT(Stage):
         return None
 
     def loadWeights(self, W):
-        if self.learningRate == 0.0:
+        if self.learningRate == 0.0 and not self.needInit:
             return
         else:
             Stage.loadWeights(self, W)
 
     def getWeights(self):
-        if self.learningRate == 0.0:
+        if self.learningRate == 0.0 and not self.needInit:
             return 0
         else:
             return W
