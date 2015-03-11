@@ -5,7 +5,7 @@ model: all
 stages:
     - name: 'imgSel'
       type: selectorRecurrent
-      inputsStr: 'input'
+      inputsStr: 'input($0)'
       start: 0
       end: 1
     - name: 'txtSel'
@@ -15,7 +15,7 @@ stages:
       end: 2
     - name: 'imgFeat'
       type: lutRecurrent
-      inputsStr: 'imgSel'
+      inputsStr: 'imgSel($0)'
       inputDim: 1449
       outputDim: 100352
       initWeights: '../../../data/nyu-depth/hidden5_4_conv.pkl'
@@ -33,7 +33,7 @@ stages:
       outputdEdX: false
     - name: 'imgRehape'
       type: reshapeRecurrent
-      inputsStr: 'imgFeat'
+      inputsStr: 'imgFeat($0)'
       reshapeFn: '(x[0], 196, x[1]/196)'
     - name: 'attReshape'
       type: reshapeRecurrent
@@ -41,7 +41,7 @@ stages:
       reshapeFn: '(x[0], x[1], 1)'
     - name: 'attCtx'
       type: sumProdRecurrent
-      inputsStr: 'attReshape, imgRehape'
+      inputsStr: 'attReshape, imgRehape($0)'
       sumAxis: 1
       outputDim: 512
     - name: 'txtAttCtx'
