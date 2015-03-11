@@ -511,6 +511,7 @@ class Recurrent(Stage):
                 stageNew = stage
             else:
                 stageNew = stage.copy()
+            stageNew.used = False
             self.stages[t].append(stageNew)
             self.stageDict[('%s-%d' % (stage.name, t))] = stageNew
 
@@ -523,13 +524,18 @@ class Recurrent(Stage):
             outputStage = Output_Recurrent(name='output')
             self.stages[t].append(outputStage)
             self.stageDict[('output-%d' % t)] = outputStage
+            outputStage.used = True
             outputStage.addInput(self.stageDict[('%s-%d' % (self.outputStageName, t))])
             for stage in self.stages[t]:
                 for inputStageStr in stage.inputsStr:
                     if '(' in inputStageStr:
                         stageName = inputStageStr[:inputStageStr.index('(')]
-                        stageTime = int(
-                            inputStageStr[inputStageStr.index('(') + 1 : inputStageStr.index(')')])
+                        stageTimeStr = \
+                            inputStageStr[inputStageStr.index('(') + 1 : inputStageStr.index(')')]
+                        if stageTimeStr[0] == '$':
+                            stageTime = int(stageTimeStr[1:]) - t
+                        else:
+                            stageTime = int(stageTimeStr)
                     else:
                         stageName = inputStageStr
                         stageTime = 0
@@ -544,6 +550,7 @@ class Recurrent(Stage):
                         self.constStages.append(stageInput)
                     else:
                         stageInput = self.stageDict[('%s-%d' % (stageName, t + stageTime))]
+                        stageInput.used = True
                     stage.addInput(stageInput)
 
     def testRun(self):
@@ -584,7 +591,8 @@ class Recurrent(Stage):
         for t in range(self.XendAll):
             self.stages[t][0].Y = X[:, t, :]
             for s in range(1, len(self.stages[t])):
-                self.stages[t][s].graphForward()
+                if self.stages[t][s].used:
+                    self.stages[t][s].graphForward()
         if self.multiOutput:
             for n in range(N):
                 if self.Xend[n] > 0:
@@ -617,7 +625,8 @@ class Recurrent(Stage):
 
         for t in reversed(range(self.XendAll)):
             for s in reversed(range(0, len(self.stages[0]) - 1)):
-                self.stages[t][s].graphBackward()
+                if self.stages[t][s].used:
+                    self.stages[t][s].graphBackward()
 
         # Collect input error
         if self.outputdEdX:
