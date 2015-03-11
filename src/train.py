@@ -69,12 +69,12 @@ if __name__ == '__main__':
         outputFolder=params['outputFolder']
     )
 
-    trainOpt['numEpoch'] = 1
-    trainInput = trainInput[:100]
-    trainTarget = trainTarget[:100]
-    trainOpt['needValid'] = False
-    validtrainInput = None
-    validtrainTarget = None
+    # trainOpt['numEpoch'] = 1
+    # trainInput = trainInput[:100]
+    # trainTarget = trainTarget[:100]
+    # trainOpt['needValid'] = False
+    # validtrainInput = None
+    # validtrainTarget = None
     trainer.train(trainInput, trainTarget, validInput, validTarget)
     # Send email
     if trainOpt.has_key('sendEmail') and trainOpt['sendEmail']:

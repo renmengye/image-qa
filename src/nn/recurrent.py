@@ -49,7 +49,7 @@ class RecurrentSubstage(Stage):
         else:
             self.inputs.append(stage)
 
-    @profile
+    #@profile
     def getInput(self):
         # fetch input from each input stage
         # concatenate input into one vector
@@ -62,7 +62,7 @@ class RecurrentSubstage(Stage):
         else:
             return self.inputs[0].Y
 
-    @profile
+    #@profile
     def sendError(self, dEdX):
         # iterate over input list and send dEdX
         if len(self.inputs) > 1:
@@ -84,13 +84,13 @@ class RecurrentSubstage(Stage):
     def getOutputError(self):
         return self.dEdY
     
-    @profile
+    #@profile
     def graphForward(self):
         X = self.getInput()
         self.forward(X)
         self.tmpError = []
 
-    @profile
+    #@profile
     def graphBackward(self):
         #errors = np.array(self.tmpError)
         # print self.name
@@ -188,7 +188,7 @@ class Map_Recurrent(RecurrentSubstage):
             self.W = self.random.uniform(
                 -self.initRange/2.0, self.initRange/2.0, (self.outputDim, self.inputDim + 1))
     
-    @profile
+    #@profile
     def forward(self, X):
         if self.inputDim is None: self.inputDim = X.shape[-1]
         if self.W is None: self.initWeights()
@@ -373,7 +373,7 @@ class LUT_Recurrent(RecurrentSubstage):
             -self.initRange/2.0, self.initRange/2.0,
             (self.inputDim, self.outputDim))), axis=0)
     
-    @profile
+    #@profile
     def forward(self, X):
         if self.W is None: self.initWeights()
         X = X.reshape(X.size)
@@ -569,7 +569,7 @@ class Recurrent(Stage):
                 self.stages[t][s].X = 0
                 self.stages[t][s].Y = 0
 
-    @profile
+    #@profile
     def forward(self, X):
         # print 'recurrent'
         # print X.shape
@@ -606,7 +606,7 @@ class Recurrent(Stage):
         self.X = X
         return Y
 
-    @profile
+    #@profile
     def backward(self, dEdY):
         N = self.X.shape[0]
         dEdX = np.zeros(self.X.shape)
