@@ -103,18 +103,28 @@ stages:
       stages:
           - timeSel
           - imgFeat2
-          - imgM
+          - imgMap2
     - name: output
       type: sequential
       stages:
           - imgtxt
           - dropout1
           - lstm1
-    - name: outputProd
+    - name: combineOutput
       type: parallel
+      axis: 1
       stages:
           - output
           - imgLine2
+      outputdEdX: false
+    - name: compProd
+      type: componentProd
+    - name: outputProd
+      type: sequential
+      stages:
+          - combineOutput
+          - compProd
+      outputdEdX: false
     - name: answer
       type: constWeights
       inputDim: 300
@@ -131,7 +141,7 @@ stages:
       outputdEdX: false
     - name: cosine
       type: cosSimilarity
-      bankDim: 68
+      bankDim: 63
     - name: all
       type: sequential
       stages:
