@@ -86,6 +86,7 @@ class RecurrentSubstage(Stage):
     
     #@profile
     def graphForward(self):
+        #print self.name
         X = self.getInput()
         self.forward(X)
         self.tmpError = []
@@ -525,7 +526,9 @@ class Recurrent(Stage):
             self.stages[t].append(outputStage)
             self.stageDict[('output-%d' % t)] = outputStage
             outputStage.used = True
-            outputStage.addInput(self.stageDict[('%s-%d' % (self.outputStageName, t))])
+            outputStageInput = self.stageDict[('%s-%d' % (self.outputStageName, t))]
+            outputStageInput.used = True
+            outputStage.addInput(outputStageInput)
             for stage in self.stages[t]:
                 for inputStageStr in stage.inputsStr:
                     if '(' in inputStageStr:

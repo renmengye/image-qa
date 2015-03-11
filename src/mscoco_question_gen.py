@@ -7,7 +7,7 @@ from nltk.stem.wordnet import WordNetLemmatizer
 from nltk.corpus import wordnet
 
 parseFilename = '../../../data/mscoco/mscoco_caption.parse.txt'
-imgidFilename = '../../.../data/mscoco/mscoco_imgid.txt'
+imgidFilename = '../../../data/mscoco/mscoco_imgid.txt'
 lemmatizer = WordNetLemmatizer()
 
 class TreeNode:
@@ -665,40 +665,57 @@ def questionGen():
     numSentences = 0
     parser = TreeParser()
     gen = QuestionGenerator()
-    # with open(imgidFilename) as f:
-    #     imgids = f.readlines()
+
+    questionAll = {}
+    with open(imgidFilename) as f:
+        imgids = f.readlines()
+
     with open(parseFilename) as f:
         for line in f:
             if len(parser.rootsList) > 0:
-                #print rootsList[0]
-                numSentences += 1
+                imgid = int(imgids[numSentences][:-1])
                 originalSent = parser.rootsList[0].toSentence()
                 hasItem = False
                 for qaitem in gen.askWhoWhat(parser.rootsList[0].copy()):
                     questionCount += 1
                     hasItem = True
                     if qaitem[0] == 'what ?':
-                        question = 'what is this ?'
+                        question = 'what is ?'
                     else:
                         question = qaitem[0]
-                    print ('Question %d:' % questionCount), question.replace('?', 'in the image%d' % imgid), 'Answer:', qaitem[1]
+                    print ('Question %d:' % questionCount), question.replace('?', 'in the image%d ?' % imgid), 'Answer:', qaitem[1]
+                    if questionAll.has_key(imgid):
+                        questionAll[imgid] += 1
+                    else:
+                        questionAll[imgid] = 1
                 for qaitem in gen.askHowMany(parser.rootsList[0].copy()):
                     questionCount += 1
                     hasItem = True
-                    print ('Question %d:' % questionCount), qaitem[0].replace('?', 'in the image%d' % imgid), 'Answer:', qaitem[1]
+                    print ('Question %d:' % questionCount), qaitem[0].replace('?', 'in the image%d ?' % imgid), 'Answer:', qaitem[1]
+                    if questionAll.has_key(imgid):
+                        questionAll[imgid] += 1
+                    else:
+                        questionAll[imgid] = 1
                 for qaitem in gen.askColor(parser.rootsList[0].copy()):
                     questionCount += 1
                     hasItem = True
-                    print ('Question %d:' % questionCount), qaitem[0].replace('?', 'in the image%d' % imgid), 'Answer:', qaitem[1]
+                    print ('Question %d:' % questionCount), qaitem[0].replace('?', 'in the image%d ?' % imgid), 'Answer:', qaitem[1]
+                    if questionAll.has_key(imgid):
+                        questionAll[imgid] += 1
+                    else:
+                        questionAll[imgid] = 1
                 if hasItem:
                     print 'Original:', originalSent
                     print '-' * 20
                 del(parser.rootsList[0])
-                # if questionCount > 2000:
-                #     break
+                numSentences += 1
             parser.parse(line)
+            if numSentences > 500:
+                break
     # Approx. 3447.5 sentences per second
+    print questionAll
     print 'Number of sentences parsed:', numSentences
+    print 'Number of images', len(questionAll)
     print 'Number of seconds:', time.time() - startTime
 
 def testHook():
@@ -727,7 +744,5 @@ def testHook():
         print ('Question:'), qaitem[0], 'Answer:', qaitem[1]
 
 if __name__ == '__main__':
-    testHook()
-
-    #print QuestionGenerator().lookupLexname('grazing')
-    #questionGen()
+    #testHook()
+    questionGen()

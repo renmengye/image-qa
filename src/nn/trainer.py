@@ -82,12 +82,17 @@ class Plotter:
         plt.clf()
         plt.plot(np.arange(self.epoch + 1),
                  self.trainer.loss[0 : self.epoch + 1], 'b-x')
-        plt.plot(np.arange(self.epoch + 1),
-                 self.trainer.validLoss[0 : self.epoch + 1], 'g-o')
-        plt.legend(['Train', 'Valid'])
+        if self.trainer.trainOpt['needValid']:
+            plt.plot(np.arange(self.epoch + 1),
+                     self.trainer.validLoss[0 : self.epoch + 1], 'g-o')
+            plt.legend(['Train', 'Valid'])
+            plt.title('Train/Valid Loss Curve')
+        else:
+            plt.legend(['Train'])
+            plt.title('Train Loss Curve')
+
         plt.xlabel('Epoch')
         plt.ylabel('Loss')
-        plt.title('Train/Valid Loss Curve')
         plt.draw()
         plt.savefig(self.lossFigFilename)
 
@@ -97,13 +102,18 @@ class Plotter:
             plt.plot(np.arange(self.epoch + 1),
                      1 - self.trainer.rate[0 : self.epoch + 1], 
                      'b-x')
-            plt.plot(np.arange(self.epoch + 1),
-                     1 - self.trainer.validRate[0 : self.epoch + 1], 
-                     'g-o')
-            plt.legend(['Train', 'Valid'])
+            if self.trainer.trainOpt['needValid']:
+                plt.plot(np.arange(self.epoch + 1),
+                         1 - self.trainer.validRate[0 : self.epoch + 1], 
+                         'g-o')
+                plt.legend(['Train', 'Valid'])
+                plt.title('Train/Valid Error Curve')
+            else:
+                plt.legend(['Train'])
+                plt.title('Train Error Curve')
+
             plt.xlabel('Epoch')
             plt.ylabel('Prediction Error')
-            plt.title('Train/Valid Error Curve')
             plt.draw()
             plt.savefig(self.errFigFilename)
         self.epoch += 1
