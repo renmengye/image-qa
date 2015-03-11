@@ -58,8 +58,8 @@ class LUT(Stage):
         Y = np.zeros((X.shape[0], self.outputDim))
         for n in range(0, X.shape[0]):
             Y[n] = self.W[X[n]]
-        #else:
-        #    Y = self.W[X, :]
+        # else:
+        #     Y = self.W[X]
         self.X = X
         self.Y = Y
         return Y
@@ -68,9 +68,9 @@ class LUT(Stage):
         X = self.X
         if self.learningRate > 0.0:
             self.dEdW = np.zeros(self.W.shape)
-            # for n in range(0, X.shape[0]):
-            #     self.dEdW[:, X[n]] += dEdY[n, :]
-            self.dEdW[X] += dEdY
+            for n in range(0, X.shape[0]):
+                self.dEdW[X[n]] += dEdY[n]
+            #self.dEdW[X] += dEdY
         return None
 
     def loadWeights(self, W):
