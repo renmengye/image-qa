@@ -29,10 +29,10 @@ class Dropout(Stage):
         self.X = X
         return Y
 
-    def backward(self, dEdY, outputdEdX=True):
+    def backward(self, dEdY):
         self.dEdW = 0
         dEdX = None
-        if outputdEdX:
+        if self.outputdEdX:
             if self.dropout:
                 dEdX = dEdY * self.dropoutVec
             else:

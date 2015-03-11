@@ -356,6 +356,17 @@ def routeStage(stageDict):
             sumAxis=stageDict['sumAxis'],
             outputDim=stageDict['outputDim']
         )
+    elif stageDict['type'] == 'dropoutRecurrent':
+        inputList = stageDict['inputsStr'].split(',')
+        for i in range(len(inputList)):
+            inputList[i] = inputList[i].strip()
+        stage = Dropout_Recurrent(
+            name=stageDict['name'],
+            inputsStr=inputList,
+            outputDim=stageDict['outputDim'],
+            dropoutRate=stageDict['dropoutRate'],
+            initSeed=stageDict['initSeed']
+        )
     elif stageDict['type'] == 'recurrent':
         stages = stageDict['stages']
         realStages = []

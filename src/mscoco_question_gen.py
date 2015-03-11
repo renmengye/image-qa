@@ -3,11 +3,13 @@ import subprocess
 import time
 import re
 import copy
+import cPickle as pkl
 from nltk.stem.wordnet import WordNetLemmatizer
 from nltk.corpus import wordnet
 
 parseFilename = '../../../data/mscoco/mscoco_caption.parse.txt'
-imgidFilename = '../../../data/mscoco/mscoco_imgid.txt'
+imgidsFilename = '../../../data/mscoco/mscoco_imgids.txt'
+outputFilename = '../../../data/mscoco/mscoco_qa.pkl'
 lemmatizer = WordNetLemmatizer()
 
 class TreeNode:
@@ -666,57 +668,65 @@ def questionGen():
     parser = TreeParser()
     gen = QuestionGenerator()
 
-    questionAll = {}
-    with open(imgidFilename) as f:
+    questionAll = []
+    with open(imgidsFilename) as f:
         imgids = f.readlines()
 
     with open(parseFilename) as f:
         for line in f:
             if len(parser.rootsList) > 0:
-                imgid = int(imgids[numSentences][:-1])
+                if len(imgids) > numSentences:
+                    imgid = int(imgids[numSentences][:-1])
+                else:
+                    print numSentences
+                    print 'Finished'
                 originalSent = parser.rootsList[0].toSentence()
                 hasItem = False
                 for qaitem in gen.askWhoWhat(parser.rootsList[0].copy()):
                     questionCount += 1
+                    questionWhatCount += 1
                     hasItem = True
                     if qaitem[0] == 'what ?':
-                        question = 'what is ?'
+                        question = 'what is this?'
                     else:
                         question = qaitem[0]
-                    print ('Question %d:' % questionCount), question.replace('?', 'in the image%d ?' % imgid), 'Answer:', qaitem[1]
-                    if questionAll.has_key(imgid):
-                        questionAll[imgid] += 1
-                    else:
-                        questionAll[imgid] = 1
+                    #print ('Question %d:' % questionCount), question, 'Answer:', qaitem[1]
+                    # 0 is what-who question type
+                    questionAll.append((question, qaitem[1], imgid, 0))
                 for qaitem in gen.askHowMany(parser.rootsList[0].copy()):
                     questionCount += 1
+                    questionHowmanyCount += 1
                     hasItem = True
-                    print ('Question %d:' % questionCount), qaitem[0].replace('?', 'in the image%d ?' % imgid), 'Answer:', qaitem[1]
-                    if questionAll.has_key(imgid):
-                        questionAll[imgid] += 1
-                    else:
-                        questionAll[imgid] = 1
+                    #print ('Question %d:' % questionCount), qaitem[0], 'Answer:', qaitem[1]
+                    # 1 is how-many question type
+                    questionAll.append((question, qaitem[1], imgid, 1))
                 for qaitem in gen.askColor(parser.rootsList[0].copy()):
                     questionCount += 1
+                    questionColorCount += 1
                     hasItem = True
-                    print ('Question %d:' % questionCount), qaitem[0].replace('?', 'in the image%d ?' % imgid), 'Answer:', qaitem[1]
-                    if questionAll.has_key(imgid):
-                        questionAll[imgid] += 1
-                    else:
-                        questionAll[imgid] = 1
+                    #print ('Question %d:' % questionCount), qaitem[0], 'Answer:', qaitem[1]
+                    # 2 is color question type
+                    questionAll.append((qaitem[0], qaitem[1], imgid, 2))
                 if hasItem:
-                    print 'Original:', originalSent
-                    print '-' * 20
+                    pass
+                    #print 'Original:', originalSent
+                    #print '-' * 20
                 del(parser.rootsList[0])
                 numSentences += 1
             parser.parse(line)
-            if numSentences > 500:
-                break
+            # if numSentences > 500:
+            #     break
     # Approx. 3447.5 sentences per second
-    print questionAll
+    #print questionAll
     print 'Number of sentences parsed:', numSentences
     print 'Number of images', len(questionAll)
     print 'Number of seconds:', time.time() - startTime
+    print 'Number of questions:', questionCount
+    print 'Number of what questions:', questionWhatCount
+    print 'Number of how many questions:', questionHowmanyCount
+    print 'Number of color questions:', questionColorCount
+    with open(outputFilename, 'wb') as f:
+        pkl.dump(questionAll, f)
 
 def testHook():
     #s = stanfordParse('There are two ovens in a kitchen restaurant , and one of them is being used .')

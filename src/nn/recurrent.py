@@ -458,6 +458,47 @@ class SumProduct_Recurrent(RecurrentSubstage):
         #self.dEdX = dEdX
         return dEdX
 
+class Dropout_Recurrent(RecurrentSubstage):
+    def __init__(self, 
+                 name, 
+                 inputsStr, 
+                 outputDim, 
+                 dropoutRate, 
+                 initSeed, 
+                 debug=False):
+        RecurrentSubstage.__init__(self, 
+            name=name, 
+            inputsStr=inputsStr, 
+            outputDim=outputDim)
+        self.dropout = True
+        self.dropoutVec = 0
+        self.dropoutRate = dropoutRate
+        self.debug = debug
+        self.random = np.random.RandomState(initSeed)
+        self.seed = initSeed
+
+    def forward(self, X):
+        if self.dropoutRate > 0.0 and self.dropout:
+            if self.debug:
+                self.random = np.random.RandomState(self.seed)
+            self.dropoutVec = (self.random.uniform(0, 1, (X.shape[-1])) >
+                               self.dropoutRate)
+            Y = X * self.dropoutVec
+        else:
+            Y = X * (1 - self.dropoutRate)
+        self.X = X
+        self.Y = Y
+        return Y
+
+    def backward(self, dEdY):
+        dEdX = None
+        if self.outputdEdX:
+            if self.dropout:
+                dEdX = dEdY * self.dropoutVec
+            else:
+                dEdX = dEdY / (1 - self.dropoutRate)
+        return dEdX
+
 class Recurrent(Stage):
     """
     Recurrent stage.
@@ -573,7 +614,7 @@ class Recurrent(Stage):
                 self.stages[t][s].Y = 0
 
     #@profile
-    def forward(self, X):
+    def forward(self, X, dropout=True):
         # print 'recurrent'
         # print X.shape
         N = X.shape[0]
@@ -595,6 +636,8 @@ class Recurrent(Stage):
             self.stages[t][0].Y = X[:, t, :]
             for s in range(1, len(self.stages[t])):
                 if self.stages[t][s].used:
+                    if hasattr(self.stages[t][s], 'dropout'):
+                        self.stages[t][s].dropout = dropout
                     self.stages[t][s].graphForward()
         if self.multiOutput:
             for n in range(N):

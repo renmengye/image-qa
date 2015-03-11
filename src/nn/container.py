@@ -1,4 +1,5 @@
 from stage import *
+from recurrent import *
 
 class Container(Stage):
     def __init__(self, stages, name=None, outputdEdX=True):
@@ -10,7 +11,8 @@ class Container(Stage):
     def forward(self, X, dropout=True):
         X1 = X
         for stage in self.stages:
-            if isinstance(stage, Container):
+            # TODO: refracter recurrent into a container.
+            if isinstance(stage, Container) or isinstance(stage, Recurrent):
                 X1 = stage.forward(X1, dropout)
             elif hasattr(stage, 'dropout'):
                 stage.dropout = dropout

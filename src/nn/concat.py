@@ -1,4 +1,5 @@
 from container import *
+from recurrent import *
 
 class Concat(Container):
     """
@@ -23,7 +24,7 @@ class Concat(Container):
         lastIdx = 0
         for i in range(0, len(self.stages)):
             stage = self.stages[i]
-            if isinstance(stage, Container):
+            if isinstance(stage, Container) or isinstance(stage, Recurrent):
                 Ytmp = stage.forward(splX[i], dropout)
             elif hasattr(stage, 'dropout'):
                 stage.dropout = dropout
