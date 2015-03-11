@@ -69,10 +69,10 @@ if __name__ == '__main__':
         outputFolder=params['outputFolder']
     )
     # trainOpt['numEpoch'] = 1
-    # trainInput = trainInput[:20]
-    # trainTarget = trainTarget[:20]
-    # validtrainInput = validInput[:20]
-    # validtrainTarget = validTarget[:20]
+    # trainInput = trainInput[:100]
+    # trainTarget = trainTarget[:100]
+    # validtrainInput = validInput[:10]
+    # validtrainTarget = validTarget[:10]
     trainer.train(trainInput, trainTarget, validInput, validTarget)
     # Send email
     if trainOpt.has_key('sendEmail') and trainOpt['sendEmail']:

@@ -42,18 +42,24 @@ class LUT(Stage):
         else:
             if sparse:
                 initWeights = np.array(initWeights.todense())
-            self.W = np.concatenate(
-                (np.zeros((1, outputDim)), initWeights), axis=0)
+                self.W = np.concatenate(
+                    (np.zeros((1, outputDim)), initWeights), axis=0)
+            else:
+                self.W = np.concatenate(
+                    (np.zeros((1, outputDim)), initWeights), axis=0)
         self.X = 0
         self.Y = 0
+        self.sparse = sparse
         pass
 
     def forward(self, X):
         X = X.reshape(X.size)
-        #Y = np.zeros((X.shape[0], self.outputDim))
-        # for n in range(0, X.shape[0]):
-        #     Y[n, :] = self.W[:, X[n]]
-        Y = self.W[X, :]
+        if self.sparse:
+            Y = np.zeros((X.shape[0], self.outputDim))
+            for n in range(0, X.shape[0]):
+                Y[n] = self.W[X[n]] if X[n] > 0 else np.zeros(self.outputDim)
+        else:
+            Y = self.W[X, :]
         self.X = X
         self.Y = Y
         return Y
