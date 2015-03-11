@@ -31,7 +31,7 @@ stages:
       initSeed: 3
       learningRate: 0.0
       outputdEdX: false
-    - name: 'imgRehape'
+    - name: 'imgReshape'
       type: reshapeRecurrent
       inputsStr: 'imgFeat($0)'
       reshapeFn: '(x[0], 196, x[1]/196)'
@@ -41,7 +41,7 @@ stages:
       reshapeFn: '(x[0], x[1], 1)'
     - name: 'attCtx'
       type: sumProdRecurrent
-      inputsStr: 'attReshape, imgRehape($0)'
+      inputsStr: 'attReshape, imgReshape($0)'
       sumAxis: 1
       outputDim: 512
     - name: 'attCtxMLP1'
@@ -54,7 +54,7 @@ stages:
       learningRate: 0.1
       momentum: 0.9
       gradientClip: 0.05
-      weightClip: 300
+      weightClip: 100
     - name: 'attCtxOut'
       type: mapRecurrent
       inputsStr: 'attCtxMLP1'
@@ -155,7 +155,7 @@ stages:
           - 'txtSel'
           - 'imgFeat'
           - 'txtDict'
-          - 'imgRehape'
+          - 'imgReshape'
           - 'attReshape'
           - 'attCtx'
           - 'attCtxMLP1'
@@ -193,8 +193,3 @@ stages:
       stages:
           - 'attModel'
           - 'answer'
-
-
-
-
-
