@@ -255,3 +255,10 @@ if __name__ == '__main__':
         np.array((allInput, allTarget, 0),\
             dtype=object))
 
+    with open(os.path.join(outputFolder, 'question_vocabs.txt'), 'w+') as f:
+        for word in idict:
+            f.write(word + '\n')
+
+    with open(os.path.join(outputFolder, 'answer_vocabs.txt'), 'w+') as f:
+        for word in iansdict:
+            f.write(word + '\n')

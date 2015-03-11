@@ -2,6 +2,7 @@ from lstm import *
 from lut import *
 from map import *
 from reshape import *
+from time_select import *
 from time_sum import *
 from inner_prod import *
 from dropout import *
@@ -170,6 +171,11 @@ def routeStage(stageDict):
     elif stageDict['type'] == 'timeSum':
         stage = TimeSum(
             name=stageDict['name'])
+    elif stageDict['type'] == 'timeSel':
+        stage = TimeSelect(
+            name=stageDict['name'],
+            time=stageDict['time']
+        )
     elif stageDict['type'] == 'innerProd':
         stage = InnerProduct(
             name=stageDict['name'],

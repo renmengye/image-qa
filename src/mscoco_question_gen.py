@@ -6,10 +6,17 @@ import copy
 import cPickle as pkl
 from nltk.stem.wordnet import WordNetLemmatizer
 from nltk.corpus import wordnet
+import sys
 
-parseFilename = '../../../data/mscoco/mscoco_caption.parse.txt'
-imgidsFilename = '../../../data/mscoco/mscoco_imgids.txt'
-outputFilename = '../../../data/mscoco/mscoco_qa.pkl'
+if len(sys.argv) < 2:
+    parseFilename = '../../../data/mscoco/mscoco_caption.parse.txt'
+    imgidsFilename = '../../../data/mscoco/mscoco_imgids.txt'
+    outputFilename = '../../../data/mscoco/mscoco_qa.pkl'
+else:
+    parseFilename = '../../../data/%s/%s_caption.parse.txt' %(sys.argv[1],sys.argv[1])
+    imgidsFilename = '../../../data/%s/%s_imgids.txt' %(sys.argv[1],sys.argv[1])
+    outputFilename = '../../../data/%s/%s_qa.pkl' %(sys.argv[1],sys.argv[1])
+
 lemmatizer = WordNetLemmatizer()
 
 class TreeNode:
@@ -690,21 +697,21 @@ def questionGen():
                         question = 'what is this?'
                     else:
                         question = qaitem[0]
-                    #print ('Question %d:' % questionCount), question, 'Answer:', qaitem[1]
+                    print ('Question %d:' % questionCount), question, 'Answer:', qaitem[1]
                     # 0 is what-who question type
                     questionAll.append((question, qaitem[1], imgid, 0))
                 for qaitem in gen.askHowMany(parser.rootsList[0].copy()):
                     questionCount += 1
                     questionHowmanyCount += 1
                     hasItem = True
-                    #print ('Question %d:' % questionCount), qaitem[0], 'Answer:', qaitem[1]
+                    print ('Question %d:' % questionCount), qaitem[0], 'Answer:', qaitem[1]
                     # 1 is how-many question type
                     questionAll.append((question, qaitem[1], imgid, 1))
                 for qaitem in gen.askColor(parser.rootsList[0].copy()):
                     questionCount += 1
                     questionColorCount += 1
                     hasItem = True
-                    #print ('Question %d:' % questionCount), qaitem[0], 'Answer:', qaitem[1]
+                    print ('Question %d:' % questionCount), qaitem[0], 'Answer:', qaitem[1]
                     # 2 is color question type
                     questionAll.append((qaitem[0], qaitem[1], imgid, 2))
                 if hasItem:

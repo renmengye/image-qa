@@ -15,8 +15,8 @@ if len(sys.argv) > 4:
     word2vecBinFilename = sys.argv[3]
     word2vecIdxFilename = sys.argv[4]
 else:
-    word2vecBinFilename = '../data/word2vec/GoogleNews-vectors-negative300.bin'
-    word2vecIdxFilename = '../data/word2vec/vocab_index.txt'
+    word2vecBinFilename = '../../../data/word2vec/GoogleNews-vectors-negative300.bin'
+    word2vecIdxFilename = '../../../data/word2vec/vocab_index.txt'
 word2vecIdxFile = open(word2vecIdxFilename, 'r')
 word2vecBinFile = open(word2vecBinFilename, 'rb')
 vocabFile = open(vocabFilename, 'r')
