@@ -392,8 +392,8 @@ class LUT_Recurrent(RecurrentSubstage):
         X = self.X
         if self.learningRate > 0.0:
             self.dEdW = np.zeros(self.W.shape)
-             for n in range(0, X.shape[0]):
-                 self.dEdW[X[n]] += dEdY[n]
+            for n in range(0, X.shape[0]):
+                self.dEdW[X[n]] += dEdY[n]
             #self.dEdW[X, :] += dEdY
         return None
 
