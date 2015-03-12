@@ -683,7 +683,7 @@ def questionGen():
         for line in f:
             if len(parser.rootsList) > 0:
                 if len(imgids) > numSentences:
-                    imgid = int(imgids[numSentences][:-1])
+                    imgid = imgids[numSentences][:-1]
                 else:
                     print numSentences
                     print 'Finished'
@@ -721,8 +721,8 @@ def questionGen():
                 del(parser.rootsList[0])
                 numSentences += 1
             parser.parse(line)
-            # if numSentences > 500:
-            #     break
+            if numSentences > 500:
+                break
     # Approx. 3447.5 sentences per second
     #print questionAll
     print 'Number of sentences parsed:', numSentences

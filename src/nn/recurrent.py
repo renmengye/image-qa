@@ -399,13 +399,13 @@ class LUT_Recurrent(RecurrentSubstage):
         return None
 
     def loadWeights(self, W):
-        if self.learningRate == 0.0 and not needInit:
+        if self.learningRate == 0.0:
             return
         else:
             Stage.loadWeights(self, W)
 
     def getWeights(self):
-        if self.learningRate == 0.0 and not needInit:
+        if self.learningRate == 0.0:
             return 0
         else:
             return W
