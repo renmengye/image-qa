@@ -69,6 +69,7 @@ if __name__ == '__main__':
         outputFolder=params['outputFolder']
     )
 
+    # a = model.getWeights()
     # trainOpt['numEpoch'] = 1
     # trainInput = trainInput[:100]
     # trainTarget = trainTarget[:100]

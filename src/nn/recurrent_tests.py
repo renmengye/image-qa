@@ -11,7 +11,7 @@ class Recurrent_Tests(stage_tests.StageTests):
         self.D2 = 5
         self.sigm = Map_Recurrent(
                 name='sigm',
-                inputsStr=['input(0)', 'sigm(-1)', 'sigm(-2)'],
+                inputNames=['input(0)', 'sigm(-1)', 'sigm(-2)'],
                 outputDim=self.D2,
                 activeFn=SigmoidActiveFn(),
                 initRange=1,
@@ -72,7 +72,7 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
         Time = 5
         I = Map_Recurrent(
                 name='I',
-                inputsStr=['input(0)', 'Y(-1)', 'C(-1)'],
+                inputNames=['input(0)', 'Y(-1)', 'C(-1)'],
                 outputDim=D2,
                 activeFn=SigmoidActiveFn(),
                 initRange=0.1,
@@ -84,7 +84,7 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
         
         F = Map_Recurrent(
                 name='F',
-                inputsStr=['input(0)', 'Y(-1)', 'C(-1)'],
+                inputNames=['input(0)', 'Y(-1)', 'C(-1)'],
                 outputDim=D2,
                 activeFn=SigmoidActiveFn(),
                 initRange=0.1,
@@ -96,7 +96,7 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
         
         Z = Map_Recurrent(
                 name='Z',
-                inputsStr=['input(0)', 'Y(-1)'],
+                inputNames=['input(0)', 'Y(-1)'],
                 outputDim=D2,
                 activeFn=TanhActiveFn(),
                 initRange=0.1,
@@ -108,26 +108,26 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
         
         FC = ComponentProduct_Recurrent(
                 name='F.C',
-                inputsStr=['F(0)', 'C(-1)'],
+                inputNames=['F(0)', 'C(-1)'],
                 outputDim=D2
             )
         
         IZ = ComponentProduct_Recurrent(
                 name='I.Z',
-                inputsStr=['I(0)', 'Z(0)'],
+                inputNames=['I(0)', 'Z(0)'],
                 outputDim=D2
             )
         
         C = Sum_Recurrent(
                 name='C',
-                inputsStr=['F.C(0)', 'I.Z(0)'],
+                inputNames=['F.C(0)', 'I.Z(0)'],
                 numComponents=2,
                 outputDim=D2
             )
         
         O = Map_Recurrent(
                 name='O',
-                inputsStr=['input(0)', 'Y(-1)', 'C(0)'],
+                inputNames=['input(0)', 'Y(-1)', 'C(0)'],
                 outputDim=D2,
                 activeFn=SigmoidActiveFn(),
                 initRange=0.1,
@@ -139,14 +139,14 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
         
         U = Active_Recurrent(
                 name='U',
-                inputsStr=['C(0)'],
+                inputNames=['C(0)'],
                 outputDim=D2,
                 activeFn=TanhActiveFn()
             )
         
         Y = ComponentProduct_Recurrent(
                 name='Y',
-                inputsStr=['O(0)', 'U(0)'],
+                inputNames=['O(0)', 'U(0)'],
                 outputDim=D2
             )
         

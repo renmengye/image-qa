@@ -5,7 +5,7 @@ from active_func import *
 
 class RecurrentSubstage(Stage):
     def __init__(self, name,
-                 inputsStr,
+                 inputNames,
                  outputDim,
                  defaultValue=None,
                  learningRate=0.0,
@@ -31,7 +31,7 @@ class RecurrentSubstage(Stage):
         else:
             self.defaultValue = defaultValue
         self.inputs = None
-        self.inputsStr = inputsStr # Before binding with actual objects
+        self.inputNames = inputNames # Before binding with actual objects
         self.inputDim = None
         self.outputDim = outputDim
         #self.tmpError = []
@@ -70,13 +70,9 @@ class RecurrentSubstage(Stage):
             for stage in self.inputs:
                 s2 = s + stage.Y.shape[-1]
                 stage.dEdY += dEdX[:, s : s2]
-                # print self.name
-                # print dEdX.shape
-                #stage.tmpError.append(dEdX[:, s : s2])
                 s = s2
         else:
             self.inputs[0].dEdY += dEdX
-            #self.inputs[0].tmpError.append(dEdX)
 
     def clearError(self):
         self.dEdY = 0.0
@@ -86,17 +82,11 @@ class RecurrentSubstage(Stage):
     
     #@profile
     def graphForward(self):
-        #print self.name
         X = self.getInput()
         self.forward(X)
-        self.tmpError = []
 
     #@profile
     def graphBackward(self):
-        #errors = np.array(self.tmpError)
-        # print self.name
-        # print 'error', errors.shape
-        #self.dEdY = np.sum(self.tmpError, axis=0)
         dEdX = self.backward(self.dEdY)
         if self.outputdEdX:
             self.sendError(dEdX)
@@ -115,7 +105,7 @@ class RecurrentSubstage(Stage):
 class Active_Recurrent(RecurrentSubstage):
     def __init__(self,
                  activeFn,
-                 inputsStr,
+                 inputNames,
                  outputDim,
                  defaultValue=None,
                  inputDim=None,
@@ -123,7 +113,7 @@ class Active_Recurrent(RecurrentSubstage):
                  name=None):
         RecurrentSubstage.__init__(self,
                  name=name,
-                 inputsStr=inputsStr,
+                 inputNames=inputNames,
                  outputDim=outputDim,
                  defaultValue=defaultValue,
                  outputdEdX=outputdEdX)
@@ -139,7 +129,7 @@ class Map_Recurrent(RecurrentSubstage):
     def __init__(self,
                  outputDim,
                  activeFn,
-                 inputsStr,
+                 inputNames,
                  initRange=1.0,
                  biasInitConst=-1.0,
                  initSeed=2,
@@ -157,7 +147,7 @@ class Map_Recurrent(RecurrentSubstage):
                  name=None):
         RecurrentSubstage.__init__(self,
                  name=name,
-                 inputsStr=inputsStr,
+                 inputNames=inputNames,
                  outputDim=outputDim,
                  defaultValue=defaultValue,
                  learningRate=learningRate,
@@ -209,14 +199,14 @@ class Map_Recurrent(RecurrentSubstage):
 class Selector_Recurrent(RecurrentSubstage):
     def __init__(self, 
                  name, 
-                 inputsStr, 
+                 inputNames,
                  start, 
                  end, 
                  axis=-1):
         RecurrentSubstage.__init__(
                  self,
                  name=name, 
-                 inputsStr=inputsStr,
+                 inputNames=inputNames,
                  outputDim=end-start)
         self.start = start
         self.end = end
@@ -243,7 +233,7 @@ class Selector_Recurrent(RecurrentSubstage):
 
 class Input_Recurrent(RecurrentSubstage):
     def __init__(self, name, outputDim):
-        RecurrentSubstage.__init__(self, name=name, inputsStr=[], outputDim=outputDim)
+        RecurrentSubstage.__init__(self, name=name, inputNames=[], outputDim=outputDim)
 
     def setValue(self, value):
         self.Y = value
@@ -262,7 +252,7 @@ class Input_Recurrent(RecurrentSubstage):
 
 class Output_Recurrent(RecurrentSubstage):
     def __init__(self, name, outputDim=0):
-        RecurrentSubstage.__init__(self, name=name, inputsStr=[], outputDim=outputDim)
+        RecurrentSubstage.__init__(self, name=name, inputNames=[], outputDim=outputDim)
     def graphForward(self):
         self.Y = self.getInput()
         self.dEdX = np.zeros(self.Y.shape)
@@ -272,7 +262,7 @@ class Output_Recurrent(RecurrentSubstage):
 class Constant_Recurrent(RecurrentSubstage):
     """Stage emitting constant value for all samples."""
     def __init__(self, name, outputDim, value):
-        RecurrentSubstage.__init__(self, name=name, inputsStr=[], outputDim=outputDim)
+        RecurrentSubstage.__init__(self, name=name, inputNames=[], outputDim=outputDim)
         self.value = np.reshape(value, (1, value.size))
     def forward(self, X):
         return np.tile(self.value, (X.shape[0], 1))
@@ -281,12 +271,12 @@ class Constant_Recurrent(RecurrentSubstage):
 
 class ComponentProduct_Recurrent(RecurrentSubstage):
     """Stage multiplying first half of the input with second half"""
-    def __init__(self, name, inputsStr, outputDim,
+    def __init__(self, name, inputNames, outputDim,
                  defaultValue=None):
         RecurrentSubstage.__init__(
             self,
             name=name,
-            inputsStr=inputsStr,
+            inputNames=inputNames,
             outputDim=outputDim,
             defaultValue=defaultValue)
     def forward(self, X):
@@ -299,12 +289,12 @@ class ComponentProduct_Recurrent(RecurrentSubstage):
 
 class Sum_Recurrent(RecurrentSubstage):
     """Stage summing first hald of the input with second half."""
-    def __init__(self, name, inputsStr, numComponents, outputDim, 
+    def __init__(self, name, inputNames, numComponents, outputDim,
                  defaultValue=None):
         RecurrentSubstage.__init__(
             self,
             name=name,
-            inputsStr=inputsStr,
+            inputNames=inputNames,
             outputDim=outputDim,
             defaultValue=defaultValue)
         self.numComponents = numComponents
@@ -317,7 +307,7 @@ class Sum_Recurrent(RecurrentSubstage):
 
 class LUT_Recurrent(RecurrentSubstage):
     def __init__(self,
-                 inputsStr,
+                 inputNames,
                  inputDim,
                  outputDim,
                  initRange=1.0,
@@ -335,7 +325,7 @@ class LUT_Recurrent(RecurrentSubstage):
                  name=None):
         RecurrentSubstage.__init__(self,
                  name=name,
-                 inputsStr=inputsStr,
+                 inputNames=inputNames,
                  learningRate=learningRate,
                  outputDim=outputDim,
                  learningRateAnnealConst=learningRateAnnealConst,
@@ -379,12 +369,9 @@ class LUT_Recurrent(RecurrentSubstage):
     def forward(self, X):
         if self.W is None: self.initWeights()
         X = X.reshape(X.size)
-        #if self.sparse:
         Y = np.zeros((X.shape[0], self.outputDim))
         for n in range(0, X.shape[0]):
              Y[n] = self.W[X[n]]
-        #else:
-        #    Y = self.W[X, :]
         self.X = X
         self.Y = Y
         return Y
@@ -395,7 +382,6 @@ class LUT_Recurrent(RecurrentSubstage):
             self.dEdW = np.zeros(self.W.shape)
             for n in range(0, X.shape[0]):
                 self.dEdW[X[n]] += dEdY[n]
-            #self.dEdW[X, :] += dEdY
         return None
 
     def loadWeights(self, W):
@@ -411,9 +397,9 @@ class LUT_Recurrent(RecurrentSubstage):
             return W
 
 class Reshape_Recurrent(RecurrentSubstage):
-    def __init__(self, name, inputsStr, reshapeFn):
+    def __init__(self, name, inputNames, reshapeFn):
         # Please don't put recurrent connection here.
-        RecurrentSubstage.__init__(self, name=name, inputsStr=inputsStr, outputDim=0)
+        RecurrentSubstage.__init__(self, name=name, inputNames=inputNames, outputDim=0)
         self.reshapeFn = eval('lambda x: ' + reshapeFn)
         self.Xshape = 0
 
@@ -430,8 +416,8 @@ class Reshape_Recurrent(RecurrentSubstage):
         return np.reshape(dEdY, self.Xshape)
 
 class SumProduct_Recurrent(RecurrentSubstage):
-    def __init__(self, name, inputsStr, sumAxis, outputDim):
-        RecurrentSubstage.__init__(self, name=name, inputsStr=inputsStr, outputDim=outputDim)
+    def __init__(self, name, inputNames, sumAxis, outputDim):
+        RecurrentSubstage.__init__(self, name=name, inputNames=inputNames, outputDim=outputDim)
         self.sumAxis = sumAxis
 
     def getInput(self):
@@ -462,14 +448,14 @@ class SumProduct_Recurrent(RecurrentSubstage):
 class Dropout_Recurrent(RecurrentSubstage):
     def __init__(self, 
                  name, 
-                 inputsStr, 
+                 inputNames,
                  outputDim, 
                  dropoutRate, 
                  initSeed, 
                  debug=False):
         RecurrentSubstage.__init__(self, 
             name=name, 
-            inputsStr=inputsStr, 
+            inputNames=inputNames,
             outputDim=outputDim)
         self.dropout = True
         self.dropoutVec = 0
@@ -572,7 +558,7 @@ class Recurrent(Stage):
             outputStageInput.used = True
             outputStage.addInput(outputStageInput)
             for stage in self.stages[t]:
-                for inputStageStr in stage.inputsStr:
+                for inputStageStr in stage.inputNames:
                     if '(' in inputStageStr:
                         stageName = inputStageStr[:inputStageStr.index('(')]
                         stageTimeStr = \
