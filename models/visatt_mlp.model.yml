@@ -3,6 +3,7 @@ decisionFn: 'argmax'
 stages:
     - 'attModel'
     - 'answer'
+outputs: 'answer'
 specs:
     - name: 'imgSel'
       type: 'selector'
@@ -122,7 +123,7 @@ specs:
           - 'lstm1'
           - 'attHid1'
           - 'attOut'
-      outputStageName: 'lstm1'
+      outputs: 'lstm1'
       inputDim: 2
       outputDim: 150
       timespan: 27
