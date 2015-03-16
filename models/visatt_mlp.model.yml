@@ -40,11 +40,13 @@ specs:
       type: 'reshape'
       inputs: 'imgFeat($0)'
       reshapeFn: '(x[0], 196, x[1]/196)'
+      outputDim: 512
       recurrent: true
     - name: 'attReshape'
       type: 'reshape'
       inputs: 'attOut(-1)'
       reshapeFn: '(x[0], x[1], 1)'
+      outputDim: 512
       recurrent: true
     - name: 'attCtx'
       type: 'sumProd'
@@ -85,7 +87,7 @@ specs:
       type: 'map'
       inputs: 'lstm1'
       outputDim: 150
-      activeFn: tanh
+      activeFn: 'tanh'
       initRange: 0.1
       initSeed: 6
       learningRate: 0.1
