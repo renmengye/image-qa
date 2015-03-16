@@ -1,0 +1,166 @@
+costFn: 'crossEntIdx'
+decisionFn: 'argmax'
+stages:
+    - 'attModel'
+    - 'answer'
+outputs: 'answer'
+specs:
+    - name: 'imgSel'
+      type: 'selector'
+      inputs: 'input($0)'
+      start: 0
+      end: 1
+      recurrent: true
+    - name: 'txtSel'
+      type: 'selector'
+      inputs: 'input'
+      start: 1
+      end: 2
+      recurrent: true
+    - name: 'imgFeat'
+      type: 'lut'
+      inputs: 'imgSel($0)'
+      inputDim: 1449
+      #outputDim: 1960
+      outputDim: 100352
+      initWeights: '../../../data/nyu-depth/hidden5_4_conv.pkl'
+      #initRange: 0.1
+      #initSeed: 1
+      sparse: true
+      learningRate: 0.0
+      outputdEdX: false
+      recurrent: true
+    - name: 'txtDict'
+      type: 'lut'
+      inputs: 'txtSel'
+      inputDim: 871
+      outputDim: 150
+      initRange: 0.1
+      initSeed: 3
+      learningRate: 0.0
+      outputdEdX: false
+      recurrent: true
+    - name: 'imgReshape'
+      type: 'reshape'
+      inputs: 'imgFeat($0)'
+      reshapeFn: '(x[0], 196, x[1]/196)'
+      outputDim: 512
+      recurrent: true
+    - name: 'attReshape'
+      type: 'reshape'
+      inputs: 'attOut(-1)'
+      reshapeFn: '(x[0], x[1], 1)'
+      outputDim: 196
+      recurrent: true
+    - name: 'attCtx'
+      type: 'sumProd'
+      inputs: 'attReshape, imgReshape($0)'
+      sumAxis: 1
+      outputDim: 512
+      recurrent: true
+    - name: 'attCtx2'
+      type: 'map'
+      inputs: 'attCtx'
+      activeFn: 'tanh'
+      outputDim: 512
+      learningRate: 0.8
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 100.0
+      recurrent: true
+    - name: 'txtAttCtx'
+      type: 'map'
+      inputs: 'txtDict, attCtx2'
+      outputDim: 300
+      activeFn: 'identity'
+      initRange: 0.1
+      initSeed: 4
+      learningRate: 0.1
+      momentum: 0.9
+      gradientClip: 0.05
+      weightClip: 100
+      recurrent: true
+    - name: 'lstm1'
+      type: 'lstm'
+      inputs: 'txtAttCtx'
+      inputDim: 300
+      outputDim: 150
+      timespan: 28
+      initRange: 0.2
+      initSeed: 4
+      cutOffZeroEnd: true
+      multiErr: false
+      learningRate: 0.8
+      learningRateAnnealConst: 0.0
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 100.0
+      outputdEdX: true
+    - name: 'attHid1'
+      type: 'map'
+      inputs: 'lstm1'
+      outputDim: 150
+      activeFn: 'tanh'
+      initRange: 0.1
+      initSeed: 6
+      learningRate: 0.8
+      momentum: 0.9
+      gradientClip: 0.05
+      weightClip: 50
+      recurrent: true
+    - name: 'attOut'
+      type: 'map'
+      inputs: 'attHid1'
+      outputDim: 196
+      activeFn: 'softmax'
+      defaultValue: 0.00510204081632653
+      initRange: 0.1
+      initSeed: 7
+      learningRate: 0.8
+      momentum: 0.9
+      gradientClip: 0.05
+      weightClip: 50
+      recurrent: true
+    - name: 'attModel'
+      type: 'recurrent'
+      inputs: 'input'
+      stages:
+          - 'imgSel'
+          - 'txtSel'
+          - 'imgFeat'
+          - 'txtDict'
+          - 'imgReshape'
+          - 'attReshape'
+          - 'attCtx'
+          - 'txtAttCtx'
+          - 'lstm1'
+          - 'attHid1'
+          - 'attOut'
+      outputs: 'lstm1'
+      inputDim: 2
+      outputDim: 150
+      timespan: 27
+      multiOutput: false
+      outputdEdX: false
+    - name: 'attModelOut'
+      type: 'map'
+      inputs: 'attModel'
+      outputDim: 150
+      activeFn: 'sigmoid'
+      initRange: 0.1
+      initSeed: 6
+      learningRate: 0.1
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 50.0
+    - name: 'answer'
+      type: 'map'
+      inputs: 'attModelOut'
+      outputDim: 63
+      activeFn: 'softmax'
+      initRange: 0.1
+      initSeed: 6
+      learningRate: 0.01
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 10.0
