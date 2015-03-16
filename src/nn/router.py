@@ -298,6 +298,9 @@ def addStage(stageDict):
         realStages = []
         for i in range(len(stages)):
             realStages.append(stageLib[stages[i]])
+        outputList = modelDict['outputs'].split(',')
+        for i in range(len(outputList)):
+            outputList[i] = outputList[i].strip()
         stage = RecurrentContainer(
             name=stageDict['name'],
             inputDim=stageDict['inputDim'],
@@ -305,7 +308,7 @@ def addStage(stageDict):
             timespan=stageDict['timespan'],
             stages=realStages,
             multiOutput=stageDict['multiOutput'],
-            outputStageNames=stageDict['outputStageNames'],
+            outputStageNames=outputList,
             outputdEdX=outputdEdX
         )
     else:
