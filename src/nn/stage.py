@@ -61,6 +61,9 @@ class Stage:
         else:
             return self.inputs[0].Y
 
+    def clearError(self):
+        self.dEdY = 0.0
+
     def sendError(self, dEdX):
         """
         Iterates over input list and sends dEdX.
@@ -72,6 +75,8 @@ class Stage:
                 stage.dEdY += dEdX[:, s : s2]
                 s = s2
         else:
+            #if type(self.inputs[0].dEdY) == np.ndarray:
+            #    print self.name, self.inputs[0].name, self.inputs[0].dEdY.shape, dEdX.shape
             self.inputs[0].dEdY += dEdX
 
     def getValue(self):

@@ -17,7 +17,6 @@ class GraphModel(Container):
                  outputStageNames=outputStageNames,
                  inputDim=inputDim,
                  outputDim=outputDim,
-                 inputType='float',
                  outputdEdX=True)
         self.getCost = costFn
         self.predict = decisionFn

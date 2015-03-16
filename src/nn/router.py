@@ -305,6 +305,7 @@ def addStage(stageDict):
             name=stageDict['name'],
             inputDim=stageDict['inputDim'],
             outputDim=stageDict['outputDim'],
+            inputNames=inputList,
             timespan=stageDict['timespan'],
             stages=realStages,
             multiOutput=stageDict['multiOutput'],
