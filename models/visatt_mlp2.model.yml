@@ -104,9 +104,9 @@ specs:
       activeFn: 'tanh'
       initRange: 0.1
       initSeed: 6
-      learningRate: 0.8
+      learningRate: 1.0
       momentum: 0.9
-      gradientClip: 0.05
+      gradientClip: 0.1
       weightClip: 50
       recurrent: true
     - name: 'attOut'
@@ -117,9 +117,9 @@ specs:
       defaultValue: 0.00510204081632653
       initRange: 0.1
       initSeed: 7
-      learningRate: 0.8
+      learningRate: 1.0
       momentum: 0.9
-      gradientClip: 0.05
+      gradientClip: 0.1
       weightClip: 50
       recurrent: true
     - name: 'attModel'

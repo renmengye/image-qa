@@ -32,6 +32,7 @@ specs:
     - name: 'imgUnfold'
       type: 'timeUnfold'
       inputs: 'imgSel'
+      outputdEdX: false
     - name: 'imgFeat'
       type: 'lut'
       inputs: 'imgUnfold'
@@ -51,6 +52,7 @@ specs:
       momentum: 0.9
       gradientClip: 0.1
       weightClip: 50.0
+      outputdEdX: false
     - name: 'imgFold'
       type: 'timeFold'
       inputs: 'imgMap'
@@ -58,6 +60,7 @@ specs:
     - name: 'txtUnfold'
       type: 'timeUnfold'
       inputs: 'txtSel'
+      outputdEdX: false
     - name: 'txtDict'
       type: 'lut'
       inputs: 'txtUnfold'
@@ -70,6 +73,7 @@ specs:
       type: 'timeFold'
       inputs: 'txtDict'
       timespan: 27
+      outputdEdX: false
     - name: 'concat'
       type: 'concat'
       inputs: 'imgFold, txtFold'

@@ -172,7 +172,8 @@ def addStage(stageDict):
     elif stageDict['type'] == 'timeUnfold':
         stage = TimeUnfold(
             name=stageDict['name'],
-            inputNames=inputList)
+            inputNames=inputList,
+            outputdEdX=outputdEdX)
     elif stageDict['type'] == 'concat':
         stage = Concat(
             name=stageDict['name'],
@@ -191,7 +192,8 @@ def addStage(stageDict):
         stage = TimeFold(
             name=stageDict['name'],
             timespan=stageDict['timespan'],
-            inputNames=inputList
+            inputNames=inputList,
+            outputdEdX=outputdEdX
         )
     elif stageDict['type'] == 'reshape':
         stage = Reshape(
@@ -262,7 +264,8 @@ def addStage(stageDict):
         stage = Reshape(
             name=stageDict['name'],
             inputNames=inputList,
-            reshapeFn=stageDict['reshapeFn']
+            reshapeFn=stageDict['reshapeFn'],
+            outputdEdX=outputdEdX
         )
     elif stageDict['type'] == 'sum':
         stage = Sum(

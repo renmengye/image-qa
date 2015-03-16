@@ -1,8 +1,8 @@
 from stage import *
 
 class Reshape(Stage):
-    def __init__(self, reshapeFn, inputNames=None, outputDim=0, name=None):
-        Stage.__init__(self, name=name, inputNames=inputNames, outputDim=outputDim)
+    def __init__(self, reshapeFn, inputNames=None, outputDim=0, name=None, outputdEdX=True):
+        Stage.__init__(self, name=name, inputNames=inputNames, outputDim=outputDim, outputdEdX=outputdEdX)
         self.reshapeFn = eval('lambda x: ' + reshapeFn)
         self.Xshape = 0
 
@@ -11,23 +11,26 @@ class Reshape(Stage):
         return np.reshape(X, self.reshapeFn(X.shape))
 
     def backward(self, dEdY):
-        return np.reshape(dEdY, self.Xshape)
+        if self.outputdEdX:
+            return np.reshape(dEdY, self.Xshape)
 
 class TimeUnfold(Reshape):
-    def __init__(self, inputNames=None, name=None):
+    def __init__(self, inputNames=None, name=None, outputdEdX=True):
         Reshape.__init__(self,
                          name=name,
                          inputNames=inputNames,
-                         reshapeFn='(x[0] * x[1], x[2])')
+                         reshapeFn='(x[0] * x[1], x[2])',
+                         outputdEdX=outputdEdX)
 
 class TimeFold(Reshape):
-    def __init__(self, timespan, inputNames=None, name=None):
+    def __init__(self, timespan, inputNames=None, name=None, outputdEdX=True):
         self.timespan = timespan
         t = str(self.timespan)
         Reshape.__init__(self,
                          name=name,
                          inputNames=inputNames,
-                         reshapeFn='(x[0] / '+t+','+t+', x[1])')
+                         reshapeFn='(x[0] / '+t+','+t+', x[1])',
+                         outputdEdX=outputdEdX)
 
 class Concat(Stage):
     def __init__(self, inputNames, axis, name=None):
