@@ -1,5 +1,5 @@
 from sequential import *
-from lstm import *
+from lstm_old import *
 from map import *
 from dropout import *
 from reshape import *
@@ -23,6 +23,7 @@ class Sequential_Tests(unittest.TestCase):
         lut = LUT(
             inputDim=np.max(self.trainInput)+1,
             outputDim=5,
+            inputNames=None,
             needInit=False,
             initWeights=wordEmbed
         )
@@ -41,7 +42,10 @@ class Sequential_Tests(unittest.TestCase):
         )
 
         dropout = Dropout(
+            name='d1',
             dropoutRate=0.5,
+            inputNames=None,
+            outputDim=5,
             initSeed=2,
             debug=True
         )
@@ -56,7 +60,6 @@ class Sequential_Tests(unittest.TestCase):
         )
 
         soft = Map(
-            inputDim=5,
             outputDim=2,
             activeFn=SoftmaxActiveFn,
             initRange=1,
@@ -87,12 +90,6 @@ class Sequential_Tests(unittest.TestCase):
         dETmp = dETmp.reshape(dE.size)
         tolerance = 1e-1
         for i in range(dE.size):
-            # print 'DE',
-            # print dE[i],
-            # print 'DETMP',
-            # print dETmp[i],
-            # print 'R',
-            # print dE[i] / dETmp[i]
             self.assertTrue(
                 (dE[i] == 0 and dETmp[i] == 0) or
                 (np.abs(dE[i] / dETmp[i] - 1) < tolerance))

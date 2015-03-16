@@ -1,7 +1,8 @@
-from stage import *
+from stage2 import *
 
-class LUT(Stage):
+class LUT(GraphStage):
     def __init__(self,
+                 inputNames,
                  inputDim,
                  outputDim,
                  initRange=1.0,
@@ -17,9 +18,11 @@ class LUT(Stage):
                  gradientClip=0.0,
                  weightRegConst=0.0,
                  name=None):
-        Stage.__init__(self,
+        GraphStage.__init__(self,
                  name=name,
+                 inputNames=inputNames,
                  learningRate=learningRate,
+                 outputDim=outputDim,
                  learningRateAnnealConst=learningRateAnnealConst,
                  momentum=momentum,
                  deltaMomentum=deltaMomentum,
@@ -27,19 +30,16 @@ class LUT(Stage):
                  gradientClip=gradientClip,
                  weightRegConst=weightRegConst,
                  outputdEdX=False)
-        self.inputDim = inputDim
         self.outputDim = outputDim
+        self.inputDim = inputDim
+        self.initRange = initRange
         self.random = np.random.RandomState(initSeed)
         self.needInit = needInit
 
-        # Zeroth dimension of the weight matrix is reserved
+        # Zeroth rows of the weight matrix is reserved
         # for empty word at the end of a sentence.
         if needInit:
-            self.W = np.concatenate(
-                (np.zeros((1, outputDim)),
-                 self.random.uniform(
-                -initRange/2.0, initRange/2.0,
-                (inputDim, outputDim))), axis=0)
+            self.W = None
         else:
             if sparse:
                 initWeights = np.array(initWeights.todense())
@@ -51,18 +51,22 @@ class LUT(Stage):
         self.X = 0
         self.Y = 0
         self.sparse = sparse
-        pass
+        self.dEdW = 0.0
+
+    def initWeights(self):
+        self.W = np.concatenate(
+            (np.zeros((1, self.outputDim)),
+             self.random.uniform(
+            -self.initRange/2.0, self.initRange/2.0,
+            (self.inputDim, self.outputDim))), axis=0)
 
     def forward(self, X):
+        if self.W is None: self.initWeights()
         X = X.reshape(X.size)
-        #if self.sparse:
         Y = np.zeros((X.shape[0], self.outputDim))
         for n in range(0, X.shape[0]):
-            Y[n] = self.W[X[n]]
-        # else:
-        #     Y = self.W[X]
+             Y[n] = self.W[X[n]]
         self.X = X
-        self.Y = Y
         return Y
 
     def backward(self, dEdY):
@@ -71,17 +75,16 @@ class LUT(Stage):
             self.dEdW = np.zeros(self.W.shape)
             for n in range(0, X.shape[0]):
                 self.dEdW[X[n]] += dEdY[n]
-            #self.dEdW[X] += dEdY
         return None
 
     def loadWeights(self, W):
-        if self.learningRate == 0.0 and not self.needInit:
+        if self.learningRate == 0.0:
             return
         else:
-            Stage.loadWeights(self, W)
+            GraphStage.loadWeights(W)
 
     def getWeights(self):
-        if self.learningRate == 0.0 and not self.needInit:
+        if self.learningRate == 0.0:
             return 0
         else:
-            return W
+            return self.W

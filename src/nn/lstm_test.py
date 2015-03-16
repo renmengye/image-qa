@@ -1,5 +1,5 @@
 from sequential import *
-from lstm import *
+from lstm_old import *
 from map import *
 from dropout import *
 from reshape import *
@@ -23,6 +23,7 @@ class LSTM_Recurrent_Real_Tests(unittest.TestCase):
         lut = LUT(
             inputDim=np.max(trainInput)+1,
             outputDim=D,
+            inputNames=None,
             needInit=False,
             initWeights=wordEmbed
         )
@@ -32,12 +33,18 @@ class LSTM_Recurrent_Real_Tests(unittest.TestCase):
         )
 
         dropout = Dropout(
+            name='d1',
             dropoutRate=0.2,
-            initSeed=2
+            initSeed=2,
+            inputNames=None,
+            outputDim=D2
         )
         dropout2 = Dropout(
+            name='d2',
             dropoutRate=0.2,
-            initSeed=2
+            initSeed=2,
+            inputNames=None,
+            outputDim=D2
         )
         lstm = LSTM_Recurrent(
                 name='lstm',
@@ -64,7 +71,6 @@ class LSTM_Recurrent_Real_Tests(unittest.TestCase):
 
         sig = Map(
             name='sig',
-            inputDim=D2,
             outputDim=1,
             activeFn=SigmoidActiveFn(),
             initRange=0.1,
@@ -77,7 +83,6 @@ class LSTM_Recurrent_Real_Tests(unittest.TestCase):
         )
         sig2 = Map(
             name='sig',
-            inputDim=D2,
             outputDim=1,
             activeFn=SigmoidActiveFn(),
             initRange=0.1,

@@ -1,11 +1,15 @@
-from lstm import *
+from lstm_old import *
 from map import *
 from lut import *
 from inner_prod import *
 from time_sum import *
 from reshape import *
-from recurrent import *
+from recurrent2 import *
 from cos_sim import *
+from sum import *
+from elem_prod import *
+from active import *
+from sum_prod import *
 import unittest
 import numpy as np
 
@@ -185,7 +189,6 @@ class MapIdentity_Tests(StageTests):
     """Linear map tests"""
     def setUp(self):
         self.stage = Map(
-            inputDim=5,
             outputDim=3,
             initRange=0.1,
             initSeed=1,
@@ -205,7 +208,6 @@ class MapSigmoid_Tests(StageTests):
     """Sigmoid map tests"""
     def setUp(self):
         self.stage = Map(
-            inputDim=5,
             outputDim=3,
             initRange=0.1,
             initSeed=1,
@@ -225,7 +227,6 @@ class MapSigmoid_CrossEnt_Tests(StageTests):
     """Sigmoid map tests"""
     def setUp(self):
         self.stage = Map(
-            inputDim=5,
             outputDim=3,
             initRange=0.1,
             initSeed=1,
@@ -245,7 +246,6 @@ class MapSoftmax_Tests(StageTests):
     """Sigmoid map tests"""
     def setUp(self):
         self.stage = Map(
-            inputDim=5,
             outputDim=3,
             initRange=0.1,
             initSeed=1,
@@ -265,7 +265,6 @@ class MapSoftmax_CrossEnt_Tests(StageTests):
     """Linear map tests"""
     def setUp(self):
         self.stage = Map(
-            inputDim=5,
             outputDim=3,
             initRange=0.1,
             initSeed=1,
@@ -287,6 +286,7 @@ class LUT_Tests(StageTests):
         self.stage = LUT(
             inputDim=5,
             outputDim=3,
+            inputNames=None,
             initRange=0.1,
             initSeed=1,
             learningRate=0.9)
@@ -300,10 +300,30 @@ class LUT_Tests(StageTests):
         dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
         self.chkgrd(dEdW, dEdWTmp)
 
+class Active_Tests(StageTests):
+    def setUp(self):
+        self.stage = Active(
+            outputDim=6,
+            name='active',
+            inputNames=None,
+            activeFn=TanhActiveFn())
+        self.model = self.stage
+        self.testInputErr = True
+        self.costFn = meanSqErr
+    def test_grad(self):
+        random = np.random.RandomState(2)
+        X = random.uniform(-0.1, 0.1, (3,6))
+        T = random.uniform(-0.1, 0.1, (3,6))
+        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
+        self.chkgrd(dEdX, dEdXTmp)
+
 class InnerProduct_Tests(StageTests):
     """Inner product tests"""
     def setUp(self):
-        self.stage = InnerProduct()
+        self.stage = InnerProduct(
+            name='inner',
+            inputNames=None,
+            outputDim=0)
         self.model = self.stage
         self.testInputErr = True
         self.costFn = meanSqErr
@@ -341,12 +361,12 @@ class Reshape_Tests(StageTests):
         dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
         self.chkgrd(dEdX, dEdXTmp)
 
-class Sum_Recurrent_Tests(StageTests):
+class Sum_Tests(StageTests):
     def setUp(self):
-        self.stage = Sum_Recurrent(
+        self.stage = Sum(
             outputDim=3,
             name='sum',
-            inputsStr=[],
+            inputNames=None,
             numComponents=2)
         self.model = self.stage
         self.testInputErr = True
@@ -358,12 +378,12 @@ class Sum_Recurrent_Tests(StageTests):
         dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
         self.chkgrd(dEdX, dEdXTmp)
 
-class ComponentProduct_Recurrent_Tests(StageTests):
+class ElementProduct_Tests(StageTests):
     def setUp(self):
-        self.stage = ComponentProduct_Recurrent(
+        self.stage = ElementProduct(
             outputDim=3,
             name='product',
-            inputsStr=[])
+            inputNames=None)
         self.model = self.stage
         self.testInputErr = True
         self.costFn = meanSqErr
@@ -371,63 +391,6 @@ class ComponentProduct_Recurrent_Tests(StageTests):
         random = np.random.RandomState(2)
         X = random.uniform(-0.1, 0.1, (3,6))
         T = random.uniform(-0.1, 0.1, (3,3))
-        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
-        self.chkgrd(dEdX, dEdXTmp)
-
-class MapSigmoid_Recurrent_Tests(StageTests):
-    def setUp(self):
-        self.stage = Map_Recurrent(
-            name='sigmoid',
-            activeFn=SigmoidActiveFn(),
-            outputDim=3,
-            inputsStr=[],
-            initRange=0.1,
-            initSeed=1)
-        self.model = self.stage
-        self.testInputErr = True
-        self.costFn = meanSqErr
-    def test_grad(self):
-        random = np.random.RandomState(2)
-        X = random.uniform(-0.1, 0.1, (3,6))
-        T = random.uniform(-0.1, 0.1, (3,3))
-        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
-        self.chkgrd(dEdW, dEdWTmp)
-        self.chkgrd(dEdX, dEdXTmp)
-
-class LUT_Recurrent_Tests(StageTests):
-    def setUp(self):
-        self.stage = LUT_Recurrent(
-            name='lut',
-            inputDim=5,
-            outputDim=3,
-            inputsStr=[],
-            initRange=0.1,
-            initSeed=1,
-            learningRate=0.9)
-        self.model = self.stage
-        self.testInputErr = False
-        self.costFn = meanSqErr
-    def test_grad(self):
-        random = np.random.RandomState(2)
-        X = np.array([1,2,3,4,5], dtype=int)
-        T = random.uniform(-0.1, 0.1, (5,3))
-        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
-        self.chkgrd(dEdW, dEdWTmp)
-
-class Active_Recurrent_Tests(StageTests):
-    def setUp(self):
-        self.stage = Active_Recurrent(
-            outputDim=6,
-            name='active',
-            inputsStr=[],
-            activeFn=TanhActiveFn())
-        self.model = self.stage
-        self.testInputErr = True
-        self.costFn = meanSqErr
-    def test_grad(self):
-        random = np.random.RandomState(2)
-        X = random.uniform(-0.1, 0.1, (3,6))
-        T = random.uniform(-0.1, 0.1, (3,6))
         dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
         self.chkgrd(dEdX, dEdXTmp)
 
@@ -435,6 +398,8 @@ class CosSimilarity_Tests(StageTests):
     def setUp(self):
         self.stage = CosSimilarity(
             bankDim=6,
+            inputNames=None,
+            outputDim=0,
             name='cos')
         self.model = self.stage
         self.testInputErr = True
@@ -446,11 +411,11 @@ class CosSimilarity_Tests(StageTests):
         dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
         self.chkgrd(dEdX, dEdXTmp)
 
-class Selector_Recurrent_Tests(StageTests):
+class Selector_Tests(StageTests):
     def setUp(self):
         self.stage = Selector_Recurrent(
             name='sel',
-            inputsStr=[],
+            inputNames=None,
             start=5,
             end=10,
             axis=-1)
@@ -464,11 +429,11 @@ class Selector_Recurrent_Tests(StageTests):
         dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
         self.chkgrd(dEdX, dEdXTmp)
 
-class SumProduct_Recurrent_Tests(StageTests):
+class SumProduct_Tests(StageTests):
     def setUp(self):
-        self.stage = SumProduct_Recurrent(
+        self.stage = SumProduct(
             name='sp', 
-            inputsStr=[], 
+            inputNames=None,
             sumAxis=1, 
             outputDim=10
             )
@@ -480,7 +445,6 @@ class SumProduct_Recurrent_Tests(StageTests):
         X = [random.uniform(-0.1, 0.1, (3, 10, 1)), 
              random.uniform(-0.1, 0.1, (3, 10, 5))]
         T = random.uniform(-0.1, 0.1, (3, 5))
-        #dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
         
         Y = self.model.forward(X)
         W = self.stage.W
@@ -548,19 +512,15 @@ if __name__ == '__main__':
     suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(Reshape_Tests))
     suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(Sum_Recurrent_Tests))
+        unittest.TestLoader().loadTestsFromTestCase(Sum_Tests))
     suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(ComponentProduct_Recurrent_Tests))
+        unittest.TestLoader().loadTestsFromTestCase(ElementProduct_Tests))
     suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(MapSigmoid_Recurrent_Tests))
-    suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(LUT_Recurrent_Tests))
-    suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(Active_Recurrent_Tests))
+        unittest.TestLoader().loadTestsFromTestCase(Active_Tests))
     suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(CosSimilarity_Tests))
     suite.addTests(
-          unittest.TestLoader().loadTestsFromTestCase(Selector_Recurrent_Tests))
+          unittest.TestLoader().loadTestsFromTestCase(Selector_Tests))
     suite.addTests(
-          unittest.TestLoader().loadTestsFromTestCase(SumProduct_Recurrent_Tests))
+          unittest.TestLoader().loadTestsFromTestCase(SumProduct_Tests))
     unittest.TextTestRunner(verbosity=2).run(suite)

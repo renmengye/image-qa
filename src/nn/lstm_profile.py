@@ -1,7 +1,7 @@
 import sys
 import time
 import numpy as np
-import lstm as l
+import lstm_old as l
 
 
 start = time.time()

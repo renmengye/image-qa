@@ -1,12 +1,14 @@
-from stage import *
+from stage2 import *
 
-class InnerProduct(Stage):
+class InnerProduct(GraphStage):
     """
     Inner product calculates the inner product of two input vectors.
     Two vectors aligns on the second axis (time-axis).
     """
     def __init__(self,
-                name=None,
+                name,
+                inputNames,
+                outputDim,
                 learningRate=0.0,
                 learningRateAnnealConst=0.0,
                 momentum=0.0,
@@ -15,8 +17,10 @@ class InnerProduct(Stage):
                 gradientClip=0.0,
                 weightRegConst=0.0,
                 outputdEdX=True):
-        Stage.__init__(self,
+        GraphStage.__init__(self,
                  name=name,
+                 outputDim=outputDim,
+                 inputNames=inputNames,
                  learningRate=learningRate,
                  learningRateAnnealConst=learningRateAnnealConst,
                  momentum=momentum,

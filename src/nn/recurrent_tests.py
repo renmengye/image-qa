@@ -1,5 +1,5 @@
-from recurrent import *
-from lstm import *
+from recurrent2 import *
+from lstm_old import *
 import stage_tests
 import unittest
 
@@ -198,9 +198,6 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
             else:
                 dEdX2 = lstm2.backward(dEdY2)
 
-            # print i, 'Y', Y/Y2
-            # print i, 'dEdY', dEdY/dEdY2
-
             I2 = lstm.stageDict['I-4']
             F2 = lstm.stageDict['F-4']
             Z2 = lstm.stageDict['Z-4']
@@ -211,15 +208,10 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
             lstm2.updateWeights()
             self.chkEqual(Y, Y2)
 
-            #print i, 'haha', dEdX/dEdX2
             self.chkEqual(dEdX, dEdX2)
-            # print i, '1', dEdW
-            # print i, '2', dEdW2
-            # print i, '3', dEdW/dEdW2
             self.chkEqual(dEdW, dEdW2)
             W = np.concatenate((I2.W, F2.W, Z2.W, O2.W), axis=-1)
             W2 = lstm2.W
-            # print i, '4', W/W2
             self.chkEqual(W, W2)
 
     def chkEqual(self, a, b):

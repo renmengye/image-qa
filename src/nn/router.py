@@ -1,4 +1,4 @@
-from lstm import *
+from lstm_old import *
 from lut import *
 from map import *
 from reshape import *
@@ -8,10 +8,9 @@ from inner_prod import *
 from dropout import *
 from sequential import *
 from parallel import *
-from concat import *
 from const_weights import *
 from cos_sim import *
-from component_prod import *
+from elem_prod import *
 from active_func import *
 from lstm_recurrent import *
 
@@ -86,6 +85,12 @@ def routeStage(stageDict):
     if stageDict.has_key('outputdEdX') else True
     defaultValue=(np.zeros(stageDict['outputDim']) + stageDict['defaultValue'])\
     if stageDict.has_key('defaultValue') else None
+    if stageDict.has_key('inputs'):
+        inputList = stageDict['inputs'].split(',')
+        for i in range(len(inputList)):
+            inputList[i] = inputList[i].strip()
+    else:
+        inputList = None
 
     if stageDict['type'] == 'lstm_old':
         stage = LSTM(
@@ -133,6 +138,7 @@ def routeStage(stageDict):
             name=stageDict['name'],
             inputDim=stageDict['inputDim'],
             outputDim=stageDict['outputDim'],
+            inputNames=inputList,
             initSeed=initSeed,
             initRange=initRange,
             initWeights=initWeights,
@@ -149,8 +155,8 @@ def routeStage(stageDict):
     elif stageDict['type'] == 'map':
         stage = Map(
             name=stageDict['name'],
-            inputDim=stageDict['inputDim'],
             outputDim=stageDict['outputDim'],
+            inputNames=inputList,
             activeFn=routeFn(stageDict['activeFn']),
             initSeed=initSeed,
             initRange=initRange,
@@ -179,6 +185,8 @@ def routeStage(stageDict):
     elif stageDict['type'] == 'innerProd':
         stage = InnerProduct(
             name=stageDict['name'],
+            inputNames=inputList,
+            outputDim=stageDict['outputDim'],
             learningRate=learningRate,
             learningRateAnnealConst=learningRateAnnealConst,
             momentum=momentum,
@@ -209,19 +217,6 @@ def routeStage(stageDict):
             stages=realStages,
             outputdEdX=outputdEdX
         )
-    elif stageDict['type'] == 'concat':
-        stages = stageDict['stages']
-        realStages = []
-        for i in range(len(stages)):
-            realStages.append(stageLib[stages[i]])
-        stage = Concat(
-            name=stageDict['name'],
-            stages=realStages,
-            axis=stageDict['axis'],
-            axis2=stageDict['axis2'] if stageDict.has_key('axis2') else stageDict['axis'],
-            splits=stageDict['splits'],
-            outputdEdX=outputdEdX
-        )
     elif stageDict['type'] == 'constWeights':
         stage = ConstWeights(
             name=stageDict['name'],
@@ -242,11 +237,15 @@ def routeStage(stageDict):
     elif stageDict['type'] == 'cosSimilarity':
         stage = CosSimilarity(
             name=stageDict['name'],
+            inputNames=inputList,
+            outputDim=stageDict['outputDim'],
             bankDim=stageDict['bankDim']
         )
     elif stageDict['type'] == 'componentProd':
-        stage = ComponentProduct(
-            name=stageDict['name']
+        stage = ElementProduct(
+            name=stageDict['name'],
+            inputNames=inputList,
+            outputDim=stageDict['outputDim']
         )
     elif stageDict['type'] == 'parallel':
         stages = stageDict['stages']
@@ -259,51 +258,7 @@ def routeStage(stageDict):
             axis=stageDict['axis'],
             outputdEdX=outputdEdX
         )
-    elif stageDict['type'] == 'mapRecurrent':
-        inputList = stageDict['inputs'].split(',')
-        for i in range(len(inputList)):
-            inputList[i] = inputList[i].strip()
-        stage = Map_Recurrent(
-            name=stageDict['name'],
-            inputNames=inputList,
-            outputDim=stageDict['outputDim'],
-            defaultValue=defaultValue,
-            activeFn=routeFn(stageDict['activeFn']),
-            initRange=initRange,
-            initSeed=initSeed,
-            biasInitConst=biasInitConst,
-            learningRate=learningRate,
-            momentum=momentum,
-            gradientClip=gradientClip,
-            weightClip=weightClip,
-            weightRegConst=weightRegConst
-        )
-    elif stageDict['type'] == 'lutRecurrent':
-        inputList = stageDict['inputs'].split(',')
-        for i in range(len(inputList)):
-            inputList[i] = inputList[i].strip()
-        stage = LUT_Recurrent(
-            name=stageDict['name'],
-            inputNames=inputList,
-            inputDim=stageDict['inputDim'],
-            outputDim=stageDict['outputDim'],
-            initSeed=initSeed,
-            initRange=initRange,
-            initWeights=initWeights,
-            sparse=stageDict['sparse'] if stageDict.has_key('sparse') else False,
-            needInit=needInit,
-            learningRate=learningRate,
-            learningRateAnnealConst=learningRateAnnealConst,
-            momentum=momentum,
-            deltaMomentum=deltaMomentum,
-            gradientClip=gradientClip,
-            weightClip=weightClip,
-            weightRegConst=weightRegConst
-        )
-    elif stageDict['type'] == 'selectorRecurrent':
-        inputList = stageDict['inputs'].split(',')
-        for i in range(len(inputList)):
-            inputList[i] = inputList[i].strip()
+    elif stageDict['type'] == 'selector':
         stage = Selector_Recurrent(
             name=stageDict['name'],
             inputNames=inputList,
@@ -311,19 +266,13 @@ def routeStage(stageDict):
             start=stageDict['start'],
             end=stageDict['end']
         )
-    elif stageDict['type'] == 'reshapeRecurrent':
-        inputList = stageDict['inputs'].split(',')
-        for i in range(len(inputList)):
-            inputList[i] = inputList[i].strip()
+    elif stageDict['type'] == 'reshape':
         stage = Reshape_Recurrent(
             name=stageDict['name'],
             inputNames=inputList,
             reshapeFn=stageDict['reshapeFn']
         )
-    elif stageDict['type'] == 'sumRecurrent':
-        inputList = stageDict['inputs'].split(',')
-        for i in range(len(inputList)):
-            inputList[i] = inputList[i].strip()
+    elif stageDict['type'] == 'sum':
         stage = Sum_Recurrent(
             name=stageDict['name'],
             inputNames=inputList,
@@ -331,20 +280,14 @@ def routeStage(stageDict):
             outputDim=stageDict['outputDim'],
             defaultValue=defaultValue
         )
-    elif stageDict['type'] == 'componentProdRecurrent':
-        inputList = stageDict['inputs'].split(',')
-        for i in range(len(inputList)):
-            inputList[i] = inputList[i].strip()
+    elif stageDict['type'] == 'elemProd':
         stage = ComponentProduct_Recurrent(
             name=stageDict['name'],
             inputNames=inputList,
             outputDim=stageDict['outputDim'],
             defaultValue=defaultValue
         )
-    elif stageDict['type'] == 'activeRecurrent':
-        inputList = stageDict['inputs'].split(',')
-        for i in range(len(inputList)):
-            inputList[i] = inputList[i].strip()
+    elif stageDict['type'] == 'active':
         stage = Active_Recurrent(
             name=stageDict['name'],
             inputNames=inputList,
@@ -352,26 +295,12 @@ def routeStage(stageDict):
             activeFn=routeFn(stageDict['activeFn']),
             defaultValue=defaultValue
         )
-    elif stageDict['type'] == 'sumProdRecurrent':
-        inputList = stageDict['inputs'].split(',')
-        for i in range(len(inputList)):
-            inputList[i] = inputList[i].strip()
+    elif stageDict['type'] == 'sumProd':
         stage = SumProduct_Recurrent(
             name=stageDict['name'],
             inputNames=inputList,
             sumAxis=stageDict['sumAxis'],
             outputDim=stageDict['outputDim']
-        )
-    elif stageDict['type'] == 'dropoutRecurrent':
-        inputList = stageDict['inputs'].split(',')
-        for i in range(len(inputList)):
-            inputList[i] = inputList[i].strip()
-        stage = Dropout_Recurrent(
-            name=stageDict['name'],
-            inputNames=inputList,
-            outputDim=stageDict['outputDim'],
-            dropoutRate=stageDict['dropoutRate'],
-            initSeed=stageDict['initSeed']
         )
     elif stageDict['type'] == 'recurrent':
         stages = stageDict['stages']

@@ -1,20 +1,24 @@
-from stage import *
+from stage2 import *
 
-class CosSimilarity(Stage):
+class CosSimilarity(GraphStage):
     """
     Compute the cosine similartiy of vectors with a bank of vectors
     """
-    def __init__(self, bankDim, name=None):
-        Stage.__init__(self, name=name)
+    def __init__(self, bankDim, inputNames, outputDim, name=None):
+        GraphStage.__init__(self, name=name, inputNames=inputNames, outputDim=outputDim)
         self.bankDim = bankDim
+        self.A = 0
+        self.Z = 0
+        self.Anorm = 0
+        self.Znorm = 0
+        self.Auni = 0
+        self.Zuni = 0
 
     def forward(self, X):
         bankDim = self.bankDim
         A = X[:bankDim]
         Z = X[bankDim:]
         Xnorm2 = np.sum(np.power(X, 2), axis=-1)
-        Anorm2 = Xnorm2[:bankDim]
-        Znorm2 = Xnorm2[bankDim:]
         Xnorm = np.sqrt(Xnorm2)
         Anorm = Xnorm[:bankDim]
         Znorm = Xnorm[bankDim:]
@@ -34,7 +38,6 @@ class CosSimilarity(Stage):
         self.dEdW = 0
         Z = self.Z
         A = self.A
-        bankDim = self.bankDim
         Anorm = self.Anorm
         Znorm = self.Znorm
         Auni = self.Auni
