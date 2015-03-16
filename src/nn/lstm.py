@@ -1,4 +1,4 @@
-from recurrent3 import *
+from recurrent import *
 from elem_prod import *
 from sum import *
 from active import *

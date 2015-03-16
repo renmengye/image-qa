@@ -1,7 +1,6 @@
 from lstm_old import *
 from lut import *
 from reshape import *
-from time_sum import *
 from inner_prod import *
 from dropout import *
 from sequential import *
@@ -168,9 +167,6 @@ def routeStage(stageDict):
         )
     elif stageDict['type'] == 'timeUnfold':
         stage = TimeUnfold(
-            name=stageDict['name'])
-    elif stageDict['type'] == 'timeSum':
-        stage = TimeSum(
             name=stageDict['name'])
     elif stageDict['type'] == 'innerProd':
         stage = InnerProduct(

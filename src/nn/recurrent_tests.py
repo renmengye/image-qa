@@ -1,4 +1,4 @@
-from recurrent3 import *
+from recurrent import *
 from lstm_old import *
 import stage_tests
 import unittest

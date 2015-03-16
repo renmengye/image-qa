@@ -2,7 +2,6 @@ from lstm_old import *
 from map import *
 from lut import *
 from inner_prod import *
-from time_sum import *
 from reshape import *
 from cos_sim import *
 from sum import *
@@ -332,19 +331,6 @@ class InnerProduct_Tests(StageTests):
         random = np.random.RandomState(2)
         X = random.uniform(-0.1, 0.1, (6,2,5))
         T = random.uniform(-0.1, 0.1, (6,1))
-        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
-        self.chkgrd(dEdX, dEdXTmp)
-
-class TimeSum_Tests(StageTests):
-    def setUp(self):
-        self.stage = TimeSum()
-        self.model = self.stage
-        self.testInputErr = True
-        self.costFn = meanSqErr
-    def test_grad(self):
-        random = np.random.RandomState(2)
-        X = random.uniform(-0.1, 0.1, (6,3,5))
-        T = random.uniform(-0.1, 0.1, (6,5))
         dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
         self.chkgrd(dEdX, dEdXTmp)
 

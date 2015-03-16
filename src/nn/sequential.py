@@ -1,4 +1,4 @@
-from container2 import *
+from container import *
 
 class Sequential(GraphStage):
     def __init__(self, stages, inputNames=None, name=None, outputDim=0, outputdEdX=True):

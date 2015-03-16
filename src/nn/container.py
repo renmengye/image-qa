@@ -1,4 +1,3 @@
-from stage2 import *
 from active_func import *
 from map import *
 

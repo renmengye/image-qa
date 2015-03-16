@@ -1,6 +1,6 @@
 import yaml
 import router
-from model2 import *
+from model import *
 
 def load(modelSpecFilename):
     """
