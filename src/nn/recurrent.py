@@ -75,11 +75,20 @@ class RecurrentAdapter(Stage, RecurrentStage):
         """
         self.stages[time].graphBackward()
 
+    def syncGradient(self):
+        # Sum error through time
+        W = self.stages[0].getWeights()
+        if type(W) is np.ndarray and self.stages[0].learningRate > 0.0:
+            tmp = np.zeros((self.timespan, W.shape[0], W.shape[1]))
+            for t in range(self.timespan):
+                tmp[t] = self.stages[t].getGradient()
+            self.stages[0].setGradient(np.sum(tmp, axis=0))
+
     def updateWeights(self):
         if self.stages[0].learningRate > 0.0:
             self.stages[0].updateWeights()
             for t in range(1, self.timespan):
-                    self.stages[t].W = self.stages[0].W
+                    self.stages[t].loadWeights(self.stages[0].getWeights())
 
     def updateLearningParams(self, numEpoch):
         # Since only the first stage updates the weights,
@@ -197,6 +206,10 @@ class RecurrentContainer(Container, RecurrentStage):
         for stage in self.constStages:
             stage.clearError()
         self.dEdY = 0.0
+
+    def syncGradient(self):
+        for stage in self.stages:
+            stage.syncGradient()
 
     def timeForward(self, time, dropout=True):
         """
@@ -323,21 +336,5 @@ class RecurrentContainer(Container, RecurrentStage):
             for t in range(self.XendAll):
                 dEdX[:, t, :] = self.stages[0].getStage(time=t).dEdY
         
-        # Sum error through time
-        for s in range(1, len(self.stages) - 1):
-            W = self.stages[s].getStage(time=0).getWeights()
-            if type(W) is np.ndarray and \
-                    (isinstance(self.stages[s], RecurrentContainer) or \
-                    self.stages[s].getStage(time=0).learningRate > 0.0):
-                tmp = np.zeros((self.timespan, W.shape[0], W.shape[1]))
-                for t in range(self.timespan):
-                    tmp[t] = self.stages[s].getStage(time=t).getGradient()
-                    # Need to recurrently set gradients!!
-                    self.stages[s].getStage(time=t).setGradient(0.0)
-                self.dEdW[s] = np.sum(tmp, axis=0)
-
-        # For gradient check purpose, synchronize the sum of gradient to the time=0 stage
-        for s in range(1, len(self.stages) - 1):
-            if self.stages[s].getStage(time=0).learningRate > 0.0:
-                self.stages[s].getStage(time=0).dEdW = self.dEdW[s]
+        self.syncGradient()
         return dEdX if self.outputdEdX else None
