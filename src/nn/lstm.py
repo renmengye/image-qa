@@ -97,29 +97,29 @@ class LSTM(RecurrentContainer):
 
         self.FC = RecurrentAdapter(ElementProduct(
                   name=name + '.F*C',
-                  inputNames=[name + '.F(0)', name + '.C(-1)'],
+                  inputNames=[name + '.F', name + '.C(-1)'],
                   outputDim=D2))
 
         self.IZ = RecurrentAdapter(ElementProduct(
                   name=name + '.I*Z',
-                  inputNames=[name + '.I(0)', name + '.Z(0)'],
+                  inputNames=[name + '.I', name + '.Z'],
                   outputDim=D2))
 
         self.C = RecurrentAdapter(Sum(
                  name=name + '.C',
-                 inputNames=[name + '.F*C(0)', name + '.I*Z(0)'],
+                 inputNames=[name + '.F*C', name + '.I*Z'],
                  numComponents=2,
                  outputDim=D2))
 
         self.U = RecurrentAdapter(Active(
                  name=name + '.U',
-                 inputNames=[name + '.C(0)'],
+                 inputNames=[name + '.C'],
                  outputDim=D2,
                  activeFn=TanhActiveFn()))
 
         self.H = RecurrentAdapter(ElementProduct(
                  name=name + '.H',
-                 inputNames=[name + '.O(0)', name + '.U(0)'],
+                 inputNames=[name + '.O', name + '.U'],
                  outputDim=D2,
                  defaultValue=defaultValue))
 

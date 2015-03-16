@@ -171,7 +171,6 @@ class RecurrentContainer(Container, RecurrentStage):
                         stageTime = 0
                     if stageTime > 0:
                         raise Exception('Recurrent model definition is non-causal.')
-                    # stageNameTime = '%s-%d' % (stageName, stageTime)
                     if t + stageTime < 0:
                         stageInput = Constant(
                             name=('%s-%s-%d'%('const', stageName, -t-stageTime)),
