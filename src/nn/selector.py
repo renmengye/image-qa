@@ -1,6 +1,6 @@
 from stage2 import *
 
-class Selector_Recurrent(GraphStage):
+class Selector(GraphStage):
     def __init__(self, 
                  name, 
                  inputNames,

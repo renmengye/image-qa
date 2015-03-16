@@ -77,19 +77,19 @@ def init_params(options):
     # NOTE: Consider initializing this to pretrained word2vec
     params['Wemb'] = norm_weight(options['n_words'], options['dim_word'])
 
-    # Initial LSTM state and memory - optionally more layers
+    # Initial LSTM_Old state and memory - optionally more layers
     ctx_dim = options['ctx_dim']
     for lidx in xrange(1, options['n_layers_init']):
         params = get_layer('ff')[0](options, params, prefix='ff_init_%d'%lidx, nin=ctx_dim, nout=ctx_dim)
     params = get_layer('ff')[0](options, params, prefix='ff_state', nin=ctx_dim, nout=options['dim'])
     params = get_layer('ff')[0](options, params, prefix='ff_memory', nin=ctx_dim, nout=options['dim'])
 
-    # LSTM decoder. Note that this assumes only 1 LSTM layer
+    # LSTM_Old decoder. Note that this assumes only 1 LSTM_Old layer
     params = get_layer('lstm_cond')[0](options, params, prefix='decoder',
                                        nin=options['dim_word'], dim=options['dim'],
                                        dimctx=ctx_dim)
 
-    # LSTM hidden state -> hidden layer
+    # LSTM_Old hidden state -> hidden layer
     #params = get_layer('ff')[0](options, params, prefix='ff_logit_lstm', nin=options['dim'], nout=options['dim_word'])
     
     # This is if you connect the context into the answer prediction
@@ -123,7 +123,7 @@ def load_params(path, params):
     return params
 
 # layers: 'name': ('parameter initializer', 'feedforward')
-# ff: feedforward layer, lstm-cond: conditional LSTM layer
+# ff: feedforward layer, lstm-cond: conditional LSTM_Old layer
 layers = {'ff': ('param_init_fflayer', 'fflayer'),
           'lstm_cond': ('param_init_lstm_cond', 'lstm_cond_layer'),
           }
@@ -187,10 +187,10 @@ def param_init_fflayer(options, params, prefix='ff', nin=None, nout=None):
 def fflayer(tparams, state_below, options, prefix='rconv', activ='lambda x: tensor.tanh(x)', **kwargs):
     return eval(activ)(tensor.dot(state_below, tparams[_p(prefix,'W')])+tparams[_p(prefix,'b')])
 
-# Conditional LSTM layer with Attention
+# Conditional LSTM_Old layer with Attention
 def param_init_lstm_cond(options, params, prefix='lstm_cond', nin=None, dim=None, dimctx=None):
     """
-    Initialize all conditional LSTM parameters.
+    Initialize all conditional LSTM_Old parameters.
     It might be helpful to look at the computation graph construction to see where these are all used.
     """
     if nin == None:
@@ -200,24 +200,24 @@ def param_init_lstm_cond(options, params, prefix='lstm_cond', nin=None, dim=None
     if dimctx == None:
         dimctx = options['dim']
 
-    # input to LSTM
+    # input to LSTM_Old
     W = numpy.concatenate([norm_weight(nin,dim),
                            norm_weight(nin,dim),
                            norm_weight(nin,dim),
                            norm_weight(nin,dim)], axis=1)
     params[_p(prefix,'W')] = W
 
-    # LSTM to LSTM - use orthogonal weight init. for recurrent connections
+    # LSTM_Old to LSTM_Old - use orthogonal weight init. for recurrent connections
     U = numpy.concatenate([ortho_weight(dim),
                            ortho_weight(dim),
                            ortho_weight(dim),
                            ortho_weight(dim)], axis=1)
     params[_p(prefix,'U')] = U
 
-    # bias to LSTM
+    # bias to LSTM_Old
     params[_p(prefix,'b')] = numpy.zeros((4 * dim,)).astype('float32')
 
-    # context to LSTM
+    # context to LSTM_Old
     Wc = norm_weight(dimctx,dim*4)
     params[_p(prefix,'Wc')] = Wc
 
@@ -225,7 +225,7 @@ def param_init_lstm_cond(options, params, prefix='lstm_cond', nin=None, dim=None
     Wc_att = norm_weight(dimctx, ortho=False)
     params[_p(prefix,'Wc_att')] = Wc_att
 
-    # attention: LSTM -> hidden
+    # attention: LSTM_Old -> hidden
     Wd_att = norm_weight(dim,dimctx)
     params[_p(prefix,'Wd_att')] = Wd_att
 
@@ -255,7 +255,7 @@ def param_init_lstm_cond(options, params, prefix='lstm_cond', nin=None, dim=None
 
     return params
 
-# Set up the computational graph for the conditional LSTM
+# Set up the computational graph for the conditional LSTM_Old
 # This is the most complex part of the code: everything needs to be set up specifically for 'scan'
 def lstm_cond_layer(tparams, state_below, options, prefix='lstm',
                     mask=None, context=None, one_step=False,
@@ -545,7 +545,7 @@ def validate_options(options):
 
 def train(dim_word=100, # word vector dimensionality
           ctx_dim=512, # context vector dimensionality
-          dim=1000, # the number of LSTM units
+          dim=1000, # the number of LSTM_Old units
           n_layers_att=1,
           n_layers_init=1,
           n_answers=5,

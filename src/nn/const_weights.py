@@ -1,9 +1,10 @@
-from stage import *
+from stage2 import *
 
-class ConstWeights(Stage):
+class ConstWeights(GraphStage):
     def __init__(self,
-                 inputDim=0,
+                 name,
                  outputDim=0,
+                 inputDim=0,
                  initRange=1.0,
                  initSeed=2,
                  needInit=True,
@@ -14,10 +15,11 @@ class ConstWeights(Stage):
                  deltaMomentum=0.0,
                  weightClip=0.0,
                  gradientClip=0.0,
-                 weightRegConst=0.0,
-                 name=None):
-        Stage.__init__(self,
+                 weightRegConst=0.0):
+        GraphStage.__init__(self,
                  name=name,
+                 outputDim=outputDim,
+                 inputNames=None,
                  learningRate=learningRate,
                  learningRateAnnealConst=learningRateAnnealConst,
                  momentum=momentum,
@@ -32,7 +34,7 @@ class ConstWeights(Stage):
                     -initRange/2.0, initRange/2.0, (outputDim, inputDim))
         else:
             self.W = initWeights
-        pass
+        self.dEdW = 0
 
     def forward(self, X):
         return self.W

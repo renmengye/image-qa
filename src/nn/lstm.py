@@ -1,11 +1,14 @@
-from recurrent import *
+from recurrent3 import *
+from elem_prod import *
+from sum import *
+from active import *
 
-class LSTM_Recurrent(Recurrent):
+class LSTM(RecurrentContainer):
     def __init__(self,
                  inputDim,
                  outputDim,
                  timespan,
-                 defaultValue=None,
+                 defaultValue=0.0,
                  initRange=1.0,
                  initSeed=2,
                  needInit=True,
@@ -20,108 +23,110 @@ class LSTM_Recurrent(Recurrent):
                  weightRegConst=0.0,
                  outputdEdX=True,
                  name=None):
-        D = inputDim
         D2 = outputDim
-        Time = timespan
         multiOutput = multiOutput
         if name is None: print 'Warning: name is None.'
 
-        self.I = Map_Recurrent(
+        self.I = RecurrentAdapter(Map(
                  name=name + '.I',
                  inputNames=['input(0)', name + '.H(-1)', name + '.C(-1)'],
-                 #inputDim=D+D2+D2,
                  outputDim=D2,
                  activeFn=SigmoidActiveFn(),
                  initRange=initRange,
                  initSeed=initSeed,
                  biasInitConst=1.0,
                  learningRate=learningRate,
+                 learningRateAnnealConst=learningRateAnnealConst,
                  momentum=momentum,
+                 deltaMomentum=deltaMomentum,
                  gradientClip=gradientClip,
                  weightClip=weightClip,
-                 weightRegConst=weightRegConst)
+                 weightRegConst=weightRegConst), timespan=timespan)
 
-        self.F = Map_Recurrent(
+        self.F = RecurrentAdapter(Map(
                  name=name + '.F',
                  inputNames=['input(0)', name + '.H(-1)', name + '.C(-1)'],
-                 #inputDim=D+D2+D2,
                  outputDim=D2,
                  activeFn=SigmoidActiveFn(),
                  initRange=initRange,
                  initSeed=initSeed+1,
                  biasInitConst=1.0,
                  learningRate=learningRate,
+                 learningRateAnnealConst=learningRateAnnealConst,
                  momentum=momentum,
+                 deltaMomentum=deltaMomentum,
                  gradientClip=gradientClip,
                  weightClip=weightClip,
-                 weightRegConst=weightRegConst)
+                 weightRegConst=weightRegConst), timespan=timespan)
 
-        self.Z = Map_Recurrent(
+        self.Z = RecurrentAdapter(Map(
                  name=name + '.Z',
                  inputNames=['input(0)', name + '.H(-1)'],
-                 #inputDim=D+D2,
                  outputDim=D2,
                  activeFn=TanhActiveFn(),
                  initRange=initRange,
                  initSeed=initSeed+2,
                  biasInitConst=0.0,
                  learningRate=learningRate,
+                 learningRateAnnealConst=learningRateAnnealConst,
                  momentum=momentum,
+                 deltaMomentum=deltaMomentum,
                  gradientClip=gradientClip,
                  weightClip=weightClip,
-                 weightRegConst=weightRegConst)
+                 weightRegConst=weightRegConst), timespan=timespan)
 
-        self.O = Map_Recurrent(
+        self.O = RecurrentAdapter(Map(
                  name=name + '.O',
                  inputNames=['input(0)', name + '.H(-1)', name + '.C(0)'],
-                 #inputDim=D+D2+D2,
                  outputDim=D2,
                  activeFn=SigmoidActiveFn(),
                  initRange=initRange,
                  initSeed=initSeed+3,
                  biasInitConst=1.0,
                  learningRate=learningRate,
+                 learningRateAnnealConst=learningRateAnnealConst,
                  momentum=momentum,
+                 deltaMomentum=deltaMomentum,
                  gradientClip=gradientClip,
                  weightClip=weightClip,
-                 weightRegConst=weightRegConst)
+                 weightRegConst=weightRegConst), timespan=timespan)
         
         if not needInit:
             self.I.W, self.F.W, self.Z.W, self.O.W = self.splitWeights(initWeights)
 
-        self.FC = ComponentProduct_Recurrent(
+        self.FC = RecurrentAdapter(ElementProduct(
                   name=name + '.F*C',
                   inputNames=[name + '.F(0)', name + '.C(-1)'],
-                  outputDim=D2)
+                  outputDim=D2), timespan=timespan)
 
-        self.IZ = ComponentProduct_Recurrent(
+        self.IZ = RecurrentAdapter(ElementProduct(
                   name=name + '.I*Z',
                   inputNames=[name + '.I(0)', name + '.Z(0)'],
-                  outputDim=D2)  
+                  outputDim=D2), timespan=timespan)
 
-        self.C = Sum_Recurrent(
+        self.C = RecurrentAdapter(Sum(
                  name=name + '.C',
                  inputNames=[name + '.F*C(0)', name + '.I*Z(0)'],
                  numComponents=2,
-                 outputDim=D2)
+                 outputDim=D2), timespan=timespan)
 
-        self.U = Active_Recurrent(
+        self.U = RecurrentAdapter(Active(
                  name=name + '.U',
                  inputNames=[name + '.C(0)'],
                  outputDim=D2,
-                 activeFn=TanhActiveFn())
+                 activeFn=TanhActiveFn()), timespan=timespan)
 
-        self.H = ComponentProduct_Recurrent(
+        self.H = RecurrentAdapter(ElementProduct(
                  name=name + '.H',
                  inputNames=[name + '.O(0)', name + '.U(0)'],
                  outputDim=D2,
-                 defaultValue=defaultValue)
+                 defaultValue=defaultValue), timespan=timespan)
 
         stages = [self.I, self.F, self.Z, self.FC, self.IZ, self.C, self.O, self.U, self.H]
-        Recurrent.__init__(self,
+        RecurrentContainer.__init__(self,
                            stages=stages,
                            timespan=timespan,
-                           outputStageName=name + '.H',
+                           outputStageNames=[name + '.H'],
                            inputDim=inputDim,
                            outputDim=outputDim,
                            multiOutput=multiOutput,
@@ -129,10 +134,16 @@ class LSTM_Recurrent(Recurrent):
                            outputdEdX=outputdEdX)
 
     def getWeights(self):
-        return np.concatenate((self.I.W, self.F.W, self.Z.W, self.O.W), axis=-1)
+        return np.concatenate((self.I.getWeights(),
+                               self.F.getWeights(),
+                               self.Z.getWeights(),
+                               self.O.getWeights()), axis=-1)
 
     def getGradient(self):
-        return np.concatenate((self.I.dEdW, self.F.dEdW, self.Z.dEdW, self.O.dEdW), axis=-1)
+        return np.concatenate((self.I.getGradient(),
+                               self.F.getGradient(),
+                               self.Z.getGradient(),
+                               self.O.getGradient()), axis=-1)
 
     def splitWeights(self, W):
         D = self.inputDim
@@ -147,10 +158,7 @@ class LSTM_Recurrent(Recurrent):
 
     def loadWeights(self, W):
         IW, FW, ZW, OW = self.splitWeights(W)
-        self.I.W= IW
-        self.F.W = FW
-        self.Z.W = ZW
-        self.O.W = OW
-        for t in range(1, self.timespan):
-            for s in range(1, len(self.stages[t]) -1):
-                self.stages[t][s].W = self.stages[0][s].W
+        self.I.loadWeights(IW)
+        self.F.loadWeights(FW)
+        self.Z.loadWeights(ZW)
+        self.O.loadWeights(OW)

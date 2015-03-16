@@ -4,12 +4,13 @@ from lut import *
 from inner_prod import *
 from time_sum import *
 from reshape import *
-from recurrent2 import *
 from cos_sim import *
 from sum import *
 from elem_prod import *
 from active import *
 from sum_prod import *
+from active_func import *
+from selector import *
 import unittest
 import numpy as np
 
@@ -96,9 +97,9 @@ class StageTests(unittest.TestCase):
                 (np.abs(dE[i] / dETmp[i] - 1) < tolerance))
 
 class LSTM_MultiErr_Tests(StageTests):
-    """LSTM multi error tests"""
+    """LSTM_Old multi error tests"""
     def setUp(self):
-        self.stage = LSTM(
+        self.stage = LSTM_Old(
             inputDim=5,
             outputDim=3,
             initRange=0.1,
@@ -117,9 +118,9 @@ class LSTM_MultiErr_Tests(StageTests):
         self.chkgrd(dEdX, dEdXTmp)
 
 class LSTM_MultiErrCutZero_Tests(StageTests):
-    """LSTM single error tests"""
+    """LSTM_Old single error tests"""
     def setUp(self):
-        self.stage = LSTM(
+        self.stage = LSTM_Old(
             inputDim=5,
             outputDim=3,
             initRange=0.1,
@@ -142,9 +143,9 @@ class LSTM_MultiErrCutZero_Tests(StageTests):
         self.chkgrd(dEdX[:,0:4], dEdXTmp[:,0:4])
 
 class LSTM_SingleErr_Tests(StageTests):
-    """LSTM single error tests"""
+    """LSTM_Old single error tests"""
     def setUp(self):
-        self.stage = LSTM(
+        self.stage = LSTM_Old(
             inputDim=5,
             outputDim=3,
             initRange=0.1,
@@ -163,9 +164,9 @@ class LSTM_SingleErr_Tests(StageTests):
         self.chkgrd(dEdX, dEdXTmp)
 
 class LSTM_SingleErrCutZero_Tests(StageTests):
-    """LSTM single error tests"""
+    """LSTM_Old single error tests"""
     def setUp(self):
-        self.stage = LSTM(
+        self.stage = LSTM_Old(
             inputDim=5,
             outputDim=3,
             initRange=0.1,
@@ -413,7 +414,7 @@ class CosSimilarity_Tests(StageTests):
 
 class Selector_Tests(StageTests):
     def setUp(self):
-        self.stage = Selector_Recurrent(
+        self.stage = Selector(
             name='sel',
             inputNames=None,
             start=5,

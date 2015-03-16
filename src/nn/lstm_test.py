@@ -1,11 +1,9 @@
 from sequential import *
 from lstm_old import *
-from map import *
 from dropout import *
 from reshape import *
 from lut import *
-from model import *
-from lstm_recurrent import *
+from lstm import *
 import unittest
 
 class LSTM_Recurrent_Real_Tests(unittest.TestCase):
@@ -46,7 +44,7 @@ class LSTM_Recurrent_Real_Tests(unittest.TestCase):
             inputNames=None,
             outputDim=D2
         )
-        lstm = LSTM_Recurrent(
+        lstm = LSTM(
                 name='lstm',
                 timespan=Time,
                 inputDim=D,
@@ -57,7 +55,7 @@ class LSTM_Recurrent_Real_Tests(unittest.TestCase):
                 outputdEdX=True)
 
         W = lstm.getWeights()
-        lstm2 = LSTM(
+        lstm2 = LSTM_Old(
             name='lstm',
             inputDim=D,
             outputDim=D2,
@@ -66,8 +64,8 @@ class LSTM_Recurrent_Real_Tests(unittest.TestCase):
             cutOffZeroEnd=True,
             multiErr=multiOutput,
             learningRate=0.8,
-            momentum=0.9
-        )
+            momentum=0.9,
+            outputdEdX=True)
 
         sig = Map(
             name='sig',
@@ -94,7 +92,8 @@ class LSTM_Recurrent_Real_Tests(unittest.TestCase):
             weightRegConst=0.00005
         )
 
-        model1 = Model(Sequential(
+        costFn = crossEntOne
+        model1 = Sequential(
             stages=[
                 time_unfold,
                 lut,
@@ -103,9 +102,9 @@ class LSTM_Recurrent_Real_Tests(unittest.TestCase):
                 lstm,
                 sig
             ]
-        ), crossEntOne, hardLimit)
+        )
 
-        model2 = Model(Sequential(
+        model2 = Sequential(
             stages=[
                 time_unfold,
                 lut,
@@ -114,7 +113,7 @@ class LSTM_Recurrent_Real_Tests(unittest.TestCase):
                 lstm2,
                 sig2
             ]
-        ), crossEntOne, hardLimit)
+        )
 
         input_ = trainInput[0:N, 0:Time]
         target_ = trainTarget[0:N]
@@ -124,20 +123,15 @@ class LSTM_Recurrent_Real_Tests(unittest.TestCase):
         Y2 = model2.forward(input_)
         self.chkEqual(Y1, Y2)
 
-        E, dEdY1 = model1.getCost(Y1, target_)
-        E, dEdY2 = model2.getCost(Y2, target_)
+        E, dEdY1 = costFn(Y1, target_)
+        E, dEdY2 = costFn(Y2, target_)
         model1.backward(dEdY1)
         model2.backward(dEdY2)
-        dEdX1 = lstm.dEdX
-        dEdX2 = lstm2.dEdX
-        self.chkEqual(dEdX1, dEdX2)
 
-        #dEdW = np.concatenate((I.dEdW, F.dEdW, Z.dEdW, O.dEdW), axis=-1)
         dEdW = lstm.getGradient()
         self.chkEqual(dEdW, lstm2.dEdW)
         lstm.updateWeights()
         lstm2.updateWeights()
-        #W = np.concatenate((I.W, F.W, Z.W, O.W), axis=-1)
         W = lstm.getWeights()
         self.chkEqual(W, lstm2.W)
 

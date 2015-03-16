@@ -1,18 +1,13 @@
 from lstm_old import *
 from lut import *
-from map import *
 from reshape import *
-from time_select import *
 from time_sum import *
 from inner_prod import *
 from dropout import *
 from sequential import *
-from parallel import *
 from const_weights import *
 from cos_sim import *
-from elem_prod import *
-from active_func import *
-from lstm_recurrent import *
+from lstm import *
 
 import pickle
 
@@ -93,7 +88,7 @@ def routeStage(stageDict):
         inputList = None
 
     if stageDict['type'] == 'lstm_old':
-        stage = LSTM(
+        stage = LSTM_Old(
             name=stageDict['name'],
             inputDim=stageDict['inputDim'],
             outputDim=stageDict['outputDim'],
@@ -113,7 +108,7 @@ def routeStage(stageDict):
             outputdEdX=outputdEdX
         )
     elif stageDict['type'] == 'lstm':
-        stage = LSTM_Recurrent(
+        stage = LSTM(
             name=stageDict['name'],
             inputDim=stageDict['inputDim'],
             outputDim=stageDict['outputDim'],
@@ -177,11 +172,6 @@ def routeStage(stageDict):
     elif stageDict['type'] == 'timeSum':
         stage = TimeSum(
             name=stageDict['name'])
-    elif stageDict['type'] == 'timeSel':
-        stage = TimeSelect(
-            name=stageDict['name'],
-            time=stageDict['time']
-        )
     elif stageDict['type'] == 'innerProd':
         stage = InnerProduct(
             name=stageDict['name'],
@@ -246,17 +236,6 @@ def routeStage(stageDict):
             name=stageDict['name'],
             inputNames=inputList,
             outputDim=stageDict['outputDim']
-        )
-    elif stageDict['type'] == 'parallel':
-        stages = stageDict['stages']
-        realStages = []
-        for i in range(len(stages)):
-            realStages.append(stageLib[stages[i]])
-        stage = Parallel(
-            name=stageDict['name'],
-            stages=realStages,
-            axis=stageDict['axis'],
-            outputdEdX=outputdEdX
         )
     elif stageDict['type'] == 'selector':
         stage = Selector_Recurrent(

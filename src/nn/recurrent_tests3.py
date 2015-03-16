@@ -1,7 +1,11 @@
-from recurrent2 import *
+from recurrent3 import *
 from lstm_old import *
 import stage_tests
 import unittest
+from map import *
+from active import *
+from elem_prod import *
+from sum import *
 
 class Recurrent_Tests(stage_tests.StageTests):
     def setUp(self):
@@ -9,22 +13,26 @@ class Recurrent_Tests(stage_tests.StageTests):
         self.T = 5
         self.D = 10
         self.D2 = 5
-        self.sigm = Map_Recurrent(
-                name='sigm',
-                inputNames=['input(0)', 'sigm(-1)', 'sigm(-2)'],
-                outputDim=self.D2,
-                activeFn=SigmoidActiveFn(),
-                initRange=1,
-                initSeed=5,
-                learningRate=0.9
+        self.sigm_ = Map(
+                        name='sigm',
+                        inputNames=['input(0)', 'sigm(-1)', 'sigm(-2)'],
+                        outputDim=self.D2,
+                        activeFn=SigmoidActiveFn(),
+                        initRange=1,
+                        initSeed=5,
+                        learningRate=0.9
+                    )
+        self.sigm = RecurrentAdapter(
+            timespan=self.T,
+            stage=self.sigm_
             )
-        self.stage = self.sigm
-        self.model = Recurrent(
+        self.stage = self.sigm.getStage(time=0)
+        self.model = RecurrentContainer(
             stages=[self.sigm],
             timespan=self.T,
             inputDim=self.D,
             outputDim=self.D2,
-            outputStageName='sigm',
+            outputStageNames=['sigm'],
             multiOutput=True,
             name='container',
             outputdEdX=True)
@@ -45,8 +53,8 @@ class Recurrent_Tests(stage_tests.StageTests):
         X = random.rand(self.N, self.T, self.D)
         tolerance = 1e-4
         Y2 = self.realForward(X)
-        Y2 = Y2.reshape(Y2.size)
         Y = self.model.forward(X)
+        Y2 = Y2.reshape(Y2.size)
         Y = Y.reshape(Y.size)
         for i in range(Y.size):
             self.assertTrue((Y[i] == 0 and Y2[i] == 0) or (np.abs(Y[i] / Y2[i] - 1) < tolerance))
@@ -54,7 +62,7 @@ class Recurrent_Tests(stage_tests.StageTests):
     def realForward(self, X):
         Y2 = np.zeros((self.N, self.T, self.D2))
         for t in range(self.T):
-            Y2[:, t, :] = self.sigm.forward(
+            Y2[:, t, :] = self.sigm_.forward(
                 np.concatenate((X[:, t, :], Y2[:, t-1, :], Y2[:, t-2, :]), axis=-1))
         return Y2
 
@@ -70,9 +78,9 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
         D = 10
         D2 = 5
         Time = 5
-        I = Map_Recurrent(
+        I = RecurrentAdapter(Map(
                 name='I',
-                inputNames=['input(0)', 'Y(-1)', 'C(-1)'],
+                inputNames=['input(0)', 'H(-1)', 'C(-1)'],
                 outputDim=D2,
                 activeFn=SigmoidActiveFn(),
                 initRange=0.1,
@@ -80,11 +88,11 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
                 biasInitConst=1.0,
                 learningRate=0.8,
                 momentum=0.9
-            )
-        
-        F = Map_Recurrent(
+            ), timespan=Time)
+
+        F = RecurrentAdapter(Map(
                 name='F',
-                inputNames=['input(0)', 'Y(-1)', 'C(-1)'],
+                inputNames=['input(0)', 'H(-1)', 'C(-1)'],
                 outputDim=D2,
                 activeFn=SigmoidActiveFn(),
                 initRange=0.1,
@@ -92,11 +100,11 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
                 biasInitConst=1.0,
                 learningRate=0.8,
                 momentum=0.9
-            )
-        
-        Z = Map_Recurrent(
+            ), timespan=Time)
+
+        Z = RecurrentAdapter(Map(
                 name='Z',
-                inputNames=['input(0)', 'Y(-1)'],
+                inputNames=['input(0)', 'H(-1)'],
                 outputDim=D2,
                 activeFn=TanhActiveFn(),
                 initRange=0.1,
@@ -104,30 +112,30 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
                 biasInitConst=0.0,
                 learningRate=0.8,
                 momentum=0.9
-            )
-        
-        FC = ComponentProduct_Recurrent(
+            ), timespan=Time)
+
+        FC = RecurrentAdapter(ElementProduct(
                 name='F.C',
                 inputNames=['F(0)', 'C(-1)'],
                 outputDim=D2
-            )
-        
-        IZ = ComponentProduct_Recurrent(
+            ), timespan=Time)
+
+        IZ = RecurrentAdapter(ElementProduct(
                 name='I.Z',
                 inputNames=['I(0)', 'Z(0)'],
                 outputDim=D2
-            )
-        
-        C = Sum_Recurrent(
+            ), timespan=Time)
+
+        C = RecurrentAdapter(Sum(
                 name='C',
                 inputNames=['F.C(0)', 'I.Z(0)'],
                 numComponents=2,
                 outputDim=D2
-            )
-        
-        O = Map_Recurrent(
+            ), timespan=Time)
+
+        O = RecurrentAdapter(Map(
                 name='O',
-                inputNames=['input(0)', 'Y(-1)', 'C(0)'],
+                inputNames=['input(0)', 'H(-1)', 'C(0)'],
                 outputDim=D2,
                 activeFn=SigmoidActiveFn(),
                 initRange=0.1,
@@ -135,33 +143,33 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
                 biasInitConst=1.0,
                 learningRate=0.8,
                 momentum=0.9
-            )
-        
-        U = Active_Recurrent(
+            ), timespan=Time)
+
+        U = RecurrentAdapter(Active(
                 name='U',
                 inputNames=['C(0)'],
                 outputDim=D2,
                 activeFn=TanhActiveFn()
-            )
-        
-        Y = ComponentProduct_Recurrent(
-                name='Y',
+            ), timespan=Time)
+
+        H = RecurrentAdapter(ElementProduct(
+                name='H',
                 inputNames=['O(0)', 'U(0)'],
                 outputDim=D2
-            )
-        
-        lstm = Recurrent(
+            ), timespan=Time)
+
+        lstm = RecurrentContainer(
                 name='lstm',
-                stages=[I, F, Z, FC, IZ, C, O, U, Y],
+                stages=[I, F, Z, FC, IZ, C, O, U, H],
                 timespan=Time,
                 inputDim=D,
                 outputDim=D2,
-                outputStageName='Y',
+                outputStageNames=['H'],
                 multiOutput=multiOutput,
                 outputdEdX=True)
 
         W = np.concatenate((I.getWeights(), F.getWeights(), Z.getWeights(), O.getWeights()), axis=-1)
-        lstm2 = LSTM(
+        lstm2 = LSTM_Old(
             name='lstm2',
             inputDim=D,
             outputDim=D2,
@@ -198,11 +206,10 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
             else:
                 dEdX2 = lstm2.backward(dEdY2)
 
-            I2 = lstm.stageDict['I-4']
-            F2 = lstm.stageDict['F-4']
-            Z2 = lstm.stageDict['Z-4']
-            O2 = lstm.stageDict['O-4']
-            dEdW = np.concatenate((I.dEdW, F.dEdW, Z.dEdW, O.dEdW), axis=-1)
+            dEdW = np.concatenate((I.getGradient(),
+                                   F.getGradient(),
+                                   Z.getGradient(),
+                                   O.getGradient()), axis=-1)
             dEdW2 = lstm2.dEdW
             lstm.updateWeights()
             lstm2.updateWeights()
@@ -210,7 +217,10 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
 
             self.chkEqual(dEdX, dEdX2)
             self.chkEqual(dEdW, dEdW2)
-            W = np.concatenate((I2.W, F2.W, Z2.W, O2.W), axis=-1)
+            W = np.concatenate((I.getWeights(),
+                                F.getWeights(),
+                                Z.getWeights(),
+                                O.getWeights()), axis=-1)
             W2 = lstm2.W
             self.chkEqual(W, W2)
 
@@ -222,12 +232,5 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
             self.assertTrue(
                 (a[i] == 0 and b[i] == 0) or
                 (np.abs(a[i] / b[i] - 1) < tolerance))
-
 if __name__ == '__main__':
-    # suite = unittest.TestSuite()
-    # suite.addTests(
-    #     unittest.TestLoader().loadTestsFromTestCase(Recurrent_Tests))
-    # suite.addTests(
-    #     unittest.TestLoader().loadTestsFromTestCase(LSTM_Recurrent_Random_Tests))
-    # unittest.TextTestRunner(verbosity=2).run(suite)
     unittest.main()
