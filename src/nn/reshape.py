@@ -28,3 +28,33 @@ class TimeFold(Reshape):
                          name=name,
                          inputNames=inputNames,
                          reshapeFn='(x[0] / '+t+','+t+', x[1])')
+
+class TimeConcat(Stage):
+    def __init__(self, inputNames=None, name=None):
+        Stage.__init__(self, name=name, inputNames=inputNames, outputDim=0)
+    def getInput(self):
+        if len(self.inputs) > 1:
+            self.splX = []
+            for stage in self.inputs:
+                X = stage.Y
+                self.splX.append(X)
+            return np.concatenate(self.splX, axis=1)
+        else:
+            return self.inputs[0].Y
+    def sendError(self, dEdX):
+        """
+        Iterates over input list and sends dEdX.
+        """
+        if len(self.inputs) > 1:
+            s = 0
+            for stage in self.inputs:
+                s2 = s + stage.Y.shape[1]
+                stage.dEdY += dEdX[:, s : s2]
+                s = s2
+        else:
+            self.inputs[0].dEdY += dEdX
+
+    def forward(self, X):
+        return X
+    def backward(self, dEdY):
+        return dEdY

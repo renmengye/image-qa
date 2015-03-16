@@ -25,9 +25,8 @@ class Container(Stage):
                  outputStageNames,
                  inputDim,
                  outputDim,
+                 inputNames,
                  name=None,
-                 inputNames=None,
-                 inputType='float',
                  outputdEdX=True):
         Stage.__init__(self,
                 name=name, 
@@ -37,7 +36,6 @@ class Container(Stage):
         self.stages = []
         self.stageDict = {}
         self.inputDim = inputDim
-        self.inputType = inputType
         self.outputStageNames = outputStageNames
 
         inputStage = self.createInputStage()
@@ -55,7 +53,6 @@ class Container(Stage):
         self.dEdW = []
         for stage in self.stages:
             self.dEdW.append(0.0)
-        self.testRun()
 
     def createInputStage(self):
         return Input(name='input', outputDim=self.inputDim)
@@ -84,14 +81,6 @@ class Container(Stage):
                 stageInput.used = True
                 stage.addInput(stageInput)
 
-    def testRun(self):
-        """Test run through the recurrent net to initialize all the weights."""
-        if self.inputType == 'float':
-            X = np.random.rand(2, self.inputDim)
-        elif self.inputType == 'int':
-            X = np.round(np.random.rand(2, self.inputDim) * 5).astype(int)
-        self.forward(X)
-
     #@profile
     def forward(self, X, dropout=True):
         self.stages[0].Y = X
@@ -112,6 +101,8 @@ class Container(Stage):
         for s in reversed(range(0, len(self.stages) - 1)):
             if self.stages[s].used:
                 self.stages[s].graphBackward()
+            if not self.stages[s].outputdEdX:
+                break
 
         # Collect input error
         if self.outputdEdX:

@@ -116,7 +116,6 @@ class RecurrentContainer(Container, RecurrentStage):
                  multiOutput=True,
                  name=None,
                  inputNames=None,
-                 inputType='float',
                  outputdEdX=True):
         self.multiOutput = multiOutput
         self.timespan = timespan
@@ -130,7 +129,6 @@ class RecurrentContainer(Container, RecurrentStage):
                  outputDim=outputDim,
                  name=name,
                  inputNames=inputNames,
-                 inputType=inputType,
                  outputdEdX=outputdEdX)
 
     def initTime(self, timespan):
@@ -147,16 +145,6 @@ class RecurrentContainer(Container, RecurrentStage):
     def createOutputStage(self):
         return RecurrentAdapter(
             stage=Container.createOutputStage(self))
-
-    def testRun(self):
-        """Test run through the recurrent net to initialize all the weights."""
-        if self.inputType == 'float':
-            X = np.random.rand(2, self.timespan, self.inputDim)
-        elif self.inputType == 'int':
-            X = np.round(np.random.rand(2, self.timespan, self.inputDim) * 5).astype(int)
-        self.forward(X)
-        for s in self.stages:
-            s.loadWeights(s.getStage(0).getWeights())
 
     def link(self):
         """

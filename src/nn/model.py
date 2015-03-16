@@ -13,6 +13,7 @@ class GraphModel(Container):
         Container.__init__(self,
                  name=name,
                  stages=stages,
+                 inputNames=['input'],
                  outputStageNames=outputStageNames,
                  inputDim=inputDim,
                  outputDim=outputDim,

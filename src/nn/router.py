@@ -40,10 +40,10 @@ def routeFn(name):
 
 stageLib = {}
 
-def getStage(name):
+def routeStage(name):
     return stageLib[name]
 
-def routeStage(stageDict):
+def addStage(stageDict):
     stage = None
     initSeed=stageDict['initSeed']\
     if stageDict.has_key('initSeed') else 0
@@ -80,7 +80,7 @@ def routeStage(stageDict):
     outputdEdX=stageDict['outputdEdX']\
     if stageDict.has_key('outputdEdX') else True
     defaultValue=(np.zeros(stageDict['outputDim']) + stageDict['defaultValue'])\
-    if stageDict.has_key('defaultValue') else None
+    if stageDict.has_key('defaultValue') else 0.0
     if stageDict.has_key('inputs'):
         inputList = stageDict['inputs'].split(',')
         for i in range(len(inputList)):
@@ -114,6 +114,7 @@ def routeStage(stageDict):
             name=stageDict['name'],
             inputDim=stageDict['inputDim'],
             outputDim=stageDict['outputDim'],
+            inputNames=inputList,
             timespan=stageDict['timespan'],
             defaultValue=defaultValue,
             initSeed=initSeed,
@@ -170,6 +171,10 @@ def routeStage(stageDict):
         )
     elif stageDict['type'] == 'timeUnfold':
         stage = TimeUnfold(
+            name=stageDict['name'],
+            inputNames=inputList)
+    elif stageDict['type'] == 'timeConcat':
+        stage = TimeConcat(
             name=stageDict['name'],
             inputNames=inputList)
     elif stageDict['type'] == 'innerProd':
@@ -297,7 +302,6 @@ def routeStage(stageDict):
             name=stageDict['name'],
             inputDim=stageDict['inputDim'],
             outputDim=stageDict['outputDim'],
-            inputType=stageDict['inputType'] if stageDict.has_key('inputType') else 'float',
             timespan=stageDict['timespan'],
             stages=realStages,
             multiOutput=stageDict['multiOutput'],
