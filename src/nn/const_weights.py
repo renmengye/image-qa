@@ -35,10 +35,13 @@ class ConstWeights(Stage):
         else:
             self.W = initWeights
         self.dEdW = 0
+        
+    def graphBackward(self):
+        self.backward(self.dEdY)
 
     def forward(self, X):
         return self.W
 
     def backward(self, dEdY):
         self.dEdW = dEdY
-        return 0
+        return None

@@ -112,11 +112,9 @@ class Container(Stage):
     #@profile
     def backward(self, dEdY):
         self.stages[-1].sendError(dEdY)
-        for s in reversed(range(0, len(self.stages) - 1)):
+        for s in reversed(range(1, len(self.stages) - 1)):
             if self.stages[s].used:
                 self.stages[s].graphBackward()
-            if not self.stages[s].outputdEdX:
-                break
 
         # Collect input error
         if self.outputdEdX:

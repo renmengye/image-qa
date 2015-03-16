@@ -49,7 +49,7 @@ class Concat(Stage):
         if len(self.inputs) > 1:
             s = 0
             for stage in self.inputs:
-                s2 = s + stage.Y.shape[1]
+                s2 = s + stage.Y.shape[self.axis]
                 if self.axis == 0:
                     stage.dEdY += dEdX[s : s2]
                 elif self.axis == 1:

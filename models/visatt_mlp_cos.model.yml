@@ -26,8 +26,8 @@ specs:
       # outputDim: 1960
       outputDim: 100352
       initWeights: '../../../data/nyu-depth/hidden5_4_conv.pkl'
-      # initRange: 0.1
-      # initSeed: 1
+      initRange: 0.1
+      initSeed: 1
       sparse: true
       learningRate: 0.0
       outputdEdX: false
