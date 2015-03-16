@@ -21,8 +21,11 @@ specs:
       type: 'lut'
       inputs: 'imgSel($0)'
       inputDim: 1449
+      #outputDim: 1960
       outputDim: 100352
       initWeights: '../../../data/nyu-depth/hidden5_4_conv.pkl'
+      #initRange: 0.1
+      #initSeed: 1
       sparse: true
       learningRate: 0.0
       outputdEdX: false
@@ -47,7 +50,7 @@ specs:
       type: 'reshape'
       inputs: 'attOut(-1)'
       reshapeFn: '(x[0], x[1], 1)'
-      outputDim: 512
+      outputDim: 196
       recurrent: true
     - name: 'attCtx'
       type: 'sumProd'
@@ -91,7 +94,7 @@ specs:
       activeFn: 'tanh'
       initRange: 0.1
       initSeed: 6
-      learningRate: 0.1
+      learningRate: 100.0
       momentum: 0.9
       gradientClip: 0.05
       weightClip: 50
@@ -104,13 +107,14 @@ specs:
       defaultValue: 0.00510204081632653
       initRange: 0.1
       initSeed: 7
-      learningRate: 0.1
+      learningRate: 100.0
       momentum: 0.9
       gradientClip: 0.05
       weightClip: 50
       recurrent: true
     - name: 'attModel'
       type: 'recurrent'
+      inputs: 'input'
       stages:
           - 'imgSel'
           - 'txtSel'

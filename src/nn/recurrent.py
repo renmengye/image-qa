@@ -55,6 +55,10 @@ class RecurrentAdapter(Stage, RecurrentStage):
             stage2.name = self.stages[0].name[:-2] + ('-%d' % s)
             self.stages.append(stage2)
 
+    def clearError(self):
+        for stage in self.stages:
+            stage.clearError()
+
     def timeForward(self, time):
         """
         Forward one timestep.
@@ -155,9 +159,12 @@ class RecurrentContainer(Container, RecurrentStage):
         self.initTime(self.timespan)
         for t in range(self.timespan):
             self.stages[-1].getStage(t).used = True
+            for s in range(1, len(self.stages) - 1):
+                self.stages[s].getStage(t).used = False
         for t in range(self.timespan):
             for stage in self.stages:
-                for inputStageStr in stage.getStage(time=t).inputNames:
+                names = stage.inputNames
+                for inputStageStr in names:
                     if '(' in inputStageStr:
                         stageName = inputStageStr[:inputStageStr.index('(')]
                         stageTimeStr = \
@@ -179,27 +186,38 @@ class RecurrentContainer(Container, RecurrentStage):
                     else:
                         stageInput = self.stageDict[stageName].getStage(t + stageTime)
                         stageInput.used = True
-                    stage.getStage(time=t).addInput(stageInput)
+                    if isinstance(stage, RecurrentAdapter):
+                        stage.getStage(time=t).addInput(stageInput)
+                    else:
+                        stage.stages[0].getStage(time=t).addInput(stageInput)
 
-    def forwardTime(self, time, dropout=True):
+    def clearError(self):
+        for stage in self.stages:
+            stage.clearError()
+        for stage in self.constStages:
+            stage.clearError()
+        self.dEdY = 0.0
+
+    def timeForward(self, time, dropout=True):
         """
         Forward one step (used as a recurrent stage/container).
         :param time: integer
         :return:
         """
-        X = self.getInput()
-        self.stages[0].getStage(time=time).Y = X
-
+        self.stages[0].getStage(time=time).graphForward()
         # If time=0 need to set const stages as well!!
         if time == 0:
+            X = self.stages[0].getStage(time=time).Y
             for s in self.constStages:
                 s.Y = np.tile(s.value, (X.shape[0], 1))
-
-        for s in range(1, len(self.stages) - 1):
-            if self.stage[s].getStage(time=time).used:
+        for s in range(0, len(self.stages)):
+            if self.stages[s].getStage(time=time).used:
                 if hasattr(self.stages[s], 'dropout'):
                     self.stages[s].getStage(time=time).dropout = dropout
-                self.stages[s].forwardTime(time=time)
+                elif isinstance(self.stages[s], RecurrentContainer):
+                    self.stages[s].timeForward(time=time, dropout=dropout)
+                else:
+                    self.stages[s].timeForward(time=time)
         self.Y = self.stages[-1].Y
         return self.Y
 
@@ -242,7 +260,7 @@ class RecurrentContainer(Container, RecurrentStage):
                     if hasattr(self.stages[s], 'dropout'):
                         self.stages[s].getStage(time=t).dropout = dropout
                     elif isinstance(self.stages[s], RecurrentContainer):
-                        self.stages[s].getStage(time=t).dropout = dropout
+                        self.stages[s].timeForward(time=t, dropout=dropout)
                     else:
                         self.stages[s].timeForward(time=t)
         if self.multiOutput:
@@ -254,6 +272,9 @@ class RecurrentContainer(Container, RecurrentStage):
             for n in range(N):
                 if self.Xend[n] > 0:
                     Y[n, :] = self.stages[-1].getStage(time=self.Xend[n] - 1).Y[n]
+
+        # Clear error for backward
+        self.clearError()
         self.Y = Y
         self.X = X
         return Y
@@ -264,9 +285,11 @@ class RecurrentContainer(Container, RecurrentStage):
         :param time: integer
         :return:
         """
-        self.stages[-1].getStage(time=time).sendError(self.dEdY)
-        for s in reversed(range(1, len(self.stages[0]) - 1)):
-            self.stages[s].timeBackward(time=time)
+        outputStage = self.stages[-1].getStage(time=time)
+        outputStage.graphBackward()
+        for s in reversed(range(0, len(self.stages) - 1)):
+            if self.stages[s].getStage(time=time).used:
+                self.stages[s].timeBackward(time=time)
 
     #@profile
     def backward(self, dEdY):
@@ -293,19 +316,12 @@ class RecurrentContainer(Container, RecurrentStage):
         for t in reversed(range(self.XendAll)):
             for s in reversed(range(1, len(self.stages) - 1)):
                 if self.stages[s].getStage(time=t).used:
-                    self.stages[s].getStage(time=t).graphBackward()
+                    self.stages[s].timeBackward(time=t)
 
         # Collect input error
         if self.outputdEdX:
             for t in range(self.XendAll):
                 dEdX[:, t, :] = self.stages[0].getStage(time=t).dEdY
-
-        # Clear error and ready for next batch
-        for t in range(self.timespan):
-            for stage in self.stages:
-                stage.getStage(time=t).dEdY = 0.0
-        for stage in self.constStages:
-            stage.dEdY = 0.0
         
         # Sum error through time
         for s in range(1, len(self.stages) - 1):

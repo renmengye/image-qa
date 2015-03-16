@@ -9,6 +9,10 @@ class Input(Stage):
             outputDim=outputDim)
     def setValue(self, value):
         self.Y = value
+    def forward(self, X):
+        return X
+    def backward(self, dEdY):
+        return dEdY
 
 class Output(Stage):
     def __init__(self, name, inputNames):
@@ -18,6 +22,8 @@ class Output(Stage):
             outputDim=0)
     def graphForward(self):
         self.Y = self.getInput()
+    def graphBackward(self):
+        self.sendError(self.dEdY)
 
 class Container(Stage):
     def __init__(self,
@@ -81,6 +87,11 @@ class Container(Stage):
                 stageInput.used = True
                 stage.addInput(stageInput)
 
+    def clearError(self):
+        for stage in self.stages:
+            stage.clearError()
+        self.dEdY = 0.0
+
     #@profile
     def forward(self, X, dropout=True):
         self.stages[0].Y = X
@@ -91,6 +102,9 @@ class Container(Stage):
                 self.stages[s].graphForward()
         self.stages[-1].graphForward()
         Y = self.stages[-1].Y
+
+        # Clear error and ready for next batch
+        self.clearError()
 
         self.X = X
         return Y
@@ -107,10 +121,6 @@ class Container(Stage):
         # Collect input error
         if self.outputdEdX:
             dEdX = self.stages[0].dEdY
-
-        # Clear error and ready for next batch
-        for stage in self.stages:
-            stage.dEdY = 0.0
 
         return dEdX if self.outputdEdX else None
 
@@ -144,45 +154,3 @@ class Container(Stage):
     def loadWeights(self, W):
         for s in range(1, len(self.stages) - 1):
             self.stages[s].loadWeights(W[s - 1])
-
-if __name__ == '__main__':
-    m1 = Map(name='hid1', 
-            inputNames=['input'], 
-            outputDim=50, 
-            activeFn=SigmoidActiveFn,
-            initRange=0.1,
-            initSeed=1)
-    m2 = Map(name='hid2',
-            inputNames=['hid1'],
-            outputDim=20,
-            activeFn=SigmoidActiveFn,
-            initRange=0.1,
-            initSeed=2)
-    container = Container(name='container',
-            inputNames=[],
-            inputDim=100,
-            outputDim=20,
-            outputStageNames=['hid2'],
-            stages=[m1, m2]
-        )
-    random = np.random.RandomState(2)
-    x = random.uniform(-0.1, 0.1, (2, 100))
-    y1 = container.forward(x)
-
-    # import map
-    # import sequential
-    # m12 = map.Map(name='hid1',
-    #         inputDim=100,
-    #         outputDim=50, 
-    #         activeFn=SigmoidActiveFn,
-    #         initRange=0.1,
-    #         initSeed=1)
-    # m22 = map.Map(name='hid2',
-    #         inputDim=50,
-    #         outputDim=20, 
-    #         activeFn=SigmoidActiveFn,
-    #         initRange=0.1,
-    #         initSeed=2)
-    # sequential = sequential.Sequential(stages=[m12, m22])
-    # y2 = sequential.forward(x)
-    # print y1/y2
