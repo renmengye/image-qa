@@ -50,18 +50,19 @@ class LSTM_Recurrent_Real_Tests(unittest.TestCase):
                 timespan=Time,
                 inputDim=D,
                 outputDim=D2,
+                inputNames=None,
                 multiOutput=multiOutput,
                 learningRate=0.8,
                 momentum=0.9,
                 outputdEdX=True)
 
-        W = lstm.getWeights()
         lstm2 = LSTM_Old(
             name='lstm',
             inputDim=D,
             outputDim=D2,
             needInit=False,
-            initWeights=W,
+            initRange=0.1,
+            initSeed=0,
             cutOffZeroEnd=True,
             multiErr=multiOutput,
             learningRate=0.8,
@@ -120,6 +121,7 @@ class LSTM_Recurrent_Real_Tests(unittest.TestCase):
         target_ = trainTarget[0:N]
         Y1 = model1.forward(input_)
 
+        W = lstm.getWeights()
         lstm2.W = W
         Y2 = model2.forward(input_)
         self.chkEqual(Y1, Y2)

@@ -166,20 +166,18 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
                 multiOutput=multiOutput,
                 outputdEdX=True)
 
-        W = np.concatenate((I.getWeights(), F.getWeights(), Z.getWeights(), O.getWeights()), axis=-1)
         lstm2 = LSTM_Old(
             name='lstm2',
             inputDim=D,
             outputDim=D2,
             needInit=False,
-            initWeights=W,
+            initRange=0.1,
+            initSeed=0,
             cutOffZeroEnd=True,
             multiErr=multiOutput,
             learningRate=0.8,
             momentum=0.9
         )
-        W2 = lstm2.W
-        self.chkEqual(W, W2)
 
         random = np.random.RandomState(1)
         costFn = crossEntOne
@@ -193,6 +191,9 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
             Y = lstm.forward(X)
             E, dEdY = costFn(Y, T)
             dEdX = lstm.backward(dEdY)
+            if i == 0:
+                W = np.concatenate((I.getWeights(), F.getWeights(), Z.getWeights(), O.getWeights()), axis=-1)
+                lstm2.W = W
             if multiOutput:
                 Y2 = lstm2.forward(X)[:,:-1]
             else:

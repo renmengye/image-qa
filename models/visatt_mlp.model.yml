@@ -131,6 +131,7 @@ specs:
       outputdEdX: false
     - name: 'answer'
       type: 'map'
+      inputs: 'attModel'
       outputDim: 63
       activeFn: 'softmax'
       initRange: 0.1

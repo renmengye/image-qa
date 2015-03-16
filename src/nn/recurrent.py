@@ -122,6 +122,7 @@ class RecurrentContainer(Container, RecurrentStage):
         self.Xend = 0
         self.XendAll = 0
         self.constStages = []
+        self.init = False
         Container.__init__(self,
                  stages=stages,
                  outputStageNames=outputStageNames,
@@ -211,6 +212,15 @@ class RecurrentContainer(Container, RecurrentStage):
         :param dropout: whether or not dropout
         :return:
         """
+        # Sync weights if new
+        if not self.init:
+            self.init = True
+            XX = np.ones(X.shape, dtype=X.dtype)
+            self.forward(XX)
+            for s in self.stages:
+                W = s.getStage(0).getWeights()
+                for t in range(1, self.timespan):
+                    s.getStage(t).loadWeights(W)
         N = X.shape[0]
         self.Xend = np.zeros(N, dtype=int) + X.shape[1]
         reachedEnd = np.sum(X, axis=-1) == 0.0
