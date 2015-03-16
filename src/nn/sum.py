@@ -1,7 +1,7 @@
 from stage import *
 
 class Sum(Stage):
-    """Stage summing first hald of the input with second half."""
+    """Stage summing first half of the input with second half."""
     def __init__(self, name, inputNames, numComponents, outputDim,
                  defaultValue=0.0):
         Stage.__init__(

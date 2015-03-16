@@ -88,7 +88,7 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
                 biasInitConst=1.0,
                 learningRate=0.8,
                 momentum=0.9
-            ), timespan=Time)
+            ))
 
         F = RecurrentAdapter(Map(
                 name='F',
@@ -100,7 +100,7 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
                 biasInitConst=1.0,
                 learningRate=0.8,
                 momentum=0.9
-            ), timespan=Time)
+            ))
 
         Z = RecurrentAdapter(Map(
                 name='Z',
@@ -112,26 +112,26 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
                 biasInitConst=0.0,
                 learningRate=0.8,
                 momentum=0.9
-            ), timespan=Time)
+            ))
 
         FC = RecurrentAdapter(ElementProduct(
                 name='F.C',
                 inputNames=['F(0)', 'C(-1)'],
                 outputDim=D2
-            ), timespan=Time)
+            ))
 
         IZ = RecurrentAdapter(ElementProduct(
                 name='I.Z',
                 inputNames=['I(0)', 'Z(0)'],
                 outputDim=D2
-            ), timespan=Time)
+            ))
 
         C = RecurrentAdapter(Sum(
                 name='C',
                 inputNames=['F.C(0)', 'I.Z(0)'],
                 numComponents=2,
                 outputDim=D2
-            ), timespan=Time)
+            ))
 
         O = RecurrentAdapter(Map(
                 name='O',
@@ -143,20 +143,20 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
                 biasInitConst=1.0,
                 learningRate=0.8,
                 momentum=0.9
-            ), timespan=Time)
+            ))
 
         U = RecurrentAdapter(Active(
                 name='U',
                 inputNames=['C(0)'],
                 outputDim=D2,
                 activeFn=TanhActiveFn()
-            ), timespan=Time)
+            ))
 
         H = RecurrentAdapter(ElementProduct(
                 name='H',
                 inputNames=['O(0)', 'U(0)'],
                 outputDim=D2
-            ), timespan=Time)
+            ))
 
         lstm = RecurrentContainer(
                 name='lstm',

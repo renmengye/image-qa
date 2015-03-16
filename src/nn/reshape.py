@@ -14,13 +14,17 @@ class Reshape(Stage):
         return np.reshape(dEdY, self.Xshape)
 
 class TimeUnfold(Reshape):
-    def __init__(self, name=None):
-        Reshape.__init__(self, name=name, 
-            reshapeFn='(x[0] * x[1], x[2])')
+    def __init__(self, inputNames, name=None):
+        Reshape.__init__(self,
+                         name=name,
+                         inputNames=inputNames,
+                         reshapeFn='(x[0] * x[1], x[2])')
 
 class TimeFold(Reshape):
-    def __init__(self, timespan, name=None):
+    def __init__(self, timespan, inputNames, name=None):
         self.timespan = timespan
         t = str(self.timespan)
-        Reshape.__init__(self, name=name, 
-            reshapeFn='(x[0] / '+t+','+t+', x[1])')
+        Reshape.__init__(self,
+                         name=name,
+                         inputNames=inputNames,
+                         reshapeFn='(x[0] / '+t+','+t+', x[1])')

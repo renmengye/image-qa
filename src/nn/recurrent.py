@@ -3,6 +3,13 @@ from container import *
 class RecurrentStage:
     def __init__(self):
         pass
+    def initTime(self, timespan):
+        """
+        Initialize stages accross timespan.
+        :param timespan:
+        :return:
+        """
+        pass
     def timeForward(self, time):
         """
         Forward one timestep. Need to implement in child classes.
@@ -29,21 +36,24 @@ class RecurrentAdapter(Stage, RecurrentStage):
     """
     Convert a standard stage into a recurrent stage.
     """
-    def __init__(self, stage, timespan):
+    def __init__(self, stage):
         Stage.__init__(self,
                             name=stage.name,
                             inputNames=stage.inputNames,
                             outputDim=stage.outputDim)
         stage.name = stage.name + '-0'
+        self.timespan = 0
         self.stages = [stage]
-        self.timespan = timespan
-        for s in range(1, timespan):
-            stage2 = stage.copy()
-            stage2.name = stage.name[:-2] + ('-%d' % s)
-            self.stages.append(stage2)
 
     def getStage(self, time):
         return self.stages[time]
+
+    def initTime(self, timespan):
+        self.timespan = timespan
+        for s in range(1, timespan):
+            stage2 = self.stages[0].copy()
+            stage2.name = self.stages[0].name[:-2] + ('-%d' % s)
+            self.stages.append(stage2)
 
     def timeForward(self, time):
         """
@@ -122,6 +132,11 @@ class RecurrentContainer(Container, RecurrentStage):
                  inputNames=inputNames,
                  inputType=inputType,
                  outputdEdX=outputdEdX)
+        self.initTime(self.timespan)
+
+    def initTime(self, timespan):
+        for s in self.stages:
+            s.initTime(timespan)
 
     def getStage(self, time):
         return self.stages[-1].getStage(time)

@@ -27,7 +27,8 @@ class LSTM_Recurrent_Real_Tests(unittest.TestCase):
         )
 
         time_fold = TimeFold(
-            timespan=Time
+            timespan=Time,
+            inputNames=None
         )
 
         dropout = Dropout(
