@@ -16,6 +16,7 @@ class Stage:
                  weightRegConst=0.0,
                  outputdEdX=True):
         self.name = name
+        print self.name, inputNames
         self.inputNames = inputNames
         self.inputs = None
         self.outputDim = outputDim
