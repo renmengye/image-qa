@@ -2,6 +2,7 @@ costFn: 'crossEntIdx'
 decisionFn: 'argmax'
 stages:
     - 'attModel'
+    - 'attModelOut'
     - 'answer'
 outputs: 'answer'
 specs:
@@ -132,6 +133,7 @@ specs:
           - 'imgReshape'
           - 'attReshape'
           - 'attCtx'
+          - 'attCtx2'
           - 'txtAttCtx'
           - 'lstm1'
           - 'attHid1'
