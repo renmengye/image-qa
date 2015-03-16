@@ -82,6 +82,7 @@ class RecurrentAdapter(Stage, RecurrentStage):
             tmp = np.zeros((self.timespan, W.shape[0], W.shape[1]))
             for t in range(self.timespan):
                 tmp[t] = self.stages[t].getGradient()
+                self.stages[t].setGradient(0.0)
             self.stages[0].setGradient(np.sum(tmp, axis=0))
 
     def updateWeights(self):
