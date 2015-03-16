@@ -23,9 +23,7 @@ class Recurrent_Tests(stage_tests.StageTests):
                         learningRate=0.9
                     )
         self.sigm = RecurrentAdapter(
-            timespan=self.T,
-            stage=self.sigm_
-            )
+            stage=self.sigm_)
         self.stage = self.sigm.getStage(time=0)
         self.model = RecurrentContainer(
             stages=[self.sigm],

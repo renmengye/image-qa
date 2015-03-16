@@ -41,7 +41,7 @@ class LSTM(RecurrentContainer):
                  deltaMomentum=deltaMomentum,
                  gradientClip=gradientClip,
                  weightClip=weightClip,
-                 weightRegConst=weightRegConst), timespan=timespan)
+                 weightRegConst=weightRegConst))
 
         self.F = RecurrentAdapter(Map(
                  name=name + '.F',
@@ -57,7 +57,7 @@ class LSTM(RecurrentContainer):
                  deltaMomentum=deltaMomentum,
                  gradientClip=gradientClip,
                  weightClip=weightClip,
-                 weightRegConst=weightRegConst), timespan=timespan)
+                 weightRegConst=weightRegConst))
 
         self.Z = RecurrentAdapter(Map(
                  name=name + '.Z',
@@ -73,7 +73,7 @@ class LSTM(RecurrentContainer):
                  deltaMomentum=deltaMomentum,
                  gradientClip=gradientClip,
                  weightClip=weightClip,
-                 weightRegConst=weightRegConst), timespan=timespan)
+                 weightRegConst=weightRegConst))
 
         self.O = RecurrentAdapter(Map(
                  name=name + '.O',
@@ -89,7 +89,7 @@ class LSTM(RecurrentContainer):
                  deltaMomentum=deltaMomentum,
                  gradientClip=gradientClip,
                  weightClip=weightClip,
-                 weightRegConst=weightRegConst), timespan=timespan)
+                 weightRegConst=weightRegConst))
         
         if not needInit:
             self.I.W, self.F.W, self.Z.W, self.O.W = self.splitWeights(initWeights)
@@ -97,30 +97,30 @@ class LSTM(RecurrentContainer):
         self.FC = RecurrentAdapter(ElementProduct(
                   name=name + '.F*C',
                   inputNames=[name + '.F(0)', name + '.C(-1)'],
-                  outputDim=D2), timespan=timespan)
+                  outputDim=D2))
 
         self.IZ = RecurrentAdapter(ElementProduct(
                   name=name + '.I*Z',
                   inputNames=[name + '.I(0)', name + '.Z(0)'],
-                  outputDim=D2), timespan=timespan)
+                  outputDim=D2))
 
         self.C = RecurrentAdapter(Sum(
                  name=name + '.C',
                  inputNames=[name + '.F*C(0)', name + '.I*Z(0)'],
                  numComponents=2,
-                 outputDim=D2), timespan=timespan)
+                 outputDim=D2))
 
         self.U = RecurrentAdapter(Active(
                  name=name + '.U',
                  inputNames=[name + '.C(0)'],
                  outputDim=D2,
-                 activeFn=TanhActiveFn()), timespan=timespan)
+                 activeFn=TanhActiveFn()))
 
         self.H = RecurrentAdapter(ElementProduct(
                  name=name + '.H',
                  inputNames=[name + '.O(0)', name + '.U(0)'],
                  outputDim=D2,
-                 defaultValue=defaultValue), timespan=timespan)
+                 defaultValue=defaultValue))
 
         stages = [self.I, self.F, self.Z, self.FC, self.IZ, self.C, self.O, self.U, self.H]
         RecurrentContainer.__init__(self,

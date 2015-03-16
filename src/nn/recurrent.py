@@ -132,7 +132,6 @@ class RecurrentContainer(Container, RecurrentStage):
                  inputNames=inputNames,
                  inputType=inputType,
                  outputdEdX=outputdEdX)
-        self.initTime(self.timespan)
 
     def initTime(self, timespan):
         for s in self.stages:
@@ -143,16 +142,11 @@ class RecurrentContainer(Container, RecurrentStage):
 
     def createInputStage(self):
         return RecurrentAdapter(
-            stage=Container.createInputStage(self),
-            timespan=self.timespan)
+            stage=Container.createInputStage(self))
 
     def createOutputStage(self):
-        output = RecurrentAdapter(
-            stage=Container.createOutputStage(self),
-            timespan=self.timespan)
-        for t in range(self.timespan):
-            output.getStage(t).used = True
-        return output
+        return RecurrentAdapter(
+            stage=Container.createOutputStage(self))
 
     def testRun(self):
         """Test run through the recurrent net to initialize all the weights."""
@@ -169,6 +163,9 @@ class RecurrentContainer(Container, RecurrentStage):
         Links the stage with time references.
         :return:
         """
+        self.initTime(self.timespan)
+        for t in range(self.timespan):
+            self.stages[-1].getStage(t).used = True
         for t in range(self.timespan):
             for stage in self.stages:
                 for inputStageStr in stage.getStage(time=t).inputNames:

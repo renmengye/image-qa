@@ -14,14 +14,14 @@ class Reshape(Stage):
         return np.reshape(dEdY, self.Xshape)
 
 class TimeUnfold(Reshape):
-    def __init__(self, inputNames, name=None):
+    def __init__(self, inputNames=None, name=None):
         Reshape.__init__(self,
                          name=name,
                          inputNames=inputNames,
                          reshapeFn='(x[0] * x[1], x[2])')
 
 class TimeFold(Reshape):
-    def __init__(self, timespan, inputNames, name=None):
+    def __init__(self, timespan, inputNames=None, name=None):
         self.timespan = timespan
         t = str(self.timespan)
         Reshape.__init__(self,
