@@ -29,16 +29,17 @@ class TimeFold(Reshape):
                          inputNames=inputNames,
                          reshapeFn='(x[0] / '+t+','+t+', x[1])')
 
-class TimeConcat(Stage):
-    def __init__(self, inputNames=None, name=None):
+class Concat(Stage):
+    def __init__(self, inputNames, axis, name=None):
         Stage.__init__(self, name=name, inputNames=inputNames, outputDim=0)
+        self.axis = axis
     def getInput(self):
         if len(self.inputs) > 1:
             self.splX = []
             for stage in self.inputs:
                 X = stage.Y
                 self.splX.append(X)
-            return np.concatenate(self.splX, axis=1)
+            return np.concatenate(self.splX, axis=self.axis)
         else:
             return self.inputs[0].Y
     def sendError(self, dEdX):
@@ -49,7 +50,12 @@ class TimeConcat(Stage):
             s = 0
             for stage in self.inputs:
                 s2 = s + stage.Y.shape[1]
-                stage.dEdY += dEdX[:, s : s2]
+                if self.axis == 0:
+                    stage.dEdY += dEdX[s : s2]
+                elif self.axis == 1:
+                    stage.dEdY += dEdX[:, s : s2]
+                elif self.axis == 2:
+                    stage.dEdY += dEdX[:, :, s : s2]
                 s = s2
         else:
             self.inputs[0].dEdY += dEdX

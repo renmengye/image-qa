@@ -71,8 +71,9 @@ specs:
       inputs: 'txtDict'
       timespan: 27
     - name: 'concat'
-      type: 'timeConcat'
+      type: 'concat'
       inputs: 'imgFold, txtFold'
+      axis: 1
     - name: 'dropout1'
       type: 'dropout'
       inputs: 'concat'

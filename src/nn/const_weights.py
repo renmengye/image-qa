@@ -15,11 +15,11 @@ class ConstWeights(Stage):
                  deltaMomentum=0.0,
                  weightClip=0.0,
                  gradientClip=0.0,
-                 weightRegConst=0.0):
+             weightRegConst=0.0):
         Stage.__init__(self,
                  name=name,
                  outputDim=outputDim,
-                 inputNames=None,
+                 inputNames=['input'],
                  learningRate=learningRate,
                  learningRateAnnealConst=learningRateAnnealConst,
                  momentum=momentum,

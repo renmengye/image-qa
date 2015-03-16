@@ -173,10 +173,11 @@ def addStage(stageDict):
         stage = TimeUnfold(
             name=stageDict['name'],
             inputNames=inputList)
-    elif stageDict['type'] == 'timeConcat':
-        stage = TimeConcat(
+    elif stageDict['type'] == 'concat':
+        stage = Concat(
             name=stageDict['name'],
-            inputNames=inputList)
+            inputNames=inputList,
+            axis=stageDict['axis'])
     elif stageDict['type'] == 'innerProd':
         stage = InnerProduct(
             name=stageDict['name'],
@@ -240,7 +241,7 @@ def addStage(stageDict):
         stage = CosSimilarity(
             name=stageDict['name'],
             inputNames=inputList,
-            outputDim=stageDict['outputDim'],
+            outputDim=0,
             bankDim=stageDict['bankDim']
         )
     elif stageDict['type'] == 'componentProd':
