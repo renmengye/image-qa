@@ -3,7 +3,6 @@ import time
 import numpy as np
 import lstm_old as l
 
-
 start = time.time()
 timespan = 100
 multiErr = len(sys.argv) > 1 and sys.argv[1] == 'm'

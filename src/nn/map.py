@@ -1,6 +1,6 @@
-from stage2 import *
+from stage import *
 
-class Map(GraphStage):
+class Map(Stage):
     def __init__(self,
                  outputDim,
                  activeFn,
@@ -20,7 +20,7 @@ class Map(GraphStage):
                  outputdEdX=True,
                  defaultValue=0.0,
                  name=None):
-        GraphStage.__init__(self,
+        Stage.__init__(self,
                  name=name,
                  inputNames=inputNames,
                  outputDim=outputDim,

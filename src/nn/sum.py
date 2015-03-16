@@ -1,10 +1,10 @@
-from stage2 import *
+from stage import *
 
-class Sum(GraphStage):
+class Sum(Stage):
     """Stage summing first hald of the input with second half."""
     def __init__(self, name, inputNames, numComponents, outputDim,
                  defaultValue=0.0):
-        GraphStage.__init__(
+        Stage.__init__(
             self,
             name=name,
             inputNames=inputNames,

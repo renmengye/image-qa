@@ -1,6 +1,6 @@
-from stage2 import *
+from stage import *
 
-class ConstWeights(GraphStage):
+class ConstWeights(Stage):
     def __init__(self,
                  name,
                  outputDim=0,
@@ -16,7 +16,7 @@ class ConstWeights(GraphStage):
                  weightClip=0.0,
                  gradientClip=0.0,
                  weightRegConst=0.0):
-        GraphStage.__init__(self,
+        Stage.__init__(self,
                  name=name,
                  outputDim=outputDim,
                  inputNames=None,

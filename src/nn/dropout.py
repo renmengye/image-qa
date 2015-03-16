@@ -1,6 +1,6 @@
-from stage2 import *
+from stage import *
 
-class Dropout(GraphStage):
+class Dropout(Stage):
     def __init__(self,
                  name,
                  inputNames,
@@ -8,7 +8,7 @@ class Dropout(GraphStage):
                  dropoutRate,
                  initSeed,
                  debug=False):
-        GraphStage.__init__(self,
+        Stage.__init__(self,
             name=name,
             inputNames=inputNames,
             outputDim=outputDim)

@@ -1,11 +1,11 @@
-from stage2 import *
+from stage import *
 
-class CosSimilarity(GraphStage):
+class CosSimilarity(Stage):
     """
     Compute the cosine similartiy of vectors with a bank of vectors
     """
     def __init__(self, bankDim, inputNames, outputDim, name=None):
-        GraphStage.__init__(self, name=name, inputNames=inputNames, outputDim=outputDim)
+        Stage.__init__(self, name=name, inputNames=inputNames, outputDim=outputDim)
         self.bankDim = bankDim
         self.A = 0
         self.Z = 0

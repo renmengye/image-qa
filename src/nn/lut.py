@@ -1,6 +1,6 @@
-from stage2 import *
+from stage import *
 
-class LUT(GraphStage):
+class LUT(Stage):
     def __init__(self,
                  inputNames,
                  inputDim,
@@ -18,7 +18,7 @@ class LUT(GraphStage):
                  gradientClip=0.0,
                  weightRegConst=0.0,
                  name=None):
-        GraphStage.__init__(self,
+        Stage.__init__(self,
                  name=name,
                  inputNames=inputNames,
                  learningRate=learningRate,
@@ -81,7 +81,7 @@ class LUT(GraphStage):
         if self.learningRate == 0.0:
             return
         else:
-            GraphStage.loadWeights(W)
+            Stage.loadWeights(W)
 
     def getWeights(self):
         if self.learningRate == 0.0:

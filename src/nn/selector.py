@@ -1,13 +1,13 @@
-from stage2 import *
+from stage import *
 
-class Selector(GraphStage):
+class Selector(Stage):
     def __init__(self, 
                  name, 
                  inputNames,
                  start, 
                  end, 
                  axis=-1):
-        GraphStage.__init__(
+        Stage.__init__(
                  self,
                  name=name, 
                  inputNames=inputNames,

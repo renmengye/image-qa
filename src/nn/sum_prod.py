@@ -1,12 +1,12 @@
-from stage2 import *
+from stage import *
 
-class SumProduct(GraphStage):
+class SumProduct(Stage):
     def __init__(self, 
                 name, 
                 inputNames, 
                 sumAxis, 
                 outputDim):
-        GraphStage.__init__(self, 
+        Stage.__init__(self,
             name=name, 
             inputNames=inputNames, 
             outputDim=outputDim)

@@ -21,16 +21,16 @@ class RecurrentStage:
         """
         Get the stage at a timestep. Need to implement in child classes.
         :param time: integer
-        :return: GraphStage object
+        :return: Stage object
         """
         pass
 
-class RecurrentAdapter(GraphStage, RecurrentStage):
+class RecurrentAdapter(Stage, RecurrentStage):
     """
     Convert a standard stage into a recurrent stage.
     """
     def __init__(self, stage, timespan):
-        GraphStage.__init__(self,
+        Stage.__init__(self,
                             name=stage.name,
                             inputNames=stage.inputNames,
                             outputDim=stage.outputDim)
@@ -82,11 +82,11 @@ class RecurrentAdapter(GraphStage, RecurrentStage):
     def getGradient(self):
         return self.stages[0].getGradient()
 
-class Constant(GraphStage):
+class Constant(Stage):
     def __init__(self,
         name,
         value):
-        GraphStage.__init__(self,
+        Stage.__init__(self,
             name=name,
             inputNames=[],
             outputDim=value.size)
@@ -96,7 +96,7 @@ class Constant(GraphStage):
     def graphForward(self):
         self.Y = self.forward(self.X)
 
-class RecurrentContainer(GraphContainer, RecurrentStage):
+class RecurrentContainer(Container, RecurrentStage):
     def __init__(self,
                  stages,
                  outputStageNames,
@@ -113,7 +113,7 @@ class RecurrentContainer(GraphContainer, RecurrentStage):
         self.Xend = 0
         self.XendAll = 0
         self.constStages = []
-        GraphContainer.__init__(self,
+        Container.__init__(self,
                  stages=stages,
                  outputStageNames=outputStageNames,
                  inputDim=inputDim,
@@ -128,12 +128,12 @@ class RecurrentContainer(GraphContainer, RecurrentStage):
 
     def createInputStage(self):
         return RecurrentAdapter(
-            stage=GraphContainer.createInputStage(self),
+            stage=Container.createInputStage(self),
             timespan=self.timespan)
 
     def createOutputStage(self):
         output = RecurrentAdapter(
-            stage=GraphContainer.createOutputStage(self),
+            stage=Container.createOutputStage(self),
             timespan=self.timespan)
         for t in range(self.timespan):
             output.getStage(t).used = True

@@ -1,7 +1,7 @@
 import numpy as np
 import copy
 
-class GraphStage:
+class Stage:
     def __init__(self,
                  name,
                  inputNames,

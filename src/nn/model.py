@@ -1,6 +1,6 @@
 from container import *
 
-class GraphModel(GraphContainer):
+class GraphModel(Container):
     def __init__(self,
                  stages, 
                  outputStageNames,
@@ -10,7 +10,7 @@ class GraphModel(GraphContainer):
                  name=None,
                  decisionFn=None, 
                  specFilename=None):
-        GraphContainer.__init__(self,
+        Container.__init__(self,
                  name=name,
                  stages=stages,
                  outputStageNames=outputStageNames,

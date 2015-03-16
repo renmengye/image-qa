@@ -1,8 +1,8 @@
-from stage2 import *
+from stage import *
 
-class Reshape(GraphStage):
+class Reshape(Stage):
     def __init__(self, reshapeFn, inputNames=None, outputDim=0, name=None):
-        GraphStage.__init__(self, name=name, inputNames=inputNames, outputDim=outputDim)
+        Stage.__init__(self, name=name, inputNames=inputNames, outputDim=outputDim)
         self.reshapeFn = eval('lambda x: ' + reshapeFn)
         self.Xshape = 0
 

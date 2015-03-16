@@ -1,8 +1,8 @@
 from container import *
 
-class Sequential(GraphStage):
+class Sequential(Stage):
     def __init__(self, stages, inputNames=None, name=None, outputDim=0, outputdEdX=True):
-        GraphStage.__init__(self,
+        Stage.__init__(self,
                  name=name,
                  outputDim=outputDim,
                  inputNames=inputNames,
@@ -12,7 +12,7 @@ class Sequential(GraphStage):
     def forward(self, X, dropout=True):
         X1 = X
         for stage in self.stages:
-            if isinstance(stage, GraphContainer) or isinstance(stage, Sequential):
+            if isinstance(stage, Container) or isinstance(stage, Sequential):
                 X1 = stage.forward(X1, dropout)
             elif hasattr(stage, 'dropout'):
                 stage.dropout = dropout

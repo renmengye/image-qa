@@ -1,6 +1,6 @@
-from stage2 import *
+from stage import *
 
-class Active(GraphStage):
+class Active(Stage):
     def __init__(self,
                  activeFn,
                  inputNames,
@@ -8,7 +8,7 @@ class Active(GraphStage):
                  defaultValue=0.0,
                  outputdEdX=True,
                  name=None):
-        GraphStage.__init__(self,
+        Stage.__init__(self,
                  name=name,
                  inputNames=inputNames,
                  outputDim=outputDim,

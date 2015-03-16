@@ -1,25 +1,25 @@
 from active_func import *
 from map import *
 
-class Input(GraphStage):
+class Input(Stage):
     def __init__(self, name, outputDim):
-        GraphStage.__init__(self, 
+        Stage.__init__(self,
             name=name, 
             inputNames=[],
             outputDim=outputDim)
     def setValue(self, value):
         self.Y = value
 
-class Output(GraphStage):
+class Output(Stage):
     def __init__(self, name, inputNames):
-        GraphStage.__init__(self, 
+        Stage.__init__(self,
             name=name, 
             inputNames=inputNames, 
             outputDim=0)
     def graphForward(self):
         self.Y = self.getInput()
 
-class GraphContainer(GraphStage):
+class Container(Stage):
     def __init__(self,
                  stages,
                  outputStageNames,
@@ -29,7 +29,7 @@ class GraphContainer(GraphStage):
                  inputNames=None,
                  inputType='float',
                  outputdEdX=True):
-        GraphStage.__init__(self, 
+        Stage.__init__(self,
                 name=name, 
                 inputNames=inputNames, 
                 outputDim=outputDim, 
@@ -167,7 +167,7 @@ if __name__ == '__main__':
             activeFn=SigmoidActiveFn,
             initRange=0.1,
             initSeed=2)
-    container = GraphContainer(name='container',
+    container = Container(name='container',
             inputNames=[],
             inputDim=100,
             outputDim=20,

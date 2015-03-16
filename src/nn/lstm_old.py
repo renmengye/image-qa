@@ -1,4 +1,4 @@
-from stage2 import *
+from stage import *
 from func import *
 
 def sliceWeights(inputDim,outputDim,W):
@@ -207,7 +207,7 @@ def backPropagateOne(dEdY,X,Y,C,Z,
 
     return dEdW, dEdX
 
-class LSTM_Old(GraphStage):
+class LSTM_Old(Stage):
     def __init__(self,
                  inputDim,
                  outputDim,
@@ -227,7 +227,7 @@ class LSTM_Old(GraphStage):
                  weightRegConst=0.0,
                  outputdEdX=True,
                  name=None):
-        GraphStage.__init__(self,
+        Stage.__init__(self,
                  name=name,
                  inputNames=inputNames,
                  outputDim=outputDim,
