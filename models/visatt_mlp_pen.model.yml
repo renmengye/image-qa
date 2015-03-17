@@ -94,7 +94,7 @@ specs:
       activeFn: 'tanh'
       initRange: 0.1
       initSeed: 6
-      learningRate: 0.1
+      learningRate: 1.0
       momentum: 0.9
       gradientClip: 0.1
       weightClip: 50
@@ -107,11 +107,15 @@ specs:
       defaultValue: 0.00510204081632653
       initRange: 0.1
       initSeed: 7
-      learningRate: 0.1
+      learningRate: 1.0
       momentum: 0.9
       gradientClip: 0.1
       weightClip: 50
       recurrent: true
+    - name: 'attPenalty'
+      type: 'attentionPenalty'
+      inputs: 'attOut'
+      errorConst: 0.05
     - name: 'attModel'
       type: 'recurrent'
       inputs: 'input'
@@ -127,6 +131,7 @@ specs:
           - 'lstm1'
           - 'attHid1'
           - 'attOut'
+          - 'attPenalty'
       outputs: 'lstm1'
       inputDim: 2
       outputDim: 150

@@ -316,6 +316,11 @@ def addStage(stageDict):
             outputStageNames=outputList,
             outputdEdX=outputdEdX
         )
+    elif stageDict['type'] == 'attentionPenalty':
+        stage = AttentionPenalty(
+            name=stageDict['name'],
+            inputNames=inputList,
+            errorConst=stageDict['errorConst'])
     else:
         raise Exception('Stage type ' + stageDict['type'] + ' not found.')
 

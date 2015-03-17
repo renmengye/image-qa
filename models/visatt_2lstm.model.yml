@@ -34,9 +34,10 @@ specs:
       type: 'lut'
       inputs: 'txtSel'
       inputDim: 871
-      outputDim: 150
-      initRange: 0.1
-      initSeed: 3
+      outputDim: 300
+      initWeights: '../data/imgword/word-embed-0-q.npy'
+      #initRange: 0.1
+      #initSeed: 3
       learningRate: 0.0
       outputdEdX: false
       recurrent: true
@@ -48,7 +49,7 @@ specs:
       recurrent: true
     - name: 'attReshape'
       type: 'reshape'
-      inputs: 'attOut(-1)'
+      inputs: 'attOut'
       reshapeFn: '(x[0], x[1], 1)'
       outputDim: 196
       recurrent: true
@@ -58,25 +59,13 @@ specs:
       sumAxis: 1
       outputDim: 512
       recurrent: true
-    - name: 'txtAttCtx'
-      type: 'map'
-      inputs: 'txtDict, attCtx'
-      outputDim: 300
-      activeFn: 'identity'
-      initRange: 0.1
-      initSeed: 4
-      learningRate: 0.1
-      momentum: 0.9
-      gradientClip: 0.05
-      weightClip: 100
-      recurrent: true
-    - name: 'lstm1'
+    - name: 'imglstm'
       type: 'lstm'
-      inputs: 'txtAttCtx'
-      inputDim: 300
-      outputDim: 150
+      inputs: 'attCtx'
+      inputDim: 512
+      outputDim: 300
       timespan: 28
-      initRange: 0.2
+      initRange: 0.1
       initSeed: 4
       cutOffZeroEnd: true
       multiErr: false
@@ -87,10 +76,27 @@ specs:
       weightClip: 100.0
       weightRegConst: 0.00005
       outputdEdX: true
+    - name: 'wordlstm'
+      type: 'lstm'
+      inputs: 'txtDict'
+      inputDim: 300
+      outputDim: 196
+      timespan: 28
+      initRange: 0.1
+      initSeed: 5
+      cutOffZeroEnd: true
+      multiErr: true
+      learningRate: 0.8
+      learningRateAnnealConst: 0.0
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 100.0
+      weightRegConst: 0.00005
+      outputdEdX: true
     - name: 'attHid1'
       type: 'map'
-      inputs: 'lstm1'
-      outputDim: 150
+      inputs: 'wordlstm'
+      outputDim: 196
       activeFn: 'tanh'
       initRange: 0.1
       initSeed: 6
@@ -121,15 +127,15 @@ specs:
           - 'imgFeat'
           - 'txtDict'
           - 'imgReshape'
-          - 'attReshape'
-          - 'attCtx'
-          - 'txtAttCtx'
-          - 'lstm1'
+          - 'wordlstm'
           - 'attHid1'
           - 'attOut'
-      outputs: 'lstm1'
+          - 'attReshape'
+          - 'attCtx'
+          - 'imglstm'
+      outputs: 'imglstm'
       inputDim: 2
-      outputDim: 150
+      outputDim: 300
       timespan: 27
       multiOutput: false
       outputdEdX: false

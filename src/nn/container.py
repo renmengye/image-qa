@@ -72,7 +72,9 @@ class Container(Stage):
         :param stage: new recurrent substage
         :return:
         """
-        stage.used = False
+        #print stage
+        if not hasattr(stage, 'used'):
+            stage.used = False
         self.stages.append(stage)
         self.stageDict[stage.name] = stage
 

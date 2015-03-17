@@ -32,6 +32,64 @@ class RecurrentStage:
         """
         pass
 
+class AttentionPenalty(RecurrentStage):
+    def __init__(self, name, inputNames, errorConst=1.0):
+        self.inputs = []
+        self.name = name
+        self.errorConst = errorConst
+        self.inputNames = inputNames
+        self.used = True
+        self.X = 0.0
+        self.dEdX = 0.0
+        self.timespan = 0
+        
+    def initTime(self, timespan):
+        self.timespan = timespan
+
+    def addInput(self, stage):
+        self.inputs.append(stage)
+
+    def clearError(self):
+        pass
+
+    def syncWeights(self):
+        pass
+
+    def syncGradient(self):
+        pass
+
+    def updateWeights(self):
+        pass
+
+    def updateLearningParams(self, epoch):
+        pass
+
+    def getWeights(self):
+        return 0
+
+    def loadWeights(self, W):
+        pass
+
+    def getGradient(self):
+        return 0
+
+    def timeForward(self, time):
+        X = self.inputs[time].Y
+        if time == 0:
+            self.X = np.zeros((X.shape[0], self.timespan, X.shape[1]))
+            self.dEdX = 0.0
+        self.X[:, time, :] = X
+
+    def timeBackward(self, time):
+        if type(self.dEdX) != np.ndarray:
+            s = np.sum(self.X, axis=1)
+            one = np.ones((self.X.shape[0], self.X.shape[2])) * self.timespan / float(self.X.shape[2])
+            self.dEdX = self.errorConst * (s - one)
+        self.inputs[time].dEdY += self.dEdX
+        
+    def getStage(self, time):
+        return self
+
 class RecurrentAdapter(Stage, RecurrentStage):
     """
     Convert a standard stage into a recurrent stage.
@@ -173,7 +231,8 @@ class RecurrentContainer(Container, RecurrentStage):
         for t in range(self.timespan):
             self.stages[-1].getStage(t).used = True
             for s in range(1, len(self.stages) - 1):
-                self.stages[s].getStage(t).used = False
+                if not hasattr(self.stages[s].getStage(t), 'used'):
+                    self.stages[s].getStage(t).used = False
         for t in range(self.timespan):
             for stage in self.stages:
                 names = stage.inputNames
@@ -199,10 +258,10 @@ class RecurrentContainer(Container, RecurrentStage):
                     else:
                         stageInput = self.stageDict[stageName].getStage(t + stageTime)
                         stageInput.used = True
-                    if isinstance(stage, RecurrentAdapter):
-                        stage.getStage(time=t).addInput(stageInput)
-                    else:
+                    if isinstance(stage, RecurrentContainer):
                         stage.stages[0].getStage(time=t).addInput(stageInput)
+                    else:
+                        stage.getStage(time=t).addInput(stageInput)
 
     def clearError(self):
         for stage in self.stages:
