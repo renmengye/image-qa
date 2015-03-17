@@ -92,6 +92,10 @@ class Container(Stage):
             stage.clearError()
         self.dEdY = 0.0
 
+    def graphForward(self, dropout=True):
+        self.X = self.getInput()
+        self.Y = self.forward(self.X, dropout=dropout)
+
     #@profile
     def forward(self, X, dropout=True):
         self.stages[0].Y = X
@@ -99,7 +103,11 @@ class Container(Stage):
             if self.stages[s].used:
                 if hasattr(self.stages[s], 'dropout'):
                     self.stages[s].dropout = dropout
-                self.stages[s].graphForward()
+                    self.stages[s].graphForward()
+                elif isinstance(self.stages[s], Container):
+                    self.stages[s].graphForward(dropout=dropout)
+                else:
+                    self.stages[s].graphForward()
         self.stages[-1].graphForward()
         Y = self.stages[-1].Y
 

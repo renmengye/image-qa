@@ -14,29 +14,28 @@ import unittest
 import numpy as np
 
 class StageTests(unittest.TestCase):
-    def calcgrd(self, X, T):
+    def calcgrd(self, X, T, eps=1e-3):
         Y = self.model.forward(X)
-        W = self.stage.W
+        W = self.stage.getWeights()
         E, dEdY = self.costFn(Y, T)
         dEdX = self.model.backward(dEdY)
-        dEdW = self.stage.dEdW
-        eps = 1e-3
+        dEdW = self.stage.getGradient()
         dEdXTmp = np.zeros(X.shape)
 
         if hasattr(W, 'shape'):
             dEdWTmp = np.zeros(W.shape)
-            for i in range(0, self.stage.W.shape[0]):
-                for j in range(0, self.stage.W.shape[1]):
-                    self.stage.W[i,j] += eps
+            for i in range(0, W.shape[0]):
+                for j in range(0, W.shape[1]):
+                    W[i,j] += eps
                     Y = self.model.forward(X)
                     Etmp1, d1 = self.costFn(Y, T)
 
-                    self.stage.W[i,j] -= 2 * eps
+                    W[i,j] -= 2 * eps
                     Y = self.model.forward(X)
                     Etmp2, d2 = self.costFn(Y, T)
 
                     dEdWTmp[i,j] = (Etmp1 - Etmp2) / 2.0 / eps
-                    self.stage.W[i,j] += eps
+                    W[i,j] += eps
         else:
             dEdW = 0
             dEdWTmp = 0  

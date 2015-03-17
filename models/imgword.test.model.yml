@@ -37,15 +37,16 @@ specs:
       type: 'lut'
       inputs: 'imgUnfold'
       inputDim: 1449
-      outputDim: 4096
-      initWeights: '../data/imgword/oxford-feat.npy'
+      outputDim: 10
+      initRange: 0.1
+      initSeed: 1
       learningRate: 0.0
       outputdEdX: false
     - name: 'imgMap'
       type: 'map'
       inputs: 'imgFeat'
       activeFn: 'identity'
-      outputDim: 300
+      outputDim: 10
       initRange: 0.1
       initSeed: 1
       learningRate: 0.8
@@ -65,8 +66,9 @@ specs:
       type: 'lut'
       inputs: 'txtUnfold'
       inputDim: 868
-      outputDim: 300
-      initWeights: '../data/imgword/word-embed-0-q.npy'
+      outputDim: 10
+      initRange: 0.1
+      initSeed: 2
       learningRate: 0.0
       outputdEdX: false
     - name: 'txtFold'
@@ -83,17 +85,17 @@ specs:
       inputs: 'concat'
       dropoutRate: 0.2
       initSeed: 3
-      outputDim: 300
+      outputDim: 10
     - name: 'lstm'
       type: 'lstm'
       inputs: 'dropout'
-      inputDim: 300
-      outputDim: 150
+      inputDim: 10
+      outputDim: 10
       timespan: 28
       initRange: 0.2
       initSeed: 4
       cutOffZeroEnd: true
-      multiErr: false
+      multiOutput: false
       learningRate: 0.8
       learningRateAnnealConst: 0.0
       momentum: 0.9
@@ -105,7 +107,7 @@ specs:
       type: 'map'
       inputs: 'lstm'
       activeFn: 'softmax'
-      outputDim: 68
+      outputDim: 63
       initRange: 0.1
       initSeed: 7
       learningRate: 0.01

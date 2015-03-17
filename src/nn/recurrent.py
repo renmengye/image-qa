@@ -85,11 +85,14 @@ class RecurrentAdapter(Stage, RecurrentStage):
                 self.stages[t].setGradient(0.0)
             self.stages[0].setGradient(np.sum(tmp, axis=0))
 
+    def syncWeights(self):
+        for t in range(1, self.timespan):
+            self.stages[t].loadWeights(self.stages[0].getWeights())
+
     def updateWeights(self):
         if self.stages[0].learningRate > 0.0:
             self.stages[0].updateWeights()
-            for t in range(1, self.timespan):
-                    self.stages[t].loadWeights(self.stages[0].getWeights())
+            self.syncWeights()
 
     def updateLearningParams(self, numEpoch):
         # Since only the first stage updates the weights,
@@ -212,6 +215,10 @@ class RecurrentContainer(Container, RecurrentStage):
         for stage in self.stages:
             stage.syncGradient()
 
+    def syncWeights(self):
+        for stage in self.stages:
+            stage.syncWeights()
+
     def timeForward(self, time, dropout=True):
         """
         Forward one step (used as a recurrent stage/container).
@@ -243,15 +250,13 @@ class RecurrentContainer(Container, RecurrentStage):
         :param dropout: whether or not dropout
         :return:
         """
-        # Sync weights if new
+        # Sync weights if new.
         if not self.init:
             self.init = True
             XX = np.ones(X.shape, dtype=X.dtype)
             self.forward(XX)
-            for s in self.stages:
-                W = s.getStage(0).getWeights()
-                for t in range(1, self.timespan):
-                    s.getStage(t).loadWeights(W)
+            self.syncWeights()
+
         N = X.shape[0]
         self.Xend = np.zeros(N, dtype=int) + X.shape[1]
         reachedEnd = np.sum(X, axis=-1) == 0.0
@@ -259,14 +264,20 @@ class RecurrentContainer(Container, RecurrentStage):
             Y = np.zeros((N, self.timespan, self.outputDim))
         else:
             Y = np.zeros((N, self.outputDim))
+
+        # Scan for the end of the sequence.
         for n in range(N):
             for t in range(X.shape[1]):
                 if reachedEnd[n, t]:
                     self.Xend[n] = t
                     break
         self.XendAll = np.max(self.Xend)
+
+        # Set value for constant stages.
         for s in self.constStages:
             s.Y = np.tile(s.value, (X.shape[0], 1))
+
+        # Propagating through time.
         for t in range(self.XendAll):
             self.stages[0].getStage(time=t).Y = X[:, t, :]
             for s in range(1, len(self.stages)):
@@ -277,6 +288,8 @@ class RecurrentContainer(Container, RecurrentStage):
                         self.stages[s].timeForward(time=t, dropout=dropout)
                     else:
                         self.stages[s].timeForward(time=t)
+
+        # Gather output.
         if self.multiOutput:
             for n in range(N):
                 if self.Xend[n] > 0:
@@ -317,6 +330,7 @@ class RecurrentContainer(Container, RecurrentStage):
         if self.outputdEdX:
             dEdX = np.zeros(self.X.shape)
 
+        # Send errors from output stages.
         if self.multiOutput:
             for t in range(self.XendAll):
                 self.stages[-1].getStage(time=t).sendError(dEdY[:, t, :])
@@ -327,6 +341,7 @@ class RecurrentContainer(Container, RecurrentStage):
                     err[n] = dEdY[n]
                     self.stages[-1].getStage(time=self.Xend[n] - 1).sendError(err)
 
+        # Back propagating through time.
         for t in reversed(range(self.XendAll)):
             for s in reversed(range(1, len(self.stages) - 1)):
                 if self.stages[s].getStage(time=t).used:
