@@ -34,30 +34,30 @@ stages:
       timespan: 27
     - name: 'imgSel'
       type: selectorRecurrent
-      inputsStr: 'input'
+      inputs: 'input'
       start: 0
       end: 100352
     - name: 'txtSel'
       type: selectorRecurrent
-      inputsStr: 'input'
+      inputs: 'input'
       start: 100352
       end: 100502
     - name: 'imgRehape'
       type: reshapeRecurrent
-      inputsStr: 'imgSel'
+      inputs: 'imgSel'
       reshapeFn: '(x[0], 196, x[1]/196)'
     - name: 'attReshape'
       type: reshapeRecurrent
-      inputsStr: 'att(-1)'
+      inputs: 'att(-1)'
       reshapeFn: '(x[0], x[1], 1)'
     - name: 'attCtx'
       type: sumProdRecurrent
-      inputsStr: 'attReshape, imgRehape'
+      inputs: 'attReshape, imgRehape'
       sumAxis: 1
       outputDim: 512
     - name: 'attCtxMLP1'
       type: mapRecurrent
-      inputsStr: 'attCtx'
+      inputs: 'attCtx'
       outputDim: 150
       activeFn: tanh
       initRange: 0.1
@@ -68,7 +68,7 @@ stages:
       weightClip: 100
     - name: 'attCtxOut'
       type: mapRecurrent
-      inputsStr: 'attCtxMLP1'
+      inputs: 'attCtxMLP1'
       outputDim: 150
       activeFn: tanh
       initRange: 0.1
@@ -79,7 +79,7 @@ stages:
       weightClip: 100
     - name: 'lstm.I'
       type: mapRecurrent
-      inputsStr: 'txtSel, attCtxOut, lstm.C(-1), lstm.H(-1)'
+      inputs: 'txtSel, attCtxOut, lstm.C(-1), lstm.H(-1)'
       outputDim: 150
       activeFn: sigmoid
       initRange: 0.1
@@ -91,7 +91,7 @@ stages:
       weightClip: 100
     - name: 'lstm.F'
       type: mapRecurrent
-      inputsStr: 'txtSel, attCtxOut, lstm.C(-1), lstm.H(-1)'
+      inputs: 'txtSel, attCtxOut, lstm.C(-1), lstm.H(-1)'
       outputDim: 150
       activeFn: sigmoid
       initRange: 0.1
@@ -103,7 +103,7 @@ stages:
       weightClip: 100
     - name: 'lstm.Z'
       type: mapRecurrent
-      inputsStr: 'txtSel, attCtxOut, lstm.H(-1)'
+      inputs: 'txtSel, attCtxOut, lstm.H(-1)'
       outputDim: 150
       activeFn: tanh
       initRange: 0.1
@@ -115,7 +115,7 @@ stages:
       weightClip: 100
     - name: 'lstm.O'
       type: mapRecurrent
-      inputsStr: 'txtSel, attCtxOut, lstm.C, lstm.H(-1)'
+      inputs: 'txtSel, attCtxOut, lstm.C, lstm.H(-1)'
       outputDim: 150
       activeFn: sigmoid
       initRange: 0.1
@@ -127,29 +127,29 @@ stages:
       weightClip: 100
     - name: 'lstm.FC'
       type: componentProdRecurrent
-      inputsStr: 'lstm.F, lstm.C(-1)'
+      inputs: 'lstm.F, lstm.C(-1)'
       outputDim: 150
     - name: 'lstm.IZ'
       type: componentProdRecurrent
-      inputsStr: 'lstm.I, lstm.Z'
+      inputs: 'lstm.I, lstm.Z'
       outputDim: 150
     - name: 'lstm.C'
       type: sumRecurrent
-      inputsStr: 'lstm.FC, lstm.IZ'
+      inputs: 'lstm.FC, lstm.IZ'
       numComponents: 2
       outputDim: 150
     - name: 'lstm.U'
       type: activeRecurrent
-      inputsStr: 'lstm.C'
+      inputs: 'lstm.C'
       activeFn: tanh
       outputDim: 150
     - name: 'lstm.H'
       type: componentProdRecurrent
-      inputsStr: 'lstm.O, lstm.U'
+      inputs: 'lstm.O, lstm.U'
       outputDim: 150
     - name: 'att'
       type: mapRecurrent
-      inputsStr: 'lstm.H'
+      inputs: 'lstm.H'
       outputDim: 196
       activeFn: softmax
       defaultValue: 0.00510204081632653

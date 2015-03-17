@@ -5,17 +5,17 @@ model: all
 stages:
     - name: 'imgSel'
       type: selectorRecurrent
-      inputsStr: 'input($0)'
+      inputs: 'input($0)'
       start: 0
       end: 1
     - name: 'txtSel'
       type: selectorRecurrent
-      inputsStr: 'input'
+      inputs: 'input'
       start: 1
       end: 2
     - name: 'imgFeat'
       type: lutRecurrent
-      inputsStr: 'imgSel($0)'
+      inputs: 'imgSel($0)'
       inputDim: 1449
       outputDim: 100352
       initWeights: '../../../data/nyu-depth/hidden5_4_conv.pkl'
@@ -24,7 +24,7 @@ stages:
       outputdEdX: false
     - name: 'txtDict'
       type: lutRecurrent
-      inputsStr: 'txtSel'
+      inputs: 'txtSel'
       inputDim: 871
       outputDim: 150
       initRange: 0.1
@@ -33,20 +33,20 @@ stages:
       outputdEdX: false
     - name: 'imgReshape'
       type: reshapeRecurrent
-      inputsStr: 'imgFeat($0)'
+      inputs: 'imgFeat($0)'
       reshapeFn: '(x[0], 196, x[1]/196)'
     - name: 'attReshape'
       type: reshapeRecurrent
-      inputsStr: 'attOut(-1)'
+      inputs: 'attOut(-1)'
       reshapeFn: '(x[0], x[1], 1)'
     - name: 'attCtx'
       type: sumProdRecurrent
-      inputsStr: 'attReshape, imgReshape($0)'
+      inputs: 'attReshape, imgReshape($0)'
       sumAxis: 1
       outputDim: 512
     - name: 'txtAttCtx'
       type: mapRecurrent
-      inputsStr: 'txtDict, attCtx'
+      inputs: 'txtDict, attCtx'
       outputDim: 300
       activeFn: identity
       initRange: 0.1
@@ -57,7 +57,7 @@ stages:
       weightClip: 100
     - name: 'lstm.I'
       type: mapRecurrent
-      inputsStr: 'txtAttCtx, lstm.C(-1), lstm.H(-1)'
+      inputs: 'txtAttCtx, lstm.C(-1), lstm.H(-1)'
       outputDim: 150
       activeFn: sigmoid
       initRange: 0.1
@@ -69,7 +69,7 @@ stages:
       weightClip: 100
     - name: 'lstm.F'
       type: mapRecurrent
-      inputsStr: 'txtAttCtx, lstm.C(-1), lstm.H(-1)'
+      inputs: 'txtAttCtx, lstm.C(-1), lstm.H(-1)'
       outputDim: 150
       activeFn: sigmoid
       initRange: 0.1
@@ -81,7 +81,7 @@ stages:
       weightClip: 100
     - name: 'lstm.Z'
       type: mapRecurrent
-      inputsStr: 'txtAttCtx, lstm.H(-1)'
+      inputs: 'txtAttCtx, lstm.H(-1)'
       outputDim: 150
       activeFn: tanh
       initRange: 0.1
@@ -93,7 +93,7 @@ stages:
       weightClip: 100
     - name: 'lstm.O'
       type: mapRecurrent
-      inputsStr: 'txtAttCtx, lstm.C, lstm.H(-1)'
+      inputs: 'txtAttCtx, lstm.C, lstm.H(-1)'
       outputDim: 150
       activeFn: sigmoid
       initRange: 0.1
@@ -105,29 +105,29 @@ stages:
       weightClip: 100
     - name: 'lstm.FC'
       type: componentProdRecurrent
-      inputsStr: 'lstm.F, lstm.C(-1)'
+      inputs: 'lstm.F, lstm.C(-1)'
       outputDim: 150
     - name: 'lstm.IZ'
       type: componentProdRecurrent
-      inputsStr: 'lstm.I, lstm.Z'
+      inputs: 'lstm.I, lstm.Z'
       outputDim: 150
     - name: 'lstm.C'
       type: sumRecurrent
-      inputsStr: 'lstm.FC, lstm.IZ'
+      inputs: 'lstm.FC, lstm.IZ'
       numComponents: 2
       outputDim: 150
     - name: 'lstm.U'
       type: activeRecurrent
-      inputsStr: 'lstm.C'
+      inputs: 'lstm.C'
       activeFn: tanh
       outputDim: 150
     - name: 'lstm.H'
       type: componentProdRecurrent
-      inputsStr: 'lstm.O, lstm.U'
+      inputs: 'lstm.O, lstm.U'
       outputDim: 150
     - name: 'attHid1'
       type: mapRecurrent
-      inputsStr: 'lstm.H'
+      inputs: 'lstm.H'
       outputDim: 150
       activeFn: tanh
       initRange: 0.1
@@ -138,7 +138,7 @@ stages:
       weightClip: 50
     - name: 'attOut'
       type: mapRecurrent
-      inputsStr: 'attHid1'
+      inputs: 'attHid1'
       outputDim: 196
       activeFn: softmax
       defaultValue: 0.00510204081632653

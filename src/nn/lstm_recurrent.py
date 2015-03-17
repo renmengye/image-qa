@@ -28,7 +28,7 @@ class LSTM_Recurrent(Recurrent):
 
         self.I = Map_Recurrent(
                  name=name + '.I',
-                 inputsStr=['input(0)', name + '.H(-1)', name + '.C(-1)'],
+                 inputNames=['input(0)', name + '.H(-1)', name + '.C(-1)'],
                  #inputDim=D+D2+D2,
                  outputDim=D2,
                  activeFn=SigmoidActiveFn(),
@@ -43,7 +43,7 @@ class LSTM_Recurrent(Recurrent):
 
         self.F = Map_Recurrent(
                  name=name + '.F',
-                 inputsStr=['input(0)', name + '.H(-1)', name + '.C(-1)'],
+                 inputNames=['input(0)', name + '.H(-1)', name + '.C(-1)'],
                  #inputDim=D+D2+D2,
                  outputDim=D2,
                  activeFn=SigmoidActiveFn(),
@@ -58,7 +58,7 @@ class LSTM_Recurrent(Recurrent):
 
         self.Z = Map_Recurrent(
                  name=name + '.Z',
-                 inputsStr=['input(0)', name + '.H(-1)'],
+                 inputNames=['input(0)', name + '.H(-1)'],
                  #inputDim=D+D2,
                  outputDim=D2,
                  activeFn=TanhActiveFn(),
@@ -73,7 +73,7 @@ class LSTM_Recurrent(Recurrent):
 
         self.O = Map_Recurrent(
                  name=name + '.O',
-                 inputsStr=['input(0)', name + '.H(-1)', name + '.C(0)'],
+                 inputNames=['input(0)', name + '.H(-1)', name + '.C(0)'],
                  #inputDim=D+D2+D2,
                  outputDim=D2,
                  activeFn=SigmoidActiveFn(),
@@ -91,29 +91,29 @@ class LSTM_Recurrent(Recurrent):
 
         self.FC = ComponentProduct_Recurrent(
                   name=name + '.F*C',
-                  inputsStr=[name + '.F(0)', name + '.C(-1)'],
+                  inputNames=[name + '.F(0)', name + '.C(-1)'],
                   outputDim=D2)
 
         self.IZ = ComponentProduct_Recurrent(
                   name=name + '.I*Z',
-                  inputsStr=[name + '.I(0)', name + '.Z(0)'],
+                  inputNames=[name + '.I(0)', name + '.Z(0)'],
                   outputDim=D2)  
 
         self.C = Sum_Recurrent(
                  name=name + '.C',
-                 inputsStr=[name + '.F*C(0)', name + '.I*Z(0)'],
+                 inputNames=[name + '.F*C(0)', name + '.I*Z(0)'],
                  numComponents=2,
                  outputDim=D2)
 
         self.U = Active_Recurrent(
                  name=name + '.U',
-                 inputsStr=[name + '.C(0)'],
+                 inputNames=[name + '.C(0)'],
                  outputDim=D2,
                  activeFn=TanhActiveFn())
 
         self.H = ComponentProduct_Recurrent(
                  name=name + '.H',
-                 inputsStr=[name + '.O(0)', name + '.U(0)'],
+                 inputNames=[name + '.O(0)', name + '.U(0)'],
                  outputDim=D2,
                  defaultValue=defaultValue)
 
