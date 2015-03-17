@@ -69,13 +69,6 @@ if __name__ == '__main__':
         outputFolder=params['outputFolder']
     )
 
-    # a = model.getWeights()
-    # trainOpt['numEpoch'] = 1
-    # trainInput = trainInput[:100]
-    # trainTarget = trainTarget[:100]
-    # trainOpt['needValid'] = False
-    # validtrainInput = None
-    # validtrainTarget = None
     trainer.train(trainInput, trainTarget, validInput, validTarget)
     # Send email
     if trainOpt.has_key('sendEmail') and trainOpt['sendEmail']:
@@ -99,13 +92,16 @@ if __name__ == '__main__':
             trainOpt=trainOpt,
             outputFolder=params['outputFolder']
         )
+        
         if params['allDataFilename'] is not None:
             allData = np.load(params['allDataFilename'])
             allInput = allData[0]
             allTarget = allData[1]
             trainer.train(allInput, allTarget)
         else:
-            trainer.train(trainInput, trainTarget)
+            allInput = np.concatenate((trainInput, validInput), axis=0)
+            allTarget = np.concatenate((trainTarget, validTarget), axis=0)
+            trainer.train(allInput, allTarget)
 
         model = nn.load(params['modelFilename'])
         model.loadWeights(np.load(trainer.modelFilename))

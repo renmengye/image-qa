@@ -9,6 +9,8 @@ class ImgWordTest(nn.stage_tests.StageTests):
         self.tolerance = 1e-2
         self.model = nn.load('../models/imgword.test.model.yml')
         self.model.stageDict['dropout'].debug = True
+        # imgMap
+        #self.stage = self.model.stageDict['imgMap']
         # lstm.I
         #self.stage = self.model.stageDict['lstm'].stageDict['lstm.I'].getStage(time=0)
         # lstm.F
