@@ -700,18 +700,24 @@ def train(dim_word=100, # word vector dimensionality
             valid, batch_size=100, maxlen=maxlen)
         vcorrect = 0
         vtotal = 0
+        vcost_total = 0.0
         for vbatch in valid_iter:
             vx, vx_mask, vctx, vy = prepare_data(\
                 vbatch, valid[1], worddict)
             vlogprob = f_pred_probs(vx, vx_mask, vctx)
+            vcost_total += f_grad_shared(vx, vx_mask, vctx, vy) / vy.size
             vout = numpy.argmax(vlogprob, axis=-1)
             vcorrect += numpy.sum((vout == vy).astype('int64'))
             vtotal += vy.size
         vr = vcorrect / float(vtotal)
-        history_errs.append(1-vr)
+        vcost = vcost_total / float(vtotal)
+        # history_errs.append(1-vr)
+        history_errs.append(vcost)
+        print 'VCost %.5f' % vcost,
         print 'Valid Acc %.5f' % vr,
         print 'Time', int(time.time() - ep_start)
-        if uidx == 0 or 1-vr <= numpy.array(history_errs).min():
+        if uidx == 0 or vcost <= numpy.array(history_errs).min():
+        #if uidx == 0 or 1-vr <= numpy.array(history_errs).min():
             best_p = unzip(tparams)
             bad_counter = 0
             numpy.savez(saveto, history_errs=history_errs, **best_p)
