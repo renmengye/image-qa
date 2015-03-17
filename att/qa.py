@@ -730,11 +730,11 @@ def train(dim_word=100, # word vector dimensionality
             break
     
 if __name__ == '__main__':
-    dropout = True
-    #train(dataset='daquar', \
-    #    n_answers=63, \
-    #    use_dropout=dropout, \
-    #    use_dropout_lstm=dropout);
+    dropout = False
+    train(dataset='daquar', \
+        n_answers=63, \
+        use_dropout=dropout, \
+        use_dropout_lstm=dropout);
     train(dataset='daquar',
         n_answers=63,
         use_dropout=dropout,
