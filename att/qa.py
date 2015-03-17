@@ -705,7 +705,7 @@ def train(dim_word=100, # word vector dimensionality
             vx, vx_mask, vctx, vy = prepare_data(\
                 vbatch, valid[1], worddict)
             vlogprob = f_pred_probs(vx, vx_mask, vctx)
-            vcost_total += f_grad_shared(vx, vx_mask, vctx, vy) / vy.size
+            vcost_total += f_grad_shared(vx, vx_mask, vctx, vy) * vy.size
             vout = numpy.argmax(vlogprob, axis=-1)
             vcorrect += numpy.sum((vout == vy).astype('int64'))
             vtotal += vy.size
