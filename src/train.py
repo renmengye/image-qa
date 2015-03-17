@@ -92,7 +92,7 @@ if __name__ == '__main__':
             trainOpt=trainOpt,
             outputFolder=params['outputFolder']
         )
-        
+
         if params['allDataFilename'] is not None:
             allData = np.load(params['allDataFilename'])
             allInput = allData[0]
