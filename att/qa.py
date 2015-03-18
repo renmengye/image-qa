@@ -611,6 +611,8 @@ def train(dim_word=100, # word vector dimensionality
     # before any regularizer
     f_pred_probs = \
         theano.function((inps[0], inps[1], inps[2]), probs, profile=False)
+    f_alpha = \
+        theano.function(inps, alphas, name='f_alpha', on_unused_input='ignore')
     cost = cost.mean()
     if decay_c > 0.:
         decay_c = theano.shared(numpy.float32(decay_c), name='decay_c')
@@ -637,15 +639,19 @@ def train(dim_word=100, # word vector dimensionality
         test_correct = 0
         test_total = 0
         test_iter = HomogeneousData(test, maxlen=maxlen)
+        tsave_total = []
         for tbatch in test_iter:
             tx, tx_mask, tctx, ty = prepare_data(\
                 tbatch, test[1], worddict)
             tlogprob = f_pred_probs(tx, tx_mask, tctx)
+            talpha = f_alpha(tx, tx_mask, tctx, ty)
             tout = numpy.argmax(tlogprob, axis=-1)
+            tsave_total.append((tbatch, tlogprob, talpha))
             test_correct += numpy.sum((tout == ty).astype('int64'))
             test_total += ty.size
         tr = test_correct / float(test_total)
         print 'Test Acc %.5f' % tr
+        numpy.save('test.out.npy', numpy.array(tsave_total, dtype=object))
         sys.exit()
 
     print 'Optimization'
@@ -731,10 +737,10 @@ def train(dim_word=100, # word vector dimensionality
     
 if __name__ == '__main__':
     dropout = False
-    train(dataset='daquar', \
-        n_answers=63, \
-        use_dropout=dropout, \
-        use_dropout_lstm=dropout);
+    #train(dataset='daquar', \
+    #    n_answers=63, \
+    #    use_dropout=dropout, \
+    #    use_dropout_lstm=dropout);
     train(dataset='daquar',
         n_answers=63,
         use_dropout=dropout,
