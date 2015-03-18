@@ -67,6 +67,9 @@ def extractQA(lines):
     lineMax = 0
     for i in range(0, len(lines) / 2):
         n = i * 2
+        if ',' in lines[n + 1]:
+            # No multiple words answer for now.
+            continue
         match = re.search('image(\d+)', lines[n])
         number = int((re.search('\d+', match.group())).group())
         line = lines[n]
@@ -76,12 +79,11 @@ def extractQA(lines):
         line = re.sub(' of the image(\d+)( \?\s)?', '' , line)
         line = re.sub(' in image(\d+)( \?\s)?', '' , line)
         line = re.sub(' image(\d+)( \?\s)?', '' , line)
-        questions.append(line)
+        question = line
+        questions.append(question)
         answer = escapeNumber(re.sub('\s$', '', lines[n + 1]))
         answers.append(answer)
         imgIds.append(number)
-        l = len(questions[i].split())
-        if l > lineMax: lineMax = l
     return (questions, answers, imgIds)
 
 def buildDict(lines, keystart):
@@ -201,6 +203,7 @@ if __name__ == '__main__':
 
     worddict_all, idict_all = buildDict(questions, 1)
     ansdict_all, iansdict_all = buildDict(answers, 0)
+
     allInput = combine(\
         lookupQID(questions, worddict), imgids)
     allTarget = lookupAnsID(answers, ansdict)
