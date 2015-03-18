@@ -35,7 +35,11 @@ def renderHtml(X, Y, T, questionArray, answerArray, topK):
                 colorStr = 'style="color:red"'
             else:
                 colorStr = ''
-            htmlList.append('<span %s>%d. %s %.4f</span><br/>' % (colorStr, i + 1, answerArray[sortIdx[i]], Y[n, sortIdx[i]]))
+            if sortIdx[i] >= len(answerArray):
+                answer = 'UNK'
+            else:
+                answer = answerArray[sortIdx[i]]
+            htmlList.append('<span %s>%d. %s %.4f</span><br/>' % (colorStr, i + 1, answer, Y[n, sortIdx[i]]))
         htmlList.append('Correct answer: <span style="color:green">%s</span><br/></div></td>' % answerArray[T[n, 0]])
 
         if np.mod(n, imgPerRow) == imgPerRow - 1:

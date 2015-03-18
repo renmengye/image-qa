@@ -202,8 +202,8 @@ if __name__ == '__main__':
     worddict_all, idict_all = buildDict(questions, 1)
     ansdict_all, iansdict_all = buildDict(answers, 0)
     allInput = combine(\
-        lookupQID(questions, worddict_all), imgids)
-    allTarget = lookupAnsID(answers, ansdict_all)
+        lookupQID(questions, worddict), imgids)
+    allTarget = lookupAnsID(answers, ansdict)
 
     np.save(\
         os.path.join(outputFolder, 'train-37-unk.npy'),\

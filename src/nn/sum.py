@@ -19,4 +19,4 @@ class Sum(Stage):
             axis=1)
     def backward(self, dEdY):
         self.dEdW = 0.0
-        return np.tile(dEdY, 2)
+        return np.tile(dEdY, self.numComponents)

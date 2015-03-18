@@ -95,15 +95,19 @@ def LoadImage(file_name, resize=256, crop=224):
     return data
 
 def plotAttention(X, A, Xend, prefix):
-    for n in range(X.shape[0]):
+    for n in range(10):
         img = LoadImage('../data/nyu-depth-v2/jpg/image%d.jpg' % X[n, 0, 0])
         plt.clf()
+        w = np.round(np.sqrt(Xend[n] + 1))
+        h = np.ceil((Xend[n] + 1) / float(w))
+        plt.subplot(w, h, 1)
         plt.imshow(img)
         plt.axis('off')
         plt.savefig(os.path.join(resultFolder, '%s-%d-_.png' % (prefix, n)))
         for t in range(Xend[n]):
             word = vocabDict[1][X[n, t, 1] - 1]
-            plt.clf()
+            #plt.clf()
+            plt.subplot(w, h, t + 2)
             plt.imshow(img)
             alpha = A[n, t].reshape(14, 14)
             alpha_img = skimage.transform.resize(alpha, [img.shape[0], img.shape[1]])
@@ -111,8 +115,8 @@ def plotAttention(X, A, Xend, prefix):
             plt.set_cmap(cm.Greys_r)
             plt.title(word)
             plt.axis('off')
-            plt.savefig(os.path.join(resultFolder, '%s-%d-%d.png' % (prefix, n, t)))
-            plt.show()
+        plt.savefig(os.path.join(resultFolder, '%s-%d-%d.png' % (prefix, n, t)))
+        plt.show()
 
 if __name__ == '__main__':
     """
@@ -142,7 +146,7 @@ if __name__ == '__main__':
     T = trainData[1]
     Xend = scan(X)
     prefix = 'train'
-    #plotAttention(X,A,Xend,prefix)
+    plotAttention(X,A,Xend,prefix)
     html = renderHtml(X, Y, T, vocabDict[1], vocabDict[3], 10, 'train')
     with open(trainHtmlFilename, 'w+') as f:
         f.writelines(html)

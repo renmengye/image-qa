@@ -9,6 +9,7 @@ from cos_sim import *
 from lstm import *
 from sum_prod import *
 from selector import *
+from sum2 import *
 
 
 import pickle
@@ -321,6 +322,11 @@ def addStage(stageDict):
             name=stageDict['name'],
             inputNames=inputList,
             errorConst=stageDict['errorConst'])
+    elif stageDict['type'] == 'sum2':
+        stage = Sum2(
+            name=stageDict['name'],
+            inputNames=inputList,
+            outputDim=stageDict['outputDim'])
     else:
         raise Exception('Stage type ' + stageDict['type'] + ' not found.')
 
