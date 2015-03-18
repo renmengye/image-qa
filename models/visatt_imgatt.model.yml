@@ -57,6 +57,7 @@ specs:
       type: 'sumProd'
       inputs: 'attReshape, imgReshape($0)'
       sumAxis: 1
+      beta: 100.0
       outputDim: 512
       recurrent: true
     - name: 'imglstm'
@@ -93,7 +94,7 @@ specs:
       inputDim: 600
       outputDim: 196
       timespan: 28
-      initRange: 0.5
+      initRange: 0.1
       initSeed: 5
       cutOffZeroEnd: true
       multiErr: true
@@ -109,7 +110,7 @@ specs:
       outputDim: 196
       activeFn: 'softmax'
       defaultValue: 0.00510204081632653
-      initRange: 0.5
+      initRange: 0.1
       initSeed: 7
       learningRate: 0.1
       momentum: 0.9

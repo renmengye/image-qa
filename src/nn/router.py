@@ -296,6 +296,7 @@ def addStage(stageDict):
             name=stageDict['name'],
             inputNames=inputList,
             sumAxis=stageDict['sumAxis'],
+            beta=stageDict['beta'] if stageDict.has_key('beta') else 1.0,
             outputDim=stageDict['outputDim']
         )
     elif stageDict['type'] == 'recurrent':
