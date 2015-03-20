@@ -7,6 +7,7 @@ class LUT(Stage):
                  outputDim,
                  initRange=1.0,
                  initSeed=2,
+                 intConversion=False,
                  needInit=True,
                  initWeights=0,
                  sparse=False,
@@ -35,6 +36,7 @@ class LUT(Stage):
         self.initRange = initRange
         self.random = np.random.RandomState(initSeed)
         self.needInit = needInit
+        self.intConversion = intConversion
 
         # Zeroth rows of the weight matrix is reserved
         # for empty word at the end of a sentence.
@@ -62,6 +64,7 @@ class LUT(Stage):
 
     def forward(self, X):
         if self.W is None: self.initWeights()
+        if self.intConversion: X = X.astype(int)
         X = X.reshape(X.size)
         Y = np.zeros((X.shape[0], self.outputDim))
         for n in range(0, X.shape[0]):

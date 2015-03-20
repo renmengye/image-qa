@@ -141,6 +141,7 @@ def addStage(stageDict):
             initSeed=initSeed,
             initRange=initRange,
             initWeights=initWeights,
+            intConversion=stageDict['intConversion'] if stageDict.has_key('intConversion') else False
             sparse=stageDict['sparse'] if stageDict.has_key('sparse') else False,
             needInit=needInit,
             learningRate=learningRate,
@@ -193,6 +194,12 @@ def addStage(stageDict):
         stage = TimeFold(
             name=stageDict['name'],
             timespan=stageDict['timespan'],
+            inputNames=inputList,
+            outputdEdX=outputdEdX
+        )
+    elif stageDict['type'] == 'timeReverse':
+        stage = TimeReverse(
+            name=stageDict['name'],
             inputNames=inputList,
             outputdEdX=outputdEdX
         )

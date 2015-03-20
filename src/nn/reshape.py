@@ -32,6 +32,42 @@ class TimeFold(Reshape):
                          reshapeFn='(x[0] / '+t+','+t+', x[1])',
                          outputdEdX=outputdEdX)
 
+class TimeReverse(Stage):
+    def __init__(self, inputNames, outputDim=0, name=None, outputdEdX=True):
+        Stage.__init__(self, 
+                       name=name,
+                       inputNames=inputNames,
+                       outputDim=outputDim,
+                       outputdEdX=outputdEdX)
+
+    def forward(self, X):
+        N = X.shape[0]
+        self.Xend = np.zeros(N, dtype=int) + X.shape[1]
+        reachedEnd = np.sum(X, axis=-1) == 0.0
+        if self.multiOutput:
+            Y = np.zeros((N, self.timespan, self.outputDim))
+        else:
+            Y = np.zeros((N, self.outputDim))
+
+        # Scan for the end of the sequence.
+        for n in range(N):
+            for t in range(X.shape[1]):
+                if reachedEnd[n, t]:
+                    self.Xend[n] = t
+                    Y[n, 0:t, :] = X[n, t-1::-1, :]
+                    break
+        return Y
+
+    def backward(self, dEdY):
+        if outputdEdX:
+            dEdX = np.zeros(dEdY.shape)
+            for n in range(N):
+                t = self.Xend[n]
+                dEdX[n, 0:t, :] = dEdY[n, t-1::-1, :]
+            return dEdX
+        else:
+            return None
+
 class Concat(Stage):
     def __init__(self, inputNames, axis, name=None):
         Stage.__init__(self, name=name, inputNames=inputNames, outputDim=0)

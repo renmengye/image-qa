@@ -64,12 +64,16 @@ def extractQA(lines):
     questions = []
     answers = []
     imgIds = []
+    discard = 0
+    preserved = 0
     lineMax = 0
     for i in range(0, len(lines) / 2):
         n = i * 2
         if ',' in lines[n + 1]:
             # No multiple words answer for now.
+            discard += 1
             continue
+        preserved += 1
         match = re.search('image(\d+)', lines[n])
         number = int((re.search('\d+', match.group())).group())
         line = lines[n]
@@ -84,6 +88,8 @@ def extractQA(lines):
         answer = escapeNumber(re.sub('\s$', '', lines[n + 1]))
         answers.append(answer)
         imgIds.append(number)
+    print 'Discard', discard
+    print 'Preserved', preserved
     return (questions, answers, imgIds)
 
 def buildDict(lines, keystart):
@@ -138,6 +144,31 @@ def lookupQID(questions, worddict):
                 result[i, j, 0] = worddict['UNK']
     return result
 
+def lookupQIDBidir(questions, worddict):
+    """
+    Look up word ids, produces forward-backward bi-directional word array
+    :param questions: List of string
+    :param worddict: Map from string (word) to word id
+    :return:
+    """
+    wordslist = []
+    maxlen = 27
+    for q in questions:
+        words = q.split(' ')
+        wordslist.append(words)
+        # if len(words) > maxlen:
+        #     maxlen = len(words)
+    result = np.zeros((len(questions), maxlen, 2), dtype=int)
+    for i,words in enumerate(wordslist):
+        for j,w in enumerate(words):
+            if worddict.has_key(w):
+                result[i, j, 0] = worddict[w]
+                result[i, len(words) - j - 1, 1] = worddict[w]
+            else:
+                result[i, j, 0] = worddict['UNK']
+                result[i, len(words) - j - 1, 1] = worddict['UNK']
+    return result
+
 def combine(wordids, imgids):
     return np.concatenate(\
         (np.array(imgids).reshape(len(imgids), 1, 1), \
@@ -147,7 +178,7 @@ def combineAttention(wordids, imgids):
     imgid_t = []
     for n in range(0, wordids.shape[0]):
         for t in range(0, wordids.shape[1]):
-            if wordids[n,t] == 0:
+            if wordids[n, t, 0] == 0:
                 imgid_t.append(0)
             else:
                 imgid_t.append(imgids[n])
@@ -160,6 +191,9 @@ if __name__ == '__main__':
     """
     Usage: imgword_prep.py -train trainQAFile -test testQAFile -o outputFolder
     """
+    trainQAFilename = '../../../data/mpi-qa/qa.37.raw.train.txt'
+    testQAFilename = '../../../data/mpi-qa/qa.37.raw.test.txt'
+    outputFolder = '../data/imgword'
     if len(sys.argv) > 6:
         for i in range(1, len(sys.argv)):
             if sys.argv[i] == '-train':
@@ -168,11 +202,8 @@ if __name__ == '__main__':
                 testQAFilename = sys.argv[i + 1]
             elif sys.argv[i] == '-o':
                 outputFolder = sys.argv[i + 1]
-    else:
-        trainQAFilename = '../../../data/mpi-qa/qa.37.raw.train.txt'
-        testQAFilename = '../../../data/mpi-qa/qa.37.raw.test.txt'
-        outputFolder = '../data/imgword'
 
+    # Read train file.
     with open(trainQAFilename) as f:
         lines = f.readlines()
 
@@ -181,6 +212,12 @@ if __name__ == '__main__':
     t_questions, v_questions = dataSplit(questions, imgids, split)
     t_answers, v_answers = dataSplit(answers, imgids, split)
     t_imgids, v_imgids = dataSplit(imgids, imgids, split)
+
+    # Read test file.
+    with open(testQAFilename) as f:
+        lines = f.readlines()
+
+    (r_questions, r_answers, r_imgids) = extractQA(lines)
 
     # Build a dictionary only for training questions.
     worddict, idict = buildDict(t_questions, 1)
@@ -192,11 +229,6 @@ if __name__ == '__main__':
     validInput = combine(\
         lookupQID(v_questions, worddict), v_imgids)
     validTarget = lookupAnsID(v_answers, ansdict)
-
-    with open(testQAFilename) as f:
-        lines = f.readlines()
-
-    (r_questions, r_answers, r_imgids) = extractQA(lines)
     testInput = combine(\
         lookupQID(r_questions, worddict), r_imgids)
     testTarget = lookupAnsID(r_answers, ansdict)
@@ -256,6 +288,31 @@ if __name__ == '__main__':
     np.save(\
         os.path.join(outputFolder, 'all-37-unk-att.npy'),\
         np.array((allInput, allTarget, 0),\
+            dtype=object))
+
+    trainInputBidir = combineAttention(\
+        lookupQIDBidir(t_questions, worddict), t_imgids)
+    validInputBidir = combineAttention(\
+        lookupQIDBidir(v_questions, worddict), v_imgids)
+    testInputBidir = combineAttention(\
+        lookupQIDBidir(r_questions, worddict), r_imgids)
+    allInputBidir = combineAttention(\
+        lookupQID(questions, worddict_all), imgids)
+    np.save(\
+        os.path.join(outputFolder, 'train-37-unk-att-bidir.npy'),\
+        np.array((trainInputBidir, trainTarget, 0),\
+            dtype=object))
+    np.save(\
+        os.path.join(outputFolder, 'valid-37-unk-att-bidir.npy'),\
+        np.array((validInputBidir, validTarget, 0),\
+            dtype=object))
+    np.save(\
+        os.path.join(outputFolder, 'test-37-unk-att-bidir.npy'),\
+        np.array((testInputBidir, testTarget, 0),\
+            dtype=object))
+    np.save(\
+        os.path.join(outputFolder, 'all-37-unk-att-bidir.npy'),\
+        np.array((allInputBidir, allTarget, 0),\
             dtype=object))
 
     with open(os.path.join(outputFolder, 'question_vocabs.txt'), 'w+') as f:
