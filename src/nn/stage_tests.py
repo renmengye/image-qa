@@ -38,7 +38,7 @@ class StageTests(unittest.TestCase):
                     W[i,j] += eps
         else:
             dEdW = 0
-            dEdWTmp = 0  
+            dEdWTmp = 0
         if self.testInputErr:
             if len(X.shape) == 3:
                 for n in range(0, X.shape[0]):
@@ -467,6 +467,65 @@ class SumProduct_Tests(StageTests):
                     dEdXTmp[n, t, j] = (Etmp1 - Etmp2) / 2.0 / eps
                     X[1][n, t, j] += eps
         self.chkgrd(dEdX[1], dEdXTmp)
+
+
+    def test_grad2(self):
+        random = np.random.RandomState(2)
+        X = [random.uniform(-0.1, 0.1, (3, 10, 1)),
+             random.uniform(-0.1, 0.1, (3, 10, 5)),
+             random.uniform(-0.1,0.1, (3, 1))]
+        T = random.uniform(-0.1, 0.1, (3, 5))
+
+        Y = self.model.forward(X)
+        W = self.stage.W
+        E, dEdY = self.costFn(Y, T)
+        dEdX = self.model.backward(dEdY)
+
+        eps = 1e-3
+        dEdXTmp = np.zeros(X[0].shape)
+        for n in range(0, 3):
+            for t in range(0, 10):
+                X[0][n, t] += eps
+                Y = self.model.forward(X)
+                Etmp1, d1 = self.costFn(Y, T)
+
+                X[0][n, t] -= 2 * eps
+                Y = self.model.forward(X)
+                Etmp2, d2 = self.costFn(Y, T)
+
+                dEdXTmp[n, t] = (Etmp1 - Etmp2) / 2.0 / eps
+                X[0][n, t] += eps
+        self.chkgrd(dEdX[0], dEdXTmp)
+        dEdXTmp = np.zeros(X[1].shape)
+        for n in range(0, 3):
+            for t in range(0, 10):
+                for j in range (0, 5):
+                    X[1][n, t, j] += eps
+                    Y = self.model.forward(X)
+                    Etmp1, d1 = self.costFn(Y, T)
+
+                    X[1][n, t, j] -= 2 * eps
+                    Y = self.model.forward(X)
+                    Etmp2, d2 = self.costFn(Y, T)
+
+                    dEdXTmp[n, t, j] = (Etmp1 - Etmp2) / 2.0 / eps
+                    X[1][n, t, j] += eps
+        self.chkgrd(dEdX[1], dEdXTmp)
+        dEdXTmp = np.zeros(X[2].shape)
+        for n in range(0, 3):
+            for j in range (0, 1):
+                X[2][n, j] += eps
+                Y = self.model.forward(X)
+                Etmp1, d1 = self.costFn(Y, T)
+
+                X[2][n, j] -= 2 * eps
+                Y = self.model.forward(X)
+                Etmp2, d2 = self.costFn(Y, T)
+
+                dEdXTmp[n, j] = (Etmp1 - Etmp2) / 2.0 / eps
+                X[2][n, j] += eps
+        print dEdX[2]/dEdXTmp
+        self.chkgrd(dEdX[2], dEdXTmp)
 
 
 if __name__ == '__main__':
