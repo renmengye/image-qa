@@ -63,7 +63,8 @@ class TimeReverse(Stage):
             dEdX = np.zeros(dEdY.shape)
             for n in range(dEdY.shape[0]):
                 t = self.Xend[n]
-                dEdX[n, 0:t, :] = dEdY[n, t-1::-1, :]
+                if t > 0:
+                    dEdX[n, 0:t, :] = dEdY[n, t-1::-1, :]
             return dEdX
         else:
             return None
