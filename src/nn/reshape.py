@@ -52,7 +52,8 @@ class TimeReverse(Stage):
             for t in range(X.shape[1]):
                 if reachedEnd[n, t]:
                     self.Xend[n] = t
-                    Y[n, 0:t, :] = X[n, t-1::-1, :]
+                    if t > 0:
+                        Y[n, 0:t, :] = X[n, t-1::-1, :]
                     break
         #print self.name, Y.shape
         return Y

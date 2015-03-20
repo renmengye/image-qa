@@ -75,7 +75,6 @@ specs:
       momentum: 0.9
       gradientClip: 0.1
       weightClip: 100.0
-      weightRegConst: 0.00005
       outputdEdX: true
     - name: 'wlstm1RevO'
       type: 'timeReverse'
@@ -95,7 +94,6 @@ specs:
       momentum: 0.9
       gradientClip: 0.1
       weightClip: 100.0
-      weightRegConst: 0.00005
       outputdEdX: true
     - name: 'wlstm2RevO'
       type: 'timeReverse'
