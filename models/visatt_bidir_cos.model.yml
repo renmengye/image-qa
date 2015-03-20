@@ -199,6 +199,19 @@ specs:
       gradientClip: 0.1
       weightClip: 50
       recurrent: true
+    - name: 'attBeta'
+      type: 'map'
+      inputs: 'txtSel2, ilstm(-1)'
+      outputDim: 1
+      activeFn: 'identity'
+      initRange: 1.0
+      biasInitConst: 1.0
+      initSeed: 8
+      learningRate: 0.1
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 5.0
+      recurrent: true
     - name: 'attModel'
       type: 'recurrent'
       inputs: 'imgSel1, wlstm2RevO'
@@ -209,6 +222,7 @@ specs:
           - 'imgReshape'
           - 'attHid1'
           - 'attOut'
+          - 'attBeta'
           - 'attReshape'
           - 'attCtx'
           - 'ctxMap'
