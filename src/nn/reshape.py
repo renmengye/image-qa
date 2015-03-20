@@ -41,13 +41,11 @@ class TimeReverse(Stage):
                        outputdEdX=outputdEdX)
 
     def forward(self, X):
+        #print self.name, X.shape
         N = X.shape[0]
         self.Xend = np.zeros(N, dtype=int) + X.shape[1]
         reachedEnd = np.sum(X, axis=-1) == 0.0
-        if self.multiOutput:
-            Y = np.zeros((N, self.timespan, self.outputDim))
-        else:
-            Y = np.zeros((N, self.outputDim))
+        Y = np.zeros(X.shape)
 
         # Scan for the end of the sequence.
         for n in range(N):
@@ -56,12 +54,13 @@ class TimeReverse(Stage):
                     self.Xend[n] = t
                     Y[n, 0:t, :] = X[n, t-1::-1, :]
                     break
+        #print self.name, Y.shape
         return Y
 
     def backward(self, dEdY):
-        if outputdEdX:
+        if self.outputdEdX:
             dEdX = np.zeros(dEdY.shape)
-            for n in range(N):
+            for n in range(dEdY.shape[0]):
                 t = self.Xend[n]
                 dEdX[n, 0:t, :] = dEdY[n, t-1::-1, :]
             return dEdX

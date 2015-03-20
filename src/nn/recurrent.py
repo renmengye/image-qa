@@ -188,6 +188,7 @@ class RecurrentContainer(Container, RecurrentStage):
                  inputDim,
                  outputDim,
                  timespan,
+                 defaultValue=0,
                  multiOutput=True,
                  name=None,
                  inputNames=None,
@@ -220,7 +221,10 @@ class RecurrentContainer(Container, RecurrentStage):
 
     def createOutputStage(self):
         return RecurrentAdapter(
-            stage=Container.createOutputStage(self))
+            stage=Output(name='output', 
+                inputNames=self.outputStageNames, 
+                outputDim=self.outputDim, 
+                defaultValue=self.defaultValue))
 
     def link(self):
         """
@@ -251,9 +255,10 @@ class RecurrentContainer(Container, RecurrentStage):
                     if stageTime > 0:
                         raise Exception('Recurrent model definition is non-causal.')
                     if t + stageTime < 0:
+                        stageInputContainer = self.stageDict[stageName]
                         stageInput = Constant(
                             name=('%s-%s-%d'%('const', stageName, -t-stageTime)),
-                            value=self.stageDict[stageName].getStage(0).defaultValue)
+                            value=stageInputContainer.getStage(0).defaultValue)
                         self.constStages.append(stageInput)
                     else:
                         stageInput = self.stageDict[stageName].getStage(t + stageTime)
@@ -376,6 +381,19 @@ class RecurrentContainer(Container, RecurrentStage):
         for s in reversed(range(0, len(self.stages) - 1)):
             if self.stages[s].getStage(time=time).used:
                 self.stages[s].timeBackward(time=time)
+
+    def sendError(self, dEdX):
+        """
+        Iterates over input list and sends dEdX.
+        """
+        if len(self.inputs) > 1:
+            s = 0
+            for stage in self.inputs:
+                s2 = s + stage.Y.shape[-1]
+                stage.dEdY += dEdX[:, :, s : s2]
+                s = s2
+        else:
+            self.inputs[0].dEdY += dEdX
 
     #@profile
     def backward(self, dEdY):

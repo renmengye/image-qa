@@ -15,11 +15,12 @@ class Input(Stage):
         return dEdY
 
 class Output(Stage):
-    def __init__(self, name, inputNames):
+    def __init__(self, name, inputNames, outputDim=0, defaultValue=0):
         Stage.__init__(self,
             name=name, 
-            inputNames=inputNames, 
-            outputDim=0)
+            inputNames=inputNames,
+            defaultValue=defaultValue,
+            outputDim=outputDim)
     def graphForward(self):
         self.Y = self.getInput()
     def graphBackward(self):
@@ -36,7 +37,7 @@ class Container(Stage):
                  outputdEdX=True):
         Stage.__init__(self,
                 name=name, 
-                inputNames=inputNames, 
+                inputNames=inputNames,
                 outputDim=outputDim, 
                 outputdEdX=outputdEdX)
         self.stages = []

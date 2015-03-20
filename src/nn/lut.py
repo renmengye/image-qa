@@ -18,6 +18,7 @@ class LUT(Stage):
                  weightClip=0.0,
                  gradientClip=0.0,
                  weightRegConst=0.0,
+                 outputdEdX=False,
                  name=None):
         Stage.__init__(self,
                  name=name,
@@ -30,7 +31,7 @@ class LUT(Stage):
                  weightClip=weightClip,
                  gradientClip=gradientClip,
                  weightRegConst=weightRegConst,
-                 outputdEdX=False)
+                 outputdEdX=outputdEdX)
         self.outputDim = outputDim
         self.inputDim = inputDim
         self.initRange = initRange
@@ -65,11 +66,11 @@ class LUT(Stage):
     def forward(self, X):
         if self.W is None: self.initWeights()
         if self.intConversion: X = X.astype(int)
+        self.X = X
         X = X.reshape(X.size)
         Y = np.zeros((X.shape[0], self.outputDim))
         for n in range(0, X.shape[0]):
              Y[n] = self.W[X[n]]
-        self.X = X
         return Y
 
     def backward(self, dEdY):
@@ -78,7 +79,10 @@ class LUT(Stage):
             self.dEdW = np.zeros(self.W.shape)
             for n in range(0, X.shape[0]):
                 self.dEdW[X[n]] += dEdY[n]
-        return None
+        if self.outputdEdX:
+            return np.zeros(X.shape)
+        else:
+            return None
 
     def loadWeights(self, W):
         if self.learningRate == 0.0:

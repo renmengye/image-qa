@@ -104,6 +104,8 @@ class Stage:
         Forward propagates.
         """
         self.X = self.getInput()
+        # if hasattr(self.X, 'shape'):
+        #     print 'forward', self.name, self.X.shape
         self.Y = self.forward(self.X)
 
     def forward(self, X):
@@ -119,6 +121,8 @@ class Stage:
         """
         Backward propagates.
         """
+        # if hasattr(self.dEdY, 'shape'):
+        #     print 'backward', self.name, self.dEdY.shape
         dEdX = self.backward(self.dEdY)
         if self.outputdEdX:
             self.sendError(dEdX)

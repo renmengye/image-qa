@@ -141,7 +141,7 @@ def addStage(stageDict):
             initSeed=initSeed,
             initRange=initRange,
             initWeights=initWeights,
-            intConversion=stageDict['intConversion'] if stageDict.has_key('intConversion') else False
+            intConversion=stageDict['intConversion'] if stageDict.has_key('intConversion') else False,
             sparse=stageDict['sparse'] if stageDict.has_key('sparse') else False,
             needInit=needInit,
             learningRate=learningRate,
@@ -150,7 +150,8 @@ def addStage(stageDict):
             deltaMomentum=deltaMomentum,
             gradientClip=gradientClip,
             weightClip=weightClip,
-            weightRegConst=weightRegConst
+            weightRegConst=weightRegConst,
+            outputdEdX=stageDict['outputdEdX'] if stageDict.has_key('outputdEdX') else False
         )
     elif stageDict['type'] == 'map':
         stage = Map(
