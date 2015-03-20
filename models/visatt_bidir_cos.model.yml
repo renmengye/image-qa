@@ -143,6 +143,7 @@ specs:
       inputs: 'attReshape, imgReshape($0)'
       sumAxis: 1
       outputDim: 512
+      beta: 5
       recurrent: true
     - name: 'ctxMap'
       type: 'map'
