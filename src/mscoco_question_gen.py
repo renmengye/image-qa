@@ -11,7 +11,7 @@ import sys
 if len(sys.argv) < 2:
     parseFilename = '../../../data/mscoco/mscoco_caption.parse.txt'
     imgidsFilename = '../../../data/mscoco/mscoco_imgids.txt'
-    outputFilename = '../../../data/mscoco/mscoco_qa.pkl'
+    outputFilename = '../../../data/mscoco/mscoco_qa_hm.pkl'
 else:
     parseFilename = '../../../data/%s/%s_caption.parse.txt' %(sys.argv[1],sys.argv[1])
     imgidsFilename = '../../../data/%s/%s_imgids.txt' %(sys.argv[1],sys.argv[1])
@@ -363,7 +363,7 @@ class QuestionGenerator:
             if node.className == 'NP' and ccNoun:
                 cont = False            
             if len(node.children) > 1 and \
-            node.children[1].className == 'PP':
+                node.children[1].className == 'PP':
                 node.children.remove(node.children[1])
             # if node.className == 'NP' and \
             # len(node.children) > 1 and \
@@ -508,6 +508,10 @@ class QuestionGenerator:
                     child.text == 'violet'):
                         found[0] = True
                         answer[0] = child
+                    if child.className == 'CC' and child.text == 'and':
+                        # Blue and white? No.
+                        found[0] = False
+                        answer[0] = None
                     if child.className == 'NN' or child.className == 'NNS':
                         obj[0] = child
                 if found[0] and obj[0] is not None:
@@ -689,40 +693,40 @@ def questionGen():
                     print 'Finished'
                 originalSent = parser.rootsList[0].toSentence()
                 hasItem = False
-                for qaitem in gen.askWhoWhat(parser.rootsList[0].copy()):
-                    questionCount += 1
-                    questionWhatCount += 1
-                    hasItem = True
-                    if qaitem[0] == 'what ?':
-                        question = 'what is this?'
-                    else:
-                        question = qaitem[0]
-                    print ('Question %d:' % questionCount), question, 'Answer:', qaitem[1]
-                    # 0 is what-who question type
-                    questionAll.append((question, qaitem[1], imgid, 0))
+                # for qaitem in gen.askWhoWhat(parser.rootsList[0].copy()):
+                #     if qaitem[0] == 'what ?' or qaitem == 'who ?':
+                #         continue
+                #     else:
+                #         question = qaitem[0]
+                #     questionCount += 1
+                #     questionWhatCount += 1
+                #     hasItem = True
+                #     print ('Question %d:' % questionCount), qaitem[0], 'Answer:', qaitem[1]
+                #     # 0 is what-who question type
+                #     questionAll.append((qaitem[0], qaitem[1], imgid, 0))
                 for qaitem in gen.askHowMany(parser.rootsList[0].copy()):
                     questionCount += 1
                     questionHowmanyCount += 1
                     hasItem = True
                     print ('Question %d:' % questionCount), qaitem[0], 'Answer:', qaitem[1]
                     # 1 is how-many question type
-                    questionAll.append((question, qaitem[1], imgid, 1))
-                for qaitem in gen.askColor(parser.rootsList[0].copy()):
-                    questionCount += 1
-                    questionColorCount += 1
-                    hasItem = True
-                    print ('Question %d:' % questionCount), qaitem[0], 'Answer:', qaitem[1]
-                    # 2 is color question type
-                    questionAll.append((qaitem[0], qaitem[1], imgid, 2))
+                    questionAll.append((qaitem[0], qaitem[1], imgid, 1))
+                # for qaitem in gen.askColor(parser.rootsList[0].copy()):
+                #     questionCount += 1
+                #     questionColorCount += 1
+                #     hasItem = True
+                #     print ('Question %d:' % questionCount), qaitem[0], 'Answer:', qaitem[1]
+                #     # 2 is color question type
+                #     questionAll.append((qaitem[0], qaitem[1], imgid, 2))
                 if hasItem:
+                    print 'Original:', originalSent
+                    print '-' * 20
                     pass
-                    #print 'Original:', originalSent
-                    #print '-' * 20
                 del(parser.rootsList[0])
                 numSentences += 1
             parser.parse(line)
-            if numSentences > 500:
-                break
+            # if numSentences > 500:
+            #     break
     # Approx. 3447.5 sentences per second
     #print questionAll
     print 'Number of sentences parsed:', numSentences
@@ -732,6 +736,8 @@ def questionGen():
     print 'Number of what questions:', questionWhatCount
     print 'Number of how many questions:', questionHowmanyCount
     print 'Number of color questions:', questionColorCount
+
+    # Output a list of tuples (q, a, imgid)
     with open(outputFilename, 'wb') as f:
         pkl.dump(questionAll, f)
 
