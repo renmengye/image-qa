@@ -140,7 +140,7 @@ specs:
       recurrent: true
     - name: 'attCtx'
       type: 'sumProd'
-      inputs: 'attReshape, imgReshape($0)'
+      inputs: 'attReshape, imgReshape($0), attBeta'
       sumAxis: 1
       outputDim: 512
       beta: 5

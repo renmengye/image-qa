@@ -59,7 +59,6 @@ class Map(Stage):
     def forward(self, X):    
         if self.inputDim is None: self.inputDim = X.shape[-1]
         if self.W is None: self.initWeights()
-        #print self.inputDim, X.shape, self.W.shape
         self.X = np.concatenate((X, np.ones((X.shape[0], 1))), axis=-1)
         Z = np.inner(self.X, self.W)
         self.Y = self.activeFn.forward(Z)
@@ -69,5 +68,4 @@ class Map(Stage):
         dEdZ = self.activeFn.backward(dEdY, self.Y, 0)
         self.dEdW = np.dot(dEdZ.transpose(), self.X)
         dEdX = np.dot(dEdZ, self.W[:, :-1])
-        #print self.name, np.sum(self.dEdW * self.dEdW)
         return dEdX if self.outputdEdX else None
