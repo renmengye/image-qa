@@ -2,6 +2,7 @@ import re
 import os
 import cPickle as pkl
 import numpy as np
+import operator
 
 imgidFilename = '../../../data/mscoco/image_list_train.txt'
 qaFilename = '../../../data/mscoco/mscoco_qa_all_train.pkl'
@@ -35,6 +36,10 @@ def buildDict(lines, keystart):
                 word_freq[k - 1] += 1
     word_dict['UNK'] = key
     word_array.append('UNK')
+    sorted_x = sorted(range(len(word_freq)), key=lambda k: word_freq[k], reverse=True)
+    for x in sorted_x:
+        print word_array[x], word_freq[x]
+    print sorted_x
     print 'Dictionary length', len(word_dict)
     return  word_dict, word_array
 
@@ -84,25 +89,25 @@ def combineAttention(wordids, imgids):
             wordids), axis=-1)
 
 if __name__ == '__main__':
-    hidFeat = []
-    with open(imgHidFeatFilename) as f:
-        for line in f:
-            hidFeat.append(line)
-            if len(hidFeat) == 6600:
-                break
-    with open(imgHidFeatOutFilename, 'w') as f:
-        for line in hidFeat:
-            f.write(line)
+    # hidFeat = []
+    # with open(imgHidFeatFilename) as f:
+    #     for line in f:
+    #         hidFeat.append(line)
+    #         if len(hidFeat) == 6600:
+    #             break
+    # with open(imgHidFeatOutFilename, 'w') as f:
+    #     for line in hidFeat:
+    #         f.write(line)
 
-    convFeat = []
-    with open(imgConvFeatFilename) as f:
-        for line in f:
-            convFeat.append(line)
-            if len(convFeat) == 6600:
-                break
-    with open(imgConvFeatOutFilename, 'w') as f:
-        for line in convFeat:
-            f.write(line)
+    # convFeat = []
+    # with open(imgConvFeatFilename) as f:
+    #     for line in f:
+    #         convFeat.append(line)
+    #         if len(convFeat) == 6600:
+    #             break
+    # with open(imgConvFeatOutFilename, 'w') as f:
+    #     for line in convFeat:
+    #         f.write(line)
 
     with open(imgidFilename) as f:
         lines = f.readlines()
