@@ -53,11 +53,15 @@ def addStage(stageDict):
     
     if stageDict.has_key('initWeights'):
         if stageDict.has_key('format'):
-            if stageDict['format'] == 'sparse2dense':
+            if stageDict['format'] == 'sparse':
                 with open(stageDict['initWeights'], 'rb') as f:
                     initWeights = pickle.load(f)
             elif stageDict['format'] == 'plain':
-                np.loadtxt(stageDict['initWeights'], delimiter=' ')
+                initWeights = np.loadtxt(stageDict['initWeights'])
+            elif stageDict['format'] == 'numpy':
+                initWeights = np.load(stageDict['initWeights'])
+            else:
+                raise Exception('Unknown weight matrix format: %s' % stageDict['format'])
         else:
             initWeights = np.load(stageDict['initWeights'])
     else:

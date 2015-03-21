@@ -39,7 +39,7 @@ specs:
       inputDim: 6600
       outputDim: 4096
       initWeights: '../data/cocoqa/hidden7-toy.txt'
-      format: plain
+      format: 'plain'
       learningRate: 0.0
       outputdEdX: false
     - name: 'imgMap'
@@ -90,7 +90,7 @@ specs:
       inputs: 'dropout'
       inputDim: 300
       outputDim: 150
-      timespan: 28
+      timespan: 55
       initRange: 0.2
       initSeed: 4
       cutOffZeroEnd: true
