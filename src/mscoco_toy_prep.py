@@ -6,7 +6,10 @@ import numpy as np
 imgidFilename = '../../../data/mscoco/image_list_train.txt'
 qaFilename = '../../../data/mscoco/mscoco_qa_all_train.pkl'
 outputFolder = '../data/cocoqa/'
-
+imgHidFeatFilename = '/ais/gobi3/u/rkiros/coco/train_features/hidden7.txt'
+imgConvFeatFilename = '/ais/gobi3/u/rkiros/coco/align_train/hidden5_4_conv.txt'
+imgHidFeatOutFilename = '../data/cocoqa/hidden7-toy.txt'
+imgConvFeatOutFilename = '../data/cocoqa/hidden5_4_conv-toy.txt'
 
 def buildDict(lines, keystart):
     # From word to number.
@@ -81,6 +84,26 @@ def combineAttention(wordids, imgids):
             wordids), axis=-1)
 
 if __name__ == '__main__':
+    hidFeat = []
+    with open(imgHidFeatFilename) as f:
+        for line in f:
+            hidFeat.append(line)
+            if len(hidFeat) == 6600:
+                break
+    with open(imgHidFeatOutFilename, 'w') as f:
+        for line in hidFeat:
+            f.write(line)
+
+    convFeat = []
+    with open(imgConvFeatFilename) as f:
+        for line in f:
+            convFeat.append(line)
+            if len(convFeat) == 6600:
+                break
+    with open(imgConvFeatOutFilename, 'w') as f:
+        for line in convFeat:
+            f.write(line)
+
     with open(imgidFilename) as f:
         lines = f.readlines()
 
@@ -90,7 +113,6 @@ if __name__ == '__main__':
     # 0 for train, 1 for valid, 2 for test.
 
     cocoImgIdRegex = 'COCO_train2014_0*(?P<imgid>[1-9][0-9]+)'
-
 
     for i in range(3000):
         match = re.search(cocoImgIdRegex, lines[i])
