@@ -52,9 +52,12 @@ def addStage(stageDict):
     if stageDict.has_key('initRange') else 1.0
     
     if stageDict.has_key('initWeights'):
-        if stageDict.has_key('sparse') and stageDict['sparse']:
-            with open(stageDict['initWeights'], 'rb') as f:
-                initWeights = pickle.load(f)
+        if stageDict.has_key('format'):
+            if stageDict['format'] == 'sparse2dense':
+                with open(stageDict['initWeights'], 'rb') as f:
+                    initWeights = pickle.load(f)
+            elif stageDict['format'] == 'plain':
+                np.loadtxt(stageDict['initWeights'], delimiter=' ')
         else:
             initWeights = np.load(stageDict['initWeights'])
     else:

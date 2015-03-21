@@ -103,7 +103,7 @@ def plotAttention(X, A, Xend, prefix):
         plt.subplot(w, h, 1)
         plt.imshow(img)
         plt.axis('off')
-        plt.savefig(os.path.join(resultFolder, '%s-%d-_.png' % (prefix, n)))
+        #plt.savefig(os.path.join(resultFolder, '%s-%d-_.png' % (prefix, n)))
         for t in range(Xend[n]):
             word = vocabDict[1][X[n, t, 1] - 1]
             #plt.clf()
