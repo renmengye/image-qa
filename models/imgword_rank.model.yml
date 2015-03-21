@@ -52,7 +52,7 @@ specs:
       outputDim: 300
       initRange: 0.1
       initSeed: 1
-      learningRate: 0.8
+      learningRate: 0.2
       momentum: 0.9
       gradientClip: 0.1
       weightClip: 50.0
@@ -98,12 +98,11 @@ specs:
       initSeed: 4
       cutOffZeroEnd: true
       multiErr: false
-      learningRate: 0.8
+      learningRate: 0.2
       learningRateAnnealConst: 0.0
       momentum: 0.9
       gradientClip: 0.1
       weightClip: 100.0
-      weightRegConst: 0.00005
       outputdEdX: true
     - name: 'dropout2'
       type: 'dropout'
@@ -121,7 +120,8 @@ specs:
       learningRate: 0.1
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 50.0
+      weightClip: 10.0
+      weightRegConst: 0.00005
     - name: 'answer'
       type: 'constWeights'
       inputDim: 300
