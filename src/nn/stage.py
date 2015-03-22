@@ -52,11 +52,13 @@ class Stage:
         Fetches input from each input stage.
         Concatenates input into one vector.
         """
+        #print self.name
         if len(self.inputs) > 1:
             self.splX = []
             for stage in self.inputs:
                 X = stage.Y
                 self.splX.append(X)
+                #print '>', stage.name, X.shape
             return np.concatenate(self.splX, axis=-1)
         else:
             return self.inputs[0].Y

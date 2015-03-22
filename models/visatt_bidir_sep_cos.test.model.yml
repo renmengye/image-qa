@@ -1,0 +1,266 @@
+costFn: 'rankingLoss'
+decisionFn: 'argmax'
+stages:
+    - 'imgSel1'
+    - 'txtSel1'
+    - 'txtSelRev'
+    - 'txtDict'
+    - 'txtDictRev'
+    - 'txtFold'
+    - 'txtFoldRev'
+    - 'wlstm1'
+    - 'wlstm1RevO'
+    - 'wlstm2'
+    - 'wlstm2RevO'
+    - 'wlstm2RevOFinal'
+    - 'attModel'
+    - 'outputMap'
+    - 'answer'
+    - 'collector'
+    - 'cosine'
+outputs: 'cosine'
+specs:
+    - name: 'imgSel1'
+      type: 'selector'
+      inputs: 'input'
+      start: 0
+      end: 1
+      axis: 2
+    - name: 'txtSel1'
+      type: 'selector'
+      inputs: 'input'
+      start: 1
+      end: 2
+      axis: 2
+    - name: 'txtSelRev'
+      type: 'timeReverse'
+      inputs: 'txtSel1'
+      outputdEdX: false
+    - name: 'txtDict'
+      type: 'lut'
+      inputs: 'txtSel1'
+      inputDim: 871
+      outputDim: 10
+      #initWeights: '../data/imgword/word-embed-0-q.npy'
+      initRange: 0.1
+      initSeed: 3
+      learningRate: 0.0
+      outputdEdX: false
+    - name: 'txtDictRev'
+      type: 'lut'
+      inputs: 'txtSelRev'
+      inputDim: 871
+      outputDim: 10
+      #initWeights: '../data/imgword/word-embed-0-q.npy'
+      initRange: 0.1
+      initSeed: 3
+      learningRate: 0.0
+      outputdEdX: false
+    - name: 'txtFold'
+      type: 'timeFold'
+      inputs: 'txtDict'
+      timespan: 27
+    - name: 'txtFoldRev'
+      type: 'timeFold'
+      inputs: 'txtDictRev'
+      timespan: 27
+    - name: 'wlstm1'
+      type: 'lstm'
+      inputs: 'txtFold'
+      inputDim: 10
+      outputDim: 10
+      timespan: 27
+      initRange: 0.1
+      initSeed: 5
+      cutOffZeroEnd: true
+      multiErr: true
+      learningRate: 0.8
+      learningRateAnnealConst: 0.0
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 100.0
+      outputdEdX: true
+    - name: 'wlstm1RevO'
+      type: 'timeReverse'
+      inputs: 'wlstm1'
+    - name: 'wlstm2'
+      type: 'lstm'
+      inputs: 'wlstm1RevO, txtFoldRev'
+      inputDim: 20
+      outputDim: 10
+      timespan: 27
+      initRange: 0.1
+      initSeed: 5
+      cutOffZeroEnd: true
+      multiErr: true
+      learningRate: 0.8
+      learningRateAnnealConst: 0.0
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 100.0
+      outputdEdX: true
+    - name: 'wlstm2RevO'
+      type: 'timeReverse'
+      inputs: 'wlstm2'
+    - name: 'wlstm2RevOFinal'
+      type: 'timeFinal'
+      inputs: 'wlstm2RevO'
+    - name: 'imgSel2'
+      type: 'selector'
+      inputs: 'input($0)'
+      start: 0
+      end: 1 
+      recurrent: true
+    - name: 'txtSel2'
+      type: 'selector'
+      inputs: 'input'
+      start: 1
+      end: 151
+      recurrent: true
+    - name: 'imgFeat'
+      type: 'lut'
+      intConversion: true
+      inputs: 'imgSel2($0)'
+      inputDim: 1449
+      outputDim: 120
+      #outputDim: 100352
+      #initWeights: '../../../data/nyu-depth/hidden5_4_conv.pkl'
+      initRange: 0.1
+      initSeed: 1
+      sparse: true
+      learningRate: 0.0
+      outputdEdX: true
+      recurrent: true
+    - name: 'imgReshape'
+      type: 'reshape'
+      inputs: 'imgFeat($0)'
+      reshapeFn: '(x[0], 12, x[1]/12)'
+      outputDim: 10
+      recurrent: true
+    - name: 'attReshape'
+      type: 'reshape'
+      inputs: 'attOut'
+      reshapeFn: '(x[0], x[1], 1)'
+      outputDim: 12
+      recurrent: true
+    - name: 'attCtx'
+      type: 'sumProd'
+      inputs: 'attReshape, imgReshape($0), attBeta'
+      sumAxis: 1
+      outputDim: 10
+      beta: 5
+      recurrent: true
+    - name: 'ctxMap'
+      type: 'map'
+      inputs: 'attCtx'
+      outputDim: 10
+      activeFn: 'tanh'
+      initRange: 0.1
+      initSeed: 9
+      learningRate: 0.1
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 50
+      recurrent: true
+    - name: 'ilstm'
+      type: 'lstm'
+      inputs: 'ctxMap'
+      inputDim: 10
+      outputDim: 10
+      timespan: 27
+      initRange: 0.1
+      initSeed: 4
+      cutOffZeroEnd: true
+      multiErr: true
+      learningRate: 0.8
+      learningRateAnnealConst: 0.0
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 100.0
+      weightRegConst: 0.00005
+      outputdEdX: true
+    - name: 'attHid1'
+      type: 'map'
+      inputs: 'txtSel2, ilstm(-1)'
+      outputDim: 12
+      activeFn: 'tanh'
+      initRange: 0.1
+      initSeed: 6
+      learningRate: 0.1
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 50
+      recurrent: true
+    - name: 'attOut'
+      type: 'map'
+      inputs: 'attHid1'
+      outputDim: 12
+      activeFn: 'softmax'
+      defaultValue: 0.0833333
+      initRange: 0.1
+      initSeed: 7
+      learningRate: 0.1
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 50
+      recurrent: true
+    - name: 'attBeta'
+      type: 'map'
+      inputs: 'txtSel2, ilstm(-1)'
+      outputDim: 1
+      activeFn: 'identity'
+      initRange: 1.0
+      biasInitConst: 1.0
+      initSeed: 8
+      learningRate: 0.1
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 5.0
+      recurrent: true
+    - name: 'attModel'
+      type: 'recurrent'
+      inputs: 'imgSel1, wlstm2RevO'
+      stages:
+          - 'imgSel2'
+          - 'txtSel2'
+          - 'imgFeat'
+          - 'imgReshape'
+          - 'attHid1'
+          - 'attOut'
+          - 'attBeta'
+          - 'attReshape'
+          - 'attCtx'
+          - 'ctxMap'
+          - 'ilstm'
+      outputs: 'ilstm'
+      inputDim: 11
+      outputDim: 10
+      timespan: 27
+      multiOutput: false
+    - name: 'outputMap'
+      type: 'map'
+      inputs: 'wlstm2RevOFinal, attModel'
+      activeFn: 'tanh'
+      outputDim: 10
+      learningRate: 0.1
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 5.0
+    - name: 'answer'
+      type: 'constWeights'
+      inputDim: 10
+      outputDim: 63
+      #initWeights: '../data/imgword/word-embed-0-a.npy'
+      initRange: 0.1
+      initSeed: 100
+      learningRate: 0.0
+      momentum: 0.0
+    - name: 'collector'
+      type: 'concat'
+      inputs: 'answer, outputMap'
+      axis: 0
+      outputdEdX: false
+    - name: 'cosine'
+      type: 'cosSimilarity'
+      inputs: 'collector'
+      bankDim: 63

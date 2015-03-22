@@ -7,16 +7,14 @@ class VisAttTest3(nn.stage_tests.StageTests):
     def setUp(self):
         self.eps = 1e-3
         self.tolerance = 1e-3
-        self.model = nn.load('../models/visatt_bidir_cos.test.model.yml')
-        # txtAttCtx
-        #self.stage = self.model.stageDict['attModel'].stageDict['txtAttCtx'].getStage(time=0)
-        # lstm.I
+        self.model = nn.load('../models/visatt_sep_cos.model.yml')
+        # ilstm.I
         #self.stage = self.model.stageDict['attModel'].stageDict['ilstm'].stageDict['ilstm.I'].getStage(time=0)
-        # lstm.F
+        # ilstm.F
         #self.stage = self.model.stageDict['attModel'].stageDict['ilstm'].stageDict['ilstm.F'].getStage(time=0)
-        # lstm.Z
+        # ilstm.Z
         #self.stage = self.model.stageDict['attModel'].stageDict['ilstm'].stageDict['ilstm.Z'].getStage(time=0)
-        # lstm.O
+        # ilstm.O
         #self.eps = 1e-3
         #self.tolerance = 1e-3
         #self.stage = self.model.stageDict['attModel'].stageDict['ilstm'].stageDict['ilstm.O'].getStage(time=0)
@@ -43,13 +41,15 @@ class VisAttTest3(nn.stage_tests.StageTests):
         # attHid1
         #self.eps = 0.1
         #self.tolerance = 1e-2
+        #self.stage = self.model.stageDict['attModel'].stageDict['attBeta'].getStage(time=0)
         #self.stage = self.model.stageDict['attModel'].stageDict['attHid1'].getStage(time=0)
         # attOut
         #self.eps = 1e-3
         #self.tolerance = 1e-3
-        self.stage = self.model.stageDict['attModel'].stageDict['attOut'].getStage(time=0)
+        #self.stage = self.model.stageDict['attModel'].stageDict['attOut'].getStage(time=0)
         # Answer softmax
         #self.stage = self.model.stageDict['answer']
+        #self.stage = self.model.stageDict['outputMap']
         print self.stage.name
         self.testInputErr = False
         self.costFn = nn.rankingLoss
@@ -60,7 +60,7 @@ class VisAttTest3(nn.stage_tests.StageTests):
         X = data[0][0:10]
         T = data[1][0:10]
         dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T, self.eps)
-        #print dEdW
+        print dEdW
         #print dEdWTmp
         print dEdW/dEdWTmp
         self.chkgrd(dEdW, dEdWTmp, self.tolerance)

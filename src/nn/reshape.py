@@ -69,6 +69,45 @@ class TimeReverse(Stage):
         else:
             return None
 
+class TimeFinal(Stage):
+    """
+    Scans and selects the last timestep.
+    """
+    def __init__(self, inputNames, outputDim=0, name=None, outputdEdX=True):
+        Stage.__init__(self, 
+                       name=name, 
+                       inputNames=inputNames, 
+                       outputDim=outputDim, 
+                       outputdEdX=outputdEdX)
+        self.Xend = 0.0
+
+    def forward(self, X):
+        N = X.shape[0]
+        self.X = X
+        self.Xend = np.zeros(N, dtype=int) + X.shape[1]
+        reachedEnd = np.sum(X, axis=-1) == 0.0
+        Y = np.zeros((N, X.shape[-1]))
+        # Scan for the end of the sequence.
+        for n in range(N):
+            for t in range(X.shape[1]):
+                if reachedEnd[n, t]:
+                    self.Xend[n] = t
+                    break
+        for n in range(N):
+            if self.Xend[n] > 0:
+                Y[n] = X[n, self.Xend[n] - 1]
+        return Y
+
+    def backward(self, dEdY):
+        if self.outputdEdX:
+            dEdX = np.zeros(self.X.shape)
+            for n in range(dEdY.shape[0]):
+                if self.Xend[n] > 0:
+                    dEdX[n, self.Xend[n] - 1, :] = dEdY[n]
+            return dEdX
+        else:
+            return None
+
 class Concat(Stage):
     def __init__(self, inputNames, axis, name=None):
         Stage.__init__(self, name=name, inputNames=inputNames, outputDim=0)

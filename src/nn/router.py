@@ -211,6 +211,12 @@ def addStage(stageDict):
             inputNames=inputList,
             outputdEdX=outputdEdX
         )
+    elif stageDict['type'] == 'timeFinal':
+        stage = TimeFinal(
+            name=stageDict['name'],
+            inputNames=inputList,
+            outputdEdX=outputdEdX
+        )
     elif stageDict['type'] == 'reshape':
         stage = Reshape(
             name=stageDict['name'],
