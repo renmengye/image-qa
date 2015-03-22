@@ -6,7 +6,7 @@ import operator
 
 imgidFilename = '../../../data/mscoco/image_list_train.txt'
 qaFilename = '../../../data/mscoco/mscoco_qa_all_train.pkl'
-outputFolder = '../data/cocoqa2/'
+outputFolder = '../data/cocoqa/'
 imgHidFeatFilename = '/ais/gobi3/u/rkiros/coco/train_features/hidden7.txt'
 imgConvFeatFilename = '/ais/gobi3/u/rkiros/coco/align_train/hidden5_4_conv.txt'
 imgHidFeatOutFilename = '../data/cocoqa/hidden7-toy.txt'

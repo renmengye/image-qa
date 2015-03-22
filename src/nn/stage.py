@@ -106,7 +106,7 @@ class Stage:
         Forward propagates.
         """
         self.X = self.getInput()
-        #if hasattr(self.X, 'shape'):
+        # if hasattr(self.X, 'shape'):
         #    print 'forward', self.name, self.X.shape
         self.Y = self.forward(self.X)
 
