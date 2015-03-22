@@ -6,6 +6,7 @@ jsonFilename = '../../../data/mscoco/captions_val2014.json'
 captionOut = '../../../data/mscoco/mscoco_caption_valid.txt'
 imgidOut = '../../../data/mscoco/mscoco_imgids_valid.txt'
 
+# To retrive image ID and url, get caption['images'][i]['id'] and caption['images'][i]['url']
 if __name__ == '__main__':
     with open(jsonFilename) as f:
         captiontxt = f.read()

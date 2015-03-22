@@ -12,7 +12,7 @@ imgConvFeatFilename = '/ais/gobi3/u/rkiros/coco/align_train/hidden5_4_conv.txt'
 imgHidFeatOutFilename = '../data/cocoqa/hidden7-toy.txt'
 imgConvFeatOutFilename = '../data/cocoqa/hidden5_4_conv-toy.txt'
 
-def buildDict(lines, keystart):
+def buildDict(lines, keystart, pr=False):
     # From word to number.
     word_dict = {}
     # From number to word, numbers need to minus one to convert to list indices.
@@ -33,14 +33,15 @@ def buildDict(lines, keystart):
                 key += 1
             else:
                 k = word_dict[words[j]]
-                word_freq[k - 1] += 1
+                word_freq[k - keystart] += 1
     word_dict['UNK'] = key
     word_array.append('UNK')
     sorted_x = sorted(range(len(word_freq)), key=lambda k: word_freq[k], reverse=True)
-    #for x in sorted_x:
-    #   print word_array[x], word_freq[x]
-    #print sorted_x
-    #print 'Dictionary length', len(word_dict)
+    if pr:
+        for x in sorted_x:
+          print word_array[x], word_freq[x]
+        print sorted_x
+        print 'Dictionary length', len(word_dict)
     return  word_dict, word_array, word_freq
 
 def removeQuestions(questions, answers, imgids, lowerBound):
@@ -72,13 +73,13 @@ def lookupAnsID(answers, ansdict):
 
 def lookupQID(questions, worddict):
     wordslist = []
-    maxlen = 54
+    maxlen = 0
     for q in questions:
         words = q.split(' ')
         wordslist.append(words)
-    #     if len(words) > maxlen:
-    #         maxlen = len(words)
-    # print 'Max length', maxlen
+        if len(words) > maxlen:
+            maxlen = len(words)
+    print 'Max length', maxlen
     result = np.zeros((len(questions), maxlen, 1), dtype=int)
     for i,words in enumerate(wordslist):
         for j,w in enumerate(words):
@@ -195,8 +196,8 @@ if __name__ == '__main__':
     print 'Train Questions After Trunk: ', len(trainQuestions)
     print 'Valid Questions After Trunk: ', len(validQuestions)
     print 'Test Questions Before Trunk: ', len(testQuestions)
-    worddict, idict, _ = buildDict(trainQuestions, 1)
-    ansdict, iansdict, _ = buildDict(trainAnswers, 0)
+    worddict, idict, _ = buildDict(trainQuestions, 1, pr=False)
+    ansdict, iansdict, _ = buildDict(trainAnswers, 0, pr=True)
 
     trainInput = combine(\
         lookupQID(trainQuestions, worddict), trainImgIds)
