@@ -51,7 +51,7 @@ specs:
       initSeed: 5
       cutOffZeroEnd: true
       multiErr: true
-      learningRate: 0.2
+      learningRate: 0.1
       learningRateAnnealConst: 0.0
       momentum: 0.9
       gradientClip: 0.1
@@ -115,7 +115,7 @@ specs:
       learningRate: 0.1
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 50
+      weightClip: 50.0
       recurrent: true
     - name: 'attOut'
       type: 'map'
@@ -128,7 +128,7 @@ specs:
       learningRate: 0.1
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 50
+      weightClip: 50.0
       recurrent: true
     - name: 'attBeta'
       type: 'map'
@@ -166,10 +166,10 @@ specs:
       inputs: 'wlstm1Final, attModel'
       activeFn: 'tanh'
       outputDim: 300
-      learningRate: 0.1
+      learningRate: 0.01
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 5.0
+      weightClip: 50.0
     - name: 'answer'
       type: 'constWeights'
       inputDim: 300

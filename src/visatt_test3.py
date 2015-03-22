@@ -7,7 +7,7 @@ class VisAttTest3(nn.stage_tests.StageTests):
     def setUp(self):
         self.eps = 1e-3
         self.tolerance = 1e-3
-        self.model = nn.load('../models/visatt_sep_cos.model.yml')
+        self.model = nn.load('../models/visatt_last.test.model.yml')
         # ilstm.I
         #self.stage = self.model.stageDict['attModel'].stageDict['ilstm'].stageDict['ilstm.I'].getStage(time=0)
         # ilstm.F
@@ -49,7 +49,7 @@ class VisAttTest3(nn.stage_tests.StageTests):
         #self.stage = self.model.stageDict['attModel'].stageDict['attOut'].getStage(time=0)
         # Answer softmax
         #self.stage = self.model.stageDict['answer']
-        #self.stage = self.model.stageDict['outputMap']
+        self.stage = self.model.stageDict['outputMap']
         print self.stage.name
         self.testInputErr = False
         self.costFn = nn.rankingLoss
