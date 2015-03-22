@@ -149,7 +149,7 @@ def addStage(stageDict):
             initRange=initRange,
             initWeights=initWeights,
             intConversion=stageDict['intConversion'] if stageDict.has_key('intConversion') else False,
-            sparse=stageDict['sparse'] if stageDict.has_key('sparse') else False,
+            sparse=stageDict['format'] == 'sparse' if stageDict.has_key('format') else False,
             needInit=needInit,
             learningRate=learningRate,
             learningRateAnnealConst=learningRateAnnealConst,

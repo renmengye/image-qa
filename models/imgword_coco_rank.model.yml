@@ -1,5 +1,5 @@
-name: 'imgword'
-costFn: 'crossEntIdx'
+name: 'imgword_rank'
+costFn: 'rankingLoss'
 decisionFn: 'argmax'
 stages:
     - 'imgSel'
@@ -17,7 +17,7 @@ stages:
     - 'answer'
     - 'collector'
     - 'cosine'
-outputs: 'softmax'
+outputs: 'cosine'
 specs:
     - name: 'imgSel'
       type: 'selector'
@@ -91,7 +91,7 @@ specs:
       type: 'lstm'
       inputs: 'dropout'
       inputDim: 300
-      outputDim: 150
+      outputDim: 300
       timespan: 55
       initRange: 0.1
       initSeed: 4
@@ -107,8 +107,8 @@ specs:
     - name: 'answer'
       type: 'constWeights'
       inputDim: 300
-      outputDim: 63
-      initWeights: '../data/imgword/word-embed-0-a.npy'
+      outputDim: 1080
+      initWeights: '../data/cocoqa/word-embed-a.npy'
       learningRate: 0.0
       momentum: 0.0
     - name: 'collector'
@@ -118,4 +118,4 @@ specs:
     - name: 'cosine'
       type: 'cosSimilarity'
       inputs: 'collector'
-      bankDim: 63
+      bankDim: 1080
