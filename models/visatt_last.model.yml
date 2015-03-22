@@ -167,8 +167,10 @@ specs:
       activeFn: 'tanh'
       outputDim: 300
       learningRate: 0.01
+      initRange: 0.1
+      initSeed: 12
       momentum: 0.9
-      gradientClip: 0.01
+      gradientClip: 0.1
       weightClip: 50.0
     - name: 'answer'
       type: 'constWeights'
