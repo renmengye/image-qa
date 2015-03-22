@@ -336,7 +336,6 @@ class RecurrentContainer(Container, RecurrentStage):
                     self.Xend[n] = t
                     break
         self.XendAll = np.max(self.Xend)
-
         # Set value for constant stages.
         for s in self.constStages:
             s.Y = np.tile(s.value, (X.shape[0], 1))
