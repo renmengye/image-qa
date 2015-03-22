@@ -158,7 +158,7 @@ specs:
           - 'attCtx'
       outputs: 'attCtx'
       inputDim: 151
-      outputDim: 150
+      outputDim: 512
       timespan: 27
       multiOutput: false
     - name: 'outputMap'
