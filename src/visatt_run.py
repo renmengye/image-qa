@@ -43,10 +43,13 @@ def test(model, X):
         batchEnd = min(N, batchStart + numExPerBat)
         Ytmp = model.forward(X[batchStart:batchEnd], dropout=False)
         Atmp = np.zeros((Ytmp.shape[0], X.shape[1], 196))
-        Atmp[:, 0, :] += 1 / 196.0
+        #Atmp[:, 0, :] += 1 / 196.0
         for n in range(Ytmp.shape[0]):
-            for t in range(1, Xend[n]):
-                Atmp[n, t, :] = model.stageDict['attModel'].stageDict['attOut'].getStage(time=t).Y[n]
+            for t in range(0, Xend[n]):
+                Atmp[n, t, :] = \
+                    model.stageDict['attModel'].stageDict['attOut'].getStage(time=t).Y[n]
+                    # model.stageDict['attModel'].stageDict['attOut'].getStage(time=t).Y[n] \
+                    # * model.stageDict['attModel'].stageDict['attBeta'].getStage(time=t).Y[n]
         if Y is None:
             Yshape = np.copy(Ytmp.shape)
             Yshape[0] = N

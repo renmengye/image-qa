@@ -41,7 +41,23 @@ def buildDict(lines, keystart):
         print word_array[x], word_freq[x]
     print sorted_x
     print 'Dictionary length', len(word_dict)
-    return  word_dict, word_array
+    return  word_dict, word_array, word_freq
+
+def removeQuestions(questions, answers, lowerBound):
+    """
+    Removes questions with answer appearing less than N times.
+    """
+    answerdict, answeridict, answerfreq = buildDict(answers, 0)
+    questionsTrunk = []
+    answersTrunk = []
+    for i in range(len(questions)):
+        if answerfreq[answerdict[answers[i]]] < lowerBound:
+            continue
+        else:
+            questionsTrunk.append(questions[i])
+            answersTrunk.append(answers[i])
+    return questionsTrunk, answersTrunk
+
 
 def lookupAnsID(answers, ansdict):
     ansids = []
@@ -166,11 +182,11 @@ if __name__ == '__main__':
                 testAnswers.append(item[1])
                 testImgIds.append(imgidDict2[imgid])
 
-    print 'Train Questions: ', len(trainQuestions)
-    print 'Valid Questions: ', len(validQuestions)
-    print 'Test Questions: ', len(testQuestions)
-    worddict, idict = buildDict(trainQuestions, 1)
-    ansdict, iansdict = buildDict(trainAnswers, 0)
+    print 'Train Questions Before Trunk: ', len(trainQuestions)
+    print 'Valid Questions Before Trunk: ', len(validQuestions)
+    print 'Test Questions Before Trunk: ', len(testQuestions)
+    worddict, idict, _ = buildDict(trainQuestions, 1)
+    ansdict, iansdict, _ = buildDict(trainAnswers, 0)
 
     trainInput = combine(\
         lookupQID(trainQuestions, worddict), trainImgIds)

@@ -26,7 +26,7 @@ specs:
       initWeights: '../../../data/nyu-depth/hidden5_4_conv.pkl'
       #initRange: 0.1
       #initSeed: 1
-      sparse: true
+      format: 'sparse'
       learningRate: 0.0
       outputdEdX: false
       recurrent: true

@@ -139,6 +139,7 @@ if __name__ == '__main__':
     trainOut = np.load(trainOutputFilename)
     Y = trainOut[0]
     A = trainOut[1]
+    print A
     trainData = np.load(trainDataFile)
     testData = np.load(testDataFile)
     vocabDict = np.load(dictFile)
