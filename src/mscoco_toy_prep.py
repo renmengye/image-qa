@@ -75,7 +75,7 @@ def lookupQID(questions, worddict):
     wordslist = []
     maxlen = 0
     for q in questions:
-        words = q.split(' ')
+        words = q.replace(',', '').split(' ')
         wordslist.append(words)
         if len(words) > maxlen:
             maxlen = len(words)
