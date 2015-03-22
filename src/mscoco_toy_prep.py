@@ -37,26 +37,28 @@ def buildDict(lines, keystart):
     word_dict['UNK'] = key
     word_array.append('UNK')
     sorted_x = sorted(range(len(word_freq)), key=lambda k: word_freq[k], reverse=True)
-    for x in sorted_x:
-        print word_array[x], word_freq[x]
-    print sorted_x
-    print 'Dictionary length', len(word_dict)
+    #for x in sorted_x:
+    #   print word_array[x], word_freq[x]
+    #print sorted_x
+    #print 'Dictionary length', len(word_dict)
     return  word_dict, word_array, word_freq
 
-def removeQuestions(questions, answers, lowerBound):
+def removeQuestions(questions, answers, imgids, lowerBound):
     """
     Removes questions with answer appearing less than N times.
     """
     answerdict, answeridict, answerfreq = buildDict(answers, 0)
     questionsTrunk = []
     answersTrunk = []
+    imgidsTrunk = []
     for i in range(len(questions)):
         if answerfreq[answerdict[answers[i]]] < lowerBound:
             continue
         else:
             questionsTrunk.append(questions[i])
             answersTrunk.append(answers[i])
-    return questionsTrunk, answersTrunk
+            imgidsTrunk.append(imgids[i])
+    return questionsTrunk, answersTrunk, imgidsTrunk
 
 
 def lookupAnsID(answers, ansdict):
@@ -184,6 +186,14 @@ if __name__ == '__main__':
 
     print 'Train Questions Before Trunk: ', len(trainQuestions)
     print 'Valid Questions Before Trunk: ', len(validQuestions)
+    print 'Test Questions Before Trunk: ', len(testQuestions)
+
+    # Truncate rare answers.
+    trainQuestions, trainAnswers, trainImgIds = removeQuestions(trainQuestions, trainAnswers, trainImgIds, 5)
+    validQuestions, validAnswers, validImgIds = removeQuestions(validQuestions, validAnswers, validImgIds,  3)
+    testQuestions, testAnswers, testImgIds = removeQuestions(testQuestions, testAnswers, testImgIds, 5)
+    print 'Train Questions After Trunk: ', len(trainQuestions)
+    print 'Valid Questions After Trunk: ', len(validQuestions)
     print 'Test Questions Before Trunk: ', len(testQuestions)
     worddict, idict, _ = buildDict(trainQuestions, 1)
     ansdict, iansdict, _ = buildDict(trainAnswers, 0)
