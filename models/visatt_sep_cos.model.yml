@@ -108,7 +108,7 @@ specs:
     - name: 'ctxMap'
       type: 'map'
       inputs: 'attCtx'
-      outputDim: 300
+      outputDim: 512
       activeFn: 'tanh'
       initRange: 0.1
       initSeed: 9
@@ -120,8 +120,8 @@ specs:
     - name: 'ilstm'
       type: 'lstm'
       inputs: 'ctxMap'
-      inputDim: 300
-      outputDim: 300
+      inputDim: 512
+      outputDim: 512
       timespan: 27
       initRange: 0.1
       initSeed: 4
@@ -189,7 +189,7 @@ specs:
           - 'ilstm'
       outputs: 'ilstm'
       inputDim: 301
-      outputDim: 300
+      outputDim: 512
       timespan: 27
       multiOutput: false
     - name: 'outputMap'
