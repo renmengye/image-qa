@@ -6,7 +6,7 @@ import operator
 
 imgidFilename = '../../../data/mscoco/image_list_train.txt'
 qaFilename = '../../../data/mscoco/mscoco_qa_all_train.pkl'
-outputFolder = '../data/cocoqa/'
+outputFolder = '../data/cocoqa2/'
 imgHidFeatFilename = '/ais/gobi3/u/rkiros/coco/train_features/hidden7.txt'
 imgConvFeatFilename = '/ais/gobi3/u/rkiros/coco/align_train/hidden5_4_conv.txt'
 imgHidFeatOutFilename = '../data/cocoqa/hidden7-toy.txt'
@@ -73,13 +73,21 @@ def lookupAnsID(answers, ansdict):
 
 def lookupQID(questions, worddict):
     wordslist = []
+<<<<<<< HEAD
     maxlen = 45
+=======
+    maxlen = 55
+>>>>>>> a002d9cf4a69763e3c69812313864b5cd25c0eb6
     for q in questions:
         words = q.replace(',', '').split(' ')
         wordslist.append(words)
     #    if len(words) > maxlen:
     #        maxlen = len(words)
+<<<<<<< HEAD
     #print 'Max length', maxlen
+=======
+    # print 'Max length', maxlen
+>>>>>>> a002d9cf4a69763e3c69812313864b5cd25c0eb6
     result = np.zeros((len(questions), maxlen, 1), dtype=int)
     for i,words in enumerate(wordslist):
         for j,w in enumerate(words):
@@ -133,6 +141,7 @@ if __name__ == '__main__':
 
     imgidDict = {} # Mark for train/valid/test.
     imgidDict2 = {} # Reindex the image, 1-based.
+    imgidDict3 = [] # Reverse dict for image, 0-based.
     # 3000 images train, 600 images valid, 3000 images test.
     # 0 for train, 1 for valid, 2 for test.
 
@@ -143,18 +152,21 @@ if __name__ == '__main__':
         imgid = match.group('imgid')
         imgidDict[imgid] = 0
         imgidDict2[imgid] = i + 1
+        imgidDict3.append(imgid)
 
     for i in range(3000, 3600):
         match = re.search(cocoImgIdRegex, lines[i])
         imgid = match.group('imgid')
         imgidDict[imgid] = 1
         imgidDict2[imgid] = i + 1
+        imgidDict3.append(imgid)
 
     for i in range(3600, 6600):
         match = re.search(cocoImgIdRegex, lines[i])
         imgid = match.group('imgid')
         imgidDict[imgid] = 2
         imgidDict2[imgid] = i + 1
+        imgidDict3.append(imgid)
 
     with open(qaFilename) as qaf:
         qaAll = pkl.load(qaf)
@@ -190,9 +202,9 @@ if __name__ == '__main__':
     print 'Test Questions Before Trunk: ', len(testQuestions)
 
     # Truncate rare answers.
-    trainQuestions, trainAnswers, trainImgIds = removeQuestions(trainQuestions, trainAnswers, trainImgIds, 5)
-    validQuestions, validAnswers, validImgIds = removeQuestions(validQuestions, validAnswers, validImgIds,  3)
-    testQuestions, testAnswers, testImgIds = removeQuestions(testQuestions, testAnswers, testImgIds, 5)
+    # trainQuestions, trainAnswers, trainImgIds = removeQuestions(trainQuestions, trainAnswers, trainImgIds, 5)
+    # validQuestions, validAnswers, validImgIds = removeQuestions(validQuestions, validAnswers, validImgIds,  3)
+    # testQuestions, testAnswers, testImgIds = removeQuestions(testQuestions, testAnswers, testImgIds, 5)
     print 'Train Questions After Trunk: ', len(trainQuestions)
     print 'Valid Questions After Trunk: ', len(validQuestions)
     print 'Test Questions Before Trunk: ', len(testQuestions)
@@ -244,6 +256,10 @@ if __name__ == '__main__':
         os.path.join(outputFolder, 'test-toy-att.npy'),\
         np.array((testInput, testTarget, 0),\
             dtype=object))
+    np.save(\
+        os.path.join(outputFolder, 'vocab-dict.npy'),\
+        np.array((worddict, idict, 
+            ansdict, iansdict, 0), dtype=object))
 
     with open(os.path.join(outputFolder, 'question_vocabs.txt'), 'w+') as f:
         for word in idict:
@@ -252,3 +268,9 @@ if __name__ == '__main__':
     with open(os.path.join(outputFolder, 'answer_vocabs.txt'), 'w+') as f:
         for word in iansdict:
             f.write(word + '\n')
+<<<<<<< HEAD
+=======
+
+    with open(os.path.join(outputFolder, 'imgid_dict.pkl'), 'wb') as f:
+        pkl.dump(imgidDict3, f)
+>>>>>>> a002d9cf4a69763e3c69812313864b5cd25c0eb6
