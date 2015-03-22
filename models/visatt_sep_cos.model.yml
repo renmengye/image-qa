@@ -3,11 +3,8 @@ decisionFn: 'argmax'
 stages:
     - 'imgSel1'
     - 'txtSel1'
-    - 'txtSelRev'
     - 'txtDict'
-    - 'txtDictRev'
     - 'txtFold'
-    - 'txtFoldRev'
     - 'wlstm1'
     - 'wlstm1Final'
     - 'attModel'
@@ -29,49 +26,32 @@ specs:
       start: 1
       end: 2
       axis: 2
-    - name: 'txtSelRev'
-      type: 'timeReverse'
-      inputs: 'txtSel1'
-      outputdEdX: false
     - name: 'txtDict'
       type: 'lut'
       inputs: 'txtSel1'
       inputDim: 871
-      outputDim: 10
-      #initWeights: '../data/imgword/word-embed-0-q.npy'
-      initRange: 0.1
-      initSeed: 3
-      learningRate: 0.0
-      outputdEdX: false
-    - name: 'txtDictRev'
-      type: 'lut'
-      inputs: 'txtSelRev'
-      inputDim: 871
-      outputDim: 10
-      #initWeights: '../data/imgword/word-embed-0-q.npy'
-      initRange: 0.1
-      initSeed: 3
+      #outputDim: 10
+      outputDim: 300
+      initWeights: '../data/imgword/word-embed-0-q.npy'
+      #initRange: 0.1
+      #initSeed: 3
       learningRate: 0.0
       outputdEdX: false
     - name: 'txtFold'
       type: 'timeFold'
       inputs: 'txtDict'
       timespan: 27
-    - name: 'txtFoldRev'
-      type: 'timeFold'
-      inputs: 'txtDictRev'
-      timespan: 27
     - name: 'wlstm1'
       type: 'lstm'
       inputs: 'txtFold'
-      inputDim: 10
-      outputDim: 10
+      inputDim: 300
+      outputDim: 300
       timespan: 27
       initRange: 0.1
       initSeed: 5
       cutOffZeroEnd: true
       multiErr: true
-      learningRate: 0.8
+      learningRate: 0.2
       learningRateAnnealConst: 0.0
       momentum: 0.9
       gradientClip: 0.1
@@ -90,45 +70,45 @@ specs:
       type: 'selector'
       inputs: 'input'
       start: 1
-      end: 151
+      end: 301
       recurrent: true
     - name: 'imgFeat'
       type: 'lut'
       intConversion: true
       inputs: 'imgSel2($0)'
       inputDim: 1449
-      outputDim: 120
-      #outputDim: 100352
-      #initWeights: '../../../data/nyu-depth/hidden5_4_conv.pkl'
-      initRange: 0.1
-      initSeed: 1
-      sparse: true
+      #outputDim: 120
+      outputDim: 100352
+      initWeights: '../../../data/nyu-depth/hidden5_4_conv.pkl'
+      #initRange: 0.1
+      #initSeed: 1
+      format: 'sparse'
       learningRate: 0.0
       outputdEdX: true
       recurrent: true
     - name: 'imgReshape'
       type: 'reshape'
       inputs: 'imgFeat($0)'
-      reshapeFn: '(x[0], 12, x[1]/12)'
-      outputDim: 10
+      reshapeFn: '(x[0], 196, x[1]/196)'
+      outputDim: 512
       recurrent: true
     - name: 'attReshape'
       type: 'reshape'
       inputs: 'attOut'
       reshapeFn: '(x[0], x[1], 1)'
-      outputDim: 12
+      outputDim: 196
       recurrent: true
     - name: 'attCtx'
       type: 'sumProd'
       inputs: 'attReshape, imgReshape($0), attBeta'
       sumAxis: 1
-      outputDim: 10
+      outputDim: 512
       beta: 5
       recurrent: true
     - name: 'ctxMap'
       type: 'map'
       inputs: 'attCtx'
-      outputDim: 10
+      outputDim: 300
       activeFn: 'tanh'
       initRange: 0.1
       initSeed: 9
@@ -140,14 +120,14 @@ specs:
     - name: 'ilstm'
       type: 'lstm'
       inputs: 'ctxMap'
-      inputDim: 10
-      outputDim: 10
+      inputDim: 300
+      outputDim: 300
       timespan: 27
       initRange: 0.1
       initSeed: 4
       cutOffZeroEnd: true
       multiErr: true
-      learningRate: 0.8
+      learningRate: 0.2
       learningRateAnnealConst: 0.0
       momentum: 0.9
       gradientClip: 0.1
@@ -157,7 +137,7 @@ specs:
     - name: 'attHid1'
       type: 'map'
       inputs: 'txtSel2, ilstm(-1)'
-      outputDim: 12
+      outputDim: 196
       activeFn: 'tanh'
       initRange: 0.1
       initSeed: 6
@@ -169,9 +149,9 @@ specs:
     - name: 'attOut'
       type: 'map'
       inputs: 'attHid1'
-      outputDim: 12
+      outputDim: 196
       activeFn: 'softmax'
-      defaultValue: 0.0833333
+      defaultValue: 0.00510204081632653
       initRange: 0.1
       initSeed: 7
       learningRate: 0.1
@@ -208,26 +188,26 @@ specs:
           - 'ctxMap'
           - 'ilstm'
       outputs: 'ilstm'
-      inputDim: 11
-      outputDim: 10
+      inputDim: 301
+      outputDim: 300
       timespan: 27
       multiOutput: false
     - name: 'outputMap'
       type: 'map'
       inputs: 'wlstm1Final, attModel'
       activeFn: 'tanh'
-      outputDim: 10
+      outputDim: 300
       learningRate: 0.1
       momentum: 0.9
       gradientClip: 0.1
       weightClip: 5.0
     - name: 'answer'
       type: 'constWeights'
-      inputDim: 10
+      inputDim: 300
       outputDim: 63
-      #initWeights: '../data/imgword/word-embed-0-a.npy'
-      initRange: 0.1
-      initSeed: 100
+      initWeights: '../data/imgword/word-embed-0-a.npy'
+      #initRange: 0.1
+      #initSeed: 100
       learningRate: 0.0
       momentum: 0.0
     - name: 'collector'
