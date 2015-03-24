@@ -94,7 +94,7 @@ specs:
       initSeed: 4
       cutOffZeroEnd: true
       multiErr: false
-      learningRate: 0.2
+      learningRate: 0.8
       learningRateAnnealConst: 0.0
       momentum: 0.9
       gradientClip: 0.1
@@ -112,5 +112,5 @@ specs:
       learningRateAnnealConst: 0.0
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 1.0
+      weightClip: 5.0
       weightRegConst: 0.00005
