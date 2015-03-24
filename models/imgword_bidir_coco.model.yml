@@ -26,12 +26,12 @@ specs:
       type: 'selector'
       inputs: 'input'
       start: 1
-      end: 28
+      end: 46
       axis: 1
     - name: 'txtDict'
       type: 'lut'
       inputs: 'txtSel1'
-      inputDim: 871
+      inputDim: 3807
       outputDim: 300
       initWeights: '../data/imgword/word-embed-0-q.npy'
       #initRange: 0.1
@@ -45,7 +45,7 @@ specs:
     - name: 'imgFeat'
       type: 'lut'
       inputs: 'imgSel1'
-      inputDim: 1449
+      inputDim: 6600
       outputDim: 4096
       initWeights: '../data/imgword/oxford-feat.npy'
       learningRate: 0.0
@@ -78,7 +78,7 @@ specs:
       inputs: 'concat'
       inputDim: 300
       outputDim: 150
-      timespan: 28
+      timespan: 46
       initRange: 0.1
       initSeed: 5
       cutOffZeroEnd: true
@@ -98,7 +98,7 @@ specs:
       inputs: 'lstm1RevO, concatRev'
       inputDim: 450
       outputDim: 150
-      timespan: 28
+      timespan: 46
       initRange: 0.1
       initSeed: 5
       cutOffZeroEnd: true
@@ -113,7 +113,7 @@ specs:
     - name: 'answer'
       type: 'map'
       inputs: 'lstm2'
-      outputDim: 63
+      outputDim: 298
       activeFn: 'softmax'
       initRange: 0.1
       initSeed: 6
@@ -121,3 +121,4 @@ specs:
       momentum: 0.9
       gradientClip: 0.1
       weightClip: 10
+      weightRegConst: 0.00005

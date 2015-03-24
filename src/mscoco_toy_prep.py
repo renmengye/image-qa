@@ -92,12 +92,13 @@ def lookupAnsID(answers, ansdict):
 def lookupQID(questions, worddict):
     wordslist = []
     maxlen = 45
+    #maxlen = 0
     for q in questions:
         words = q.replace(',', '').split(' ')
         wordslist.append(words)
-    #    if len(words) > maxlen:
-    #        maxlen = len(words)
-    # print 'Max length', maxlen
+        # if len(words) > maxlen:
+        #     maxlen = len(words)
+    print 'Max length', maxlen
     result = np.zeros((len(questions), maxlen, 1), dtype=int)
     for i,words in enumerate(wordslist):
         for j,w in enumerate(words):
