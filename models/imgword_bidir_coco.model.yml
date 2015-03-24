@@ -33,7 +33,7 @@ specs:
       inputs: 'txtSel1'
       inputDim: 3807
       outputDim: 300
-      initWeights: '../data/imgword/word-embed-0-q.npy'
+      initWeights: '../data/cocoqa/word-embed-q.npy'
       #initRange: 0.1
       #initSeed: 3
       learningRate: 0.0
@@ -47,7 +47,8 @@ specs:
       inputs: 'imgSel1'
       inputDim: 6600
       outputDim: 4096
-      initWeights: '../data/imgword/oxford-feat.npy'
+      initWeights: '../data/cocoqa/hidden7-toy.txt'
+      format: 'plain'
       learningRate: 0.0
       outputdEdX: false
     - name: 'imgMap'
