@@ -116,7 +116,7 @@ specs:
       inputs: 'ctxMap'
       inputDim: 512
       outputDim: 512
-      timespan: 27
+      timespan: 45
       initRange: 0.1
       initSeed: 4
       cutOffZeroEnd: true
