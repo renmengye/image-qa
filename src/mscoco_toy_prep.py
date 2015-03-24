@@ -39,26 +39,44 @@ def buildDict(lines, keystart, pr=False):
     sorted_x = sorted(range(len(word_freq)), key=lambda k: word_freq[k], reverse=True)
     if pr:
         for x in sorted_x:
-          print word_array[x], word_freq[x]
+            print word_array[x], word_freq[x]
         print sorted_x
         print 'Dictionary length', len(word_dict)
     return  word_dict, word_array, word_freq
 
-def removeQuestions(questions, answers, imgids, lowerBound):
+def removeQuestions(questions, answers, imgids, lowerBound, upperBound=100):
     """
     Removes questions with answer appearing less than N times.
+    Probability function to decide whether or not to enroll an answer (remove too frequent answers).
     """
     answerdict, answeridict, answerfreq = buildDict(answers, 0)
+    random = np.random.RandomState(2)
     questionsTrunk = []
     answersTrunk = []
     imgidsTrunk = []
+    answerfreq2 = []
+    for item in answerfreq:
+        answerfreq2.append(0)
     for i in range(len(questions)):
         if answerfreq[answerdict[answers[i]]] < lowerBound:
             continue
         else:
-            questionsTrunk.append(questions[i])
-            answersTrunk.append(answers[i])
-            imgidsTrunk.append(imgids[i])
+            if answerfreq2[answerdict[answers[i]]] <= 100:
+                questionsTrunk.append(questions[i])
+                answersTrunk.append(answers[i])
+                imgidsTrunk.append(imgids[i])
+                answerfreq2[answerdict[answers[i]]] += 1
+            else:
+                # Exponential distribution
+                prob = np.exp(-(answerfreq2[answerdict[answers[i]]] - upperBound) / float(2 * upperBound))
+                #prob = 1 - (answerfreq2[answerdict[answers[i]]] - 100) / float(1500)
+                r = random.uniform(0, 1, [1])
+                #print 'Prob', prob, 'freq', answerfreq2[answerdict[answers[i]]], 'random', r
+                if r < prob:
+                    questionsTrunk.append(questions[i])
+                    answersTrunk.append(answers[i])
+                    imgidsTrunk.append(imgids[i])
+                    answerfreq2[answerdict[answers[i]]] += 1
     return questionsTrunk, answersTrunk, imgidsTrunk
 
 
@@ -108,6 +126,7 @@ def combineAttention(wordids, imgids):
             wordids), axis=-1)
 
 if __name__ == '__main__':
+    # Build image features.
     # hidFeat = []
     # with open(imgHidFeatFilename) as f:
     #     for line in f:
@@ -199,9 +218,14 @@ if __name__ == '__main__':
     testQuestions, testAnswers, testImgIds = removeQuestions(testQuestions, testAnswers, testImgIds, 5)
     print 'Train Questions After Trunk: ', len(trainQuestions)
     print 'Valid Questions After Trunk: ', len(validQuestions)
-    print 'Test Questions Before Trunk: ', len(testQuestions)
+    print 'Test Questions After Trunk: ', len(testQuestions)
     worddict, idict, _ = buildDict(trainQuestions, 1, pr=False)
     ansdict, iansdict, _ = buildDict(trainAnswers, 0, pr=True)
+
+    print 'Valid answer distribution'
+    buildDict(validAnswers, 0, pr=True)
+    print 'Test answer distribution'
+    buildDict(testAnswers, 0, pr=True)
 
     trainInput = combine(\
         lookupQID(trainQuestions, worddict), trainImgIds)
