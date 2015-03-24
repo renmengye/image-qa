@@ -214,9 +214,9 @@ if __name__ == '__main__':
     print 'Test Questions Before Trunk: ', len(testQuestions)
 
     # Truncate rare answers.
-    trainQuestions, trainAnswers, trainImgIds = removeQuestions(trainQuestions, trainAnswers, trainImgIds, 5)
-    validQuestions, validAnswers, validImgIds = removeQuestions(validQuestions, validAnswers, validImgIds,  3)
-    testQuestions, testAnswers, testImgIds = removeQuestions(testQuestions, testAnswers, testImgIds, 5)
+    trainQuestions, trainAnswers, trainImgIds = removeQuestions(trainQuestions, trainAnswers, trainImgIds, 5, 100)
+    validQuestions, validAnswers, validImgIds = removeQuestions(validQuestions, validAnswers, validImgIds,  3, 20)
+    testQuestions, testAnswers, testImgIds = removeQuestions(testQuestions, testAnswers, testImgIds, 5, 100)
     print 'Train Questions After Trunk: ', len(trainQuestions)
     print 'Valid Questions After Trunk: ', len(validQuestions)
     print 'Test Questions After Trunk: ', len(testQuestions)
