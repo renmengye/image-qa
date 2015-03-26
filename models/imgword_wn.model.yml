@@ -51,7 +51,7 @@ specs:
       learningRate: 0.8
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 100.0
+      weightClip: 50.0
       outputdEdX: false
     - name: 'imgFold'
       type: 'timeFold'
@@ -112,5 +112,5 @@ specs:
       learningRateAnnealConst: 0.0
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 5.0
+      weightClip: 10.0
       weightRegConst: 0.00005

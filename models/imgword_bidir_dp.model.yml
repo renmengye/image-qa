@@ -63,7 +63,7 @@ specs:
       learningRate: 0.8
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 50.0
+      weightClip: 100.0
       outputdEdX: false
     - name: 'imgFold'
       type: 'timeFold'

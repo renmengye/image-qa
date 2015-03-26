@@ -38,7 +38,9 @@ specs:
       inputs: 'imgUnfold'
       inputDim: 1449
       outputDim: 4096
-      initWeights: '../data/imgword/oxford-feat.npy'
+      initRange: 0.01
+      initSeed: 1000
+      #initWeights: '../data/imgword/oxford-feat.npy'
       learningRate: 0.0
       outputdEdX: false
     - name: 'imgMap'
@@ -51,7 +53,7 @@ specs:
       learningRate: 0.8
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 100.0
+      weightClip: 50.0
       outputdEdX: false
     - name: 'imgFold'
       type: 'timeFold'
