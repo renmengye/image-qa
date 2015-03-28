@@ -11,7 +11,7 @@ stages:
     - 'txtDict'
     - 'txtFold'
     - 'bow'
-    - 'sum'
+    - 'hidden'
     - 'softmax'
 outputs: 'softmax'
 specs:
@@ -68,7 +68,7 @@ specs:
     - name: 'txtFold'
       type: 'timeFold'
       inputs: 'txtDict'
-      timespan: 27
+      timespan: 45
     - name: 'bow'
       type: 'sum2'
       inputs: 'txtFold'
@@ -88,7 +88,7 @@ specs:
       weightRegConst: 0.00005
     - name: 'softmax'
       type: 'map'
-      inputs: 'sum'
+      inputs: 'hidden'
       activeFn: 'softmax'
       outputDim: 298
       initRange: 0.1
