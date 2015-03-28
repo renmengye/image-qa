@@ -11,7 +11,7 @@ qaValidFilename = '../../../data/mscoco/mscoco_qa_all_valid.pkl'
 outputFolder = '../data/cocoqa-full/'
 imgHidFeatTrainFilename = '/ais/gobi3/u/rkiros/coco/train_features_vgg/hidden7.txt'
 imgHidFeatValidFilename = '/ais/gobi3/u/rkiros/coco/valid_features_vgg/hidden7.txt'
-imgHidFeatOutFilename = '../data/cocoqa/hidden7.txt'
+imgHidFeatOutFilename = '../data/cocoqa-full/hidden7.txt'
 #imgConvFeatOutFilename = '../data/cocoqa/hidden5_4_conv.txt'
 
 def buildDict(lines, keystart, pr=False):
