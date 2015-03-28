@@ -67,7 +67,7 @@ specs:
       inputs: 'txtUnfold'
       inputDim: 13049
       outputDim: 300
-      initWeights: 0.1
+      initRange: 0.1
       initSeed: 0
       learningRate: 0.0
       outputdEdX: false
