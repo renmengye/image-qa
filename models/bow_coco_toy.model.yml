@@ -44,11 +44,10 @@ specs:
       inputs: 'imgFeat'
       activeFn: 'identity'
       outputDim: 300
-      initRange: 0.1
+      initRange: 0.01
       initSeed: 1
-      learningRate: 0.8
+      learningRate: 0.01
       momentum: 0.9
-      gradientClip: 0.1
       weightClip: 100.0
     - name: 'imgFold'
       type: 'timeFold'
@@ -78,12 +77,11 @@ specs:
       inputs: 'bow, imgMap'
       type: 'map'
       activeFn: 'tanh'
-      initRange: 0.1
+      initRange: 0.01
       initSeed: 2
       outputDim: 300
-      learningRate: 0.8
+      learningRate: 0.01
       momentum: 0.9
-      gradientClip: 0.1
       weightClip: 100.0
       weightRegConst: 0.00005
     - name: 'softmax'
@@ -91,11 +89,10 @@ specs:
       inputs: 'hidden'
       activeFn: 'softmax'
       outputDim: 298
-      initRange: 0.1
+      initRange: 0.01
       initSeed: 7
       learningRate: 0.01
       learningRateAnnealConst: 0.0
       momentum: 0.9
-      gradientClip: 0.1
       weightClip: 15.0
       weightRegConst: 0.00005
