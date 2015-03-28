@@ -72,9 +72,14 @@ specs:
       type: 'sum2'
       inputs: 'txtFold'
       numComponents: 45
-      outputDim: 300    
-    - name: 'hidden'
+      outputDim: 300
+    - name: 'dropout'
       inputs: 'bow, imgMap'
+      type: 'dropout'
+      dropoutRate: 0.5
+      initSeed: 3
+    - name: 'hidden'
+      inputs: 'dropout'
       type: 'map'
       activeFn: 'tanh'
       initRange: 0.01
