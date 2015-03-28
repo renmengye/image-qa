@@ -128,25 +128,25 @@ def combineAttention(wordids, imgids):
 
 if __name__ == '__main__':
     # Build image features.
-    # hidFeat = []
-    # with open(imgHidFeatFilename) as f:
-    #     for line in f:
-    #         hidFeat.append(line)
-    #         if len(hidFeat) == 6600:
-    #             break
-    # with open(imgHidFeatOutFilename, 'w') as f:
-    #     for line in hidFeat:
-    #         f.write(line)
+    hidFeat = []
+    with open(imgHidFeatFilename) as f:
+        for line in f:
+            hidFeat.append(line)
+            if len(hidFeat) == 6600:
+                break
+    with open(imgHidFeatOutFilename, 'w') as f:
+        for line in hidFeat:
+            f.write(line)
 
-    # convFeat = []
-    # with open(imgConvFeatFilename) as f:
-    #     for line in f:
-    #         convFeat.append(line)
-    #         if len(convFeat) == 6600:
-    #             break
-    # with open(imgConvFeatOutFilename, 'w') as f:
-    #     for line in convFeat:
-    #         f.write(line)
+    convFeat = []
+    with open(imgConvFeatFilename) as f:
+        for line in f:
+            convFeat.append(line)
+            if len(convFeat) == 6600:
+                break
+    with open(imgConvFeatOutFilename, 'w') as f:
+        for line in convFeat:
+            f.write(line)
 
     with open(imgidFilename) as f:
         lines = f.readlines()
