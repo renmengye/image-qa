@@ -9,9 +9,9 @@ from nltk.corpus import wordnet
 import sys
 
 if len(sys.argv) < 2:
-    parseFilename = '../../../data/mscoco/mscoco_caption.parse.txt'
-    imgidsFilename = '../../../data/mscoco/mscoco_imgids.txt'
-    outputFilename = '../../../data/mscoco/mscoco_qa_all.pkl'
+    parseFilename = '../../../data/mscoco/mscoco_caption_valid.parse.txt'
+    imgidsFilename = '../../../data/mscoco/mscoco_imgids_valid.txt'
+    outputFilename = '../../../data/mscoco/mscoco_qa_all_valid.pkl'
 else:
     parseFilename = '../../../data/%s/%s_caption.parse.txt' %(sys.argv[1],sys.argv[1])
     imgidsFilename = '../../../data/%s/%s_imgids.txt' %(sys.argv[1],sys.argv[1])
@@ -578,7 +578,7 @@ class TreeParser:
 
     @staticmethod
     def isText(s):
-        if TreeParser.isAlpha(s) or TreeParser.isNumber(s) or s == '.' or s == ',' or s == '-' or s == '\'' or s == '`' or s == '/' or s == '>' or s == ':' or s == ';' or s == '\\' or s == '!' or s == '?' or s == '&' or s == '-' or s == '=' or s == '#' or s == '$' or s == '@' or s == '_' or s == '*' or s == '+' or s == chr(194) or s == chr(160):
+        if TreeParser.isAlpha(s) or TreeParser.isNumber(s) or s == '.' or s == ',' or s == '-' or s == '\'' or s == '`' or s == '/' or s == '>' or s == ':' or s == ';' or s == '\\' or s == '!' or s == '?' or s == '&' or s == '-' or s == '=' or s == '#' or s == '$' or s == '@' or s == '_' or s == '*' or s == '+' or s == '%' or s == chr(194) or s == chr(160):
             return True
         else:
             return False 
@@ -745,7 +745,7 @@ def testHook():
     #s = stanfordParse('There are two ovens in a kitchen restaurant , and one of them is being used .')
     #s = stanfordParse('A bathroom with two sinks a bathtub and a shower with lots of lighting from the windows .')
     #s = stanfordParse('A man waits at the crosswalk with his bicycle .')
-    s = stanfordParse('A brown horse is grazing grass near a red house .')
+    s = stanfordParse('A boy is playing with two dogs .')
 
     #print s
     s = s.split('\n')
