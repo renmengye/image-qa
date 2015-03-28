@@ -4,13 +4,15 @@ import cPickle as pkl
 import numpy as np
 import operator
 
-imgidFilename = '../../../data/mscoco/image_list_train.txt'
-qaFilename = '../../../data/mscoco/mscoco_qa_all_train.pkl'
-outputFolder = '../data/cocoqa/'
-imgHidFeatFilename = '/ais/gobi3/u/rkiros/coco/train_features_vgg/hidden7.txt'
-imgConvFeatFilename = '/ais/gobi3/u/rkiros/coco/align_train/hidden5_4_conv.txt'
-imgHidFeatOutFilename = '../data/cocoqa/hidden7-toy.txt'
-imgConvFeatOutFilename = '../data/cocoqa/hidden5_4_conv-toy.txt'
+imgidTrainFilename = '../../../data/mscoco/image_list_train.txt'
+imgidValidFilename = '../../../data/mscoco/image_list_valid.txt'
+qaTrainFilename = '../../../data/mscoco/mscoco_qa_all_train.pkl'
+qaValidFilename = '../../../data/mscoco/mscoco_qa_all_valid.pkl'
+outputFolder = '../data/cocoqa-full/'
+imgHidFeatTrainFilename = '/ais/gobi3/u/rkiros/coco/train_features_vgg/hidden7.txt'
+imgHidFeatValidFilename = '/ais/gobi3/u/rkiros/coco/valid_features_vgg/hidden7.txt'
+imgHidFeatOutFilename = '../data/cocoqa/hidden7.txt'
+#imgConvFeatOutFilename = '../data/cocoqa/hidden5_4_conv.txt'
 
 def buildDict(lines, keystart, pr=False):
     # From word to number.
@@ -40,7 +42,7 @@ def buildDict(lines, keystart, pr=False):
     if pr:
         for x in sorted_x:
             print word_array[x], word_freq[x]
-        print sorted_x
+        #print sorted_x
         print 'Dictionary length', len(word_dict)
     return  word_dict, word_array, word_freq
 
@@ -91,13 +93,13 @@ def lookupAnsID(answers, ansdict):
 
 def lookupQID(questions, worddict):
     wordslist = []
-    maxlen = 45
+    maxlen = 55
     #maxlen = 0
     for q in questions:
         words = q.replace(',', '').split(' ')
         wordslist.append(words)
-        # if len(words) > maxlen:
-        #     maxlen = len(words)
+        #if len(words) > maxlen:
+        #    maxlen = len(words)
     print 'Max length', maxlen
     result = np.zeros((len(questions), maxlen, 1), dtype=int)
     for i,words in enumerate(wordslist):
@@ -128,15 +130,13 @@ def combineAttention(wordids, imgids):
 
 if __name__ == '__main__':
     # Build image features.
-    # hidFeat = []
-    # with open(imgHidFeatFilename) as f:
-    #     for line in f:
-    #         hidFeat.append(line)
-    #         if len(hidFeat) == 6600:
-    #             break
-    # with open(imgHidFeatOutFilename, 'w') as f:
-    #     for line in hidFeat:
-    #         f.write(line)
+    hidFeat = []
+    with open(imgHidFeatTrainFilename) as f:
+        hidFeat = f.readlines()
+    with open(imgHidFeatValidFilename) as f:
+        hidFeat.extend(f.readlines())
+    with open(imgHidFeatOutFilename, 'w') as f:
+        f.writelines(hidFeat)
 
     # convFeat = []
     # with open(imgConvFeatFilename) as f:
@@ -148,8 +148,13 @@ if __name__ == '__main__':
     #     for line in convFeat:
     #         f.write(line)
 
-    with open(imgidFilename) as f:
+    with open(imgidTrainFilename) as f:
         lines = f.readlines()
+    trainLen = len(lines) * 9 / 10
+    validLen = len(lines)
+    with open(imgidValidFilename) as f:
+        lines.extend(f.readlines())
+    testLen = len(lines)
 
     imgidDict = {} # Mark for train/valid/test.
     imgidDict2 = {} # Reindex the image, 1-based.
@@ -157,31 +162,33 @@ if __name__ == '__main__':
     # 3000 images train, 600 images valid, 3000 images test.
     # 0 for train, 1 for valid, 2 for test.
 
-    cocoImgIdRegex = 'COCO_train2014_0*(?P<imgid>[1-9][0-9]+)'
+    cocoImgIdRegex = 'COCO_((train)|(val))2014_0*(?P<imgid>[1-9][0-9]*)'
 
-    for i in range(3000):
+    for i in range(trainLen):
         match = re.search(cocoImgIdRegex, lines[i])
         imgid = match.group('imgid')
         imgidDict[imgid] = 0
         imgidDict2[imgid] = i + 1
         imgidDict3.append(imgid)
 
-    for i in range(3000, 3600):
+    for i in range(trainLen, validLen):
         match = re.search(cocoImgIdRegex, lines[i])
         imgid = match.group('imgid')
         imgidDict[imgid] = 1
         imgidDict2[imgid] = i + 1
         imgidDict3.append(imgid)
 
-    for i in range(3600, 6600):
+    for i in range(validLen, testLen):
         match = re.search(cocoImgIdRegex, lines[i])
         imgid = match.group('imgid')
         imgidDict[imgid] = 2
         imgidDict2[imgid] = i + 1
         imgidDict3.append(imgid)
 
-    with open(qaFilename) as qaf:
+    with open(qaTrainFilename) as qaf:
         qaAll = pkl.load(qaf)
+    with open(qaValidFilename) as qaf:
+        qaAll.extend(pkl.load(qaf))
 
     trainQuestions = []
     trainAnswers = []
@@ -214,9 +221,9 @@ if __name__ == '__main__':
     print 'Test Questions Before Trunk: ', len(testQuestions)
 
     # Truncate rare answers.
-    trainQuestions, trainAnswers, trainImgIds = removeQuestions(trainQuestions, trainAnswers, trainImgIds, 5, 100)
-    validQuestions, validAnswers, validImgIds = removeQuestions(validQuestions, validAnswers, validImgIds,  3, 20)
-    testQuestions, testAnswers, testImgIds = removeQuestions(testQuestions, testAnswers, testImgIds, 5, 100)
+    trainQuestions, trainAnswers, trainImgIds = removeQuestions(trainQuestions, trainAnswers, trainImgIds, 20, 200)
+    validQuestions, validAnswers, validImgIds = removeQuestions(validQuestions, validAnswers, validImgIds,  3, 30)
+    testQuestions, testAnswers, testImgIds = removeQuestions(testQuestions, testAnswers, testImgIds, 10, 100)
     print 'Train Questions After Trunk: ', len(trainQuestions)
     print 'Valid Questions After Trunk: ', len(validQuestions)
     print 'Test Questions After Trunk: ', len(testQuestions)
@@ -239,15 +246,15 @@ if __name__ == '__main__':
     testTarget = lookupAnsID(testAnswers, ansdict)
 
     np.save(\
-        os.path.join(outputFolder, 'train-toy.npy'),\
+        os.path.join(outputFolder, 'train.npy'),\
         np.array((trainInput, trainTarget, 0),\
             dtype=object))
     np.save(\
-        os.path.join(outputFolder, 'valid-toy.npy'),\
+        os.path.join(outputFolder, 'valid.npy'),\
         np.array((validInput, validTarget, 0),\
             dtype=object))
     np.save(\
-        os.path.join(outputFolder, 'test-toy.npy'),\
+        os.path.join(outputFolder, 'test.npy'),\
         np.array((testInput, testTarget, 0),\
             dtype=object))
 
@@ -262,11 +269,11 @@ if __name__ == '__main__':
     testTarget = lookupAnsID(testAnswers, ansdict)
 
     np.save(\
-        os.path.join(outputFolder, 'train-toy-att.npy'),\
+        os.path.join(outputFolder, 'train-att.npy'),\
         np.array((trainInput, trainTarget, 0),\
             dtype=object))
     np.save(\
-        os.path.join(outputFolder, 'valid-toy-att.npy'),\
+        os.path.join(outputFolder, 'valid-att.npy'),\
         np.array((validInput, validTarget, 0),\
             dtype=object))
     np.save(\
