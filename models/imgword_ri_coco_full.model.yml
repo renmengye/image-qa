@@ -38,7 +38,7 @@ specs:
       inputs: 'imgUnfold'
       inputDim: 123287
       outputDim: 4096
-      initRange: 0.01
+      initRange: 0.1
       initSeed: 0
       learningRate: 0.0
       outputdEdX: false
