@@ -13,7 +13,8 @@ import cPickle as pkl
 from nn.func import *
 #plt.ion()
 
-jsonFilename = '../../../data/mscoco/captions_train2014.json'
+jsonTrainFilename = '../../../data/mscoco/captions_train2014.json'
+jsonValidFilename = '../../../data/mscoco/captions_val2014.json'
 imgidDictFilename = '../data/cocoqa-full/imgid_dict.pkl'
 
 
@@ -76,15 +77,18 @@ def scan(X):
     return Xend
 
 def readImgDict():
-    with open(jsonFilename) as f:
+    with open(jsonTrainFilename) as f:
         captiontxt = f.read()
-    caption = json.loads(captiontxt)
     urlDict = {}
-    #print len(caption['images'])
+    caption = json.loads(captiontxt)
     for item in caption['images']:
         urlDict[item['id']] = item['url']
-        #print item
-        #print item['id'], item['url']
+
+    with open(jsonValidFilename) as f:
+        captiontxt = f.read()
+    caption = json.loads(captiontxt)
+    for item in caption['images']:
+        urlDict[item['id']] = item['url']
     return urlDict
 
 if __name__ == '__main__':
