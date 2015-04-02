@@ -146,7 +146,7 @@ if __name__ == '__main__':
     html = renderHtml(X, Y, T, vocabDict[1], vocabDict[3], 10, urlDict, imgidDict)
     with open(trainHtmlFilename, 'w+') as f:
         f.writelines(html)
-    correct, total = calcRate(X, Y, T, questionArray)
+    correct, total = calcRate(X, Y, T, vocabDict[1])
     print correct, total, np.array(correct) / np.array(total)
 
     # Test
@@ -159,5 +159,5 @@ if __name__ == '__main__':
     html = renderHtml(TX, TY, TT, vocabDict[1], vocabDict[3], 10, urlDict, imgidDict)
     with open(testHtmlFilename, 'w+') as f:
         f.writelines(html)
-    correct, total = calcRate(X, Y, T, questionArray)
+    correct, total = calcRate(X, Y, T, vocabDict[1])
     print correct, total, np.array(correct) / np.array(total)
