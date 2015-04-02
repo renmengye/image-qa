@@ -229,7 +229,7 @@ if __name__ == '__main__':
     testCount = [0,0,0]
     for n in range(0, len(trainQuestions)):
         question = trainQuestions[n]
-        if question.startswith('how many'):
+        if 'how many' in question:
             typ = 1
         elif question.startswith('what is the color'):
             typ = 2
@@ -238,7 +238,7 @@ if __name__ == '__main__':
         trainCount[typ] += 1
     for n in range(0, len(validQuestions)):
         question = validQuestions[n]
-        if question.startswith('how many'):
+        if 'how many' in question:
             typ = 1
         elif question.startswith('what is the color'):
             typ = 2
