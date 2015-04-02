@@ -224,9 +224,43 @@ if __name__ == '__main__':
     trainQuestions, trainAnswers, trainImgIds = removeQuestions(trainQuestions, trainAnswers, trainImgIds, 20, 200)
     validQuestions, validAnswers, validImgIds = removeQuestions(validQuestions, validAnswers, validImgIds,  3, 30)
     testQuestions, testAnswers, testImgIds = removeQuestions(testQuestions, testAnswers, testImgIds, 10, 100)
+    trainCount = [0,0,0]
+    validCount = [0,0,0]
+    testCount = [0,0,0]
+    for n in range(0, len(trainQuestions)):
+        question = trainQuestions[n]
+        if question.startswith('how many'):
+            typ = 1
+        elif question.startswith('what is the color'):
+            typ = 2
+        else:
+            typ = 0
+        trainCount[typ] += 1
+    for n in range(0, len(validQuestions)):
+        question = validQuestions[n]
+        if question.startswith('how many'):
+            typ = 1
+        elif question.startswith('what is the color'):
+            typ = 2
+        else:
+            typ = 0
+        validCount[typ] += 1
+    for n in range(0, len(testQuestions)):
+        question = testQuestions[n]
+        if 'how many' in question:
+            typ = 1
+        elif question.startswith('what is the color'):
+            typ = 2
+        else:
+            typ = 0
+        testCount[typ] += 1
+
     print 'Train Questions After Trunk: ', len(trainQuestions)
+    print 'Train Question dist: ', trainCount
     print 'Valid Questions After Trunk: ', len(validQuestions)
+    print 'Valid Question dist: ', validCount
     print 'Test Questions After Trunk: ', len(testQuestions)
+    print 'Test Question dist: ', testCount
     worddict, idict, _ = buildDict(trainQuestions, 1, pr=False)
     ansdict, iansdict, _ = buildDict(trainAnswers, 0, pr=True)
 
