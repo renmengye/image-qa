@@ -147,7 +147,7 @@ if __name__ == '__main__':
     with open(trainHtmlFilename, 'w+') as f:
         f.writelines(html)
     correct, total = calcRate(X, Y, T, vocabDict[1])
-    print correct, total, np.array(correct) / np.array(total)
+    print correct, total, np.array(correct, dtype=float) / np.array(total, dtype=float)
 
     # Test
     testOutputFilename = os.path.join(resultFolder, '%s.test.o.npy' % taskId)
