@@ -17,6 +17,34 @@ jsonTrainFilename = '../../../data/mscoco/captions_train2014.json'
 jsonValidFilename = '../../../data/mscoco/captions_val2014.json'
 imgidDictFilename = '../data/cocoqa-full/imgid_dict.pkl'
 
+def decodeQuestion(X, questionArray):
+    sentence = ''
+    for t in range(1, X.shape[0]):
+        if X[n, t, 0] == 0:
+            break
+        sentence += questionArray[X[t, 0]- 1] + ' '
+    sentence += '?'
+    return sentence
+
+def calcRate(X, Y, T):
+    correct = [0, 0, 0]
+    total = [0, 0, 0]
+    for n in range(0, X.shape[0]):        
+        sortIdx = np.argsort(Y[n], axis=0)
+        sortIdx = sortIdx[::-1]
+        A = Y[sortIdx[0]]
+        question = decodeQuestion(X[n])
+        if question.startswith('how many'):
+            typ = 1
+        elif question.startswith('what is the color'):
+            typ = 2
+        else:
+            typ = 0
+        total[typ] += 1
+        if A == T:
+            correct[typ] += 1
+    return correct, total
+
 
 def renderHtml(X, Y, T, questionArray, answerArray, topK, urlDict, imgidDict):
     htmlList = []
@@ -34,12 +62,7 @@ def renderHtml(X, Y, T, questionArray, answerArray, topK, urlDict, imgidDict):
         htmlList.append('<td style="padding-top:0px;height=550px">\
         <div style="width:310px;height:210px;text-align:top;margin-top:0px;\
         padding-top:0px;line-height:0px"><img src="%s" width=300 height=200/></div>\n' % imageFilename)
-        sentence = ''
-        for t in range(1, X.shape[1]):
-            if X[n, t, 0] == 0:
-                break
-            sentence += questionArray[X[n, t, 0]- 1] + ' '
-        sentence += '?'
+        sentence = decodeQuestion(X[n])
         htmlList.append('<div style="height:300px;text-align:bottom;overflow:hidden;">Q%d: %s<br/>' % (n + 1, sentence))
         htmlList.append('Top %d answers: (confidence)<br/>' % topK)
         sortIdx = np.argsort(Y[n], axis=0)
@@ -123,6 +146,8 @@ if __name__ == '__main__':
     html = renderHtml(X, Y, T, vocabDict[1], vocabDict[3], 10, urlDict, imgidDict)
     with open(trainHtmlFilename, 'w+') as f:
         f.writelines(html)
+    correct, total = calcRate(X, Y, T)
+    print correct, total, np.array(correct) / np.array(total)
 
     # Test
     testOutputFilename = os.path.join(resultFolder, '%s.test.o.npy' % taskId)
@@ -134,3 +159,5 @@ if __name__ == '__main__':
     html = renderHtml(TX, TY, TT, vocabDict[1], vocabDict[3], 10, urlDict, imgidDict)
     with open(testHtmlFilename, 'w+') as f:
         f.writelines(html)
+    correct, total = calcRate(X, Y, T)
+    print correct, total, np.array(correct) / np.array(total)
