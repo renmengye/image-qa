@@ -41,7 +41,7 @@ def calcRate(X, Y, T, questionArray):
         else:
             typ = 0
         total[typ] += 1
-        if A == T:
+        if A == T[n]:
             correct[typ] += 1
     return correct, total
 
