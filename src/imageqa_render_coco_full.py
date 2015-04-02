@@ -32,7 +32,7 @@ def calcRate(X, Y, T, questionArray):
     for n in range(0, X.shape[0]):        
         sortIdx = np.argsort(Y[n], axis=0)
         sortIdx = sortIdx[::-1]
-        A = Y[n, sortIdx[0]]
+        A = sortIdx[0]
         question = decodeQuestion(X[n], questionArray)
         if question.startswith('how many'):
             typ = 1
@@ -159,5 +159,5 @@ if __name__ == '__main__':
     html = renderHtml(TX, TY, TT, vocabDict[1], vocabDict[3], 10, urlDict, imgidDict)
     with open(testHtmlFilename, 'w+') as f:
         f.writelines(html)
-    correct, total = calcRate(X, Y, T, vocabDict[1])
-    print correct, total, np.array(correct) / np.array(total)
+    correct, total = calcRate(TX, TY, TT, vocabDict[1])
+    print correct, total, np.array(correct, dtype=float) / np.array(total, dtype=float)
