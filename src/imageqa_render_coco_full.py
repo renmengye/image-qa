@@ -20,7 +20,7 @@ imgidDictFilename = '../data/cocoqa-full/imgid_dict.pkl'
 def decodeQuestion(X, questionArray):
     sentence = ''
     for t in range(1, X.shape[0]):
-        if X[n, t, 0] == 0:
+        if X[t, 0] == 0:
             break
         sentence += questionArray[X[t, 0]- 1] + ' '
     sentence += '?'
