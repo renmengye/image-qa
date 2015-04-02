@@ -32,7 +32,7 @@ def calcRate(X, Y, T, questionArray):
     for n in range(0, X.shape[0]):        
         sortIdx = np.argsort(Y[n], axis=0)
         sortIdx = sortIdx[::-1]
-        A = Y[sortIdx[0]]
+        A = Y[n, sortIdx[0]]
         question = decodeQuestion(X[n], questionArray)
         if question.startswith('how many'):
             typ = 1
