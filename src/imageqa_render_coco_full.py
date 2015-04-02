@@ -26,14 +26,14 @@ def decodeQuestion(X, questionArray):
     sentence += '?'
     return sentence
 
-def calcRate(X, Y, T):
+def calcRate(X, Y, T, questionArray):
     correct = [0, 0, 0]
     total = [0, 0, 0]
     for n in range(0, X.shape[0]):        
         sortIdx = np.argsort(Y[n], axis=0)
         sortIdx = sortIdx[::-1]
         A = Y[sortIdx[0]]
-        question = decodeQuestion(X[n])
+        question = decodeQuestion(X[n], questionArray)
         if question.startswith('how many'):
             typ = 1
         elif question.startswith('what is the color'):
@@ -146,7 +146,7 @@ if __name__ == '__main__':
     html = renderHtml(X, Y, T, vocabDict[1], vocabDict[3], 10, urlDict, imgidDict)
     with open(trainHtmlFilename, 'w+') as f:
         f.writelines(html)
-    correct, total = calcRate(X, Y, T)
+    correct, total = calcRate(X, Y, T, questionArray)
     print correct, total, np.array(correct) / np.array(total)
 
     # Test
@@ -159,5 +159,5 @@ if __name__ == '__main__':
     html = renderHtml(TX, TY, TT, vocabDict[1], vocabDict[3], 10, urlDict, imgidDict)
     with open(testHtmlFilename, 'w+') as f:
         f.writelines(html)
-    correct, total = calcRate(X, Y, T)
+    correct, total = calcRate(X, Y, T, questionArray)
     print correct, total, np.array(correct) / np.array(total)
