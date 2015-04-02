@@ -62,7 +62,7 @@ def renderHtml(X, Y, T, questionArray, answerArray, topK, urlDict, imgidDict):
         htmlList.append('<td style="padding-top:0px;height=550px">\
         <div style="width:310px;height:210px;text-align:top;margin-top:0px;\
         padding-top:0px;line-height:0px"><img src="%s" width=300 height=200/></div>\n' % imageFilename)
-        sentence = decodeQuestion(X[n])
+        sentence = decodeQuestion(X[n], questionArray)
         htmlList.append('<div style="height:300px;text-align:bottom;overflow:hidden;">Q%d: %s<br/>' % (n + 1, sentence))
         htmlList.append('Top %d answers: (confidence)<br/>' % topK)
         sortIdx = np.argsort(Y[n], axis=0)
