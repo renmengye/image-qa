@@ -92,7 +92,7 @@ def extractQA(lines):
     print 'Preserved', preserved
     return (questions, answers, imgIds)
 
-def buildDict(lines, keystart):
+def buildDict(lines, keystart, pr=False):
     # From word to number.
     word_dict = {}
     # From number to word, numbers need to minus one to convert to list indices.
@@ -113,9 +113,16 @@ def buildDict(lines, keystart):
                 key += 1
             else:
                 k = word_dict[words[j]]
-                word_freq[k - 1] += 1
+                word_freq[k - keystart] += 1
     word_dict['UNK'] = key
     word_array.append('UNK')
+
+    sorted_x = sorted(range(len(word_freq)), key=lambda k: word_freq[k], reverse=True)
+    if pr:
+        for x in sorted_x:
+            print word_array[x], word_freq[x],
+        #print sorted_x
+        print 'Dictionary length', len(word_dict)
     return  word_dict, word_array
 
 def lookupAnsID(answers, ansdict):
@@ -144,31 +151,6 @@ def lookupQID(questions, worddict):
                 result[i, j, 0] = worddict['UNK']
     return result
 
-def lookupQIDBidir(questions, worddict):
-    """
-    Look up word ids, produces forward-backward bi-directional word array
-    :param questions: List of string
-    :param worddict: Map from string (word) to word id
-    :return:
-    """
-    wordslist = []
-    maxlen = 27
-    for q in questions:
-        words = q.split(' ')
-        wordslist.append(words)
-        # if len(words) > maxlen:
-        #     maxlen = len(words)
-    result = np.zeros((len(questions), maxlen, 2), dtype=int)
-    for i,words in enumerate(wordslist):
-        for j,w in enumerate(words):
-            if worddict.has_key(w):
-                result[i, j, 0] = worddict[w]
-                result[i, len(words) - j - 1, 1] = worddict[w]
-            else:
-                result[i, j, 0] = worddict['UNK']
-                result[i, len(words) - j - 1, 1] = worddict['UNK']
-    return result
-
 def combine(wordids, imgids):
     return np.concatenate(\
         (np.array(imgids).reshape(len(imgids), 1, 1), \
@@ -193,7 +175,7 @@ if __name__ == '__main__':
     """
     trainQAFilename = '../../../data/mpi-qa/qa.37.raw.train.txt'
     testQAFilename = '../../../data/mpi-qa/qa.37.raw.test.txt'
-    outputFolder = '../data/imgword'
+    outputFolder = '../data/daquar-37'
     if len(sys.argv) > 6:
         for i in range(1, len(sys.argv)):
             if sys.argv[i] == '-train':
@@ -213,16 +195,65 @@ if __name__ == '__main__':
     t_answers, v_answers = dataSplit(answers, imgids, split)
     t_imgids, v_imgids = dataSplit(imgids, imgids, split)
 
+    print len(t_questions) + len(v_questions)
+
     # Read test file.
     with open(testQAFilename) as f:
         lines = f.readlines()
 
     (r_questions, r_answers, r_imgids) = extractQA(lines)
 
+    print len(r_questions)
     # Build a dictionary only for training questions.
-    worddict, idict = buildDict(t_questions, 1)
-    ansdict, iansdict = buildDict(t_answers, 0)
+    worddict, idict = buildDict(t_questions, 1, pr=False)
+    ansdict, iansdict = buildDict(t_answers, 0, pr=True)
+    v_ansdict, v_iansdict = buildDict(v_answers, 0, pr=True)
+    r_ansdict, r_ansidict = buildDict(r_answers, 1, pr=True)
+
+    trainCount = [0,0,0]
+    validCount = [0,0,0]
+    testCount = [0,0,0]
+    for n in range(0, len(t_questions)):
+        question = t_questions[n]
+        if 'how many' in question:
+            typ = 1
+        elif 'what' in question and 'color' in question:
+            typ = 2
+        else:
+            typ = 0
+        trainCount[typ] += 1
+    for n in range(0, len(v_questions)):
+        question = v_questions[n]
+        if 'how many' in question:
+            typ = 1
+        elif 'what' in question and 'color' in question:
+            typ = 2
+        else:
+            typ = 0
+        validCount[typ] += 1
+    for n in range(0, len(r_questions)):
+        question = r_questions[n]
+        if 'how many' in question:
+            typ = 1
+        elif 'what' in question and 'color' in question:
+            typ = 2
+        else:
+            typ = 0
+        testCount[typ] += 1
     
+    print 'Train Questions After Trunk: ', len(t_questions)
+    print 'Train Question Dist: ', trainCount
+    print 'Valid Questions After Trunk: ', len(v_questions)
+    print 'Valid: Question Dst: ', validCount
+    trainValidQuestionsLen = len(t_questions) + len(v_questions)
+    print 'Train+Valid questions: ', trainValidQuestionsLen
+    print 'Train+Valid Dist: ', np.array(trainCount) + np.array(validCount)
+    print 'Trian+Valid Dist: ', (np.array(trainCount) + np.array(validCount)) / float(trainValidQuestionsLen)
+
+    print 'Test Questions After Trunk: ', len(r_questions)
+    print 'Test Question Dist: ', testCount
+    print 'Test Question Dist: ', np.array(testCount) / float(len(r_questions))
+
     trainInput = combine(\
         lookupQID(t_questions, worddict), t_imgids)
     trainTarget = lookupAnsID(t_answers, ansdict)
@@ -234,26 +265,26 @@ if __name__ == '__main__':
     testTarget = lookupAnsID(r_answers, ansdict)
 
     worddict_all, idict_all = buildDict(questions, 1)
-    ansdict_all, iansdict_all = buildDict(answers, 0)
+    ansdict_all, iansdict_all = buildDict(answers, 0, pr=True)
 
     allInput = combine(\
         lookupQID(questions, worddict), imgids)
     allTarget = lookupAnsID(answers, ansdict)
 
     np.save(\
-        os.path.join(outputFolder, 'train-37-unk.npy'),\
+        os.path.join(outputFolder, 'train-unk.npy'),\
         np.array((trainInput, trainTarget, 0),\
             dtype=object))
     np.save(\
-        os.path.join(outputFolder, 'valid-37-unk.npy'),\
+        os.path.join(outputFolder, 'valid-unk.npy'),\
         np.array((validInput, validTarget, 0),\
             dtype=object))
     np.save(\
-        os.path.join(outputFolder, 'test-37-unk.npy'),\
+        os.path.join(outputFolder, 'test-unk.npy'),\
         np.array((testInput, testTarget, 0),\
             dtype=object))
     np.save(\
-        os.path.join(outputFolder, 'all-37-unk.npy'),\
+        os.path.join(outputFolder, 'all-unk.npy'),\
         np.array((allInput, allTarget, 0),\
             dtype=object))
     np.save(\
@@ -274,45 +305,20 @@ if __name__ == '__main__':
     allInput = combineAttention(\
         lookupQID(questions, worddict_all), imgids)
     np.save(\
-        os.path.join(outputFolder, 'train-37-unk-att.npy'),\
+        os.path.join(outputFolder, 'train-unk-att.npy'),\
         np.array((trainInput, trainTarget, 0),\
             dtype=object))
     np.save(\
-        os.path.join(outputFolder, 'valid-37-unk-att.npy'),\
+        os.path.join(outputFolder, 'valid-unk-att.npy'),\
         np.array((validInput, validTarget, 0),\
             dtype=object))
     np.save(\
-        os.path.join(outputFolder, 'test-37-unk-att.npy'),\
+        os.path.join(outputFolder, 'test-unk-att.npy'),\
         np.array((testInput, testTarget, 0),\
             dtype=object))
     np.save(\
-        os.path.join(outputFolder, 'all-37-unk-att.npy'),\
+        os.path.join(outputFolder, 'all-unk-att.npy'),\
         np.array((allInput, allTarget, 0),\
-            dtype=object))
-
-    trainInputBidir = combineAttention(\
-        lookupQIDBidir(t_questions, worddict), t_imgids)
-    validInputBidir = combineAttention(\
-        lookupQIDBidir(v_questions, worddict), v_imgids)
-    testInputBidir = combineAttention(\
-        lookupQIDBidir(r_questions, worddict), r_imgids)
-    allInputBidir = combineAttention(\
-        lookupQID(questions, worddict_all), imgids)
-    np.save(\
-        os.path.join(outputFolder, 'train-37-unk-att-bidir.npy'),\
-        np.array((trainInputBidir, trainTarget, 0),\
-            dtype=object))
-    np.save(\
-        os.path.join(outputFolder, 'valid-37-unk-att-bidir.npy'),\
-        np.array((validInputBidir, validTarget, 0),\
-            dtype=object))
-    np.save(\
-        os.path.join(outputFolder, 'test-37-unk-att-bidir.npy'),\
-        np.array((testInputBidir, testTarget, 0),\
-            dtype=object))
-    np.save(\
-        os.path.join(outputFolder, 'all-37-unk-att-bidir.npy'),\
-        np.array((allInputBidir, allTarget, 0),\
             dtype=object))
 
     with open(os.path.join(outputFolder, 'question_vocabs.txt'), 'w+') as f:

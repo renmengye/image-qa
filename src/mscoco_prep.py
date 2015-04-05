@@ -41,7 +41,7 @@ def buildDict(lines, keystart, pr=False):
     sorted_x = sorted(range(len(word_freq)), key=lambda k: word_freq[k], reverse=True)
     if pr:
         for x in sorted_x:
-            print word_array[x], word_freq[x]
+            print word_array[x], word_freq[x],
         #print sorted_x
         print 'Dictionary length', len(word_dict)
     return  word_dict, word_array, word_freq
@@ -227,6 +227,9 @@ if __name__ == '__main__':
     trainCount = [0,0,0]
     validCount = [0,0,0]
     testCount = [0,0,0]
+    
+    numberAns = {}
+    colorAns = {}
     for n in range(0, len(trainQuestions)):
         question = trainQuestions[n]
         if 'how many' in question:
@@ -249,18 +252,29 @@ if __name__ == '__main__':
         question = testQuestions[n]
         if 'how many' in question:
             typ = 1
+            numberAns[testAnswers[n]] = 1
         elif question.startswith('what is the color'):
             typ = 2
+            colorAns[testAnswers[n]] = 1
         else:
             typ = 0
         testCount[typ] += 1
 
+    print numberAns
+    print colorAns
     print 'Train Questions After Trunk: ', len(trainQuestions)
-    print 'Train Question dist: ', trainCount
+    print 'Train Question Dist: ', trainCount
     print 'Valid Questions After Trunk: ', len(validQuestions)
-    print 'Valid Question dist: ', validCount
+    print 'Valid Question Dst: ', validCount
+    trainValidQuestionsLen = len(trainQuestions) + len(validQuestions)
+    print 'Train+Valid questions: ', trainValidQuestionsLen
+    print 'Train+Valid Dist: ', np.array(trainCount) + np.array(validCount)
+    print 'Trian+Valid Dist: ', (np.array(trainCount) + np.array(validCount)) / float(trainValidQuestionsLen)
+
     print 'Test Questions After Trunk: ', len(testQuestions)
-    print 'Test Question dist: ', testCount
+    print 'Test Question Dist: ', testCount
+    print 'Test Question Dist: ', np.array(testCount) / float(len(testQuestions))
+    
     worddict, idict, _ = buildDict(trainQuestions, 1, pr=False)
     ansdict, iansdict, _ = buildDict(trainAnswers, 0, pr=True)
 
