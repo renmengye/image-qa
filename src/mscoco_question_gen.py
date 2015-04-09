@@ -9,13 +9,14 @@ from nltk.corpus import wordnet
 import sys
 
 if len(sys.argv) < 2:
-    parseFilename = '../../../data/mscoco/mscoco_caption_valid.parse.txt'
-    imgidsFilename = '../../../data/mscoco/mscoco_imgids_valid.txt'
-    outputFilename = '../../../data/mscoco/mscoco_qa_all_valid.pkl'
+    parseFilename = '../../../data/mscoco/train/caption.parse.txt'
+    imgidsFilename = '../../../data/mscoco/train/imgids.txt'
+    outputFilename = '../../../data/mscoco/train/qa.pkl'
 else:
-    parseFilename = '../../../data/%s/%s_caption.parse.txt' %(sys.argv[1],sys.argv[1])
-    imgidsFilename = '../../../data/%s/%s_imgids.txt' %(sys.argv[1],sys.argv[1])
-    outputFilename = '../../../data/%s/%s_qa.pkl' %(sys.argv[1],sys.argv[1])
+    folder = sys.argv[1]
+    parseFilename = '%s/caption.parse.txt' %(sys.argv[1],sys.argv[1])
+    imgidsFilename = '%s/imgids.txt' %(sys.argv[1],sys.argv[1])
+    outputFilename = '%s/qa.pkl' %(sys.argv[1],sys.argv[1])
 
 lemmatizer = WordNetLemmatizer()
 
@@ -170,19 +171,6 @@ class QuestionGenerator:
                 insideNP = True
             elif insideNP and item.className == 'VP':
                 insideVP = True
-
-                # Testing!!!!
-                # Now if inside the NP, then move the entire NP
-                # cont = False
-                # for child in item.children:
-                #     if child.className == 'VP':
-                #         if child is not topVP:
-                #             #print 'VP inside NP'
-                #             return False
-                #         else:
-                #             cont = True
-                # if not cont:
-                #     whPosition = whStack.index(item)
                 pass
 
         # Look for VP
@@ -725,8 +713,8 @@ def questionGen():
                 del(parser.rootsList[0])
                 numSentences += 1
             parser.parse(line)
-            # if numSentences > 500:
-            #     break
+            if numSentences > 500:
+                break
     # Approx. 3447.5 sentences per second
     #print questionAll
     print 'Number of sentences parsed:', numSentences
@@ -738,8 +726,21 @@ def questionGen():
     print 'Number of color questions:', questionColorCount
 
     # Output a list of tuples (q, a, imgid)
-    with open(outputFilename, 'wb') as f:
-        pkl.dump(questionAll, f)
+    # with open(outputFilename, 'wb') as f:
+    #     pkl.dump(questionAll, f)
+    with open(outputFilename+'.csv', 'w') as f:
+        f.write('#,question,answer,type\n')
+        for i,item in enumerate(questionAll):
+            question = item[0]
+            if 'how many' in question:
+                typ = 2
+            elif question.startswith('what is the color'):
+                typ = 3
+            elif 'who' in question:
+                typ = 4
+            else:
+                typ = 1
+            f.write(str(i+1)+','+item[0].replace(',','')+','+item[1]+','+str(typ)+'\n')
 
 def testHook():
     #s = stanfordParse('There are two ovens in a kitchen restaurant , and one of them is being used .')
