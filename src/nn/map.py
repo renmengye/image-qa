@@ -1,5 +1,6 @@
 from stage import *
-#import os
+import os
+#import gnumpy as gpu
 
 class Map(Stage):
     def __init__(self,
@@ -58,24 +59,28 @@ class Map(Stage):
         #         -self.initRange/2.0, self.initRange/2.0, (self.outputDim, self.inputDim + 1))
         if self.biasInitConst >= 0.0:
             self.W = np.concatenate((self.random.uniform(
-                -self.initRange/2.0, self.initRange/2.0, (self.outputDim, self.inputDim)),
-                np.ones((self.outputDim, 1)) * self.biasInitConst), axis=-1)
+                -self.initRange/2.0, self.initRange/2.0, (self.inputDim, self.outputDim)),
+                np.ones((1, self.outputDim)) * self.biasInitConst), axis=0)
         else:
             self.W = self.random.uniform(
-                -self.initRange/2.0, self.initRange/2.0, (self.outputDim, self.inputDim + 1))
-        # is os.environ.has_key('MAP_DEVICE') and os.environ['MAP_DEVICE'] == 'GPU':
-        #     self.W = 
+                -self.initRange/2.0, self.initRange/2.0, (self.inputDim + 1, self.outputDim))
+
+        # is os.environ.has_key('GNUMPY_USE_GPU') and os.environ['GNUMPY_USE_GPU'] == 'yes':
+        #     self.gpu = True
+        #     self.W = gpu.array(self.W)
     
-    def forward(self, X):    
+    def forward(self, X):
         if self.inputDim is None: self.inputDim = X.shape[-1]
         if self.W is None: self.initWeights()
         self.X = np.concatenate((X, np.ones((X.shape[0], 1))), axis=-1)
-        Z = np.inner(self.X, self.W)
+        Z = np.dot(self.X, self.W)
         self.Y = self.activeFn.forward(Z)
         return self.Y
 
     def backward(self, dEdY):
         dEdZ = self.activeFn.backward(dEdY, self.Y, 0)
-        self.dEdW = np.dot(dEdZ.transpose(), self.X)
-        dEdX = np.dot(dEdZ, self.W[:, :-1])
+        # self.dEdW = np.dot(dEdZ.transpose(), self.X)
+        # dEdX = np.dot(dEdZ, self.W[:, :-1])
+        self.dEdW = np.dot(self.X.transpose(), dEdZ)
+        dEdX = np.dot(dEdZ, self.W[:-1, :].transpose())
         return dEdX if self.outputdEdX else None

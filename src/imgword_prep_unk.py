@@ -272,27 +272,27 @@ if __name__ == '__main__':
     allTarget = lookupAnsID(answers, ansdict)
 
     np.save(\
-        os.path.join(outputFolder, 'train-unk.npy'),\
+        os.path.join(outputFolder, 'train.npy'),\
         np.array((trainInput, trainTarget, 0),\
             dtype=object))
     np.save(\
-        os.path.join(outputFolder, 'valid-unk.npy'),\
+        os.path.join(outputFolder, 'valid.npy'),\
         np.array((validInput, validTarget, 0),\
             dtype=object))
     np.save(\
-        os.path.join(outputFolder, 'test-unk.npy'),\
+        os.path.join(outputFolder, 'test.npy'),\
         np.array((testInput, testTarget, 0),\
             dtype=object))
     np.save(\
-        os.path.join(outputFolder, 'all-unk.npy'),\
+        os.path.join(outputFolder, 'all.npy'),\
         np.array((allInput, allTarget, 0),\
             dtype=object))
     np.save(\
-        os.path.join(outputFolder, 'vocab-dict-unk.npy'),\
+        os.path.join(outputFolder, 'vocab-dict.npy'),\
         np.array((worddict, idict, 
             ansdict, iansdict, 0), dtype=object))
     np.save(\
-        os.path.join(outputFolder, 'vocab-dict-unk-all.npy'),\
+        os.path.join(outputFolder, 'vocab-dict-all.npy'),\
         np.array((worddict_all, idict_all, 
             ansdict_all, iansdict_all, 0), dtype=object))
 
@@ -305,19 +305,19 @@ if __name__ == '__main__':
     allInput = combineAttention(\
         lookupQID(questions, worddict_all), imgids)
     np.save(\
-        os.path.join(outputFolder, 'train-unk-att.npy'),\
+        os.path.join(outputFolder, 'train-att.npy'),\
         np.array((trainInput, trainTarget, 0),\
             dtype=object))
     np.save(\
-        os.path.join(outputFolder, 'valid-unk-att.npy'),\
+        os.path.join(outputFolder, 'valid-att.npy'),\
         np.array((validInput, validTarget, 0),\
             dtype=object))
     np.save(\
-        os.path.join(outputFolder, 'test-unk-att.npy'),\
+        os.path.join(outputFolder, 'test-att.npy'),\
         np.array((testInput, testTarget, 0),\
             dtype=object))
     np.save(\
-        os.path.join(outputFolder, 'all-unk-att.npy'),\
+        os.path.join(outputFolder, 'all-att.npy'),\
         np.array((allInput, allTarget, 0),\
             dtype=object))
 

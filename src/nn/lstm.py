@@ -139,13 +139,13 @@ class LSTM(RecurrentContainer):
         return np.concatenate((self.I.getWeights(),
                                self.F.getWeights(),
                                self.Z.getWeights(),
-                               self.O.getWeights()), axis=-1)
+                               self.O.getWeights()), axis=0)
 
     def getGradient(self):
         return np.concatenate((self.I.getGradient(),
                                self.F.getGradient(),
                                self.Z.getGradient(),
-                               self.O.getGradient()), axis=-1)
+                               self.O.getGradient()), axis=0)
 
     def splitWeights(self, W):
         D = self.inputDim

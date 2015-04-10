@@ -192,8 +192,8 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
             E, dEdY = costFn(Y, T)
             dEdX = lstm.backward(dEdY)
             if i == 0:
-                W = np.concatenate((I.getWeights(), F.getWeights(), Z.getWeights(), O.getWeights()), axis=-1)
-                lstm2.W = W
+                W = np.concatenate((I.getWeights(), F.getWeights(), Z.getWeights(), O.getWeights()), axis=0)
+                lstm2.W = W.transpose()
             if multiOutput:
                 Y2 = lstm2.forward(X)[:,:-1]
             else:
@@ -208,20 +208,20 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
             dEdW = np.concatenate((I.getGradient(),
                                    F.getGradient(),
                                    Z.getGradient(),
-                                   O.getGradient()), axis=-1)
+                                   O.getGradient()), axis=0)
             dEdW2 = lstm2.dEdW
             lstm.updateWeights()
             lstm2.updateWeights()
             self.chkEqual(Y, Y2)
 
             self.chkEqual(dEdX, dEdX2)
-            self.chkEqual(dEdW, dEdW2)
+            self.chkEqual(dEdW.transpose(), dEdW2)
             W = np.concatenate((I.getWeights(),
                                 F.getWeights(),
                                 Z.getWeights(),
-                                O.getWeights()), axis=-1)
+                                O.getWeights()), axis=0)
             W2 = lstm2.W
-            self.chkEqual(W, W2)
+            self.chkEqual(W.transpose(), W2)
 
     def chkEqual(self, a, b):
         tolerance = 1e-4

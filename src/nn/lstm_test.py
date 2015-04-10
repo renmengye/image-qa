@@ -8,13 +8,14 @@ import unittest
 
 class LSTM_Recurrent_Real_Tests(unittest.TestCase):
     def test_all(self):
-        data = np.load('../../data/sentiment3/train-1.npy')
-        wordEmbed = np.load('../../data/sentiment3/word-embed-0.npy')
-        trainInput = data[0]
-        trainTarget = data[1]
+        trainInput = np.loadtxt('lstm_test_input.csv', delimiter=',')
+        trainInput = trainInput.reshape(trainInput.shape[0], trainInput.shape[1], 1)
+        trainTarget = np.loadtxt('lstm_test_target.csv', delimiter=',')
+        trainTarget = trainTarget.reshape(trainTarget.shape[0], 1)
+        wordEmbed = np.loadtxt('lstm_test_word.csv', delimiter=',')
         D = 300
         D2 = 50
-        N = 25
+        N = trainInput.shape[0]
         Time = trainInput.shape[1]
         multiOutput = False
         time_unfold = TimeUnfold()
@@ -122,7 +123,7 @@ class LSTM_Recurrent_Real_Tests(unittest.TestCase):
         Y1 = model1.forward(input_)
 
         W = lstm.getWeights()
-        lstm2.W = W
+        lstm2.W = W.transpose()
         Y2 = model2.forward(input_)
         self.chkEqual(Y1, Y2)
 
@@ -132,11 +133,11 @@ class LSTM_Recurrent_Real_Tests(unittest.TestCase):
         model2.backward(dEdY2)
 
         dEdW = lstm.getGradient()
-        self.chkEqual(dEdW, lstm2.dEdW)
+        self.chkEqual(dEdW.transpose(), lstm2.dEdW)
         lstm.updateWeights()
         lstm2.updateWeights()
         W = lstm.getWeights()
-        self.chkEqual(W, lstm2.W)
+        self.chkEqual(W.transpose(), lstm2.W)
 
     def chkEqual(self, a, b):
         tolerance = 1e-4
