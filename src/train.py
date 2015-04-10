@@ -51,7 +51,6 @@ if __name__ == '__main__':
     params = readFlags()
     with open(params['configFilename']) as f:
         trainOpt = yaml.load(f)
-    trainOpt['numEpoch'] = 1
     trainData = np.load(params['trainDataFilename'])
     trainInput = trainData[0]
     trainTarget = trainData[1]
