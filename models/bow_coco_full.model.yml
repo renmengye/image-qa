@@ -88,11 +88,11 @@ specs:
       type: 'map'
       inputs: 'hidden'
       activeFn: 'softmax'
-      outputDim: 298
+      outputDim: 794
       initRange: 0.01
       initSeed: 7
       learningRate: 0.01
       learningRateAnnealConst: 0.0
       momentum: 0.9
-      weightClip: 15.0
+      weightClip: 50.0
       weightRegConst: 0.00005

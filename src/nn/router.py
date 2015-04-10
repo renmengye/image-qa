@@ -33,6 +33,8 @@ def routeFn(name):
         return TanhActiveFn
     elif name == 'identity':
         return IdentityActiveFn
+    elif name == 'relu':
+        return ReluActiveFn
     elif name == 'mse':
         return meanSqErr
     else:
@@ -58,7 +60,7 @@ def addStage(stageDict):
                     initWeights = pickle.load(f)
             elif stageDict['format'] == 'plain':
                 initWeights = np.loadtxt(stageDict['initWeights'])
-            elif stageDict['format'] == 'h5'
+            elif stageDict['format'] == 'h5':
                 initWeightsFile = h5py.File(stageDict['initWeights'])
                 initWeights = initWeightsFile[stageDict['h5key']][:]
             elif stageDict['format'] == 'numpy':

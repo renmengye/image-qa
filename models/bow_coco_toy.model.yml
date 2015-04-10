@@ -11,6 +11,7 @@ stages:
     - 'txtDict'
     - 'txtFold'
     - 'bow'
+    - 'dropout'
     - 'hidden'
     - 'softmax'
 outputs: 'softmax'
@@ -78,6 +79,7 @@ specs:
       type: 'dropout'
       dropoutRate: 0.5
       initSeed: 3
+      outputDim: 600
     - name: 'hidden'
       inputs: 'dropout'
       type: 'map'

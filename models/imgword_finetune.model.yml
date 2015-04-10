@@ -41,27 +41,29 @@ specs:
       inputDim: 1449
       outputDim: 18432
       initWeights: '/ais/gobi3/u/mren/data/nyu-depth/hidden_alex.h5'
-      format: h5
+      format: 'h5'
       h5key: 'hidden5_maxpool'
       learningRate: 0.0
       outputdEdX: false
     - name: 'imgFC1'
       type: 'map'
+      inputs: 'imgMaxPool'
       activeFn: 'relu'
       inputDim: 18432
       outputDim: 4096
       initWeights: '/ais/gobi3/u/mren/models/alexnet/weights.h5'
-      format: h5
+      format: 'h5'
       h5key: 'hidden56'
       learningRate: 0.01
       momentum: 0.5
       weightRegConst: 0.0005
     - name: 'imgFC2'
       type: 'map'
+      inputs: 'imgFC1'
       activeFn: 'relu'
       inputDim: 4096
       outputDim: 4096
-      initWeights: 'ais/gobi3/u/mren/models/alexnet/weights.h5'
+      initWeights: '/ais/gobi3/u/mren/models/alexnet/weights.h5'
       format: h5
       h5key: 'hidden67'
       learningRate: 0.01

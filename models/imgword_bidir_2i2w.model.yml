@@ -40,8 +40,6 @@ specs:
       inputDim: 871
       outputDim: 300
       initWeights: '../data/imgword/word-embed-0-q.npy'
-      #initRange: 0.1
-      #initSeed: 3
       learningRate: 0.0
       outputdEdX: false
     - name: 'txtFold'
@@ -126,6 +124,7 @@ specs:
       momentum: 0.9
       gradientClip: 0.1
       weightClip: 100.0
+      weightRegConst: 0.00005
       outputdEdX: true
     - name: 'lstm1RevO'
       type: 'timeReverse'
@@ -151,6 +150,7 @@ specs:
       momentum: 0.9
       gradientClip: 0.1
       weightClip: 100.0
+      weightRegConst: 0.00005
       outputdEdX: true
     - name: 'answer'
       type: 'map'
@@ -162,4 +162,5 @@ specs:
       learningRate: 0.01
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 15
+      weightClip: 15.0
+      weightRegConst: 0.00005

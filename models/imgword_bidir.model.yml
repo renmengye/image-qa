@@ -34,8 +34,6 @@ specs:
       inputDim: 871
       outputDim: 300
       initWeights: '../data/imgword/word-embed-0-q.npy'
-      #initRange: 0.1
-      #initSeed: 3
       learningRate: 0.0
       outputdEdX: false
     - name: 'txtFold'
@@ -60,7 +58,7 @@ specs:
       learningRate: 0.8
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 50.0
+      weightClip: 100.0
       outputdEdX: false
     - name: 'imgFold'
       type: 'timeFold'
@@ -120,4 +118,5 @@ specs:
       learningRate: 0.01
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 10
+      weightClip: 15.0
+      weightRegConst: 0.00005

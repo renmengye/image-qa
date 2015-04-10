@@ -118,6 +118,7 @@ specs:
       momentum: 0.9
       gradientClip: 0.1
       weightClip: 100.0
+      weightRegConst: 0.00005
       outputdEdX: true 
     - name: 'answer'
       type: 'map'
@@ -129,4 +130,5 @@ specs:
       learningRate: 0.01
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 15
+      weightClip: 15.0
+      weightRegConst: 0.00005
