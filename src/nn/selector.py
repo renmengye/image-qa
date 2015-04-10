@@ -19,6 +19,7 @@ class Selector(Stage):
             raise Exception('Selector axis=%d not supported' % axis)
 
     def forward(self, X):
+        self.X = X
         if self.axis == -1:
             self.axis = len(X.shape) - 1
         if self.axis == 0:

@@ -260,6 +260,25 @@ class MapSoftmax_Tests(StageTests):
         self.chkgrd(dEdW, dEdWTmp)
         self.chkgrd(dEdX, dEdXTmp)
 
+class MapRelu_Tests(StageTests):
+    """Sigmoid map tests"""
+    def setUp(self):
+        self.stage = Map(
+            outputDim=3,
+            initRange=0.1,
+            initSeed=1,
+            activeFn=ReluActiveFn)
+        self.model = self.stage
+        self.testInputErr = True
+        self.costFn = meanSqErr
+    def test_grad(self):
+        random = np.random.RandomState(2)
+        X = random.uniform(-0.1, 0.1, (6,5))
+        T = random.uniform(-0.1, 0.1, (6,3))
+        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
+        self.chkgrd(dEdW, dEdWTmp)
+        self.chkgrd(dEdX, dEdXTmp)
+
 class MapSoftmax_CrossEnt_Tests(StageTests):
     """Linear map tests"""
     def setUp(self):
@@ -524,7 +543,6 @@ class SumProduct_Tests(StageTests):
 
                 dEdXTmp[n, j] = (Etmp1 - Etmp2) / 2.0 / eps
                 X[2][n, j] += eps
-        print dEdX[2]/dEdXTmp
         self.chkgrd(dEdX[2], dEdXTmp)
 
 
@@ -546,6 +564,8 @@ if __name__ == '__main__':
         unittest.TestLoader().loadTestsFromTestCase(MapSigmoid_CrossEnt_Tests))
     suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(MapSoftmax_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(MapRelu_Tests))
     suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(MapSoftmax_CrossEnt_Tests))
     suite.addTests(

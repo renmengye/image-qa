@@ -58,3 +58,15 @@ class IdentityActiveFn():
     @staticmethod
     def backward(dEdY, Y, Z):
         return dEdY
+
+class ReluActiveFn():
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def forward(Z):
+        return np.maximum(0, Z)
+
+    @staticmethod
+    def backward(dEdY, Y, Z):
+        return (Y > 0).astype(int) * dEdY

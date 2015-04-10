@@ -11,7 +11,7 @@ from sum_prod import *
 from selector import *
 from sum2 import *
 
-
+import h5py
 import pickle
 
 def routeFn(name):
@@ -58,6 +58,9 @@ def addStage(stageDict):
                     initWeights = pickle.load(f)
             elif stageDict['format'] == 'plain':
                 initWeights = np.loadtxt(stageDict['initWeights'])
+            elif stageDict['format'] == 'h5'
+                initWeightsFile = h5py.File(stageDict['initWeights'])
+                initWeights = initWeightsFile[stageDict['h5key']][:]
             elif stageDict['format'] == 'numpy':
                 initWeights = np.load(stageDict['initWeights'])
             else:
