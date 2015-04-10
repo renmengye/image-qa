@@ -1,4 +1,5 @@
 from stage import *
+#import os
 
 class Map(Stage):
     def __init__(self,
@@ -48,6 +49,13 @@ class Map(Stage):
         pass
 
     def initWeights(self):
+        # if self.biasInitConst >= 0.0:
+        #     self.W = np.concatenate((self.random.uniform(
+        #         -self.initRange/2.0, self.initRange/2.0, (self.outputDim, self.inputDim)),
+        #         np.ones((self.outputDim, 1)) * self.biasInitConst), axis=-1)
+        # else:
+        #     self.W = self.random.uniform(
+        #         -self.initRange/2.0, self.initRange/2.0, (self.outputDim, self.inputDim + 1))
         if self.biasInitConst >= 0.0:
             self.W = np.concatenate((self.random.uniform(
                 -self.initRange/2.0, self.initRange/2.0, (self.outputDim, self.inputDim)),
@@ -55,6 +63,8 @@ class Map(Stage):
         else:
             self.W = self.random.uniform(
                 -self.initRange/2.0, self.initRange/2.0, (self.outputDim, self.inputDim + 1))
+        # is os.environ.has_key('MAP_DEVICE') and os.environ['MAP_DEVICE'] == 'GPU':
+        #     self.W = 
     
     def forward(self, X):    
         if self.inputDim is None: self.inputDim = X.shape[-1]
