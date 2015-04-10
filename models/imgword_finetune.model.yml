@@ -57,6 +57,7 @@ specs:
       learningRate: 0.01
       momentum: 0.5
       weightRegConst: 0.0005
+      outputdEdX: false
     - name: 'imgFC2'
       type: 'map'
       inputs: 'imgFC1'
@@ -64,7 +65,7 @@ specs:
       inputDim: 4096
       outputDim: 4096
       initWeights: '/ais/gobi3/u/mren/models/alexnet/weights.h5'
-      format: h5
+      format: 'h5'
       h5key: 'hidden67'
       learningRate: 0.01
       momentum: 0.5
@@ -81,7 +82,6 @@ specs:
       gradientClip: 0.1
       weightClip: 100.0
       weightRegConst: 0.0005
-      outputdEdX: false
     - name: 'imgFold'
       type: 'timeFold'
       inputs: 'imgMap'
