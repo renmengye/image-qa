@@ -51,6 +51,7 @@ if __name__ == '__main__':
     params = readFlags()
     with open(params['configFilename']) as f:
         trainOpt = yaml.load(f)
+    trainOpt['numEpoch'] = 1
     trainData = np.load(params['trainDataFilename'])
     trainInput = trainData[0]
     trainTarget = trainData[1]
@@ -85,6 +86,7 @@ if __name__ == '__main__':
         # Retrain with all the data
         trainOpt['needValid'] = False
         # trainOpt['numEpoch'] = trainer.stoppedEpoch + 1
+        print 'Stopped score:', trainer.stoppedTrainScore
         trainOpt['stopScore'] = trainer.stoppedTrainScore
         model = nn.load(params['modelFilename'])
         trainer = nn.Trainer(

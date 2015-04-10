@@ -231,6 +231,16 @@ class Trainer:
                 self.rate[epoch] = rate
             self.loss[epoch] = E
 
+            if not trainOpt.has_key('criterion'):
+                Tscore = E
+            else:
+                if trainOpt['criterion'] == 'loss':
+                    Tscore = E
+                elif trainOpt['criterion'] == 'rate':
+                    Tscore = 1 - rate
+                else:
+                    raise Exception('Unknown stopping criterion "%s"' % trainOpt['criterion'])
+
             # Run validation
             if trainOpt['needValid']:
                 VY = tester.test(self.model, VX)
@@ -246,10 +256,8 @@ class Trainer:
                 else:
                     if trainOpt['criterion'] == 'loss':
                         Vscore = VE
-                        Tscore = E
                     elif trainOpt['criterion'] == 'rate':
                         Vscore = 1 - Vrate
-                        Tscore = 1 - rate
                     else:
                         raise Exception('Unknown stopping criterion "%s"' % trainOpt['criterion'])
                 if (bestVscore is None) or (Vscore < bestVscore):
@@ -265,13 +273,14 @@ class Trainer:
                     # Stop training if above patience level
                     if nAfterBest > trainOpt['patience']:
                         print 'Patience level reached, early stop.'
+                        print 'Will stop at score ', bestTscore
                         break
             else:
-                if trainOpt.has_key('stopScore') and E < trainOpt['stopScore']:
-                    print 'Training score is lower than %.4f , ealy stop.' % trainOpt['stopScore']
-                    break
                 if trainOpt['saveModel']:
                     self.save()
+                if trainOpt.has_key('stopScore') and Tscore < trainOpt['stopScore']:
+                    print 'Training score is lower than %.4f , ealy stop.' % trainOpt['stopScore']
+                    break
 
             # Anneal learning rate
             self.model.updateLearningParams(epoch)
