@@ -58,6 +58,8 @@ specs:
       momentum: 0.5
       weightRegConst: 0.0005
       outputdEdX: false
+      gradientClip: 10000.0
+      weightClip: 10000.0
     - name: 'imgFC2'
       type: 'map'
       inputs: 'imgFC1'
@@ -70,6 +72,8 @@ specs:
       learningRate: 0.01
       momentum: 0.5
       weightRegConst: 0.0005
+      gradientClip: 10000.0
+      weightClip: 10000.0
     - name: 'imgMap'
       type: 'map'
       inputs: 'imgFC2'
