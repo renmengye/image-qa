@@ -42,12 +42,18 @@ def trainValidSplit(imgids):
     for i in imgids:
         split[i] = 1
     count = 0
+    seed = 1
+    random = np.random.RandomState(seed)
+    print 'Split', split
     for i in split.keys():
-        if count < len(split) / 10:
+        if random.uniform(0, 1, (1)) < 0.1:
             split[i] = 0
-        else:
-            break
+        # if count < len(split) / 10:
+        #     split[i] = 0
+        # else:
+        #     break
         count += 1
+    print split
     return split
 
 def dataSplit(data, imgids, split):
