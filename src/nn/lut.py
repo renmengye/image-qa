@@ -19,6 +19,7 @@ class LUT(Stage):
                  gradientClip=0.0,
                  weightRegConst=0.0,
                  outputdEdX=False,
+                 gpu=True,
                  name=None):
         Stage.__init__(self,
                  name=name,
@@ -31,6 +32,7 @@ class LUT(Stage):
                  weightClip=weightClip,
                  gradientClip=gradientClip,
                  weightRegConst=weightRegConst,
+                 gpu=gpu,
                  outputdEdX=outputdEdX)
         self.outputDim = outputDim
         self.inputDim = inputDim
@@ -51,6 +53,8 @@ class LUT(Stage):
             else:
                 self.W = np.concatenate(
                     (np.zeros((1, outputDim)), initWeights), axis=0)
+            if self.gpu:
+                self.W = self.W.astype('float32')
         self.X = 0
         self.Y = 0
         self.sparse = sparse
@@ -62,15 +66,18 @@ class LUT(Stage):
              self.random.uniform(
             -self.initRange/2.0, self.initRange/2.0,
             (self.inputDim, self.outputDim))), axis=0)
+        if self.gpu:
+            self.W = self.W.astype('float32')
 
     def forward(self, X):
         if self.W is None: self.initWeights()
         if self.intConversion: X = X.astype(int)
         self.X = X
         X = X.reshape(X.size)
-        Y = np.zeros((X.shape[0], self.outputDim))
+        Y = np.zeros((X.shape[0], self.outputDim), self.W.dtype)
         for n in range(0, X.shape[0]):
              Y[n] = self.W[X[n]]
+        #print 'lut', Y.dtype
         return Y
 
     def backward(self, dEdY):

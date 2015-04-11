@@ -1,5 +1,6 @@
 import numpy as np
 import copy
+import gnumpy as gpu
 
 class Stage:
     def __init__(self,
@@ -14,6 +15,7 @@ class Stage:
                  weightClip=0.0,
                  gradientClip=0.0,
                  weightRegConst=0.0,
+                 gpu=False,
                  outputdEdX=True):
         self.name = name
         self.inputNames = inputNames
@@ -37,6 +39,7 @@ class Stage:
         self.Y = 0.0
         self.X = 0.0
         self.dEdY = 0.0
+        self.gpu = gpu
         self.splX = None
     def __str__(self):
         return self.name
@@ -58,9 +61,11 @@ class Stage:
             for stage in self.inputs:
                 X = stage.Y
                 self.splX.append(X)
+                #print self.name, 'get input', stage.name, X.dtype
                 #print '>', stage.name, X.shape
             return np.concatenate(self.splX, axis=-1)
         else:
+            #print self.name,'get input', self.inputs[0].Y.dtype
             return self.inputs[0].Y
 
     def clearError(self):
@@ -141,21 +146,38 @@ class Stage:
         self._updateWeights(self.dEdW)
 
     def _updateWeights(self, dEdW):
-        if self.gradientClip > 0.0:
-            self.dEdWnorm = np.sqrt(np.sum(np.power(dEdW, 2)))
-            if self.dEdWnorm > self.gradientClip:
-                dEdW *= self.gradientClip / self.dEdWnorm
-        if self.learningRate > 0.0:
-            self.lastdW = -self.learningRate * dEdW + \
+        if self.gpu:
+            if self.gradientClip > 0.0:
+                self.dEdWnorm = gpu.sqrt(gpu.sum(dEdW ** 2))
+                if self.dEdWnorm > self.gradientClip:
+                    dEdW *= self.gradientClip / self.dEdWnorm
+            if self.learningRate > 0.0:
+                self.lastdW = -self.learningRate * dEdW + \
                            self.momentum * self.lastdW
-            self.W += self.lastdW
-        if self.weightRegConst > 0.0:
-            a = self.learningRate * self.weightRegConst
-            self.W -= a * self.W
-        if self.weightClip > 0.0:
-            self.Wnorm = np.sqrt(np.sum(np.power(self.W, 2)))
-            if self.Wnorm > self.weightClip:
-                self.W *= self.weightClip / self.Wnorm
+                self.W += self.lastdW
+            if self.weightRegConst > 0.0:
+                a = self.learningRate * self.weightRegConst
+                self.W -= a * self.W
+            if self.weightClip > 0.0:
+                self.Wnorm = gpu.sqrt(gpu.sum(self.W ** 2))
+                if self.Wnorm > self.weightClip:
+                    self.W *= self.weightClip / self.Wnorm
+        else:
+            if self.gradientClip > 0.0:
+                self.dEdWnorm = np.sqrt(np.sum(np.power(dEdW, 2)))
+                if self.dEdWnorm > self.gradientClip:
+                    dEdW *= self.gradientClip / self.dEdWnorm
+            if self.learningRate > 0.0:
+                self.lastdW = -self.learningRate * dEdW + \
+                           self.momentum * self.lastdW
+                self.W += self.lastdW
+            if self.weightRegConst > 0.0:
+                a = self.learningRate * self.weightRegConst
+                self.W -= a * self.W
+            if self.weightClip > 0.0:
+                self.Wnorm = np.sqrt(np.sum(np.power(self.W, 2)))
+                if self.Wnorm > self.weightClip:
+                    self.W *= self.weightClip / self.Wnorm
 
     def updateLearningParams(self, numEpoch):
         self.learningRate = self.startLearningRate / \

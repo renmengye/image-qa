@@ -99,7 +99,6 @@ specs:
       momentum: 0.9
       gradientClip: 0.1
       weightClip: 100.0
-      weightRegConst: 0.00005
       outputdEdX: true
     - name: 'softmax'
       type: 'map'
@@ -113,4 +112,3 @@ specs:
       momentum: 0.9
       gradientClip: 0.1
       weightClip: 15.0
-      weightRegConst: 0.00005

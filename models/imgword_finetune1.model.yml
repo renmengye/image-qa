@@ -55,7 +55,7 @@ specs:
       h5key: 'hidden67'
       learningRate: 0.01
       momentum: 0.5
-      weightRegConst: 0.0005
+      weightRegConst: 0.00005
       gradientClip: 10000.0
       weightClip: 10000.0
     - name: 'imgMap'
@@ -69,7 +69,7 @@ specs:
       momentum: 0.9
       gradientClip: 0.1
       weightClip: 100.0
-      weightRegConst: 0.0005
+      weightRegConst: 0.00001
     - name: 'imgFold'
       type: 'timeFold'
       inputs: 'imgMap'

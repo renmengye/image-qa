@@ -136,7 +136,13 @@ class RecurrentAdapter(Stage, RecurrentStage):
     def syncGradient(self):
         # Sum error through time
         W = self.stages[0].getWeights()
-        if type(W) is np.ndarray and self.stages[0].learningRate > 0.0:
+        if self.stages[0].gpu:
+            tmp = gpu.zeros((self.timespan, W.shape[0], W.shape[1]))
+            for t in range(self.timespan):
+                tmp[t] = self.stages[t].getGradient()
+                self.stages[t].setGradient(0.0)
+            self.stages[0].setGradient(gpu.sum(tmp, axis=0))
+        elif type(W) is np.ndarray and self.stages[0].learningRate > 0.0:
             tmp = np.zeros((self.timespan, W.shape[0], W.shape[1]))
             for t in range(self.timespan):
                 tmp[t] = self.stages[t].getGradient()

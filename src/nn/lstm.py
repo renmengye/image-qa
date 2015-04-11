@@ -136,7 +136,14 @@ class LSTM(RecurrentContainer):
                            outputdEdX=outputdEdX)
 
     def getWeights(self):
-        return np.concatenate((self.I.getWeights(),
+        if self.I.stages[0].gpu:
+            return np.concatenate((
+                    gpu.as_numpy_array(self.I.getWeights()),
+                    gpu.as_numpy_array(self.F.getWeights()),
+                    gpu.as_numpy_array(self.Z.getWeights()),
+                    gpu.as_numpy_array(self.O.getWeights())), axis=0)
+        else:
+            return np.concatenate((self.I.getWeights(),
                                self.F.getWeights(),
                                self.Z.getWeights(),
                                self.O.getWeights()), axis=0)
@@ -152,15 +159,21 @@ class LSTM(RecurrentContainer):
         D2 = self.outputDim
         s = D + D2 + D2 + 1
         s2 = D + D2 + 1
-        IW = W[:, :s]
-        FW = W[:, s:s + s]
-        ZW = W[:, s + s:s + s + s2]
-        OW = W[:, s + s +s2:s + s + s2 + s]
+        IW = W[:s, :]
+        FW = W[s:s + s, :]
+        ZW = W[s + s:s + s + s2, :]
+        OW = W[s + s +s2:s + s + s2 + s, :]
         return IW, FW, ZW, OW
 
     def loadWeights(self, W):
         IW, FW, ZW, OW = self.splitWeights(W)
-        self.I.loadWeights(IW)
-        self.F.loadWeights(FW)
-        self.Z.loadWeights(ZW)
-        self.O.loadWeights(OW)
+        if self.I.stages[0].gpu:
+            self.I.loadWeights(gpu.as_garray(IW))
+            self.F.loadWeights(gpu.as_garray(FW))
+            self.Z.loadWeights(gpu.as_garray(ZW))
+            self.O.loadWeights(gpu.as_garray(OW))
+        else:
+            self.I.loadWeights(IW)
+            self.F.loadWeights(FW)
+            self.Z.loadWeights(ZW)
+            self.O.loadWeights(OW)

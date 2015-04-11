@@ -157,7 +157,10 @@ class Container(Stage):
     def getWeights(self):
         weights = []
         for s in range(1, len(self.stages)-1):
-            weights.append(self.stages[s].getWeights())
+            if self.stages[s].gpu:
+                weights.append(gpu.as_numpy_array(self.stages[s].getWeights()))
+            else:
+                weights.append(self.stages[s].getWeights())
         return np.array(weights, dtype=object)
 
     def loadWeights(self, W):
