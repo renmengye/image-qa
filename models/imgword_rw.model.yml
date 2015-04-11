@@ -38,7 +38,7 @@ specs:
       inputs: 'imgUnfold'
       inputDim: 1449
       outputDim: 4096
-      initWeights: '../data/imgword/oxford-feat.npy'
+      initWeights: '../data/daquar-37/oxford-feat.npy'
       learningRate: 0.0
       outputdEdX: false
     - name: 'imgMap'
@@ -68,7 +68,6 @@ specs:
       outputDim: 300
       initRange: 0.42
       initSeed: 2
-      #initWeights: '../data/imgword/word-embed-0-q.npy'
       learningRate: 0.0
       outputdEdX: false
     - name: 'txtFold'

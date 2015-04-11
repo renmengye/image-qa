@@ -36,7 +36,7 @@ specs:
       inputs: 'txtSel'
       inputDim: 871
       outputDim: 300
-      initWeights: '../data/imgword/word-embed-0-q.npy'
+      initWeights: '../data/daquar-37/word-embed-q.npy'
       learningRate: 0.0
       outputdEdX: false
     - name: 'txtFold'
@@ -48,7 +48,7 @@ specs:
       inputs: 'imgSel'
       inputDim: 1449
       outputDim: 4096
-      initWeights: '../data/imgword/oxford-feat.npy'
+      initWeights: '../data/daquar-37/oxford-feat.npy'
       learningRate: 0.0
       outputdEdX: false
     - name: 'imgMapFirst'

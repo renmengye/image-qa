@@ -68,7 +68,7 @@ specs:
       inputs: 'txtUnfold'
       inputDim: 868
       outputDim: 300
-      initWeights: '../data/imgword/word-embed-0-q.npy'
+      initWeights: '../data/daquar-37/word-embed-q.npy'
       learningRate: 0.0
       outputdEdX: false
     - name: 'txtFold'
