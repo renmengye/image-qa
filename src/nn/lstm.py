@@ -27,7 +27,8 @@ class LSTM(RecurrentContainer):
         D2 = outputDim
         multiOutput = multiOutput
         if name is None: print 'Warning: name is None.'
-
+        self.inputDim = inputDim
+        self.outputDim = outputDim
         self.I = RecurrentAdapter(Map(
                  name=name + '.I',
                  inputNames=['input(0)', name + '.H(-1)', name + '.C(-1)'],

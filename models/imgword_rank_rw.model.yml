@@ -107,7 +107,7 @@ specs:
     - name: 'answer'
       type: 'constWeights'
       inputDim: 300
-      outputDim: 63
+      outputDim: 67
       initSeed: 200
       initRange: 0.1
       #initWeights: '../data/imgword/word-embed-0-a.npy'
@@ -120,4 +120,4 @@ specs:
     - name: 'cosine'
       type: 'cosSimilarity'
       inputs: 'collector'
-      bankDim: 63
+      bankDim: 67

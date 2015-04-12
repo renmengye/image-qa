@@ -10,7 +10,7 @@ class ImgWordTest(nn.stage_tests.StageTests):
         self.model = nn.load('../models/imgword.test.model.yml')
         self.model.stageDict['dropout'].debug = True
         # imgMap
-        #self.stage = self.model.stageDict['imgMap']
+        self.stage = self.model.stageDict['imgMap']
         # lstm.I
         #self.stage = self.model.stageDict['lstm'].stageDict['lstm.I'].getStage(time=0)
         # lstm.F
@@ -20,13 +20,13 @@ class ImgWordTest(nn.stage_tests.StageTests):
         # lstm.O
         #self.stage = self.model.stageDict['lstm'].stageDict['lstm.O'].getStage(time=0)
         # Answer softmax
-        #self.stage = self.model.stageDict['softmax']
+        self.stage = self.model.stageDict['softmax']
         print self.stage.name
         self.testInputErr = False
         self.costFn = nn.crossEntIdx
 
     def test_grad(self):
-        data = np.load('../data/imgword/train-37-unk.npy')
+        data = np.load('../data/daquar-37/train.npy')
         X = data[0][0:10]
         T = data[1][0:10]
         dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T, self.eps)

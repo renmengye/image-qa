@@ -106,8 +106,8 @@ specs:
     - name: 'answer'
       type: 'constWeights'
       inputDim: 300
-      outputDim: 63
-      initWeights: '../data/imgword/word-embed-0-a.npy'
+      outputDim: 67
+      initWeights: '../data/daquar-37/word-embed-a.npy'
       learningRate: 0.0
       momentum: 0.0
     - name: 'collector'
@@ -117,4 +117,4 @@ specs:
     - name: 'cosine'
       type: 'cosSimilarity'
       inputs: 'collector'
-      bankDim: 63
+      bankDim: 67
