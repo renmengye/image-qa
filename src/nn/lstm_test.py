@@ -14,7 +14,7 @@ class LSTM_Recurrent_Real_Tests(unittest.TestCase):
         trainTarget = trainTarget.reshape(trainTarget.shape[0], 1)
         wordEmbed = np.loadtxt('lstm_test_word.csv', delimiter=',')
         D = 300
-        D2 = 50
+        D2 = 10
         N = trainInput.shape[0]
         Time = trainInput.shape[1]
         multiOutput = False
@@ -140,12 +140,17 @@ class LSTM_Recurrent_Real_Tests(unittest.TestCase):
         self.chkEqual(W.transpose(), lstm2.W)
 
     def chkEqual(self, a, b):
-        tolerance = 1e-4
+        tolerance = 1e-1
         a = a.reshape(a.size)
         b = b.reshape(b.size)
         for i in range(a.size):
-            self.assertTrue(
+           if not ((a[i] == 0 and b[i] == 0) or
+                (np.abs(a[i]) < 1e-7 and np.abs(b[i]) < 1e-7) or
+                (np.abs(a[i] / b[i] - 1) < tolerance)):
+                    print a[i], b[i], a[i]/b[i]
+           self.assertTrue(
                 (a[i] == 0 and b[i] == 0) or
+                (np.abs(a[i]) < 1e-7 and np.abs(b[i]) < 1e-7) or
                 (np.abs(a[i] / b[i] - 1) < tolerance))
 
 if __name__ == '__main__':
