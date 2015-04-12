@@ -551,14 +551,14 @@ class SumProduct_Tests(StageTests):
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    #suite.addTests(
-    #    unittest.TestLoader().loadTestsFromTestCase(LSTM_MultiErr_Tests))
-    #suite.addTests(
-    #    unittest.TestLoader().loadTestsFromTestCase(LSTM_MultiErrCutZero_Tests))
-    #suite.addTests(
-    #    unittest.TestLoader().loadTestsFromTestCase(LSTM_SingleErr_Tests))
-    #suite.addTests(
-    #    unittest.TestLoader().loadTestsFromTestCase(LSTM_SingleErrCutZero_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(LSTM_MultiErr_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(LSTM_MultiErrCutZero_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(LSTM_SingleErr_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(LSTM_SingleErrCutZero_Tests))
     suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(MapIdentity_Tests))
     suite.addTests(
@@ -573,20 +573,20 @@ if __name__ == '__main__':
         unittest.TestLoader().loadTestsFromTestCase(MapSoftmax_CrossEnt_Tests))
     suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(LUT_Tests))
-    #suite.addTests(
-    #    unittest.TestLoader().loadTestsFromTestCase(InnerProduct_Tests))
-    #suite.addTests(
-    #    unittest.TestLoader().loadTestsFromTestCase(Reshape_Tests))
-    #suite.addTests(
-    #    unittest.TestLoader().loadTestsFromTestCase(Sum_Tests))
-    #suite.addTests(
-    #    unittest.TestLoader().loadTestsFromTestCase(ElementProduct_Tests))
-    #suite.addTests(
-    #    unittest.TestLoader().loadTestsFromTestCase(Active_Tests))
-    #suite.addTests(
-    #    unittest.TestLoader().loadTestsFromTestCase(CosSimilarity_Tests))
-    #suite.addTests(
-    #      unittest.TestLoader().loadTestsFromTestCase(Selector_Tests))
-    #suite.addTests(
-    #      unittest.TestLoader().loadTestsFromTestCase(SumProduct_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(InnerProduct_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(Reshape_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(Sum_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(ElementProduct_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(Active_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(CosSimilarity_Tests))
+    suite.addTests(
+          unittest.TestLoader().loadTestsFromTestCase(Selector_Tests))
+    suite.addTests(
+          unittest.TestLoader().loadTestsFromTestCase(SumProduct_Tests))
     unittest.TextTestRunner(verbosity=2).run(suite)
