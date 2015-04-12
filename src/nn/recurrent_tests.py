@@ -194,10 +194,10 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
             if i == 0:
                 if I.stages[0].gpu:            
                     W = np.concatenate((
-                        gpu.as_numpy_array(self.I.getWeights()),
-                        gpu.as_numpy_array(self.F.getWeights()),
-                        gpu.as_numpy_array(self.Z.getWeights()),
-                        gpu.as_numpy_array(self.O.getWeights())), axis=0)
+                        gpu.as_numpy_array(I.getWeights()),
+                        gpu.as_numpy_array(F.getWeights()),
+                        gpu.as_numpy_array(Z.getWeights()),
+                        gpu.as_numpy_array(O.getWeights())), axis=0)
                 else:
                     W = np.concatenate((I.getWeights(), 
                         F.getWeights(), Z.getWeights(), 
@@ -216,10 +216,10 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
 
             if I.stages[0].gpu:
                 dEdW = np.concatenate((
-                    gpu.as_numpy_array(self.I.getGradient()),
-                    gpu.as_numpy_array(self.F.getGradient()),
-                    gpu.as_numpy_array(self.Z.getGradient()),
-                    gpu.as_numpy_array(self.O.getGradient())), axis=0)
+                    gpu.as_numpy_array(I.getGradient()),
+                    gpu.as_numpy_array(F.getGradient()),
+                    gpu.as_numpy_array(Z.getGradient()),
+                    gpu.as_numpy_array(O.getGradient())), axis=0)
             else:
                 dEdW = np.concatenate((I.getGradient(),
                                        F.getGradient(),
@@ -234,10 +234,10 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
             self.chkEqual(dEdW.transpose(), dEdW2)
             if I.stages[0].gpu:            
                 W = np.concatenate((
-                    gpu.as_numpy_array(self.I.getWeights()),
-                    gpu.as_numpy_array(self.F.getWeights()),
-                    gpu.as_numpy_array(self.Z.getWeights()),
-                    gpu.as_numpy_array(self.O.getWeights())), axis=0)
+                    gpu.as_numpy_array(I.getWeights()),
+                    gpu.as_numpy_array(F.getWeights()),
+                    gpu.as_numpy_array(Z.getWeights()),
+                    gpu.as_numpy_array(O.getWeights())), axis=0)
             else:
                 W = np.concatenate((I.getWeights(), 
                     F.getWeights(), Z.getWeights(), 
