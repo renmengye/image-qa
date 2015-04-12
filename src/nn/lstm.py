@@ -150,10 +150,17 @@ class LSTM(RecurrentContainer):
                                self.O.getWeights()), axis=0)
 
     def getGradient(self):
-        return np.concatenate((self.I.getGradient(),
-                               self.F.getGradient(),
-                               self.Z.getGradient(),
-                               self.O.getGradient()), axis=0)
+        if self.I.stages[0].gpu:
+            return np.concatenate((
+                gpu.as_numpy_array(self.I.getGradient()),
+                gpu.as_numpy_array(self.F.getGradient()),
+                gpu.as_numpy_array(self.Z.getGradient()),
+                gpu.as_numpy_array(self.O.getGradient())), axis=0)
+        else:
+            return np.concatenate((I.getGradient(),
+                                   F.getGradient(),
+                                   Z.getGradient(),
+                                   O.getGradient()), axis=0)
 
     def splitWeights(self, W):
         D = self.inputDim

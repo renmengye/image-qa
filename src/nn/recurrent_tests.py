@@ -192,7 +192,16 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
             E, dEdY = costFn(Y, T)
             dEdX = lstm.backward(dEdY)
             if i == 0:
-                W = np.concatenate((I.getWeights(), F.getWeights(), Z.getWeights(), O.getWeights()), axis=0)
+                if I.stages[0].gpu:            
+                    W = np.concatenate((
+                        gpu.as_numpy_array(self.I.getWeights()),
+                        gpu.as_numpy_array(self.F.getWeights()),
+                        gpu.as_numpy_array(self.Z.getWeights()),
+                        gpu.as_numpy_array(self.O.getWeights())), axis=0)
+                else:
+                    W = np.concatenate((I.getWeights(), 
+                        F.getWeights(), Z.getWeights(), 
+                        O.getWeights()), axis=0)
                 lstm2.W = W.transpose()
             if multiOutput:
                 Y2 = lstm2.forward(X)[:,:-1]
@@ -205,10 +214,17 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
             else:
                 dEdX2 = lstm2.backward(dEdY2)
 
-            dEdW = np.concatenate((I.getGradient(),
-                                   F.getGradient(),
-                                   Z.getGradient(),
-                                   O.getGradient()), axis=0)
+            if I.stages[0].gpu:
+                dEdW = np.concatenate((
+                    gpu.as_numpy_array(self.I.getGradient()),
+                    gpu.as_numpy_array(self.F.getGradient()),
+                    gpu.as_numpy_array(self.Z.getGradient()),
+                    gpu.as_numpy_array(self.O.getGradient())), axis=0)
+            else:
+                dEdW = np.concatenate((I.getGradient(),
+                                       F.getGradient(),
+                                       Z.getGradient(),
+                                       O.getGradient()), axis=0)
             dEdW2 = lstm2.dEdW
             lstm.updateWeights()
             lstm2.updateWeights()
@@ -216,10 +232,16 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
 
             self.chkEqual(dEdX, dEdX2)
             self.chkEqual(dEdW.transpose(), dEdW2)
-            W = np.concatenate((I.getWeights(),
-                                F.getWeights(),
-                                Z.getWeights(),
-                                O.getWeights()), axis=0)
+            if I.stages[0].gpu:            
+                W = np.concatenate((
+                    gpu.as_numpy_array(self.I.getWeights()),
+                    gpu.as_numpy_array(self.F.getWeights()),
+                    gpu.as_numpy_array(self.Z.getWeights()),
+                    gpu.as_numpy_array(self.O.getWeights())), axis=0)
+            else:
+                W = np.concatenate((I.getWeights(), 
+                    F.getWeights(), Z.getWeights(), 
+                    O.getWeights()), axis=0)
             W2 = lstm2.W
             self.chkEqual(W.transpose(), W2)
 
