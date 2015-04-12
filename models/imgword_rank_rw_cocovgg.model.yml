@@ -1,5 +1,5 @@
 name: 'imgword'
-costFn: 'crossEntIdx'
+costFn: 'rankingLoss'
 decisionFn: 'argmax'
 stages:
     - 'imgSel'
@@ -14,8 +14,10 @@ stages:
     - 'concat'
     - 'dropout'
     - 'lstm'
-    - 'softmax'
-outputs: 'softmax'
+    - 'answer'
+    - 'collector'
+    - 'cosine'
+outputs: 'cosine'
 specs:
     - name: 'imgSel'
       type: 'selector'
@@ -38,22 +40,17 @@ specs:
       inputs: 'imgUnfold'
       inputDim: 1449
       outputDim: 4096
-      initWeights: '/ais/gobi3/u/mren/data/nyu-depth/hidden_oxford.h5'
-      h5key: 'hidden7'
-      format: 'h5'
+      initWeights: '/ais/gobi3/u/mren/data/nyu-depth/hidden7_oxford_ms.npy'
       learningRate: 0.0
       outputdEdX: false
     - name: 'imgMap'
       type: 'map'
       inputs: 'imgFeat'
       activeFn: 'identity'
-      outputDim: 300
-      initRange: 0.0541
-      initSeed: 1
-      learningRate: 0.8
-      momentum: 0.9
-      gradientClip: 0.1
-      weightClip: 100.0
+      outputDim: 500
+      bias: false
+      initWeights: '/ais/gobi3/u/mren/models/coco_vgg/map.npy'
+      learningRate: 0.0
       outputdEdX: false
     - name: 'imgFold'
       type: 'timeFold'
@@ -67,8 +64,9 @@ specs:
       type: 'lut'
       inputs: 'txtUnfold'
       inputDim: 868
-      outputDim: 300
-      initWeights: '../data/daquar-37/word-embed-q.npy'
+      outputDim: 500
+      initRange: 1.0
+      initSeed: 2
       learningRate: 0.0
       outputdEdX: false
     - name: 'txtFold'
@@ -83,14 +81,14 @@ specs:
     - name: 'dropout'
       type: 'dropout'
       inputs: 'concat'
-      dropoutRate: 0.2
+      dropoutRate: 0.5
       initSeed: 3
-      outputDim: 300
+      outputDim: 500
     - name: 'lstm'
       type: 'lstm'
       inputs: 'dropout'
-      inputDim: 300
-      outputDim: 150
+      inputDim: 500
+      outputDim: 500
       timespan: 28
       initRange: 0.1
       initSeed: 4
@@ -101,17 +99,22 @@ specs:
       momentum: 0.9
       gradientClip: 0.1
       weightClip: 100.0
-      outputdEdX: true
-    - name: 'softmax'
-      type: 'map'
-      inputs: 'lstm'
-      activeFn: 'softmax'
-      outputDim: 68
-      initRange: 0.1
-      initSeed: 7
-      learningRate: 0.01
-      learningRateAnnealConst: 0.0
-      momentum: 0.9
-      gradientClip: 0.1
-      weightClip: 15.0
       weightRegConst: 0.00005
+      outputdEdX: true
+    - name: 'answer'
+      type: 'constWeights'
+      inputDim: 500
+      outputDim: 67
+      initSeed: 200
+      initRange: 0.1
+      #initWeights: '../data/imgword/word-embed-0-a.npy'
+      learningRate: 0.0
+      momentum: 0.0
+    - name: 'collector'
+      type: 'concat'
+      inputs: 'answer, lstm'
+      axis: 0
+    - name: 'cosine'
+      type: 'cosSimilarity'
+      inputs: 'collector'
+      bankDim: 67

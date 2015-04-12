@@ -174,6 +174,8 @@ def addStage(stageDict):
             initSeed=initSeed,
             initRange=initRange,
             initWeights=initWeights,
+            bias=stageDict['bias'] if stageDict.has_key('bias') else True,
+            biasInitConst=biasInitConst,
             needInit=needInit,
             learningRate=learningRate,
             learningRateAnnealConst=learningRateAnnealConst,

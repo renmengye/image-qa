@@ -90,9 +90,9 @@ specs:
       type: 'lstm'
       inputs: 'dropout'
       inputDim: 300
-      outputDim: 150
+      outputDim: 300
       timespan: 28
-      initRange: 0.1
+      initRange: 0.2
       initSeed: 4
       cutOffZeroEnd: true
       multiErr: false
