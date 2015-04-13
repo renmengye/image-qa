@@ -1,0 +1,96 @@
+name: 'sentiment'
+costFn: 'crossEntOne'
+decisionFn: 'hardLimit'
+stages:
+    - 'unfold'
+    - 'dict'
+    - 'fold'
+    - 'dropout'
+    - 'lstm1'
+    - 'conv'
+    - 'maxpool'
+    - 'relu'
+    - 'lstm2'
+    - 'sigmoid'
+outputs: 'sigmoid'
+specs:
+    - name: 'unfold'
+      type: 'timeUnfold'
+      inputs: 'input'
+    - name: 'dict'
+      type: 'lut'
+      inputs: 'unfold'
+      inputDim: 16547
+      outputDim: 300
+      initWeights: '../data/sentiment3/word-embed-0.npy'
+      learningRate: 0.0
+    - name: 'fold'
+      type: 'timeFold'
+      timespan: 60
+    - name: 'dropout'
+      type: 'dropout'
+      inputs: 'fold'
+      dropoutRate: 0.2
+      initSeed: 3
+    - name: 'lstm1'
+      type: 'lstm'
+      inputs: 'dropout'
+      inputDim: 300
+      outputDim: 150
+      timespan: 60
+      initRange: 0.1
+      initSeed: 4
+      multiOutput: true
+      learningRate: 0.8
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 100.0
+      weightRegConst: 0.00005
+      outputdEdX: false
+    - name: 'conv'
+      type: 'conv1d'
+      inputs: 'lstm1'
+      windowSize: 4
+      numFilters: 50
+      numChannels: 150
+      learningRate: 0.1
+      momentum: 0.9
+      gradientClip: 1000.0
+      weightClip: 1000.0
+    - name: 'maxpool'
+      inputs: 'conv'
+      windowSize: 4
+      outputDim: 50
+    - name: 'relu'
+      type: 'active'
+      inputs: 'maxpool'
+      activeFn: 'relu'
+      outputDim: 50
+    - name: 'lstm2'
+      type: 'lstm'
+      inputs: 'relu'
+      inputDim: 50
+      outputDim: 20
+      timespan: 60
+      initRange: 0.1
+      initSeed: 4
+      multiOutput: false
+      learningRate: 0.8
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 10.0
+      weightRegConst: 0.00005
+      outputdEdX: false
+    - name: 'sigmoid'
+      type: 'map'
+      inputs: 'lstm2'
+      activeFn: 'sigmoid'
+      outputDim: 1
+      initRange: 0.1
+      initSeed: 7
+      learningRate: 0.01
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 5.0
+      learningRateAnnealConst: 0.0
+      weightRegConst: 0.00005
