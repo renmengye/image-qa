@@ -22,7 +22,7 @@ specs:
       inputs: 'unfold'
       inputDim: 16547
       outputDim: 300
-      initWeights: '../data/sentiment3/word-embed-0.npy'
+      initWeights: '../data/sentiment/word-embed.npy'
       learningRate: 0.0
     - name: 'fold'
       type: 'timeFold'
