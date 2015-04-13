@@ -10,6 +10,9 @@ from lstm import *
 from sum_prod import *
 from selector import *
 from sum2 import *
+from conv1d import *
+from maxpool1d import *
+from meanpool1d import *
 
 import h5py
 import pickle
@@ -356,6 +359,39 @@ def addStage(stageDict):
             name=stageDict['name'],
             inputNames=inputList,
             outputDim=stageDict['outputDim'])
+    elif stageDict['type'] == 'conv1d':
+        stage = Conv1D(
+            name=stageDict['name'],
+            inputNames=inputList,
+            numFilters=stageDict['numFilters'],
+            numChannels=stageDict['numChannels'],
+            windowSize=stageDict['windowSize'],
+            initSeed=initSeed,
+            initRange=initRange,
+            initWeights=initWeights,
+            needInit=needInit,
+            learningRate=learningRate,
+            learningRateAnnealConst=learningRateAnnealConst,
+            momentum=momentum,
+            deltaMomentum=deltaMomentum,
+            gradientClip=gradientClip,
+            weightClip=weightClip,
+            weightRegConst=weightRegConst
+            )
+    elif stageDict['type'] == 'maxpool1d':
+        stage = MaxPool1D(
+            name=stageDict['name'],
+            inputNames=inputList,
+            windowSize=stageDict['windowSize'],
+            outputDim=stageDict['outputDim']
+        )
+    elif stageDict['type'] == 'meanpool1d':
+        stage = MeanPool1D(
+            name=stageDict['name'],
+            inputNames=inputList,
+            windowSize=stageDict['windowSize'],
+            outputDim=stageDict['outputDim']
+        )
     else:
         raise Exception('Stage type ' + stageDict['type'] + ' not found.')
 

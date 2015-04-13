@@ -11,6 +11,7 @@ from sum_prod import *
 from active_func import *
 from selector import *
 from conv1d import *
+from meanpool1d import *
 
 import unittest
 import numpy as np
@@ -552,6 +553,11 @@ class SumProduct_Tests(StageTests):
 
 class Conv1D_Tests(StageTests):
     def setUp(self):
+        F = 10
+        S = 3
+        D = 5
+        T = 20
+        N = 10
         self.stage = Conv1D(
                         numChannels=D, 
                         windowSize=S, 
@@ -591,46 +597,109 @@ class Conv1D_Tests(StageTests):
         self.chkgrd(dEdW, dEdWTmp)
         self.chkgrd(dEdX, dEdXTmp)
 
+class MaxPool1D_Tests(StageTests):
+    def setUp(self):
+        self.testInputErr = True
+        self.costFn = meanSqErr
+
+    def test_grad(self):
+        S = 4
+        D = 5
+        T = 20
+        N = 10
+        self.stage = MaxPool1D(
+                        outputDim=D, 
+                        windowSize=S)
+        self.model = self.stage
+        random = np.random.RandomState(2)
+        X = random.uniform(-0.1, 0.1, (N, T, D))
+        T = random.uniform(-0.1, 0.1, (N, T / S, D))
+        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T, eps=1e-5)
+        self.chkgrd(dEdX, dEdXTmp)
+
+    def test_grad2(self):
+        S = 3
+        D = 5
+        T = 20
+        N = 10
+        self.stage = MaxPool1D(
+                        outputDim=D, 
+                        windowSize=S)
+        self.model = self.stage
+        random = np.random.RandomState(2)
+        X = random.uniform(-0.1, 0.1, (N, T, D))
+        T = random.uniform(-0.1, 0.1, (N, T / S + 1, D))
+        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T, eps=1e-5)
+        self.chkgrd(dEdX, dEdXTmp)
+
+class MeanPool1D_Tests(StageTests):
+    def setUp(self):
+        S = 4
+        D = 5
+        T = 20
+        N = 10
+        self.stage = MeanPool1D(
+                        outputDim=D, 
+                        windowSize=S)
+        self.model = self.stage
+        self.testInputErr = True
+        self.costFn = meanSqErr
+
+    def test_grad(self):
+        S = 4
+        D = 5
+        T = 20
+        N = 10
+        random = np.random.RandomState(2)
+        X = random.uniform(-0.1, 0.1, (N, T, D))
+        T = random.uniform(-0.1, 0.1, (N, T / S, D))
+        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
+        self.chkgrd(dEdX, dEdXTmp)
+
 if __name__ == '__main__':
     suite = unittest.TestSuite()
+    # suite.addTests(
+    #     unittest.TestLoader().loadTestsFromTestCase(LSTM_MultiErr_Tests))
+    # suite.addTests(
+    #     unittest.TestLoader().loadTestsFromTestCase(LSTM_MultiErrCutZero_Tests))
+    # suite.addTests(
+    #     unittest.TestLoader().loadTestsFromTestCase(LSTM_SingleErr_Tests))
+    # suite.addTests(
+    #     unittest.TestLoader().loadTestsFromTestCase(LSTM_SingleErrCutZero_Tests))
+    # suite.addTests(
+    #     unittest.TestLoader().loadTestsFromTestCase(MapIdentity_Tests))
+    # suite.addTests(
+    #     unittest.TestLoader().loadTestsFromTestCase(MapSigmoid_Tests))
+    # suite.addTests(
+    #     unittest.TestLoader().loadTestsFromTestCase(MapSigmoid_CrossEnt_Tests))
+    # suite.addTests(
+    #     unittest.TestLoader().loadTestsFromTestCase(MapSoftmax_Tests))
+    # suite.addTests(
+    #     unittest.TestLoader().loadTestsFromTestCase(MapRelu_Tests))
+    # suite.addTests(
+    #     unittest.TestLoader().loadTestsFromTestCase(MapSoftmax_CrossEnt_Tests))
+    # suite.addTests(
+    #     unittest.TestLoader().loadTestsFromTestCase(LUT_Tests))
+    # suite.addTests(
+    #     unittest.TestLoader().loadTestsFromTestCase(InnerProduct_Tests))
+    # suite.addTests(
+    #     unittest.TestLoader().loadTestsFromTestCase(Reshape_Tests))
+    # suite.addTests(
+    #     unittest.TestLoader().loadTestsFromTestCase(Sum_Tests))
+    # suite.addTests(
+    #     unittest.TestLoader().loadTestsFromTestCase(ElementProduct_Tests))
+    # suite.addTests(
+    #     unittest.TestLoader().loadTestsFromTestCase(Active_Tests))
+    # suite.addTests(
+    #     unittest.TestLoader().loadTestsFromTestCase(CosSimilarity_Tests))
+    # suite.addTests(
+    #       unittest.TestLoader().loadTestsFromTestCase(Selector_Tests))
+    # suite.addTests(
+    #       unittest.TestLoader().loadTestsFromTestCase(SumProduct_Tests))
+    # suite.addTests(
+    #       unittest.TestLoader().loadTestsFromTestCase(Conv1D_Tests))
+    # suite.addTests(
+    #       unittest.TestLoader().loadTestsFromTestCase(MaxPool1D_Tests))
     suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(LSTM_MultiErr_Tests))
-    suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(LSTM_MultiErrCutZero_Tests))
-    suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(LSTM_SingleErr_Tests))
-    suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(LSTM_SingleErrCutZero_Tests))
-    suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(MapIdentity_Tests))
-    suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(MapSigmoid_Tests))
-    suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(MapSigmoid_CrossEnt_Tests))
-    suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(MapSoftmax_Tests))
-    suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(MapRelu_Tests))
-    suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(MapSoftmax_CrossEnt_Tests))
-    suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(LUT_Tests))
-    suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(InnerProduct_Tests))
-    suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(Reshape_Tests))
-    suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(Sum_Tests))
-    suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(ElementProduct_Tests))
-    suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(Active_Tests))
-    suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(CosSimilarity_Tests))
-    suite.addTests(
-          unittest.TestLoader().loadTestsFromTestCase(Selector_Tests))
-    suite.addTests(
-          unittest.TestLoader().loadTestsFromTestCase(SumProduct_Tests))
-    suite.addTests(
-          unittest.TestLoader().loadTestsFromTestCase(Conv1D_Tests))
+          unittest.TestLoader().loadTestsFromTestCase(MeanPool1D_Tests))
     unittest.TextTestRunner(verbosity=2).run(suite)

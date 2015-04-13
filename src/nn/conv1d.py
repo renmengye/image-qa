@@ -17,6 +17,8 @@ class Conv1D(Stage):
                  inputNames=None,
                  initRange=1.0,
                  initSeed=2,
+                 needInit=True,
+                 initWeights=None,
                  learningRate=0.0,
                  learningRateAnnealConst=0.0,
                  momentum=0.0,
@@ -46,8 +48,11 @@ class Conv1D(Stage):
         self.numChannels = numChannels
         self.windowSize = windowSize
         self.random = np.random.RandomState(initSeed)
-        self.W = self.random.uniform(-initRange/2.0, initRange/2.0,
-                    (self.windowSize * self.numChannels, self.numFilters))
+        if needInit:
+            self.W = self.random.uniform(-initRange/2.0, initRange/2.0,
+                        (self.windowSize * self.numChannels, self.numFilters))
+        else:
+            self.W = initWeights
         if self.gpu:
             self.W = gpu.as_garray(self.W)
         self.X = 0
