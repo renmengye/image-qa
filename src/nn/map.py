@@ -1,8 +1,9 @@
 from stage import *
 import os
-os.environ['GNUMPY_USE_GPU'] = 'yes'
-import gnumpy as gpu
-import gnumpy as gnp
+use_gpu = os.environ.get('GNUMPY_USE_GPU', 'yes') == 'yes'
+if use_gpu:
+    import gnumpy as gpu
+    import gnumpy as gnp
 
 class Map(Stage):
     def __init__(self,
@@ -24,7 +25,7 @@ class Map(Stage):
                  weightRegConst=0.0,
                  outputdEdX=True,
                  defaultValue=0.0,
-                 gpu=os.environ['GNUMPY_USE_GPU']=='yes',
+                 gpu=use_gpu,
                  name=None):
         Stage.__init__(self,
                  name=name,

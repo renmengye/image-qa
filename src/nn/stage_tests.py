@@ -10,6 +10,8 @@ from active import *
 from sum_prod import *
 from active_func import *
 from selector import *
+from conv1d import *
+
 import unittest
 import numpy as np
 
@@ -548,6 +550,35 @@ class SumProduct_Tests(StageTests):
                 X[2][n, j] += eps
         self.chkgrd(dEdX[2], dEdXTmp)
 
+class Conv1D_Tests(StageTests):
+    def setUp(self):
+        F = 10
+        S = 3
+        D = 5
+        T = 20
+        N = 10
+        self.stage = Conv1D(
+                        numChannels=D, 
+                        windowSize=S, 
+                        numFilters=F)
+        self.model = self.stage
+        self.testInputErr = True
+        self.costFn = meanSqErr
+    def test_forward(self):
+        pass
+
+    def test_grad(self):
+        F = 10
+        S = 3
+        D = 5
+        T = 20
+        N = 10
+        random = np.random.RandomState(2)
+        X = random.uniform(-0.1, 0.1, (N, T, D))
+        T = random.uniform(-0.1, 0.1, (N, T - S + 1, F))
+        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
+        self.chkgrd(dEdW, dEdWTmp)
+        self.chkgrd(dEdX, dEdXTmp)
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
@@ -589,4 +620,6 @@ if __name__ == '__main__':
           unittest.TestLoader().loadTestsFromTestCase(Selector_Tests))
     suite.addTests(
           unittest.TestLoader().loadTestsFromTestCase(SumProduct_Tests))
+    suite.addTests(
+          unittest.TestLoader().loadTestsFromTestCase(Conv1D_Tests))
     unittest.TextTestRunner(verbosity=2).run(suite)
