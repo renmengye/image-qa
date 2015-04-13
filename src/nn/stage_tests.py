@@ -552,11 +552,6 @@ class SumProduct_Tests(StageTests):
 
 class Conv1D_Tests(StageTests):
     def setUp(self):
-        F = 10
-        S = 3
-        D = 5
-        T = 20
-        N = 10
         self.stage = Conv1D(
                         numChannels=D, 
                         windowSize=S, 
@@ -564,8 +559,24 @@ class Conv1D_Tests(StageTests):
         self.model = self.stage
         self.testInputErr = True
         self.costFn = meanSqErr
+
     def test_forward(self):
-        pass
+        F = 10
+        S = 3
+        D = 5
+        T = 20
+        N = 10
+        random = np.random.RandomState(2)
+        X = random.uniform(-0.1, 0.1, (N, T, D))
+        Y = self.stage.forward(X)
+        filters = self.stage.W.reshape(S, D, F)
+
+        Y2 = np.zeros(Y.shape)
+        for f in range(F):
+            for d in range(D):
+                for t in range(T - S + 1):
+                    Y2[:, t, f] += np.dot(X[:, t : t + S, d], filters[:, d, f])
+        self.chkgrd(Y, Y2)
 
     def test_grad(self):
         F = 10
