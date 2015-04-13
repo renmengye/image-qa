@@ -38,14 +38,15 @@ specs:
       inputs: 'imgUnfold'
       inputDim: 1449
       outputDim: 4096
-      initWeights: '../data/daquar-37/oxford-feat.npy'
+      initWeights: '/ais/gobi3/u/mren/data/nyu-depth/hidden7_oxford_ms.npy'
       learningRate: 0.0
       outputdEdX: false
     - name: 'imgMap'
       type: 'map'
       inputs: 'imgFeat'
       activeFn: 'identity'
-      outputDim: 300
+      bias: false
+      outputDim: 500
       initRange: 0.1
       initSeed: 1
       learningRate: 0.8
@@ -65,8 +66,8 @@ specs:
       type: 'lut'
       inputs: 'txtUnfold'
       inputDim: 868
-      outputDim: 300
-      initRange: 0.42
+      outputDim: 500
+      initRange: 1.0
       initSeed: 2
       learningRate: 0.0
       outputdEdX: false
@@ -84,14 +85,14 @@ specs:
       inputs: 'concat'
       dropoutRate: 0.2
       initSeed: 3
-      outputDim: 300
+      outputDim: 500
     - name: 'lstm'
       type: 'lstm'
       inputs: 'dropout'
-      inputDim: 300
+      inputDim: 500
       outputDim: 150
       timespan: 28
-      initRange: 0.2
+      initRange: 0.1
       initSeed: 4
       cutOffZeroEnd: true
       multiErr: false

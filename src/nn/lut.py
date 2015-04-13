@@ -1,4 +1,6 @@
 from stage import *
+import os
+use_gpu = os.environ.get('GNUMPY_USE_GPU', 'yes') == 'yes'
 
 class LUT(Stage):
     def __init__(self,
@@ -19,7 +21,7 @@ class LUT(Stage):
                  gradientClip=0.0,
                  weightRegConst=0.0,
                  outputdEdX=False,
-                 gpu=True,
+                 gpu=use_gpu,
                  name=None):
         Stage.__init__(self,
                  name=name,
@@ -77,15 +79,16 @@ class LUT(Stage):
         Y = np.zeros((X.shape[0], self.outputDim), self.W.dtype)
         for n in range(0, X.shape[0]):
              Y[n] = self.W[X[n]]
-        #print 'lut', Y.dtype
         return Y
 
     def backward(self, dEdY):
         X = self.X
         if self.learningRate > 0.0:
-            self.dEdW = np.zeros(self.W.shape)
+            self.dEdW = np.zeros(self.W.shape, self.W.dtype)
             for n in range(0, X.shape[0]):
                 self.dEdW[X[n]] += dEdY[n]
+            # Freeze 0th row
+            self.dEdW[0, :] = np.zeros(self.outputDim)
         if self.outputdEdX:
             return np.zeros(X.shape)
         else:
@@ -95,7 +98,7 @@ class LUT(Stage):
         if self.learningRate == 0.0:
             return
         else:
-            Stage.loadWeights(W)
+            Stage.loadWeights(self, W)
 
     def getWeights(self):
         if self.learningRate == 0.0:

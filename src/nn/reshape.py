@@ -46,16 +46,19 @@ class TimeReverse(Stage):
         self.Xend = np.zeros(N, dtype=int) + X.shape[1]
         reachedEnd = np.sum(X, axis=-1) == 0.0
         Y = np.zeros(X.shape)
-
         # Scan for the end of the sequence.
         for n in range(N):
+            found = False
             for t in range(X.shape[1]):
                 if reachedEnd[n, t]:
                     self.Xend[n] = t
                     if t > 0:
+                        found = True
                         Y[n, 0:t, :] = X[n, t-1::-1, :]
                     break
-        #print self.name, Y.shape
+            if found == False:
+                self.Xend[n] = X.shape[1]
+                Y[n, :, :] = X[n, ::-1, :]
         return Y
 
     def backward(self, dEdY):
