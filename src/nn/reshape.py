@@ -139,8 +139,10 @@ class Concat(Stage):
                 elif self.axis == 2:
                     stage.dEdY += dEdX[:, :, s : s2]
                 s = s2
+                stage.receivedError = True
         else:
             self.inputs[0].dEdY += dEdX
+            self.inputs[0].receivedError = True
 
     def forward(self, X):
         return X

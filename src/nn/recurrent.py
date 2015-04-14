@@ -280,6 +280,7 @@ class RecurrentContainer(Container, RecurrentStage):
         for stage in self.constStages:
             stage.clearError()
         self.dEdY = 0.0
+        self.receivedError = False
 
     def syncGradient(self):
         for stage in self.stages:
@@ -397,8 +398,10 @@ class RecurrentContainer(Container, RecurrentStage):
                 s2 = s + stage.Y.shape[-1]
                 stage.dEdY += dEdX[:, :, s : s2]
                 s = s2
+                stage.receivedError = True
         else:
             self.inputs[0].dEdY += dEdX
+            self.inputs[0].receivedError = True
 
     #@profile
     def backward(self, dEdY):
@@ -409,8 +412,6 @@ class RecurrentContainer(Container, RecurrentStage):
         """
         N = self.X.shape[0]
         dEdX = np.zeros(self.X.shape)
-        if self.outputdEdX:
-            dEdX = np.zeros(self.X.shape)
 
         # Send errors from output stages.
         if self.multiOutput:

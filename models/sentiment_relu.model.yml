@@ -5,11 +5,9 @@ stages:
     - 'unfold'
     - 'dict'
     - 'fold'
-    #- 'dropout'
-    #- 'lstm1'
     - 'conv'
+    - 'relu'
     - 'meanpool'
-    #- 'relu'
     - 'lstm2'
     - 'sigmoid'
 outputs: 'sigmoid'
@@ -29,28 +27,6 @@ specs:
       inputs: 'dict'
       timespan: 60
       outputdEdX: false
-    #- name: 'dropout'
-    #  type: 'dropout'
-    #  inputs: 'fold'
-    #  dropoutRate: 0.2
-    #  initSeed: 3
-    #  outputDim: 300
-    #  outputdEdX: false
-    #- name: 'lstm1'
-    #  type: 'lstm'
-    #  inputs: 'dropout'
-    #  inputDim: 300
-    #  outputDim: 150
-    #  timespan: 60
-    #  initRange: 0.1
-    #  initSeed: 4
-    #  multiOutput: true
-    #  learningRate: 0.8
-    #  momentum: 0.9
-    #  gradientClip: 0.1
-    #  weightClip: 100.0
-    #  weightRegConst: 0.00005
-    #  outputdEdX: false
     - name: 'conv'
       type: 'conv1d'
       inputs: 'fold'
@@ -63,16 +39,16 @@ specs:
       momentum: 0.9
       gradientClip: 0.1
       weightClip: 50.0
+    - name: 'relu'
+      type: 'active'
+      inputs: 'conv'
+      activeFn: 'relu'
+      outputDim: 50
     - name: 'meanpool'
       type: 'meanpool1d'
-      inputs: 'conv'
+      inputs: 'relu'
       windowSize: 3
       outputDim: 50
-    #- name: 'relu'
-    #  type: 'active'
-    #  inputs: 'maxpool'
-    #  activeFn: 'relu'
-    #  outputDim: 50
     - name: 'lstm2'
       type: 'lstm'
       inputs: 'meanpool'

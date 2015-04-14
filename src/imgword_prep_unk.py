@@ -334,3 +334,11 @@ if __name__ == '__main__':
     with open(os.path.join(outputFolder, 'answer_vocabs.txt'), 'w+') as f:
         for word in iansdict:
             f.write(word + '\n')
+
+    trainImgIds = []
+    for i in range(1449):
+        if split.has_key(i) and split[i] == 1:
+            trainImgIds.append(i)
+    with open(os.path.join(outputFolder, 'train_imgids.txt'), 'w+') as f:
+        for i in trainImgIds:
+            f.write(str(i) + '\n')

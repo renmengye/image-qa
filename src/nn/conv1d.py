@@ -54,7 +54,7 @@ class Conv1D(Stage):
         else:
             self.W = initWeights
         if self.gpu:
-            self.W = gpu.as_garray(self.W)
+            self.W = gnp.as_garray(self.W.astype('float32'))
         self.X = 0
         self.Y = 0
 
@@ -93,6 +93,7 @@ class Conv1D(Stage):
         D = self.X.shape[2]
         dEdY = dEdY.reshape(N * (T - S + 1), F)
         dEdX = np.zeros(self.X.shape, self.X.dtype)
+        
         if self.gpu:
             gdEdY = gpu.as_garray(dEdY.astype('float32'))
             self.dEdW = gpu.dot(self.Z.transpose(), gdEdY)
@@ -101,7 +102,7 @@ class Conv1D(Stage):
 
         if self.outputdEdX:
             if self.gpu:
-                gdEdZ = gpu.dot(dgEdY, self.W.transpose())
+                gdEdZ = gpu.dot(gdEdY, self.W.transpose())
                 dEdZ = gpu.as_numpy_array(gdEdZ)
             else:
                 dEdZ = np.dot(dEdY, self.W.transpose())

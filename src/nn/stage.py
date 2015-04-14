@@ -44,6 +44,7 @@ class Stage:
         self.dEdY = 0.0
         self.gpu = gpu
         self.splX = None
+        self.receivedError = False
     def __str__(self):
         return self.name
 
@@ -73,6 +74,7 @@ class Stage:
 
     def clearError(self):
         self.dEdY = 0.0
+        self.receivedError = False
 
     def sendError(self, dEdX):
         """
@@ -84,10 +86,13 @@ class Stage:
                 s2 = s + stage.Y.shape[-1]
                 stage.dEdY += dEdX[:, s : s2]
                 s = s2
+                stage.receivedError = True
         else:
             #if type(self.inputs[0].dEdY) == np.ndarray:
             #    print self.name, self.inputs[0].name, self.inputs[0].dEdY.shape, dEdX.shape
             self.inputs[0].dEdY += dEdX
+            self.inputs[0].receivedError = True
+            #print self.name, 'send error', self.inputs[0].name
 
     def getValue(self):
         """
