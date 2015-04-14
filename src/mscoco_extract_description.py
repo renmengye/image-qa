@@ -1,10 +1,16 @@
 import json
 import os
 import cPickle as pkl
+import sys
 
-jsonFilename = '../../../data/mscoco/captions_val2014.json'
-captionOut = '../../../data/mscoco/mscoco_caption_valid.txt'
-imgidOut = '../../../data/mscoco/mscoco_imgids_valid.txt'
+if len(sys.argv) < 2:
+    folder = '../../../data/mscoco/train'
+else:
+    folder = sys.argv[1]
+
+jsonFilename = '%s/captions.json' % (folder)
+captionOut = '%s/captions.txt' % (folder)
+imgidOut = '%s/imgids.txt' % (folder)
 
 # To retrive image ID and url, get caption['images'][i]['id'] and caption['images'][i]['url']
 if __name__ == '__main__':
@@ -17,8 +23,7 @@ if __name__ == '__main__':
     for i in range(L):
         sent = caption['annotations'][i]['caption']
         imgid = caption['annotations'][i]['image_id']
-
-        sent = sent.replace('\n','').strip()
+        sent = sent.replace('\n','').strip().strip('.').strip()
         dataset.append((sent, imgid))
         #if sent.startswith('One motorcycle witha large'):
         #print (sent, imgid)
