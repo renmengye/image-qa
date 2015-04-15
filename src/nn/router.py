@@ -13,6 +13,7 @@ from sum2 import *
 from conv1d import *
 from maxpool1d import *
 from meanpool1d import *
+from normalize import *
 
 import h5py
 import pickle
@@ -353,12 +354,14 @@ def addStage(stageDict):
         stage = AttentionPenalty(
             name=stageDict['name'],
             inputNames=inputList,
-            errorConst=stageDict['errorConst'])
+            errorConst=stageDict['errorConst']
+        )
     elif stageDict['type'] == 'sum2':
         stage = Sum2(
             name=stageDict['name'],
             inputNames=inputList,
-            outputDim=stageDict['outputDim'])
+            outputDim=stageDict['outputDim']
+        )
     elif stageDict['type'] == 'conv1d':
         stage = Conv1D(
             name=stageDict['name'],
@@ -376,21 +379,32 @@ def addStage(stageDict):
             deltaMomentum=deltaMomentum,
             gradientClip=gradientClip,
             weightClip=weightClip,
-            weightRegConst=weightRegConst
-            )
+            weightRegConst=weightRegConst,
+            outputdEdX=outputdEdX
+        )
     elif stageDict['type'] == 'maxpool1d':
         stage = MaxPool1D(
             name=stageDict['name'],
             inputNames=inputList,
             windowSize=stageDict['windowSize'],
-            outputDim=stageDict['outputDim']
+            outputDim=stageDict['outputDim'],
+            outputdEdX=outputdEdX
         )
     elif stageDict['type'] == 'meanpool1d':
         stage = MeanPool1D(
             name=stageDict['name'],
             inputNames=inputList,
             windowSize=stageDict['windowSize'],
-            outputDim=stageDict['outputDim']
+            outputDim=stageDict['outputDim'],
+            outputdEdX=outputdEdX
+        )
+    elif stageDict['type'] == 'normalize':
+        stage = Normalize(
+            name=stageDict['name'],
+            inputNames=inputList,
+            mean=np.load(stageDict['mean']),
+            std=np.load(stageDict['std']),
+            outputdEdX=outputdEdX
         )
     else:
         raise Exception('Stage type ' + stageDict['type'] + ' not found.')

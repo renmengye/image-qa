@@ -12,6 +12,8 @@ from active_func import *
 from selector import *
 from conv1d import *
 from meanpool1d import *
+from maxpool1d import *
+from normalize import *
 
 import unittest
 import numpy as np
@@ -656,6 +658,23 @@ class MeanPool1D_Tests(StageTests):
         dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
         self.chkgrd(dEdX, dEdXTmp)
 
+class Normalize_Tests(StageTests):
+    def setUp(self):
+        self.stage = Normalize(
+            outputDim=5,
+            mean=np.random.rand(5),
+            std=np.random.rand(5))
+        self.model = self.stage
+        self.costFn = meanSqErr
+        self.testInputErr = True
+
+    def test_grad(self):
+        X = np.random.rand(3, 5)
+        T = np.random.rand(3, 5)
+        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
+        print dEdX / dEdXTmp
+        self.chkgrd(dEdX, dEdXTmp)
+
 if __name__ == '__main__':
     suite = unittest.TestSuite()
     # suite.addTests(
@@ -700,6 +719,8 @@ if __name__ == '__main__':
     #       unittest.TestLoader().loadTestsFromTestCase(Conv1D_Tests))
     # suite.addTests(
     #       unittest.TestLoader().loadTestsFromTestCase(MaxPool1D_Tests))
+    # suite.addTests(
+    #       unittest.TestLoader().loadTestsFromTestCase(MeanPool1D_Tests))
     suite.addTests(
-          unittest.TestLoader().loadTestsFromTestCase(MeanPool1D_Tests))
+          unittest.TestLoader().loadTestsFromTestCase(Normalize_Tests))
     unittest.TextTestRunner(verbosity=2).run(suite)
