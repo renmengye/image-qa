@@ -88,16 +88,22 @@ def lookupAnsID(answers, ansdict):
             ansids.append(ansdict['UNK'])
     return np.array(ansids, dtype=int).reshape(len(ansids), 1)
 
-def lookupQID(questions, worddict):
-    wordslist = []
-    maxlen = 39
-    #maxlen = 0
+def findMaxlen(questions):
+    maxlen = 0
     for q in questions:
-        words = q.replace(',', '').split(' ')
+        words = q.split(' ')
+        if len(words) > maxlen:
+            maxlen = len(words)
+    print 'Maxlen: ', maxlen
+    return maxlen
+
+def lookupQID(questions, worddict, maxlen):
+    wordslist = []
+    for q in questions:
+        words = q.split(' ')
         wordslist.append(words)
         if len(words) > maxlen:
             maxlen = len(words)
-    print 'Max length', maxlen
     result = np.zeros((len(questions), maxlen, 1), dtype=int)
     for i,words in enumerate(wordslist):
         for j,w in enumerate(words):
@@ -224,7 +230,6 @@ if __name__ == '__main__':
                 testImgIds.append(imgidDict2[imgid])
                 testQuestionTypes.append(item[3])
 
-
     print 'Train Questions Before Trunk: ', len(trainQuestions)
     print 'Valid Questions Before Trunk: ', len(validQuestions)
     print 'Test Questions Before Trunk: ', len(testQuestions)
@@ -327,15 +332,16 @@ if __name__ == '__main__':
     testImgIds = np.array(testImgIds, dtype=object)[shuffle]
     testQuestionTypes = np.array(testQuestionTypes, dtype=object)[shuffle]
 
+    maxlen = findMaxlen(np.concatenate((trainQuestions, validQuestions, testQuestions)))
     # Build output
     trainInput = combine(\
-        lookupQID(trainQuestions, worddict), trainImgIds)
+        lookupQID(trainQuestions, worddict, maxlen), trainImgIds)
     trainTarget = lookupAnsID(trainAnswers, ansdict)
     validInput = combine(\
-        lookupQID(validQuestions, worddict), validImgIds)
+        lookupQID(validQuestions, worddict, maxlen), validImgIds)
     validTarget = lookupAnsID(validAnswers, ansdict)
     testInput = combine(\
-        lookupQID(testQuestions, worddict), testImgIds)
+        lookupQID(testQuestions, worddict, maxlen), testImgIds)
     testTarget = lookupAnsID(testAnswers, ansdict)
 
     np.save(\
