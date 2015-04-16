@@ -43,8 +43,6 @@ if __name__ == '__main__':
 
     trainDataFile = os.path.join(dataFolder, 'train.npy')
     testDataFile = os.path.join(dataFolder, 'test.npy')
-    trainData = np.load(trainDataFile)
-    testData = np.load(testDataFile)
 
     X = trainData[0]
     Y = nn.test(model, X)

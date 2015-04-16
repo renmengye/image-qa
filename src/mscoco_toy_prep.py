@@ -210,6 +210,11 @@ if __name__ == '__main__':
     testAnswers = []
     testImgIds = []
     testQuestionTypes = []
+    baseline = []
+    colorAnswer = 'white'
+    numberAnswer = 'two'
+    objectAnswer = 'cat'
+    locationAnswer = 'kitchen'
 
     for item in qaAll:
         imgid = item[2]
@@ -286,6 +291,14 @@ if __name__ == '__main__':
     for n in range(0, len(testQuestions)):
         question = testQuestions[n]
         testCount[testQuestionTypes[n]] += 1
+        if testQuestionTypes[n] == 0:
+            baseline.append(objectAnswer)
+        elif testQuestionTypes[n] == 1:
+            baseline.append(numberAnswer)
+        elif testQuestionTypes[n] == 2:
+            baseline.append(colorAnswer)
+        elif testQuestionTypes[n] == 3:
+            baseline.append(locationAnswer)
 
     print 'Train Questions After Trunk: ', len(trainQuestions)
     print 'Train Question Dist: ', trainCount
@@ -371,6 +384,10 @@ if __name__ == '__main__':
 
     with open(os.path.join(outputFolder, 'imgid_dict.pkl'), 'wb') as f:
         pkl.dump(imgidDict3, f)
+
+    with open(os.path.join(outputFolder, 'baseline.txt'), 'w+') as f:
+        for answer in baseline:
+            f.write(answer + '\n')
 
     call(['python', 'word2vec_lookup.py', 
         os.path.join(outputFolder, 'question_vocabs.txt'), 

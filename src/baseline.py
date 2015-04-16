@@ -4,6 +4,7 @@ if len(sys.argv) < 6:
     colorAnswer = 'white'
     numberAnswer = 'two'
     objectAnswer = 'table'
+    locationAnswer = 'kitchen'
     gtFile = '../gt.txt'
     outFile = '../guess.txt'
 else:
