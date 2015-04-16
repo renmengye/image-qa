@@ -10,6 +10,6 @@ plotFigs: true
 calcError: true
 stopCost: 0.01
 progress: true
-patience: 20
+patience: 5
 criterion: rate
 sendEmail: true

@@ -13,9 +13,9 @@ import cPickle as pkl
 from nn.func import *
 #plt.ion()
 
-jsonTrainFilename = '../../../data/mscoco/captions_train2014.json'
-jsonValidFilename = '../../../data/mscoco/captions_val2014.json'
-imgidDictFilename = '../data/cocoqa-full/imgid_dict.pkl'
+jsonTrainFilename = '../../../data/mscoco/train/captions.json'
+jsonValidFilename = '../../../data/mscoco/valid/captions.json'
+imgidDictFilename = '../data/cocoqa-toy/imgid_dict.pkl'
 
 def decodeQuestion(X, questionArray):
     sentence = ''

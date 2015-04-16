@@ -14,7 +14,7 @@ from nn.func import *
 #plt.ion()
 
 jsonFilename = '../../../data/mscoco/captions_train2014.json'
-imgidDictFilename = '../data/cocoqa/imgid_dict.pkl'
+imgidDictFilename = '../data/cocoqai-toy/imgid_dict.pkl'
 
 
 def renderHtml(X, Y, T, questionArray, answerArray, topK, urlDict, imgidDict):

@@ -176,21 +176,21 @@ if __name__ == '__main__':
         match = re.search(cocoImgIdRegex, lines[i])
         imgid = match.group('imgid')
         imgidDict[imgid] = 0
-        imgidDict2[imgid] = i + 1
+        imgidDict2[imgid] = len(imgidDict3) + 1
         imgidDict3.append(imgid)
 
     for i in range(totalTrainLen, validLen):
         match = re.search(cocoImgIdRegex, lines[i])
         imgid = match.group('imgid')
         imgidDict[imgid] = 1
-        imgidDict2[imgid] = i + 1
+        imgidDict2[imgid] = len(imgidDict3) + 1
         imgidDict3.append(imgid)
 
     for i in range(validLen, testLen):
         match = re.search(cocoImgIdRegex, lines[i])
         imgid = match.group('imgid')
         imgidDict[imgid] = 2
-        imgidDict2[imgid] = i + 1
+        imgidDict2[imgid] = len(imgidDict3) + 1
         imgidDict3.append(imgid)
 
     with open(qaTrainFilename) as qaf:
