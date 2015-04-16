@@ -47,27 +47,23 @@ def buildDict(lines, keystart, pr=False):
         print 'Dictionary length', len(word_dict)
     return  word_dict, word_array, word_freq
 
-def removeQuestions(questions, answers, imgids, lowerBound, upperBound=100):
+def removeQuestions(answers, lowerBound, upperBound=100):
     """
     Removes questions with answer appearing less than N times.
     Probability function to decide whether or not to enroll an answer (remove too frequent answers).
     """
     answerdict, answeridict, answerfreq = buildDict(answers, 0)
     random = np.random.RandomState(2)
-    questionsTrunk = []
-    answersTrunk = []
-    imgidsTrunk = []
     answerfreq2 = []
+    survivor = []
     for item in answerfreq:
         answerfreq2.append(0)
-    for i in range(len(questions)):
+    for i in range(len(answers)):
         if answerfreq[answerdict[answers[i]]] < lowerBound:
             continue
         else:
             if answerfreq2[answerdict[answers[i]]] <= 100:
-                questionsTrunk.append(questions[i])
-                answersTrunk.append(answers[i])
-                imgidsTrunk.append(imgids[i])
+                survivor.append(i)
                 answerfreq2[answerdict[answers[i]]] += 1
             else:
                 # Exponential distribution
@@ -76,11 +72,9 @@ def removeQuestions(questions, answers, imgids, lowerBound, upperBound=100):
                 r = random.uniform(0, 1, [1])
                 #print 'Prob', prob, 'freq', answerfreq2[answerdict[answers[i]]], 'random', r
                 if r < prob:
-                    questionsTrunk.append(questions[i])
-                    answersTrunk.append(answers[i])
-                    imgidsTrunk.append(imgids[i])
+                    survivor.append(i)
                     answerfreq2[answerdict[answers[i]]] += 1
-    return questionsTrunk, answersTrunk, imgidsTrunk
+    return survivor
 
 
 def lookupAnsID(answers, ansdict):
@@ -129,11 +123,22 @@ def combineAttention(wordids, imgids):
             (np.array(imgid_t).reshape(len(imgids), wordids.shape[1], 1),
             wordids), axis=-1)
 
+def questionType(q):
+    if 'how many' in q:
+        typ = 1
+    elif q.startswith('what is the color'):
+        typ = 2
+    elif q.startswith('where'):
+        typ = 3
+    else:
+        typ = 0
+    return typ
+
 if __name__ == '__main__':
     # Build image features.
-    # numTrain = 3000
-    # numValid = 600
-    # numTest = 3000
+    numTrain = 6000
+    numValid = 1200
+    numTest = 6000
     # imgHidFeat = h5py.File(imgHidFeatTrainFilename)
     # hidFeat = imgHidFeat['hidden7'][0 : numTrain]
     # imgHidFeat = h5py.File(imgHidFeatValidFilename)
@@ -143,17 +148,16 @@ if __name__ == '__main__':
 
     with open(imgidTrainFilename) as f:
         lines = f.readlines()
-    trainLen = 3000
+    trainLen = numTrain
     totalTrainLen = len(lines)
     with open(imgidValidFilename) as f:
         lines.extend(f.readlines())
-    validLen = totalTrainLen + 600
-    testLen = validLen + 3000
+    validLen = totalTrainLen + numValid
+    testLen = validLen + numTest
 
     imgidDict = {} # Mark for train/valid/test.
     imgidDict2 = {} # Reindex the image, 1-based.
     imgidDict3 = [] # Reverse dict for image, 0-based.
-    # 3000 images train, 600 images valid, 3000 images test.
     # 0 for train, 1 for valid, 2 for test.
 
     cocoImgIdRegex = 'COCO_((train)|(val))2014_0*(?P<imgid>[1-9][0-9]*)'
@@ -187,12 +191,15 @@ if __name__ == '__main__':
     trainQuestions = []
     trainAnswers = []
     trainImgIds = []
+    trainQuestionTypes = []
     validQuestions = []
     validAnswers = []
     validImgIds = []
+    validQuestionTypes = []
     testQuestions = []
     testAnswers = []
     testImgIds = []
+    testQuestionTypes = []
 
     for item in qaAll:
         imgid = item[2]
@@ -201,80 +208,93 @@ if __name__ == '__main__':
                 trainQuestions.append(item[0][:-2])
                 trainAnswers.append(item[1])
                 trainImgIds.append(imgidDict2[imgid])
+                trainQuestionTypes.append(item[3])
             elif imgidDict[imgid] == 1:
                 validQuestions.append(item[0][:-2])
                 validAnswers.append(item[1])
                 validImgIds.append(imgidDict2[imgid])
+                validQuestionTypes.append(item[3])
             elif imgidDict[imgid] == 2:
                 testQuestions.append(item[0][:-2])
                 testAnswers.append(item[1])
                 testImgIds.append(imgidDict2[imgid])
+                testQuestionTypes.append(item[3])
+
 
     print 'Train Questions Before Trunk: ', len(trainQuestions)
     print 'Valid Questions Before Trunk: ', len(validQuestions)
     print 'Test Questions Before Trunk: ', len(testQuestions)
 
-    # Truncate rare answers.
-    trainQuestions, trainAnswers, trainImgIds = \
-        removeQuestions(trainQuestions, trainAnswers, trainImgIds, 5, 100)
-    validQuestions, validAnswers, validImgIds = \
-        removeQuestions(validQuestions, validAnswers, validImgIds, 2, 20)
-    testQuestions, testAnswers, testImgIds = \
-        removeQuestions(testQuestions, testAnswers, testImgIds, 5, 100)
-    trainCount = [0,0,0]
-    validCount = [0,0,0]
-    testCount = [0,0,0]
+    # Shuffle the questions before applying rare-common answer rejection.
+    r = np.random.RandomState(1)
+    shuffle = r.permutation(len(trainQuestions))
+    trainQuestions = np.array(trainQuestions, dtype=object)[shuffle]
+    trainAnswers = np.array(trainAnswers, dtype=object)[shuffle]
+    trainImgIds = np.array(trainImgIds, dtype=object)[shuffle]
+    trainQuestionTypes = np.array(trainQuestionTypes,dtype=object)[shuffle]
+
+    shuffle = r.permutation(len(validQuestions))
+    validQuestions = np.array(validQuestions, dtype=object)[shuffle]
+    validAnswers = np.array(validAnswers, dtype=object)[shuffle]
+    validImgIds = np.array(validImgIds, dtype=object)[shuffle]
+    validQuestionTypes = np.array(validQuestionTypes, dtype=object)[shuffle]
+
+    shuffle = r.permutation(len(testQuestions))
+    testQuestions = np.array(testQuestions, dtype=object)[shuffle]
+    testAnswers = np.array(testAnswers, dtype=object)[shuffle]
+    testImgIds = np.array(testImgIds, dtype=object)[shuffle]
+    testQuestionTypes = np.array(testQuestionTypes, dtype=object)[shuffle]
+
+    # Truncate rare-common answers.
+    survivor = np.array(removeQuestions(trainAnswers, 5, 100))
+    trainQuestions = trainQuestions[survivor]
+    trainAnswers = trainAnswers[survivor]
+    trainImgIds = trainImgIds[survivor]
+    trainQuestionTypes = trainQuestionTypes[survivor]
+
+    survivor = np.array(removeQuestions(validAnswers, 2, 20))
+    validQuestions = validQuestions[survivor]
+    validAnswers = validAnswers[survivor]
+    validImgIds = validImgIds[survivor]
+    validQuestionTypes = validQuestionTypes[survivor]
+
+    survivor = np.array(removeQuestions(testAnswers, 5, 100))
+    testQuestions = testQuestions[survivor]
+    testAnswers = testAnswers[survivor]
+    testImgIds = testImgIds[survivor]
+    testQuestionTypes = testQuestionTypes[survivor]
+
+    trainCount = np.zeros(4, dtype=int)
+    validCount = np.zeros(4, dtype=int)
+    testCount = np.zeros(4, dtype=int)
     
-    numberAns = {}
-    colorAns = {}
     for n in range(0, len(trainQuestions)):
         question = trainQuestions[n]
-        if 'how many' in question:
-            typ = 1
-        elif question.startswith('what is the color'):
-            typ = 2
-        else:
-            typ = 0
-        trainCount[typ] += 1
+        trainCount[trainQuestionTypes[n]] += 1
     for n in range(0, len(validQuestions)):
         question = validQuestions[n]
-        if 'how many' in question:
-            typ = 1
-        elif question.startswith('what is the color'):
-            typ = 2
-        else:
-            typ = 0
-        validCount[typ] += 1
+        validCount[validQuestionTypes[n]] += 1
     for n in range(0, len(testQuestions)):
         question = testQuestions[n]
-        if 'how many' in question:
-            typ = 1
-            numberAns[testAnswers[n]] = 1
-        elif question.startswith('what is the color'):
-            typ = 2
-            colorAns[testAnswers[n]] = 1
-        else:
-            typ = 0
-        testCount[typ] += 1
+        testCount[testQuestionTypes[n]] += 1
 
-    print numberAns
-    print colorAns
     print 'Train Questions After Trunk: ', len(trainQuestions)
     print 'Train Question Dist: ', trainCount
-    print 'Train Question Dist: ', np.array(trainCount) / float(len(trainQuestions))
+    print 'Train Question Dist: ', trainCount / float(len(trainQuestions))
     print 'Valid Questions After Trunk: ', len(validQuestions)
     print 'Valid Question Dist: ', validCount
-    print 'Valid Question Dist: ', np.array(validCount) / float(len(validQuestions))
+    print 'Valid Question Dist: ', validCount / float(len(validQuestions))
 
     trainValidQuestionsLen = len(trainQuestions) + len(validQuestions)
     print 'Train+Valid questions: ', trainValidQuestionsLen
-    print 'Train+Valid Dist: ', np.array(trainCount) + np.array(validCount)
-    print 'Trian+Valid Dist: ', (np.array(trainCount) + np.array(validCount)) / float(trainValidQuestionsLen)
+    print 'Train+Valid Dist: ', trainCount + validCount
+    print 'Trian+Valid Dist: ', (trainCount + validCount) / float(trainValidQuestionsLen)
 
     print 'Test Questions After Trunk: ', len(testQuestions)
     print 'Test Question Dist: ', testCount
-    print 'Test Question Dist: ', np.array(testCount) / float(len(testQuestions))
+    print 'Test Question Dist: ', testCount / float(len(testQuestions))
     
+    # Build dictionary based on training questions/answers.
     worddict, idict, _ = buildDict(trainQuestions, 1, pr=False)
     ansdict, iansdict, _ = buildDict(trainAnswers, 0, pr=True)
 
@@ -283,6 +303,27 @@ if __name__ == '__main__':
     print 'Test answer distribution'
     buildDict(testAnswers, 0, pr=True)
 
+    # Shuffle the questions again after applying rare-common answer rejection.
+    r = np.random.RandomState(2)
+    shuffle = r.permutation(len(trainQuestions))
+    trainQuestions = np.array(trainQuestions, dtype=object)[shuffle]
+    trainAnswers = np.array(trainAnswers, dtype=object)[shuffle]
+    trainImgIds = np.array(trainImgIds, dtype=object)[shuffle]
+    trainQuestionTypes = np.array(trainQuestionTypes,dtype=object)[shuffle]
+
+    shuffle = r.permutation(len(validQuestions))
+    validQuestions = np.array(validQuestions, dtype=object)[shuffle]
+    validAnswers = np.array(validAnswers, dtype=object)[shuffle]
+    validImgIds = np.array(validImgIds, dtype=object)[shuffle]
+    validQuestionTypes = np.array(validQuestionTypes, dtype=object)[shuffle]
+
+    shuffle = r.permutation(len(testQuestions))
+    testQuestions = np.array(testQuestions, dtype=object)[shuffle]
+    testAnswers = np.array(testAnswers, dtype=object)[shuffle]
+    testImgIds = np.array(testImgIds, dtype=object)[shuffle]
+    testQuestionTypes = np.array(testQuestionTypes, dtype=object)[shuffle]
+
+    # Build output
     trainInput = combine(\
         lookupQID(trainQuestions, worddict), trainImgIds)
     trainTarget = lookupAnsID(trainAnswers, ansdict)
@@ -303,29 +344,6 @@ if __name__ == '__main__':
             dtype=object))
     np.save(\
         os.path.join(outputFolder, 'test.npy'),\
-        np.array((testInput, testTarget, 0),\
-            dtype=object))
-
-    trainInput = combineAttention(\
-        lookupQID(trainQuestions, worddict), trainImgIds)
-    trainTarget = lookupAnsID(trainAnswers, ansdict)
-    validInput = combineAttention(\
-        lookupQID(validQuestions, worddict), validImgIds)
-    validTarget = lookupAnsID(validAnswers, ansdict)
-    testInput = combineAttention(\
-        lookupQID(testQuestions, worddict), testImgIds)
-    testTarget = lookupAnsID(testAnswers, ansdict)
-
-    np.save(\
-        os.path.join(outputFolder, 'train-att.npy'),\
-        np.array((trainInput, trainTarget, 0),\
-            dtype=object))
-    np.save(\
-        os.path.join(outputFolder, 'valid-att.npy'),\
-        np.array((validInput, validTarget, 0),\
-            dtype=object))
-    np.save(\
-        os.path.join(outputFolder, 'test-toy-att.npy'),\
         np.array((testInput, testTarget, 0),\
             dtype=object))
     np.save(\
