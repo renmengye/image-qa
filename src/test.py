@@ -43,7 +43,7 @@ if __name__ == '__main__':
 
     trainDataFile = os.path.join(dataFolder, 'train.npy')
     testDataFile = os.path.join(dataFolder, 'test.npy')
-    testDataFile = os.path.join(dataFolder, 'vocab-dict.npy')
+    dictFile = os.path.join(dataFolder, 'vocab-dict.npy')
     trainData = np.load(trainDataFile)
     testData = np.load(testDataFile)
     vocabDict = np.load(dictFile)
