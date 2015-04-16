@@ -43,8 +43,10 @@ if __name__ == '__main__':
 
     trainDataFile = os.path.join(dataFolder, 'train.npy')
     testDataFile = os.path.join(dataFolder, 'test.npy')
+    testDataFile = os.path.join(dataFolder, 'vocab-dict.npy')
     trainData = np.load(trainDataFile)
     testData = np.load(testDataFile)
+    vocabDict = np.load(dictFile)
 
     X = trainData[0]
     Y = nn.test(model, X)
@@ -52,7 +54,6 @@ if __name__ == '__main__':
     TX = testData[0]
     TY = nn.test(model, TX)
     TT = testData[1]
-    vocabDict = np.load(dictFile)
     answerArray = vocabDict[3]
     with open(testTruthFile, 'w+') as f:
         for n in range(0, TT.shape[0]):
