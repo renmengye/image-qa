@@ -26,8 +26,8 @@ def decodeQuestion(X, questionArray):
     return sentence
 
 def calcRate(X, Y, T, questionArray):
-    correct = [0, 0, 0]
-    total = [0, 0, 0]
+    correct = np.zeros(4, dtype=int)
+    total = np.zeros(4, dtype=int)
     for n in range(0, X.shape[0]):        
         sortIdx = np.argsort(Y[n], axis=0)
         sortIdx = sortIdx[::-1]
@@ -37,6 +37,8 @@ def calcRate(X, Y, T, questionArray):
             typ = 1
         elif question.startswith('what is the color'):
             typ = 2
+        elif question.startswith('where'):
+            typ = 3
         else:
             typ = 0
         total[typ] += 1
@@ -158,4 +160,4 @@ if __name__ == '__main__':
     with open(testHtmlFilename, 'w+') as f:
         f.writelines(html)
     correct, total = calcRate(TX, TY, TT, vocabDict[1])
-    print correct, total, np.array(correct, dtype=float) / np.array(total, dtype=float)
+    print correct, total, correct / total.astype(float)
