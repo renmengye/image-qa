@@ -13,8 +13,36 @@ import cPickle as pkl
 from nn.func import *
 #plt.ion()
 
-jsonFilename = '../../../data/mscoco/captions_train2014.json'
-imgidDictFilename = '../data/cocoqai-toy/imgid_dict.pkl'
+jsonTrainFilename = '../../../data/mscoco/train/captions.json'
+jsonValidFilename = '../../../data/mscoco/valid/captions.json'
+
+def decodeQuestion(X, questionArray):
+    sentence = ''
+    for t in range(1, X.shape[0]):
+        if X[t, 0] == 0:
+            break
+        sentence += questionArray[X[t, 0]- 1] + ' '
+    sentence += '?'
+    return sentence
+
+def calcRate(X, Y, T, questionArray):
+    correct = [0, 0, 0]
+    total = [0, 0, 0]
+    for n in range(0, X.shape[0]):        
+        sortIdx = np.argsort(Y[n], axis=0)
+        sortIdx = sortIdx[::-1]
+        A = sortIdx[0]
+        question = decodeQuestion(X[n], questionArray)
+        if question.startswith('how many'):
+            typ = 1
+        elif question.startswith('what is the color'):
+            typ = 2
+        else:
+            typ = 0
+        total[typ] += 1
+        if A == T[n, 0]:
+            correct[typ] += 1
+    return correct, total
 
 
 def renderHtml(X, Y, T, questionArray, answerArray, topK, urlDict, imgidDict):
@@ -22,7 +50,7 @@ def renderHtml(X, Y, T, questionArray, answerArray, topK, urlDict, imgidDict):
     htmlList.append('<html><head></head><body>\n')
     htmlList.append('<table style="width:1250px;border=0">')
     imgPerRow = 4
-    for n in range(0, X.shape[0]):
+    for n in range(0, 20000):
         if np.mod(n, imgPerRow) == 0:
             htmlList.append('<tr>')
         imageId = X[n, 0, 0]
@@ -33,12 +61,7 @@ def renderHtml(X, Y, T, questionArray, answerArray, topK, urlDict, imgidDict):
         htmlList.append('<td style="padding-top:0px;height=550px">\
         <div style="width:310px;height:210px;text-align:top;margin-top:0px;\
         padding-top:0px;line-height:0px"><img src="%s" width=300 height=200/></div>\n' % imageFilename)
-        sentence = ''
-        for t in range(1, X.shape[1]):
-            if X[n, t, 0] == 0:
-                break
-            sentence += questionArray[X[n, t, 0]- 1] + ' '
-        sentence += '?'
+        sentence = decodeQuestion(X[n], questionArray)
         htmlList.append('<div style="height:300px;text-align:bottom;overflow:hidden;">Q%d: %s<br/>' % (n + 1, sentence))
         htmlList.append('Top %d answers: (confidence)<br/>' % topK)
         sortIdx = np.argsort(Y[n], axis=0)
@@ -76,32 +99,29 @@ def scan(X):
     return Xend
 
 def readImgDict():
-    with open(jsonFilename) as f:
+    with open(jsonTrainFilename) as f:
         captiontxt = f.read()
-    caption = json.loads(captiontxt)
     urlDict = {}
-    #print len(caption['images'])
+    caption = json.loads(captiontxt)
     for item in caption['images']:
         urlDict[item['id']] = item['url']
-        #print item
-        #print item['id'], item['url']
+
+    with open(jsonValidFilename) as f:
+        captiontxt = f.read()
+    caption = json.loads(captiontxt)
+    for item in caption['images']:
+        urlDict[item['id']] = item['url']
     return urlDict
 
 if __name__ == '__main__':
     """
-    Usage: imageqa_render.py id -train trainData.npy -test testData.npy -dict vocabDict.npy
+    Usage: imageqa_render.py id -data dataFolder
     """
     urlDict = readImgDict()
-    with open(imgidDictFilename, 'rb') as f:
-        imgidDict = pkl.load(f)
     taskId = sys.argv[1]
     for i in range(2, len(sys.argv)):
-        if sys.argv[i] == '-train':
-            trainDataFile = sys.argv[i + 1]
-        elif sys.argv[i] == '-test':
-            testDataFile = sys.argv[i + 1]
-        elif sys.argv[i] == '-dict':
-            dictFile = sys.argv[i + 1]
+        if sys.argv[i] == '-data':
+            dataFolder = sys.argv[i + 1]
     resultFolder = '../results/%s' % taskId
     print taskId
 
@@ -110,15 +130,22 @@ if __name__ == '__main__':
     trainHtmlFilename = os.path.join(resultFolder, '%s.train.o.html' % taskId)
     trainOut = np.load(trainOutputFilename)
     Y = trainOut
-    trainData = np.load(trainDataFile)
-    testData = np.load(testDataFile)
-    vocabDict = np.load(dictFile)
+    trainData = np.load(os.path.join(dataFolder, 'train.npy'))
+    testData = np.load(os.path.join(dataFolder, 'test.npy'))
+    vocabDict = np.load(os.path.join(dataFolder, 'vocab-dict.npy'))
+    imgidDictFilename = os.path.join(dataFolder, 'imgid_dict.pkl')
+
+    with open(imgidDictFilename, 'rb') as f:
+        imgidDict = pkl.load(f)
+
     X = trainData[0]
     T = trainData[1]
     Xend = scan(X)
     html = renderHtml(X, Y, T, vocabDict[1], vocabDict[3], 10, urlDict, imgidDict)
     with open(trainHtmlFilename, 'w+') as f:
         f.writelines(html)
+    correct, total = calcRate(X, Y, T, vocabDict[1])
+    print correct, total, np.array(correct, dtype=float) / np.array(total, dtype=float)
 
     # Test
     testOutputFilename = os.path.join(resultFolder, '%s.test.o.npy' % taskId)
@@ -130,3 +157,5 @@ if __name__ == '__main__':
     html = renderHtml(TX, TY, TT, vocabDict[1], vocabDict[3], 10, urlDict, imgidDict)
     with open(testHtmlFilename, 'w+') as f:
         f.writelines(html)
+    correct, total = calcRate(TX, TY, TT, vocabDict[1])
+    print correct, total, np.array(correct, dtype=float) / np.array(total, dtype=float)
