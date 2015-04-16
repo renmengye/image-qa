@@ -404,6 +404,7 @@ def addStage(stageDict):
             inputNames=inputList,
             mean=np.load(stageDict['mean']),
             std=np.load(stageDict['std']),
+            outputDim=stageDict['outputDim'],
             outputdEdX=outputdEdX
         )
     else:

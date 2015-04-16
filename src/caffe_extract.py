@@ -42,7 +42,7 @@ with open(CATEGORY_FILE) as f:
     for line in f:
         parts = line.split(' ')
         if synsets_dict.has_key(parts[0]):
-            cls_dict[int(parts[1])] = synsets_dict[parts[0])
+            cls_dict[int(parts[1])] = synsets_dict[parts[0]]
         else:
             cls_dict[int(parts[1])] = parts[0]
 

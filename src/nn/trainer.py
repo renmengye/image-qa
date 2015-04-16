@@ -183,6 +183,7 @@ class Trainer:
         bestTscore = None
         bestEpoch = 0
         nAfterBest = 0
+        stop = False
 
         # Train loop through epochs
         for epoch in range(0, numEpoch):
@@ -274,23 +275,28 @@ class Trainer:
                     if nAfterBest > trainOpt['patience']:
                         print 'Patience level reached, early stop.'
                         print 'Will stop at score ', bestTscore
-                        break
+                        stop = True
             else:
                 if trainOpt['saveModel']:
                     self.save()
                 if trainOpt.has_key('stopScore') and Tscore < trainOpt['stopScore']:
                     print 'Training score is lower than %.4f , ealy stop.' % trainOpt['stopScore']
-                    break
+                    stop = True                    
 
             # Anneal learning rate
             self.model.updateLearningParams(epoch)
 
             # Print statistics
             logger.logTrainStats()
-
+            if trainOpt['needValid']:
+                print 'BT: %.4f' % bestTscore
             # Plot train curves
             if trainOpt['plotFigs']:
                 plotter.plot()
+
+            # Terminate
+            if stop:
+                break
 
         # Record final epoch number
         self.stoppedTrainScore = bestTscore

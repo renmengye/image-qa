@@ -49,11 +49,14 @@ def readFlags():
 
 if __name__ == '__main__':
     params = readFlags()
+    
     with open(params['configFilename']) as f:
         trainOpt = yaml.load(f)
+    
     trainData = np.load(params['trainDataFilename'])
     trainInput = trainData[0]
     trainTarget = trainData[1]
+    
     if params['validDataFilename'] is not None:
         validData = np.load(params['validDataFilename'])
         validInput = validData[0]
@@ -61,27 +64,34 @@ if __name__ == '__main__':
     else:
         validInput = None
         validTarget = None
+    
     model = nn.load(params['modelFilename'])
     trainer = nn.Trainer(
-        name=params['name']+'-v',
+        name=params['name']+\
+        ('-v' if params['validDataFilename'] is not None else ''),
         model=model,
         trainOpt=trainOpt,
         outputFolder=params['outputFolder']
     )
 
     trainer.train(trainInput, trainTarget, validInput, validTarget)
-    # Send email
-    if trainOpt.has_key('sendEmail') and trainOpt['sendEmail']:
-        email.appendList(params['outputFolder'], trainer.name)
-
+    
     if params['testDataFilename'] is not None:
         testData = np.load(params['testDataFilename'])
         testInput = testData[0]
         testTarget = testData[1]
         testOutput = nn.test(model, testInput)
         testRate, c, t = nn.calcRate(model, testOutput, testTarget)
-        print 'Before retrain test rate: ', testRate
+        print 'Test rate: ', testRate
+        with open(os.path.join(trainer.outputFolder, 'result.txt'), 'w+') as f:
+            f.write('Test rate: %f' % testRate)
+    
+    # Send email
+    if trainOpt.has_key('sendEmail') and trainOpt['sendEmail']:
+        email.appendList(params['outputFolder'], trainer.name)
 
+    if params['testDataFilename'] is not None and\
+        params['validDataFilename'] is not None:
         # Retrain with all the data
         trainOpt['needValid'] = False
         # trainOpt['numEpoch'] = trainer.stoppedEpoch + 1
@@ -109,10 +119,11 @@ if __name__ == '__main__':
         model.loadWeights(np.load(trainer.modelFilename))
         testOutput = nn.test(model, testInput)
         testRate, c, t = nn.calcRate(model, testOutput, testTarget)
-        print 'After retrain test rate: ', testRate
+        print 'Test rate: ', testRate
 
         with open(os.path.join(trainer.outputFolder, 'result.txt'), 'w+') as f:
             f.write('Test rate: %f' % testRate)
+        
         # Send email
         if trainOpt.has_key('sendEmail') and trainOpt['sendEmail']:
             email.appendList(params['outputFolder'], trainer.name)

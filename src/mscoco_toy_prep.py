@@ -4,6 +4,8 @@ import cPickle as pkl
 import numpy as np
 import operator
 import h5py
+import sys
+from subprocess import call
 
 imgidTrainFilename = '../../../data/mscoco/train/image_list.txt'
 imgidValidFilename = '../../../data/mscoco/valid/image_list.txt'
@@ -12,7 +14,7 @@ qaValidFilename = '../../../data/mscoco/valid/qa.pkl'
 outputFolder = '../data/cocoqa-toy/'
 imgHidFeatTrainFilename = '/ais/gobi3/u/mren/data/mscoco/hidden_oxford_train.h5'
 imgHidFeatValidFilename = '/ais/gobi3/u/mren/data/mscoco/hidden_oxford_valid.h5'
-imgHidFeatOutFilename = '../ais/gobi3/u/mren/data/cocoqa-toy/hidden_oxford.h5'
+imgHidFeatOutFilename = '/ais/gobi3/u/mren/data/cocoqa-toy/hidden_oxford.h5'
 #imgConvFeatOutFilename = '../data/cocoqa/hidden5_4_conv.txt'
 
 def buildDict(lines, keystart, pr=False):
@@ -88,8 +90,8 @@ def lookupAnsID(answers, ansdict):
 
 def lookupQID(questions, worddict):
     wordslist = []
-    #maxlen = 55
-    maxlen = 0
+    maxlen = 39
+    #maxlen = 0
     for q in questions:
         words = q.replace(',', '').split(' ')
         wordslist.append(words)
@@ -139,17 +141,19 @@ if __name__ == '__main__':
     numTrain = 6000
     numValid = 1200
     numTest = 6000
-    # imgHidFeat = h5py.File(imgHidFeatTrainFilename)
-    # hidFeat = imgHidFeat['hidden7'][0 : numTrain]
-    # imgHidFeat = h5py.File(imgHidFeatValidFilename)
-    # hidFeat = np.concatenate((hidFeat, imgHidFeat[0 : numValid + numTest]))
-    # imgOutFile = h5py.File(imgHidFeatOutFilename, 'w')
-    # imgOutFile['hidden7'] = hidFeat
-
+    imgHidFeat = h5py.File(imgHidFeatTrainFilename)
+    hidFeatTrain = imgHidFeat['hidden7'][0 : numTrain]
+    imgHidFeat = h5py.File(imgHidFeatValidFilename)
+    hidFeatValid = imgHidFeat['hidden7'][0 : numValid + numTest]
+    hidFeat = np.concatenate((hidFeatTrain, hidFeatValid), axis=0)
+    imgOutFile = h5py.File(imgHidFeatOutFilename, 'w')
+    imgOutFile['hidden7'] = hidFeat
+    
     with open(imgidTrainFilename) as f:
         lines = f.readlines()
     trainLen = numTrain
     totalTrainLen = len(lines)
+    
     with open(imgidValidFilename) as f:
         lines.extend(f.readlines())
     validLen = totalTrainLen + numValid
@@ -361,3 +365,16 @@ if __name__ == '__main__':
 
     with open(os.path.join(outputFolder, 'imgid_dict.pkl'), 'wb') as f:
         pkl.dump(imgidDict3, f)
+
+    call(['python', 'word2vec_lookup.py', 
+        os.path.join(outputFolder, 'question_vocabs.txt'), 
+        os.path.join(outputFolder, 'question_vocabs_vec.npy')])
+    call(['python', 'word2vec_lookup.py', 
+        os.path.join(outputFolder, 'answer_vocabs.txt'), 
+        os.path.join(outputFolder, 'answer_vocabs_vec.npy')])
+    call(['python', 'word_embedding.py', 
+        os.path.join(outputFolder, 'question_vocabs_vec.npy'), 
+        os.path.join(outputFolder, 'word-embed-q.npy', '0', 'no')])
+    call(['python', 'word_embedding.py', 
+        os.path.join(outputFolder, 'answer_vocabs_vec.npy'), 
+        os.path.join(outputFolder, 'word-embed-a.npy', '0', 'no')])
