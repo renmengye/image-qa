@@ -24,16 +24,14 @@ def calcPrecision(Y, T):
 
 if __name__ == '__main__':
     """
-    Usage: test.py id -train trainData.npy -test testData.npy -dict vocabDict.npy
+    Usage: test.py id -data dataFolder
     """
     taskId = sys.argv[1]
     for i in range(2, len(sys.argv)):
-        if sys.argv[i] == '-train':
-            trainDataFile = sys.argv[i + 1]
-        elif sys.argv[i] == '-test':
-            testDataFile = sys.argv[i + 1]
-        elif sys.argv[i] == '-dict':
-            dictFile = sys.argv[i + 1]
+        if sys.argv[i] == '-data':
+            dataFolder = sys.argv[i + 1]
+
+    resultFolder = '../results/%s' % taskId
     trainOutFile = os.path.join('../results/%s' % taskId, '%s.train.o.npy' % taskId)
     testOutFile = os.path.join('../results/%s' % taskId, '%s.test.o.npy' % taskId)
     testAnswerFile = os.path.join('../results/%s' % taskId, '%s.test.o.txt' % taskId)
@@ -42,6 +40,9 @@ if __name__ == '__main__':
     model = nn.load(modelFile)
     model.loadWeights(
         np.load('../results/%s/%s.w.npy' % (taskId, taskId)))
+
+    trainDataFile = os.path.join(dataFolder, 'train.npy')
+    testDataFile = os.path.join(dataFolder, 'test.npy')
     trainData = np.load(trainDataFile)
     testData = np.load(testDataFile)
 

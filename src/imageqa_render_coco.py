@@ -50,7 +50,7 @@ def renderHtml(X, Y, T, questionArray, answerArray, topK, urlDict, imgidDict):
     htmlList.append('<html><head></head><body>\n')
     htmlList.append('<table style="width:1250px;border=0">')
     imgPerRow = 4
-    for n in range(0, 20000):
+    for n in range(0, np.min(20000, X.shape[0])):
         if np.mod(n, imgPerRow) == 0:
             htmlList.append('<tr>')
         imageId = X[n, 0, 0]
