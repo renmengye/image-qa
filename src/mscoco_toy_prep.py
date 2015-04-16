@@ -214,7 +214,7 @@ if __name__ == '__main__':
     colorAnswer = 'white'
     numberAnswer = 'two'
     objectAnswer = 'cat'
-    locationAnswer = 'kitchen'
+    locationAnswer = 'room'
 
     for item in qaAll:
         imgid = item[2]
@@ -291,14 +291,6 @@ if __name__ == '__main__':
     for n in range(0, len(testQuestions)):
         question = testQuestions[n]
         testCount[testQuestionTypes[n]] += 1
-        if testQuestionTypes[n] == 0:
-            baseline.append(objectAnswer)
-        elif testQuestionTypes[n] == 1:
-            baseline.append(numberAnswer)
-        elif testQuestionTypes[n] == 2:
-            baseline.append(colorAnswer)
-        elif testQuestionTypes[n] == 3:
-            baseline.append(locationAnswer)
 
     print 'Train Questions After Trunk: ', len(trainQuestions)
     print 'Train Question Dist: ', trainCount
@@ -344,6 +336,16 @@ if __name__ == '__main__':
     testAnswers = np.array(testAnswers, dtype=object)[shuffle]
     testImgIds = np.array(testImgIds, dtype=object)[shuffle]
     testQuestionTypes = np.array(testQuestionTypes, dtype=object)[shuffle]
+
+    for n in range(0, len(testQuestions)):
+        if testQuestionTypes[n] == 0:
+            baseline.append(objectAnswer)
+        elif testQuestionTypes[n] == 1:
+            baseline.append(numberAnswer)
+        elif testQuestionTypes[n] == 2:
+            baseline.append(colorAnswer)
+        elif testQuestionTypes[n] == 3:
+            baseline.append(locationAnswer)
 
     maxlen = findMaxlen(np.concatenate((trainQuestions, validQuestions, testQuestions)))
     # Build output

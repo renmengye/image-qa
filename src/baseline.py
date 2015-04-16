@@ -1,45 +1,35 @@
 import sys
+import numpy as np
 
-if len(sys.argv) < 6:
-    colorAnswer = 'white'
-    numberAnswer = 'two'
-    objectAnswer = 'table'
-    locationAnswer = 'kitchen'
-    gtFile = '../gt.txt'
-    outFile = '../guess.txt'
-else:
-    colorAnswer = sys.argv[1]
-    numberAnswer = sys.argv[2]
-    objectAnswer = sys.argv[3]
-    gtFile = sys.argv[4]
-    outFile = sys.argv[5]
+outFile = sys.argv[1]
+gtFile = sys.argv[2]
 
 with open(gtFile) as f:
     gt = f.readlines()
+with open(outFile) as f:
+    out = f.readlines()
 
-correct = 0
-total = len(gt)
-with open(outFile, 'w') as f:
-    for item in gt:
-        answer = item[:-1]
-        if answer == 'one' or answer == 'two' or answer == 'three' or\
-            answer == 'four' or answer == 'five' or answer == 'six' or\
-            answer == 'seven' or answer == 'eight' or answer == 'nine' or\
-            answer == 'ten' or answer == 'eleven' or answer == 'twelve' or\
-            answer == 'thirteen' or answer == 'fourteen' or answer == 'fifteen' or\
-            answer == 'sixteen' or answer == 'seventeen' or answer == 'eighteen' or\
-            answer == 'nineteen' or answer == 'twenty' or answer == 'twenty-one' or\
-            answer == 'twenty-two' or answer == 'twenty-three' or answer == 'twenty-four' or\
-            answer == 'twenty-five' or answer == 'twenty-six' or answer == 'twenty-seven':
-            f.write(numberAnswer + '\n')
-            if answer == numberAnswer: correct += 1
-        elif answer == 'red' or answer == 'orange' or answer == 'yellow' or\
-            answer == 'green' or answer == 'blue' or answer == 'black' or\
-            answer == 'white' or answer == 'brown' or answer == 'grey' or\
-            answer == 'gray' or answer == 'purple' or answer == 'pink':
-            f.write(colorAnswer + '\n')
-            if answer == colorAnswer: correct += 1
-        else:
-            f.write(objectAnswer + '\n')
-            if answer == objectAnswer: correct += 1
-print correct / float(total)
+colorAnswer = 'white'
+numberAnswer = 'two'
+objectAnswer = 'cat'
+locationAnswer = 'room'
+
+correct = np.zeros(4)
+total = np.zeros(4)
+
+for item in zip(out, gt):
+    answer = item[0]
+    if answer.startswith(objectAnswer):
+        if answer == item[1]: correct[0] += 1
+        total[0] += 1
+    elif answer.startswith(numberAnswer):
+        if answer == item[1]: correct[1] += 1
+        total[1] += 1
+    elif answer.startswith(colorAnswer):
+        if answer == item[1]: correct[2] += 1
+        total[2] += 1
+    elif answer.startswith(locationAnswer):
+        if answer == item[1]: correct[3] += 1
+        total[3] += 1
+
+print correct, total, correct / total.astype(float)
