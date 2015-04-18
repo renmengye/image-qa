@@ -33,7 +33,7 @@ def calcRate(X, Y, T, questionArray):
         sortIdx = sortIdx[::-1]
         A = sortIdx[0]
         question = decodeQuestion(X[n], questionArray)
-        if question.startswith('how many'):
+        if 'how many' in question:
             typ = 1
         elif question.startswith('what is the color'):
             typ = 2

@@ -17,17 +17,17 @@ int main(int argc, char **argv) {
     printf("Usage: ./distance <FILE>\nwhere FILE contains word projections in the BINARY FORMAT\n");
     return 0;
   }
-  strcpy_s(file_name, max_size, argv[1]);
-  fopen_s(&f, file_name, "rb");
+  strcpy(file_name, argv[1]);
+  f = fopen(file_name, "rb");
   if (f == NULL) {
     printf("Input file not found\n");
     return -1;
   }
-  fscanf_s(f, "%lld", &words);
-  fscanf_s(f, "%lld", &size);
+  fscanf(f, "%lld", &words);
+  fscanf(f, "%lld", &size);
   cursor += 2 * sizeof(long long);
   FILE *vocab_file;
-  fopen_s(&vocab_file, "vocab_index.txt", "w+");
+  vocab_file = fopen("vocab_index.txt", "w+");
   vocab = (char *)malloc((long long)words * max_w * sizeof(char));
 
   for (b = 0; b < words; b++) {

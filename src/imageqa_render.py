@@ -5,6 +5,25 @@ from nn.func import *
 
 imageFolder = '../../data/nyu-depth-v2/jpg/'
 
+def calcRate(X, Y, T, questionArray):
+    correct = np.zeros(4, dtype=int)
+    total = np.zeros(4, dtype=int)
+    for n in range(0, X.shape[0]):        
+        sortIdx = np.argsort(Y[n], axis=0)
+        sortIdx = sortIdx[::-1]
+        A = sortIdx[0]
+        question = decodeQuestion(X[n], questionArray)
+        if 'how many' in question:
+            typ = 1
+        elif 'what' in question and 'color' in question:
+            typ = 2
+        else:
+            typ = 0
+        total[typ] += 1
+        if A == T[n, 0]:
+            correct[typ] += 1
+    return correct, total
+
 def renderHtml(X, Y, T, questionArray, answerArray, topK):
     htmlList = []
     htmlList.append('<html><head></head><body>\n')
@@ -53,26 +72,27 @@ if __name__ == '__main__':
     """
     taskId = sys.argv[1]
     for i in range(2, len(sys.argv)):
-        if sys.argv[i] == '-train':
-            trainDataFile = sys.argv[i + 1]
-        elif sys.argv[i] == '-test':
-            testDataFile = sys.argv[i + 1]
-        elif sys.argv[i] == '-dict':
-            dictFile = sys.argv[i + 1]
+        if sys.argv[i] == '-data':
+            dataFolder = sys.argv[i + 1]
     resultFolder = '../results/%s' % taskId
+    print taskId
 
     # Train
     trainOutputFilename = os.path.join(resultFolder, '%s.train.o.npy' % taskId)
     trainHtmlFilename = os.path.join(resultFolder, '%s.train.o.html' % taskId)
-    Y = np.load(trainOutputFilename)
-    trainData = np.load(trainDataFile)
-    testData = np.load(testDataFile)
-    vocabDict = np.load(dictFile)
+    trainOut = np.load(trainOutputFilename)
+    Y = trainOut
+    trainData = np.load(os.path.join(dataFolder, 'train.npy'))
+    testData = np.load(os.path.join(dataFolder, 'test.npy'))
+    vocabDict = np.load(os.path.join(dataFolder, 'vocab-dict.npy'))
+
     X = trainData[0]
     T = trainData[1]
     html = renderHtml(X, Y, T, vocabDict[1], vocabDict[3], 10)
     with open(trainHtmlFilename, 'w+') as f:
         f.writelines(html)
+    correct, total = calcRate(X, Y, T, vocabDict[1])
+    print correct, total, np.array(correct, dtype=float) / np.array(total, dtype=float)
 
     # Test
     testOutputFilename = os.path.join(resultFolder, '%s.test.o.npy' % taskId)
@@ -83,3 +103,5 @@ if __name__ == '__main__':
     html = renderHtml(TX, TY, TT, vocabDict[1], vocabDict[3], 10)
     with open(testHtmlFilename, 'w+') as f:
         f.writelines(html)
+    correct, total = calcRate(TX, TY, TT, vocabDict[1])
+    print correct, total, correct / total.astype(float)
