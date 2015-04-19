@@ -5,6 +5,15 @@ from nn.func import *
 
 imageFolder = '../../data/nyu-depth-v2/jpg/'
 
+def decodeQuestion(X, questionArray):
+    sentence = ''
+    for t in range(1, X.shape[0]):
+        if X[t, 0] == 0:
+            break
+        sentence += questionArray[X[t, 0]- 1] + ' '
+    sentence += '?'
+    return sentence
+    
 def calcRate(X, Y, T, questionArray):
     correct = np.zeros(4, dtype=int)
     total = np.zeros(4, dtype=int)

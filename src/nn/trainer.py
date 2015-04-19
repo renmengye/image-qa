@@ -129,7 +129,8 @@ class Trainer:
         self.name = name + time.strftime("-%Y%m%d-%H%M%S")
         self.resultsFolder = outputFolder
         self.outputFolder = os.path.join(outputFolder, self.name)
-        self.modelFilename = os.path.join(self.outputFolder, self.name + '.w.npy')
+        self.modelFilename = \
+            os.path.join(self.outputFolder, self.name + '.w.npy')
         self.trainOpt = trainOpt
         self.startTime = time.time()
         self.random = np.random.RandomState(seed)
@@ -220,7 +221,8 @@ class Trainer:
 
                 # Prediction error
                 if calcError:
-                    rate_, correct_, total_ = tester.calcRate(self.model, Y_bat, T_bat)
+                    rate_, correct_, total_ = \
+                        tester.calcRate(self.model, Y_bat, T_bat)
                     correct += correct_
                     total += total_
 
@@ -240,7 +242,8 @@ class Trainer:
                 elif trainOpt['criterion'] == 'rate':
                     Tscore = 1 - rate
                 else:
-                    raise Exception('Unknown stopping criterion "%s"' % trainOpt['criterion'])
+                    raise Exception('Unknown stopping criterion "%s"' % \
+                        trainOpt['criterion'])
 
             # Run validation
             if trainOpt['needValid']:
@@ -260,7 +263,8 @@ class Trainer:
                     elif trainOpt['criterion'] == 'rate':
                         Vscore = 1 - Vrate
                     else:
-                        raise Exception('Unknown stopping criterion "%s"' % trainOpt['criterion'])
+                        raise Exception('Unknown stopping criterion "%s"' % \
+                            trainOpt['criterion'])
                 if (bestVscore is None) or (Vscore < bestVscore):
                     bestVscore = Vscore
                     bestTscore = Tscore
@@ -279,8 +283,8 @@ class Trainer:
             else:
                 if trainOpt['saveModel']:
                     self.save()
-                if trainOpt.has_key('stopScore') and Tscore < trainOpt['stopScore']:
-                    print 'Training score is lower than %.4f , ealy stop.' % trainOpt['stopScore']
+                if trainOpt.has_key('stopScore') and \
+                    Tscore < trainOpt['stopScore']:
                     stop = True                    
 
             # Anneal learning rate
@@ -290,12 +294,15 @@ class Trainer:
             logger.logTrainStats()
             if trainOpt['needValid']:
                 print 'BT: %.4f' % bestTscore
+            
             # Plot train curves
             if trainOpt['plotFigs']:
                 plotter.plot()
 
             # Terminate
             if stop:
+                print 'Training score is lower than %.4f , ealy stop.' % \
+                trainOpt['stopScore']                
                 break
 
         # Record final epoch number
@@ -306,4 +313,3 @@ class Trainer:
         if filename is None:
             filename = self.modelFilename
         np.save(filename, self.model.getWeights())
-        pass

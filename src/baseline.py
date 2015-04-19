@@ -9,9 +9,14 @@ with open(gtFile) as f:
 with open(outFile) as f:
     out = f.readlines()
 
+# colorAnswer = 'white'
+# numberAnswer = 'two'
+# objectAnswer = 'cat'
+# locationAnswer = 'room'
+
 colorAnswer = 'white'
 numberAnswer = 'two'
-objectAnswer = 'cat'
+objectAnswer = 'table'
 locationAnswer = 'room'
 
 correct = np.zeros(4)

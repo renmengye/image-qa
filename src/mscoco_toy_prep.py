@@ -2,10 +2,7 @@ import re
 import os
 import cPickle as pkl
 import numpy as np
-import operator
 import h5py
-import sys
-from subprocess import call
 
 imgidTrainFilename = '../../../data/mscoco/train/image_list.txt'
 imgidValidFilename = '../../../data/mscoco/valid/image_list.txt'
@@ -69,10 +66,9 @@ def removeQuestions(answers, lowerBound, upperBound=100):
                 answerfreq2[answerdict[answers[i]]] += 1
             else:
                 # Exponential distribution
-                prob = np.exp(-(answerfreq2[answerdict[answers[i]]] - upperBound) / float(2 * upperBound))
-                #prob = 1 - (answerfreq2[answerdict[answers[i]]] - 100) / float(1500)
+                prob = np.exp(-(answerfreq2[answerdict[answers[i]]] - \
+                    upperBound) / float(2 * upperBound))
                 r = random.uniform(0, 1, [1])
-                #print 'Prob', prob, 'freq', answerfreq2[answerdict[answers[i]]], 'random', r
                 if r < prob:
                     survivor.append(i)
                     answerfreq2[answerdict[answers[i]]] += 1
@@ -392,16 +388,3 @@ if __name__ == '__main__':
     with open(os.path.join(outputFolder, 'baseline.txt'), 'w+') as f:
         for answer in baseline:
             f.write(answer + '\n')
-
-    call(['python', 'word2vec_lookup.py', 
-        os.path.join(outputFolder, 'question_vocabs.txt'), 
-        os.path.join(outputFolder, 'question_vocabs_vec.npy')])
-    call(['python', 'word2vec_lookup.py', 
-        os.path.join(outputFolder, 'answer_vocabs.txt'), 
-        os.path.join(outputFolder, 'answer_vocabs_vec.npy')])
-    call(['python', 'word_embedding.py', 
-        os.path.join(outputFolder, 'question_vocabs_vec.npy'), 
-        os.path.join(outputFolder, 'word-embed-q.npy', '0', 'no')])
-    call(['python', 'word_embedding.py', 
-        os.path.join(outputFolder, 'answer_vocabs_vec.npy'), 
-        os.path.join(outputFolder, 'word-embed-a.npy', '0', 'no')])
