@@ -147,13 +147,15 @@ if __name__ == '__main__':
     numTrain = 6000
     numValid = 1200
     numTest = 6000
-    imgHidFeat = h5py.File(imgHidFeatTrainFilename)
-    hidFeatTrain = imgHidFeat['hidden7'][0 : numTrain]
-    imgHidFeat = h5py.File(imgHidFeatValidFilename)
-    hidFeatValid = imgHidFeat['hidden7'][0 : numValid + numTest]
-    hidFeat = np.concatenate((hidFeatTrain, hidFeatValid), axis=0)
+    imgHidFeatTrain = h5py.File(imgHidFeatTrainFilename)
+    imgHidFeatValid = h5py.File(imgHidFeatValidFilename)
     imgOutFile = h5py.File(imgHidFeatOutFilename, 'w')
-    imgOutFile['hidden7'] = hidFeat
+    
+    for name in ['hidden7', 'hidden6', 'hidden5_maxpool']:
+        hidFeatTrain = imgHidFeatTrain[name][0 : numTrain]
+        hidFeatValid = imgHidFeatValid[name][0 : numValid + numTest]
+        hidFeat = np.concatenate((hidFeatTrain, hidFeatValid), axis=0)
+        imgOutFile[name] = hidFeat
     
     with open(imgidTrainFilename) as f:
         lines = f.readlines()

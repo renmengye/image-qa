@@ -53,7 +53,7 @@ if _useGpu == 'auto':
 if _useGpu == 'yes':
  import cudamat as _cudamat
 elif _useGpu == 'no':
- import npmat as _cudamat
+ #import npmat as _cudamat
  _precision = _os.environ.get('GNUMPY_CPU_PRECISION', '32')
  assert _precision in ('32', '64', '128'), 'environment variable GNUMPY_CPU_PRECISION, if present, should have value 32, 64, or 128.'
  _cudamat.__DTYPE__ = eval('numpy.float'+_precision)
