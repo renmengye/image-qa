@@ -4,6 +4,7 @@ import cPickle as pkl
 import numpy as np
 import h5py
 import sys
+from scipy import sparse
 
 imgidTrainFilename = '../../../data/mscoco/train/image_list.txt'
 imgidValidFilename = '../../../data/mscoco/valid/image_list.txt'
@@ -172,10 +173,12 @@ if __name__ == '__main__':
                 hidFeat = np.concatenate((hidFeatTrain, hidFeatValid), axis=0)
                 imgOutFile[name] = hidFeat
             hidden7Train = imgOutFile['hidden7'][0 : numTrain]
-            mean = numpy.mean(hidden7Train, axis=0)
-            std = numpy.std(hidden7Train, axis=0)
+            mean = np.mean(hidden7Train, axis=0)
+            std = np.std(hidden7Train, axis=0)
+            for i in range(std.shape[0]):
+                if std[i] == 0.0: std[i] = 1.0
             hidden7Ms = (imgOutFile['hidden7'][:] - mean) / std
-            imgOutFile['hidden7_ms'] = hidden7Ms
+            imgOutFile['hidden7_ms'] = hidden7Ms.astype('float32')
         else:
             print 'Not building image features'
         
@@ -207,18 +210,27 @@ if __name__ == '__main__':
             imgHidFeatTrain = h5py.File(imgHidFeatTrainFilename)
             imgHidFeatValid = h5py.File(imgHidFeatValidFilename)
             imgOutFile = h5py.File(imgHidFeatOutFilename, 'w')
-            
+            numTrain = 0
+
             for name in ['hidden7', 'hidden6', 'hidden5_maxpool']:
                 hidFeatTrain = imgHidFeatTrain[name][:]
+                if name == 'hidden7':
+                    numTrain = hidFeatTrain.shape[0]
                 hidFeatValid = imgHidFeatValid[name][:]
                 hidFeat = np.concatenate((hidFeatTrain, hidFeatValid), axis=0)
-                imgOutFile[name] = hidFeat
+                hidFeatSparse = sparse.csr_matrix(hidFeat)
+                imgOutFile[name + '_shape'] = hidFeatSparse._shape
+                imgOutFile[name + '_data'] = hidFeatSparse.data
+                imgOutFile[name + 'indices'] = hidFeatSparse.indices
+                imgOutFile[name + 'indptr'] = hidFeatSparse.indptr
 
             hidden7Train = imgOutFile['hidden7'][0 : numTrain]
-            mean = numpy.mean(hidden7Train, axis=0)
-            std = numpy.std(hidden7Train, axis=0)
-            hidden7Ms = (imgOutFile['hidden7'][:] - mean) / std
-            imgOutFile['hidden7_ms'] = hidden7Ms
+            mean = np.mean(hidden7Train, axis=0)
+            std = np.std(hidden7Train, axis=0)
+            for i in range(std.shape[0]):
+                if std[i] == 0.0: std[i] = 1.0
+            imgOutFile['hidden7_mean'] = mean.astype('float32')
+            imgOutFile['hidden7_std'] = std.astype('float32')
         else:
             print 'Not building image features'
 

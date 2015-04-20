@@ -578,7 +578,8 @@ class Conv1D_Tests(StageTests):
         X = random.uniform(-0.1, 0.1, (N, T, D))
         Y = self.stage.forward(X)
         filters = self.stage.W.reshape(S, D, F)
-
+        if self.stage.gpu:
+            filters = gpu.as_numpy_array(filters)
         Y2 = np.zeros(Y.shape)
         for f in range(F):
             for d in range(D):
@@ -672,55 +673,54 @@ class Normalize_Tests(StageTests):
         X = np.random.rand(3, 5)
         T = np.random.rand(3, 5)
         dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
-        print dEdX / dEdXTmp
         self.chkgrd(dEdX, dEdXTmp)
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    # suite.addTests(
-    #     unittest.TestLoader().loadTestsFromTestCase(LSTM_MultiErr_Tests))
-    # suite.addTests(
-    #     unittest.TestLoader().loadTestsFromTestCase(LSTM_MultiErrCutZero_Tests))
-    # suite.addTests(
-    #     unittest.TestLoader().loadTestsFromTestCase(LSTM_SingleErr_Tests))
-    # suite.addTests(
-    #     unittest.TestLoader().loadTestsFromTestCase(LSTM_SingleErrCutZero_Tests))
-    # suite.addTests(
-    #     unittest.TestLoader().loadTestsFromTestCase(MapIdentity_Tests))
-    # suite.addTests(
-    #     unittest.TestLoader().loadTestsFromTestCase(MapSigmoid_Tests))
-    # suite.addTests(
-    #     unittest.TestLoader().loadTestsFromTestCase(MapSigmoid_CrossEnt_Tests))
-    # suite.addTests(
-    #     unittest.TestLoader().loadTestsFromTestCase(MapSoftmax_Tests))
-    # suite.addTests(
-    #     unittest.TestLoader().loadTestsFromTestCase(MapRelu_Tests))
-    # suite.addTests(
-    #     unittest.TestLoader().loadTestsFromTestCase(MapSoftmax_CrossEnt_Tests))
-    # suite.addTests(
-    #     unittest.TestLoader().loadTestsFromTestCase(LUT_Tests))
-    # suite.addTests(
-    #     unittest.TestLoader().loadTestsFromTestCase(InnerProduct_Tests))
-    # suite.addTests(
-    #     unittest.TestLoader().loadTestsFromTestCase(Reshape_Tests))
-    # suite.addTests(
-    #     unittest.TestLoader().loadTestsFromTestCase(Sum_Tests))
-    # suite.addTests(
-    #     unittest.TestLoader().loadTestsFromTestCase(ElementProduct_Tests))
-    # suite.addTests(
-    #     unittest.TestLoader().loadTestsFromTestCase(Active_Tests))
-    # suite.addTests(
-    #     unittest.TestLoader().loadTestsFromTestCase(CosSimilarity_Tests))
-    # suite.addTests(
-    #       unittest.TestLoader().loadTestsFromTestCase(Selector_Tests))
-    # suite.addTests(
-    #       unittest.TestLoader().loadTestsFromTestCase(SumProduct_Tests))
-    # suite.addTests(
-    #       unittest.TestLoader().loadTestsFromTestCase(Conv1D_Tests))
-    # suite.addTests(
-    #       unittest.TestLoader().loadTestsFromTestCase(MaxPool1D_Tests))
-    # suite.addTests(
-    #       unittest.TestLoader().loadTestsFromTestCase(MeanPool1D_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(LSTM_MultiErr_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(LSTM_MultiErrCutZero_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(LSTM_SingleErr_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(LSTM_SingleErrCutZero_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(MapIdentity_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(MapSigmoid_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(MapSigmoid_CrossEnt_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(MapSoftmax_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(MapRelu_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(MapSoftmax_CrossEnt_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(LUT_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(InnerProduct_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(Reshape_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(Sum_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(ElementProduct_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(Active_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(CosSimilarity_Tests))
+    suite.addTests(
+          unittest.TestLoader().loadTestsFromTestCase(Selector_Tests))
+    suite.addTests(
+          unittest.TestLoader().loadTestsFromTestCase(SumProduct_Tests))
+    suite.addTests(
+          unittest.TestLoader().loadTestsFromTestCase(Conv1D_Tests))
+    suite.addTests(
+          unittest.TestLoader().loadTestsFromTestCase(MaxPool1D_Tests))
+    suite.addTests(
+          unittest.TestLoader().loadTestsFromTestCase(MeanPool1D_Tests))
     suite.addTests(
           unittest.TestLoader().loadTestsFromTestCase(Normalize_Tests))
     unittest.TextTestRunner(verbosity=2).run(suite)

@@ -3,6 +3,12 @@ import os
 use_gpu = os.environ.get('GNUMPY_USE_GPU', 'yes') == 'yes'
 
 class LUT(Stage):
+    """
+    Look-up table.
+    WARNING: this implementation of LUT is index 1-based.
+    0 will mean an all-zero entry.
+    The first row of the weight matrix is one.
+    """
     def __init__(self,
                  inputNames,
                  inputDim,
@@ -48,13 +54,7 @@ class LUT(Stage):
         if needInit:
             self.W = None
         else:
-            if sparse:
-                initWeights = np.array(initWeights.todense())
-                self.W = np.concatenate(
-                    (np.zeros((1, outputDim)), initWeights), axis=0)
-            else:
-                self.W = np.concatenate(
-                    (np.zeros((1, outputDim)), initWeights), axis=0)
+            self.W = initWeights
             if self.gpu:
                 self.W = self.W.astype('float32')
         self.X = 0
@@ -63,11 +63,9 @@ class LUT(Stage):
         self.dEdW = 0.0
 
     def initWeights(self):
-        self.W = np.concatenate(
-            (np.zeros((1, self.outputDim)),
-             self.random.uniform(
+        self.W = self.random.uniform(
             -self.initRange/2.0, self.initRange/2.0,
-            (self.inputDim, self.outputDim))), axis=0)
+            (self.inputDim, self.outputDim))
         if self.gpu:
             self.W = self.W.astype('float32')
 
@@ -78,7 +76,12 @@ class LUT(Stage):
         X = X.reshape(X.size)
         Y = np.zeros((X.shape[0], self.outputDim), self.W.dtype)
         for n in range(0, X.shape[0]):
-             Y[n] = self.W[X[n]]
+            if self.sparse:
+                if X[n] != 0:
+                    Y[n] = self.W[X[n] - 1].todense()
+            else:
+                if X[n] != 0:
+                    Y[n] = self.W[X[n] - 1]
         return Y
 
     def backward(self, dEdY):
@@ -86,9 +89,7 @@ class LUT(Stage):
         if self.learningRate > 0.0:
             self.dEdW = np.zeros(self.W.shape, self.W.dtype)
             for n in range(0, X.shape[0]):
-                self.dEdW[X[n]] += dEdY[n]
-            # Freeze 0th row
-            self.dEdW[0, :] = np.zeros(self.outputDim)
+                self.dEdW[X[n] - 1] += dEdY[n]
         if self.outputdEdX:
             return np.zeros(X.shape)
         else:

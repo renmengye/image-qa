@@ -59,18 +59,25 @@ def addStage(stageDict):
     
     if stageDict.has_key('initWeights'):
         if stageDict.has_key('format'):
-            if stageDict['format'] == 'sparse':
-                with open(stageDict['initWeights'], 'rb') as f:
-                    initWeights = pickle.load(f)
-            elif stageDict['format'] == 'plain':
+            if stageDict['format'] == 'plain':
                 initWeights = np.loadtxt(stageDict['initWeights'])
             elif stageDict['format'] == 'h5':
                 initWeightsFile = h5py.File(stageDict['initWeights'])
-                initWeights = initWeightsFile[stageDict['h5key']][:]
+                if stageDict.has_key('sparse') and stageDict['sparse']:
+                    key = stageDict['h5key']
+                    iwShape = initWeightsFile[key + '_shape'][:]
+                    iwData = initWeightsFile[key + '_data'][:]
+                    iwInd = initWeightsFile[key + '_indices'][:]
+                    iwPtr = initWeightsFile[key + '_indptr'][:]
+                    initWeights = sparse.csr_matrix(
+                        (iwData, iwInd, iwPtr), shape=iwShape)
+                else:
+                    initWeights = initWeightsFile[stageDict['h5key']][:]
             elif stageDict['format'] == 'numpy':
                 initWeights = np.load(stageDict['initWeights'])
             else:
-                raise Exception('Unknown weight matrix format: %s' % stageDict['format'])
+                raise Exception(
+                    'Unknown weight matrix format: %s' % stageDict['format'])
         else:
             initWeights = np.load(stageDict['initWeights'])
     else:
@@ -157,8 +164,10 @@ def addStage(stageDict):
             initSeed=initSeed,
             initRange=initRange,
             initWeights=initWeights,
-            intConversion=stageDict['intConversion'] if stageDict.has_key('intConversion') else False,
-            sparse=stageDict['format'] == 'sparse' if stageDict.has_key('format') else False,
+            intConversion=stageDict['intConversion'] if \
+            stageDict.has_key('intConversion') else False,
+            sparse=stageDict['sparse'] == True if \
+            stageDict.has_key('sparse') else False,
             needInit=needInit,
             learningRate=learningRate,
             learningRateAnnealConst=learningRateAnnealConst,
