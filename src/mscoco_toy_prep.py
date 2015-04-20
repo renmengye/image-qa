@@ -74,7 +74,6 @@ def removeQuestions(answers, lowerBound, upperBound=100):
                     answerfreq2[answerdict[answers[i]]] += 1
     return survivor
 
-
 def lookupAnsID(answers, ansdict):
     ansids = []
     for ans in answers:
@@ -143,25 +142,25 @@ if __name__ == '__main__':
     numTrain = 6000
     numValid = 1200
     numTest = 6000
-    imgHidFeatTrain = h5py.File(imgHidFeatTrainFilename)
-    imgHidFeatValid = h5py.File(imgHidFeatValidFilename)
-    imgOutFile = h5py.File(imgHidFeatOutFilename, 'w')
+    # imgHidFeatTrain = h5py.File(imgHidFeatTrainFilename)
+    # imgHidFeatValid = h5py.File(imgHidFeatValidFilename)
+    # imgOutFile = h5py.File(imgHidFeatOutFilename, 'w')
     
-    for name in ['hidden7', 'hidden6', 'hidden5_maxpool']:
-        hidFeatTrain = imgHidFeatTrain[name][0 : numTrain]
-        hidFeatValid = imgHidFeatValid[name][0 : numValid + numTest]
-        hidFeat = np.concatenate((hidFeatTrain, hidFeatValid), axis=0)
-        imgOutFile[name] = hidFeat
+    # for name in ['hidden7', 'hidden6', 'hidden5_maxpool']:
+    #     hidFeatTrain = imgHidFeatTrain[name][0 : numTrain + numValid]
+    #     hidFeatValid = imgHidFeatValid[name][0 : numTest]
+    #     hidFeat = np.concatenate((hidFeatTrain, hidFeatValid), axis=0)
+    #     imgOutFile[name] = hidFeat
     
     with open(imgidTrainFilename) as f:
         lines = f.readlines()
     trainLen = numTrain
+    validLen = trainLen + numValid
     totalTrainLen = len(lines)
     
     with open(imgidValidFilename) as f:
         lines.extend(f.readlines())
-    validLen = totalTrainLen + numValid
-    testLen = validLen + numTest
+    testLen = totalTrainLen + numTest
 
     imgidDict = {} # Mark for train/valid/test.
     imgidDict2 = {} # Reindex the image, 1-based.
@@ -177,14 +176,14 @@ if __name__ == '__main__':
         imgidDict2[imgid] = len(imgidDict3) + 1
         imgidDict3.append(imgid)
 
-    for i in range(totalTrainLen, validLen):
+    for i in range(trainLen, validLen):
         match = re.search(cocoImgIdRegex, lines[i])
         imgid = match.group('imgid')
         imgidDict[imgid] = 1
         imgidDict2[imgid] = len(imgidDict3) + 1
         imgidDict3.append(imgid)
 
-    for i in range(validLen, testLen):
+    for i in range(totalTrainLen, testLen):
         match = re.search(cocoImgIdRegex, lines[i])
         imgid = match.group('imgid')
         imgidDict[imgid] = 2
@@ -346,6 +345,7 @@ if __name__ == '__main__':
             baseline.append(locationAnswer)
 
     maxlen = findMaxlen(np.concatenate((trainQuestions, validQuestions, testQuestions)))
+    
     # Build output
     trainInput = combine(\
         lookupQID(trainQuestions, worddict, maxlen), trainImgIds)
