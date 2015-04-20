@@ -66,6 +66,7 @@ specs:
       inputs: 'txtUnfold'
       inputDim: 3663
       outputDim: 300
+      intConversion: true
       initWeights: '../data/cocoqa-toy/word-embed-q.npy'
       learningRate: 0.8
       momentum: 0.9
