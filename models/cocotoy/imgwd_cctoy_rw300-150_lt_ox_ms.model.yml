@@ -38,7 +38,7 @@ specs:
       inputs: 'imgUnfold'
       inputDim: 13200
       outputDim: 4096
-      initWeights: '/ais/gobi3/u/mren/data/cocoqa-toy/hidden7_oxford.h5'
+      initWeights: '/ais/gobi3/u/mren/data/cocoqa-toy/hidden_oxford.h5'
       format: 'h5'
       h5key: 'hidden7_ms'
       learningRate: 0.0
