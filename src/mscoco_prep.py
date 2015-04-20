@@ -166,12 +166,16 @@ if __name__ == '__main__':
             imgHidFeatTrain = h5py.File(imgHidFeatTrainFilename)
             imgHidFeatValid = h5py.File(imgHidFeatValidFilename)
             imgOutFile = h5py.File(imgHidFeatOutFilename, 'w')
-            
             for name in ['hidden7', 'hidden6', 'hidden5_maxpool']:
                 hidFeatTrain = imgHidFeatTrain[name][0 : numTrain + numValid]
                 hidFeatValid = imgHidFeatValid[name][0 : numTest]
                 hidFeat = np.concatenate((hidFeatTrain, hidFeatValid), axis=0)
                 imgOutFile[name] = hidFeat
+            hidden7Train = imgOutFile['hidden7'][0 : numTrain]
+            mean = numpy.mean(hidden7Train, axis=0)
+            std = numpy.std(hidden7Train, axis=0)
+            hidden7Ms = (imgOutFile['hidden7'][:] - mean) / std
+            imgOutFile['hidden7_ms'] = hidden7Ms
         else:
             print 'Not building image features'
         
@@ -209,6 +213,12 @@ if __name__ == '__main__':
                 hidFeatValid = imgHidFeatValid[name][:]
                 hidFeat = np.concatenate((hidFeatTrain, hidFeatValid), axis=0)
                 imgOutFile[name] = hidFeat
+
+            hidden7Train = imgOutFile['hidden7'][0 : numTrain]
+            mean = numpy.mean(hidden7Train, axis=0)
+            std = numpy.std(hidden7Train, axis=0)
+            hidden7Ms = (imgOutFile['hidden7'][:] - mean) / std
+            imgOutFile['hidden7_ms'] = hidden7Ms
         else:
             print 'Not building image features'
 
