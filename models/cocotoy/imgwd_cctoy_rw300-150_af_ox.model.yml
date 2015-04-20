@@ -48,7 +48,7 @@ specs:
       inputs: 'imgFeat'
       activeFn: 'identity'
       bias: true
-      outputDim: 500
+      outputDim: 300
       initRange: 0.05
       initSeed: 1
       learningRate: 0.8
@@ -68,7 +68,7 @@ specs:
       type: 'lut'
       inputs: 'txtUnfold'
       inputDim: 3663
-      outputDim: 500
+      outputDim: 300
       initRange: 1.0
       initSeed: 2
       learningRate: 0.0
@@ -87,11 +87,11 @@ specs:
       inputs: 'concat'
       dropoutRate: 0.2
       initSeed: 3
-      outputDim: 500
+      outputDim: 300
     - name: 'lstm'
       type: 'lstm'
       inputs: 'dropout'
-      inputDim: 500
+      inputDim: 300
       outputDim: 150
       timespan: 40
       initRange: 0.1

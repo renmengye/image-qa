@@ -38,16 +38,18 @@ specs:
       inputs: 'imgUnfold'
       inputDim: 13200
       outputDim: 4096
-      initRange: 2.0
-      initSeed: 2000
+      initWeights: '/ais/gobi3/u/mren/data/cocoqa-toy/hidden_oxford.h5'
+      format: 'h5'
+      h5key: 'hidden7'
       learningRate: 0.0
       outputdEdX: false
     - name: 'imgMap'
       type: 'map'
       inputs: 'imgFeat'
       activeFn: 'identity'
+      bias: true
       outputDim: 300
-      initRange: 0.0541
+      initRange: 0.05
       initSeed: 1
       learningRate: 0.8
       momentum: 0.9
@@ -66,8 +68,9 @@ specs:
       type: 'lut'
       inputs: 'txtUnfold'
       inputDim: 3663
-      outputDim: 300
-      initWeights: '../data/cocoqa-toy/word-embed-q.npy'
+      outputDim: 500
+      initRange: 1.0
+      initSeed: 2
       learningRate: 0.0
       outputdEdX: false
     - name: 'txtFold'
@@ -84,11 +87,11 @@ specs:
       inputs: 'concat'
       dropoutRate: 0.2
       initSeed: 3
-      outputDim: 300
+      outputDim: 500
     - name: 'lstm'
       type: 'lstm'
       inputs: 'dropout'
-      inputDim: 300
+      inputDim: 500
       outputDim: 150
       timespan: 40
       initRange: 0.1
@@ -100,6 +103,7 @@ specs:
       momentum: 0.9
       gradientClip: 0.1
       weightClip: 100.0
+      weightRegConst: 0.00005
       outputdEdX: true
     - name: 'softmax'
       type: 'map'

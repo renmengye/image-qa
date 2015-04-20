@@ -16,10 +16,7 @@ Usage: python train.py {name} -d {train/valid/test folder}
 
 def readFlags():
     params = {}
-    if len(sys.argv) < 2:
-        raise Exception('Name not specified')
-    params['name'] = sys.argv[1]
-
+    params['name'] = None
     params['outputFolder'] = None
     params['configFilename'] = None
     params['trainDataFilename'] = None
@@ -28,8 +25,10 @@ def readFlags():
     params['allDataFilename'] = None
     params['modelFilename'] = None
     params['imageqa'] = True
-    for i in range(2, len(sys.argv) - 1):
-        if sys.argv[i] == '-o' or sys.argv[i] == '-out':
+    for i in range(1, len(sys.argv) - 1):
+        if sys.argv[i] == '-n' or sys.argv[i] == '-name':
+            params['name'] == sys.argv[i + 1]
+        elif sys.argv[i] == '-o' or sys.argv[i] == '-out':
             params['outputFolder'] = sys.argv[i + 1]
         elif sys.argv[i] == '-d' or sys.argv[i] == '-data':
             dataFolder = sys.argv[i + 1]
@@ -58,6 +57,8 @@ def readFlags():
         raise Exception('Data file not specified')
     if params['modelFilename'] is None:
         raise Exception('Model file not specified')
+    if params['name'] is None:
+        params['name'] = params['modelFilename'].split('/')[-1].split('.')[0]
 
     return params
 
