@@ -22,7 +22,7 @@ word2vecBinFile = open(word2vecBinFilename, 'rb')
 vocabFile = open(vocabFilename, 'r')
 
 numWords = 3000000
-numDim = 500
+numDim = 300
 
 wordLocationDict = {}
 
