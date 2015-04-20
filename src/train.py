@@ -80,6 +80,7 @@ if __name__ == '__main__':
         testData = np.load(params['testDataFilename'])
         testInput = testData[0]
         testTarget = testData[1]
+        model.loadWeights(np.load(trainer.modelFilename))
         testOutput = nn.test(model, testInput)
         testRate, c, t = nn.calcRate(model, testOutput, testTarget)
         print 'Test rate: ', testRate

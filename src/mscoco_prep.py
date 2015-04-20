@@ -91,16 +91,22 @@ def lookupAnsID(answers, ansdict):
             ansids.append(ansdict['UNK'])
     return np.array(ansids, dtype=int).reshape(len(ansids), 1)
 
-def lookupQID(questions, worddict):
-    wordslist = []
-    maxlen = 55
-    #maxlen = 0
+def findMaxlen(questions):
+    maxlen = 0
     for q in questions:
-        words = q.replace(',', '').split(' ')
+        words = q.split(' ')
+        if len(words) > maxlen:
+            maxlen = len(words)
+    print 'Maxlen: ', maxlen
+    return maxlen
+
+def lookupQID(questions, worddict, maxlen):
+    wordslist = []
+    for q in questions:
+        words = q.split(' ')
         wordslist.append(words)
-        #if len(words) > maxlen:
-        #    maxlen = len(words)
-    print 'Max length', maxlen
+        if len(words) > maxlen:
+            maxlen = len(words)
     result = np.zeros((len(questions), maxlen, 1), dtype=int)
     for i,words in enumerate(wordslist):
         for j,w in enumerate(words):
@@ -130,23 +136,15 @@ def combineAttention(wordids, imgids):
 
 if __name__ == '__main__':
     # Build image features.
-    # hidFeat = []
-    # with open(imgHidFeatTrainFilename) as f:
-    #     hidFeat = f.readlines()
-    # with open(imgHidFeatValidFilename) as f:
-    #     hidFeat.extend(f.readlines())
-    # with open(imgHidFeatOutFilename, 'w') as f:
-    #     f.writelines(hidFeat)
-
-    # convFeat = []
-    # with open(imgConvFeatFilename) as f:
-    #     for line in f:
-    #         convFeat.append(line)
-    #         if len(convFeat) == 6600:
-    #             break
-    # with open(imgConvFeatOutFilename, 'w') as f:
-    #     for line in convFeat:
-    #         f.write(line)
+    imgHidFeatTrain = h5py.File(imgHidFeatTrainFilename)
+    imgHidFeatValid = h5py.File(imgHidFeatValidFilename)
+    imgOutFile = h5py.File(imgHidFeatOutFilename, 'w')
+    
+    for name in ['hidden7', 'hidden6', 'hidden5_maxpool']:
+        hidFeatTrain = imgHidFeatTrain[name][:]
+        hidFeatValid = imgHidFeatValid[name][:]
+        hidFeat = np.concatenate((hidFeatTrain, hidFeatValid), axis=0)
+        imgOutFile[name] = hidFeat
 
     with open(imgidTrainFilename) as f:
         lines = f.readlines()
@@ -159,9 +157,8 @@ if __name__ == '__main__':
     imgidDict = {} # Mark for train/valid/test.
     imgidDict2 = {} # Reindex the image, 1-based.
     imgidDict3 = [] # Reverse dict for image, 0-based.
-    # 3000 images train, 600 images valid, 3000 images test.
-    # 0 for train, 1 for valid, 2 for test.
 
+    # 0 for train, 1 for valid, 2 for test.
     cocoImgIdRegex = 'COCO_((train)|(val))2014_0*(?P<imgid>[1-9][0-9]*)'
 
     for i in range(trainLen):
@@ -220,13 +217,28 @@ if __name__ == '__main__':
     print 'Valid Questions Before Trunk: ', len(validQuestions)
     print 'Test Questions Before Trunk: ', len(testQuestions)
 
-    # Truncate rare answers.
-    trainQuestions, trainAnswers, trainImgIds = removeQuestions(trainQuestions, trainAnswers, trainImgIds, 20, 200)
-    validQuestions, validAnswers, validImgIds = removeQuestions(validQuestions, validAnswers, validImgIds,  3, 30)
-    testQuestions, testAnswers, testImgIds = removeQuestions(testQuestions, testAnswers, testImgIds, 10, 100)
-    trainCount = [0,0,0]
-    validCount = [0,0,0]
-    testCount = [0,0,0]
+    # Truncate rare-common answers.
+    survivor = np.array(removeQuestions(trainAnswers, 20, 200))
+    trainQuestions = trainQuestions[survivor]
+    trainAnswers = trainAnswers[survivor]
+    trainImgIds = trainImgIds[survivor]
+    trainQuestionTypes = trainQuestionTypes[survivor]
+
+    survivor = np.array(removeQuestions(validAnswers, 3, 30))
+    validQuestions = validQuestions[survivor]
+    validAnswers = validAnswers[survivor]
+    validImgIds = validImgIds[survivor]
+    validQuestionTypes = validQuestionTypes[survivor]
+
+    survivor = np.array(removeQuestions(testAnswers, 10, 100))
+    testQuestions = testQuestions[survivor]
+    testAnswers = testAnswers[survivor]
+    testImgIds = testImgIds[survivor]
+    testQuestionTypes = testQuestionTypes[survivor]
+
+    trainCount = np.zeros(4, dtype=int)
+    validCount = np.zeros(4, dtype=int)
+    testCount = np.zeros(4, dtype=int)
     
     numberAns = {}
     colorAns = {}
@@ -260,21 +272,23 @@ if __name__ == '__main__':
             typ = 0
         testCount[typ] += 1
 
-    print numberAns
-    print colorAns
     print 'Train Questions After Trunk: ', len(trainQuestions)
     print 'Train Question Dist: ', trainCount
+    print 'Train Question Dist: ', trainCount / float(len(trainQuestions))
     print 'Valid Questions After Trunk: ', len(validQuestions)
-    print 'Valid Question Dst: ', validCount
+    print 'Valid Question Dist: ', validCount
+    print 'Valid Question Dist: ', validCount / float(len(validQuestions))
+
     trainValidQuestionsLen = len(trainQuestions) + len(validQuestions)
     print 'Train+Valid questions: ', trainValidQuestionsLen
-    print 'Train+Valid Dist: ', np.array(trainCount) + np.array(validCount)
-    print 'Trian+Valid Dist: ', (np.array(trainCount) + np.array(validCount)) / float(trainValidQuestionsLen)
+    print 'Train+Valid Dist: ', trainCount + validCount
+    print 'Trian+Valid Dist: ', (trainCount + validCount) / float(trainValidQuestionsLen)
 
     print 'Test Questions After Trunk: ', len(testQuestions)
     print 'Test Question Dist: ', testCount
-    print 'Test Question Dist: ', np.array(testCount) / float(len(testQuestions))
+    print 'Test Question Dist: ', testCount / float(len(testQuestions))
     
+    # Build dictionary based on training questions/answers.
     worddict, idict, _ = buildDict(trainQuestions, 1, pr=False)
     ansdict, iansdict, _ = buildDict(trainAnswers, 0, pr=True)
 
@@ -282,6 +296,26 @@ if __name__ == '__main__':
     buildDict(validAnswers, 0, pr=True)
     print 'Test answer distribution'
     buildDict(testAnswers, 0, pr=True)
+
+    # Shuffle the questions again after applying rare-common answer rejection.
+    r = np.random.RandomState(2)
+    shuffle = r.permutation(len(trainQuestions))
+    trainQuestions = np.array(trainQuestions, dtype=object)[shuffle]
+    trainAnswers = np.array(trainAnswers, dtype=object)[shuffle]
+    trainImgIds = np.array(trainImgIds, dtype=object)[shuffle]
+    trainQuestionTypes = np.array(trainQuestionTypes,dtype=object)[shuffle]
+
+    shuffle = r.permutation(len(validQuestions))
+    validQuestions = np.array(validQuestions, dtype=object)[shuffle]
+    validAnswers = np.array(validAnswers, dtype=object)[shuffle]
+    validImgIds = np.array(validImgIds, dtype=object)[shuffle]
+    validQuestionTypes = np.array(validQuestionTypes, dtype=object)[shuffle]
+
+    shuffle = r.permutation(len(testQuestions))
+    testQuestions = np.array(testQuestions, dtype=object)[shuffle]
+    testAnswers = np.array(testAnswers, dtype=object)[shuffle]
+    testImgIds = np.array(testImgIds, dtype=object)[shuffle]
+    testQuestionTypes = np.array(testQuestionTypes, dtype=object)[shuffle]
 
     trainInput = combine(\
         lookupQID(trainQuestions, worddict), trainImgIds)
@@ -305,29 +339,6 @@ if __name__ == '__main__':
         os.path.join(outputFolder, 'test.npy'),\
         np.array((testInput, testTarget, 0),\
             dtype=object))
-
-    trainInput = combineAttention(\
-        lookupQID(trainQuestions, worddict), trainImgIds)
-    trainTarget = lookupAnsID(trainAnswers, ansdict)
-    validInput = combineAttention(\
-        lookupQID(validQuestions, worddict), validImgIds)
-    validTarget = lookupAnsID(validAnswers, ansdict)
-    testInput = combineAttention(\
-        lookupQID(testQuestions, worddict), testImgIds)
-    testTarget = lookupAnsID(testAnswers, ansdict)
-
-    np.save(\
-        os.path.join(outputFolder, 'train-att.npy'),\
-        np.array((trainInput, trainTarget, 0),\
-            dtype=object))
-    np.save(\
-        os.path.join(outputFolder, 'valid-att.npy'),\
-        np.array((validInput, validTarget, 0),\
-            dtype=object))
-    np.save(\
-        os.path.join(outputFolder, 'test-toy-att.npy'),\
-        np.array((testInput, testTarget, 0),\
-            dtype=object))
     np.save(\
         os.path.join(outputFolder, 'vocab-dict.npy'),\
         np.array((worddict, idict, 
@@ -343,3 +354,7 @@ if __name__ == '__main__':
 
     with open(os.path.join(outputFolder, 'imgid_dict.pkl'), 'wb') as f:
         pkl.dump(imgidDict3, f)
+
+    with open(os.path.join(outputFolder, 'baseline.txt'), 'w+') as f:
+        for answer in baseline:
+            f.write(answer + '\n')
