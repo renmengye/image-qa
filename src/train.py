@@ -4,9 +4,14 @@ import os
 import sys
 import yaml
 import email
+import imageqa_test
 
 '''
-Usage: python train.py {name} -d {train data} -m {model spec} -c {config} -o {output folder}
+Usage: python train.py {name} -d {train/valid/test folder}
+                              -m {model spec} 
+                              -c {config} 
+                              -o {output folder}
+                              [-imageqa]
 '''
 
 def readFlags():
@@ -25,19 +30,25 @@ def readFlags():
     for i in range(2, len(sys.argv) - 1):
         if sys.argv[i] == '-o' or sys.argv[i] == '-out':
             params['outputFolder'] = sys.argv[i + 1]
-        elif sys.argv[i] == '-d' or sys.argv[i] == '-train':
-            params['trainDataFilename'] = sys.argv[i + 1]
-        elif sys.argv[i] == '-t' or sys.argv[i] == '-test':
-            params['testDataFilename'] = sys.argv[i + 1]
-        elif sys.argv[i] == '-v' or sys.argv[i] == '-valid':
-            params['validDataFilename'] = sys.argv[i + 1]
+        elif sys.argv[i] == '-d' or sys.argv[i] == '-data':
+            dataFolder = sys.argv[i + 1]
+            trainPath = os.path.join(dataFolder, 'train.npy')
+            params['trainDataFilename'] = trainPath if os.path.isfile(trainPath) else None
+            validPath = os.path.join(dataFolder, 'valid.npy')
+            params['validDataFilename'] = validPath if os.path.isfile(validPath) else None
+            testPath = os.path.join(dataFolder, 'test.npy')
+            params['testDataFilename'] = testPath if os.path.isfile(testPath) else None
+            params['dataFolder'] = dataFolder
         elif sys.argv[i] == '-a' or sys.argv[i] == '-alldata':
             params['allDataFilename'] = sys.argv[i + 1]
         elif sys.argv[i] == '-m' or sys.argv[i] == '-model':
             params['modelFilename'] = sys.argv[i + 1]
         elif sys.argv[i] == '-c' or sys.argv[i] == '-config':
             params['configFilename'] = sys.argv[i + 1]
+        elif sys.argv[i] == '-imageqa':
+            params['imageqa'] = True
 
+    # Check required parameters.
     if params['configFilename'] is None:
         raise Exception('Config file not specified')
     if params['trainDataFilename'] is None:
@@ -53,6 +64,7 @@ if __name__ == '__main__':
     with open(params['configFilename']) as f:
         trainOpt = yaml.load(f)
     
+    trainOpt['numEpoch'] = 1
     trainData = np.load(params['trainDataFilename'])
     trainInput = trainData[0]
     trainTarget = trainData[1]
@@ -77,15 +89,19 @@ if __name__ == '__main__':
     trainer.train(trainInput, trainTarget, validInput, validTarget)
     
     if params['testDataFilename'] is not None:
-        testData = np.load(params['testDataFilename'])
-        testInput = testData[0]
-        testTarget = testData[1]
-        model.loadWeights(np.load(trainer.modelFilename))
-        testOutput = nn.test(model, testInput)
-        testRate, c, t = nn.calcRate(model, testOutput, testTarget)
-        print 'Test rate: ', testRate
-        with open(os.path.join(trainer.outputFolder, 'result.txt'), 'w+') as f:
-            f.write('Test rate: %f' % testRate)
+        if params['imageqa']:
+            imageqa_test.testAll(
+                trainer.name, model, params['dataFolder'], params['outputFolder'])
+        else:
+            testData = np.load(params['testDataFilename'])
+            testInput = testData[0]
+            testTarget = testData[1]
+            model.loadWeights(np.load(trainer.modelFilename))
+            testOutput = nn.test(model, testInput)
+            testRate, c, t = nn.calcRate(model, testOutput, testTarget)
+            print 'Test rate: ', testRate
+            with open(os.path.join(trainer.outputFolder, 'result.txt'), 'w+') as f:
+                f.write('Test rate: %f\n' % testRate)
     
     # Send email
     if trainOpt.has_key('sendEmail') and trainOpt['sendEmail']:
@@ -118,9 +134,13 @@ if __name__ == '__main__':
 
         model = nn.load(params['modelFilename'])
         model.loadWeights(np.load(trainer.modelFilename))
-        testOutput = nn.test(model, testInput)
-        testRate, c, t = nn.calcRate(model, testOutput, testTarget)
-        print 'Test rate: ', testRate
+        if params['imageqa']:
+            imageqa_test.testAll(
+                trainer.name, model, params['dataFolder'], params['outputFolder'])
+        else:
+            testOutput = nn.test(model, testInput)
+            testRate, c, t = nn.calcRate(model, testOutput, testTarget)
+            print 'Test rate: ', testRate
 
         with open(os.path.join(trainer.outputFolder, 'result.txt'), 'w+') as f:
             f.write('Test rate: %f' % testRate)

@@ -2,36 +2,9 @@ import sys
 import os
 
 from nn.func import *
+from imageqa_test import *
 
 imageFolder = '../../data/nyu-depth-v2/jpg/'
-
-def decodeQuestion(X, questionArray):
-    sentence = ''
-    for t in range(1, X.shape[0]):
-        if X[t, 0] == 0:
-            break
-        sentence += questionArray[X[t, 0]- 1] + ' '
-    sentence += '?'
-    return sentence
-    
-def calcRate(X, Y, T, questionArray):
-    correct = np.zeros(4, dtype=int)
-    total = np.zeros(4, dtype=int)
-    for n in range(0, X.shape[0]):        
-        sortIdx = np.argsort(Y[n], axis=0)
-        sortIdx = sortIdx[::-1]
-        A = sortIdx[0]
-        question = decodeQuestion(X[n], questionArray)
-        if 'how many' in question:
-            typ = 1
-        elif 'what' in question and 'color' in question:
-            typ = 2
-        else:
-            typ = 0
-        total[typ] += 1
-        if A == T[n, 0]:
-            correct[typ] += 1
-    return correct, total
 
 def renderHtml(X, Y, T, questionArray, answerArray, topK):
     htmlList = []
@@ -77,7 +50,7 @@ def renderHtml(X, Y, T, questionArray, answerArray, topK):
 
 if __name__ == '__main__':
     """
-    Usage: imageqa_render.py id -train trainData.npy -test testData.npy -dict vocabDict.npy
+    Usage: imageqa_render.py id -data {dataFolder}
     """
     taskId = sys.argv[1]
     for i in range(2, len(sys.argv)):
@@ -86,31 +59,37 @@ if __name__ == '__main__':
     resultFolder = '../results/%s' % taskId
     print taskId
 
-    # Train
-    trainOutputFilename = os.path.join(resultFolder, '%s.train.o.npy' % taskId)
-    trainHtmlFilename = os.path.join(resultFolder, '%s.train.o.html' % taskId)
-    trainOut = np.load(trainOutputFilename)
-    Y = trainOut
-    trainData = np.load(os.path.join(dataFolder, 'train.npy'))
-    testData = np.load(os.path.join(dataFolder, 'test.npy'))
     vocabDict = np.load(os.path.join(dataFolder, 'vocab-dict.npy'))
 
-    X = trainData[0]
-    T = trainData[1]
-    html = renderHtml(X, Y, T, vocabDict[1], vocabDict[3], 10)
+    resultFolder = '../results/%s' % taskId
+    modelFile = '../results/%s/%s.model.yml' % (taskId, taskId)
+    model = nn.load(modelFile)
+    model.loadWeights(
+        np.load('../results/%s/%s.w.npy' % (taskId, taskId)))
+
+    trainDataFile = os.path.join(dataFolder, 'train.npy')
+    testDataFile = os.path.join(dataFolder, 'test.npy')
+    trainData = np.load(trainDataFile)
+    testData = np.load(testDataFile)
+
+    inputTrain = trainData[0]
+    outputTrain = nn.test(model, X)
+    targetTrain = trainData[1]
+    inputTest = testData[0]
+    outputTest = nn.test(model, TX)
+    targetTest = testData[1]
+    questionArray = vocabDict[1]
+    answerArray = vocabDict[3]
+
+    # Render
+    trainHtmlFilename = os.path.join(resultFolder, '%s.train.o.html' % taskId)
+    html = renderHtml(inputTrain, outputTrain, targetTrain, 
+        questionArrayTrain, answerArrayTrain, 10)
     with open(trainHtmlFilename, 'w+') as f:
         f.writelines(html)
-    correct, total = calcRate(X, Y, T, vocabDict[1])
-    print correct, total, np.array(correct, dtype=float) / np.array(total, dtype=float)
 
-    # Test
-    testOutputFilename = os.path.join(resultFolder, '%s.test.o.npy' % taskId)
     testHtmlFilename = os.path.join(resultFolder, '%s.test.o.html' % taskId)
-    TY = np.load(testOutputFilename)
-    TX = testData[0]
-    TT = testData[1]
-    html = renderHtml(TX, TY, TT, vocabDict[1], vocabDict[3], 10)
+    html = renderHtml(inputTest, outputTest, targetTest, 
+        questionArray, answerArray, 10)
     with open(testHtmlFilename, 'w+') as f:
         f.writelines(html)
-    correct, total = calcRate(TX, TY, TT, vocabDict[1])
-    print correct, total, correct / total.astype(float)
