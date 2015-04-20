@@ -27,6 +27,7 @@ def readFlags():
     params['validDataFilename'] = None
     params['allDataFilename'] = None
     params['modelFilename'] = None
+    params['imageqa'] = True
     for i in range(2, len(sys.argv) - 1):
         if sys.argv[i] == '-o' or sys.argv[i] == '-out':
             params['outputFolder'] = sys.argv[i + 1]
@@ -47,6 +48,8 @@ def readFlags():
             params['configFilename'] = sys.argv[i + 1]
         elif sys.argv[i] == '-imageqa':
             params['imageqa'] = True
+        elif sys.argv[i] == '-noimageqa':
+            params['imageqa'] = False
 
     # Check required parameters.
     if params['configFilename'] is None:
