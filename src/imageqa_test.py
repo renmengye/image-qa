@@ -22,7 +22,8 @@ def calcRate(X, Y, T, questionArray):
         question = decodeQuestion(X[n], questionArray)
         if 'how many' in question:
             typ = 1
-        elif question.startswith('what is the color'):
+        elif question.startswith('what is the color') or \
+            question.startswith('what') and 'colour' in question:
             typ = 2
         elif question.startswith('where'):
             typ = 3
