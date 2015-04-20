@@ -34,7 +34,7 @@ specs:
     - name: 'txtDict'
       type: 'lut'
       inputs: 'txtSel'
-      inputDim: 3675
+      inputDim: 3663
       outputDim: 500
       initRange: 1.0
       initSeed: 2
@@ -126,7 +126,7 @@ specs:
     - name: 'answer'
       type: 'map'
       inputs: 'lstm'
-      outputDim: 239
+      outputDim: 237
       activeFn: 'softmax'
       initRange: 0.05
       initSeed: 6

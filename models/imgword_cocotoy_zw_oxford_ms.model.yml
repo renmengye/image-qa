@@ -25,7 +25,7 @@ specs:
       type: 'map'
       inputs: 'imgFeat'
       activeFn: 'softmax'
-      outputDim: 239 
+      outputDim: 237
       initRange: 0.1
       initSeed: 7
       learningRate: 0.01

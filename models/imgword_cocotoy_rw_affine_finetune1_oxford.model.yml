@@ -81,7 +81,7 @@ specs:
     - name: 'txtDict'
       type: 'lut'
       inputs: 'txtUnfold'
-      inputDim: 3675
+      inputDim: 3663
       outputDim: 500
       initRange: 1.0
       initSeed: 2
@@ -123,7 +123,7 @@ specs:
       type: 'map'
       inputs: 'lstm'
       activeFn: 'softmax'
-      outputDim: 239
+      outputDim: 237
       initRange: 0.1
       initSeed: 7
       learningRate: 0.01
