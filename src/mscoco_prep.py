@@ -2,16 +2,16 @@ import re
 import os
 import cPickle as pkl
 import numpy as np
-import operator
+import h5py
+import sys
 
-imgidTrainFilename = '../../../data/mscoco/image_list_train.txt'
-imgidValidFilename = '../../../data/mscoco/image_list_valid.txt'
-qaTrainFilename = '../../../data/mscoco/mscoco_qa_all_train.pkl'
-qaValidFilename = '../../../data/mscoco/mscoco_qa_all_valid.pkl'
-outputFolder = '../data/cocoqa-full/'
-imgHidFeatTrainFilename = '/ais/gobi3/u/rkiros/coco/train_features_vgg/hidden7.txt'
-imgHidFeatValidFilename = '/ais/gobi3/u/rkiros/coco/valid_features_vgg/hidden7.txt'
-imgHidFeatOutFilename = '../data/cocoqa-full/hidden7.txt'
+imgidTrainFilename = '../../../data/mscoco/train/image_list.txt'
+imgidValidFilename = '../../../data/mscoco/valid/image_list.txt'
+qaTrainFilename = '../../../data/mscoco/train/qa.pkl'
+qaValidFilename = '../../../data/mscoco/valid/qa.pkl'
+imgHidFeatTrainFilename = '/ais/gobi3/u/mren/data/mscoco/hidden_oxford_train.h5'
+imgHidFeatValidFilename = '/ais/gobi3/u/mren/data/mscoco/hidden_oxford_valid.h5'
+imgHidFeatOutFilename = '/ais/gobi3/u/mren/data/cocoqa-toy/hidden_oxford.h5'
 #imgConvFeatOutFilename = '../data/cocoqa/hidden5_4_conv.txt'
 
 def buildDict(lines, keystart, pr=False):
@@ -46,41 +46,33 @@ def buildDict(lines, keystart, pr=False):
         print 'Dictionary length', len(word_dict)
     return  word_dict, word_array, word_freq
 
-def removeQuestions(questions, answers, imgids, lowerBound, upperBound=100):
+def removeQuestions(answers, lowerBound, upperBound=100):
     """
     Removes questions with answer appearing less than N times.
     Probability function to decide whether or not to enroll an answer (remove too frequent answers).
     """
     answerdict, answeridict, answerfreq = buildDict(answers, 0)
     random = np.random.RandomState(2)
-    questionsTrunk = []
-    answersTrunk = []
-    imgidsTrunk = []
     answerfreq2 = []
+    survivor = []
     for item in answerfreq:
         answerfreq2.append(0)
-    for i in range(len(questions)):
+    for i in range(len(answers)):
         if answerfreq[answerdict[answers[i]]] < lowerBound:
             continue
         else:
             if answerfreq2[answerdict[answers[i]]] <= 100:
-                questionsTrunk.append(questions[i])
-                answersTrunk.append(answers[i])
-                imgidsTrunk.append(imgids[i])
+                survivor.append(i)
                 answerfreq2[answerdict[answers[i]]] += 1
             else:
                 # Exponential distribution
-                prob = np.exp(-(answerfreq2[answerdict[answers[i]]] - upperBound) / float(2 * upperBound))
-                #prob = 1 - (answerfreq2[answerdict[answers[i]]] - 100) / float(1500)
+                prob = np.exp(-(answerfreq2[answerdict[answers[i]]] - \
+                    upperBound) / float(2 * upperBound))
                 r = random.uniform(0, 1, [1])
-                #print 'Prob', prob, 'freq', answerfreq2[answerdict[answers[i]]], 'random', r
                 if r < prob:
-                    questionsTrunk.append(questions[i])
-                    answersTrunk.append(answers[i])
-                    imgidsTrunk.append(imgids[i])
+                    survivor.append(i)
                     answerfreq2[answerdict[answers[i]]] += 1
-    return questionsTrunk, answersTrunk, imgidsTrunk
-
+    return survivor
 
 def lookupAnsID(answers, ansdict):
     ansids = []
@@ -91,16 +83,22 @@ def lookupAnsID(answers, ansdict):
             ansids.append(ansdict['UNK'])
     return np.array(ansids, dtype=int).reshape(len(ansids), 1)
 
-def lookupQID(questions, worddict):
-    wordslist = []
-    maxlen = 55
-    #maxlen = 0
+def findMaxlen(questions):
+    maxlen = 0
     for q in questions:
-        words = q.replace(',', '').split(' ')
+        words = q.split(' ')
+        if len(words) > maxlen:
+            maxlen = len(words)
+    print 'Maxlen: ', maxlen
+    return maxlen
+
+def lookupQID(questions, worddict, maxlen):
+    wordslist = []
+    for q in questions:
+        words = q.split(' ')
         wordslist.append(words)
-        #if len(words) > maxlen:
-        #    maxlen = len(words)
-    print 'Max length', maxlen
+        if len(words) > maxlen:
+            maxlen = len(words)
     result = np.zeros((len(questions), maxlen, 1), dtype=int)
     for i,words in enumerate(wordslist):
         for j,w in enumerate(words):
@@ -129,56 +127,137 @@ def combineAttention(wordids, imgids):
             wordids), axis=-1)
 
 if __name__ == '__main__':
-    # Build image features.
-    # hidFeat = []
-    # with open(imgHidFeatTrainFilename) as f:
-    #     hidFeat = f.readlines()
-    # with open(imgHidFeatValidFilename) as f:
-    #     hidFeat.extend(f.readlines())
-    # with open(imgHidFeatOutFilename, 'w') as f:
-    #     f.writelines(hidFeat)
+    """
+    Assemble COCO-QA dataset.
+    Make sure you have already run parsing and question generation.
+    This program only assembles generated questions.
 
-    # convFeat = []
-    # with open(imgConvFeatFilename) as f:
-    #     for line in f:
-    #         convFeat.append(line)
-    #         if len(convFeat) == 6600:
-    #             break
-    # with open(imgConvFeatOutFilename, 'w') as f:
-    #     for line in convFeat:
-    #         f.write(line)
+    Usage:
+    mscoco_prep.py [-toy] [-image]
+    
+    Options:
+    -toy: Build the toy COCOQA dataset, default is full dataset.
+    -image: Build image features, default is not building.
+    """
 
-    with open(imgidTrainFilename) as f:
-        lines = f.readlines()
-    trainLen = len(lines) * 9 / 10
-    validLen = len(lines)
-    with open(imgidValidFilename) as f:
-        lines.extend(f.readlines())
-    testLen = len(lines)
+    buildToy = False
+    buildImage = False
+    for flag in sys.argv:
+        if flag == '-toy':
+            buildToy = True
+        elif flag == '-image':
+            buildImage = True
+    if buildToy:
+        # Build toy dataset
+        print 'Building toy dataset'
+        outputFolder = '../data/cocoqa-toy'
+        numTrain = 6000
+        numValid = 1200
+        numTest = 6000
+        trainLB = 5
+        trainUB = 100
+        validLB = 2
+        validUB = 20
+        testLB = 5
+        testUB = 100
+        if buildImage:
+            # Build image features.
+            print 'Building image features'
+            imgHidFeatTrain = h5py.File(imgHidFeatTrainFilename)
+            imgHidFeatValid = h5py.File(imgHidFeatValidFilename)
+            imgOutFile = h5py.File(imgHidFeatOutFilename, 'w')
+            for name in ['hidden7', 'hidden6', 'hidden5_maxpool']:
+                hidFeatTrain = imgHidFeatTrain[name][0 : numTrain + numValid]
+                hidFeatValid = imgHidFeatValid[name][0 : numTest]
+                hidFeat = np.concatenate((hidFeatTrain, hidFeatValid), axis=0)
+                imgOutFile[name] = hidFeat
+            hidden7Train = imgOutFile['hidden7'][0 : numTrain]
+            mean = numpy.mean(hidden7Train, axis=0)
+            std = numpy.std(hidden7Train, axis=0)
+            hidden7Ms = (imgOutFile['hidden7'][:] - mean) / std
+            imgOutFile['hidden7_ms'] = hidden7Ms
+        else:
+            print 'Not building image features'
+        
+        with open(imgidTrainFilename) as f:
+            lines = f.readlines()
+        trainStart = 0
+        trainEnd = numTrain
+        validStart = trainEnd
+        validEnd = validStart + numValid
+        totalTrainLen = len(lines)
+        
+        with open(imgidValidFilename) as f:
+            lines.extend(f.readlines())
+        testStart = totalTrainLen 
+        testEnd = testStart + numTest
+    else:
+        # Build full dataset
+        print 'Building full dataset'
+        outputFolder = '../data/cocoqa-full/'
+        trainLB = 20
+        trainUB = 200
+        validLB = 3
+        validUB = 30
+        testLB = 10
+        testUB = 100
+        if buildImage:
+            # Build image features.
+            print 'Building image features'
+            imgHidFeatTrain = h5py.File(imgHidFeatTrainFilename)
+            imgHidFeatValid = h5py.File(imgHidFeatValidFilename)
+            imgOutFile = h5py.File(imgHidFeatOutFilename, 'w')
+            
+            for name in ['hidden7', 'hidden6', 'hidden5_maxpool']:
+                hidFeatTrain = imgHidFeatTrain[name][:]
+                hidFeatValid = imgHidFeatValid[name][:]
+                hidFeat = np.concatenate((hidFeatTrain, hidFeatValid), axis=0)
+                imgOutFile[name] = hidFeat
 
-    imgidDict = {} # Mark for train/valid/test.
-    imgidDict2 = {} # Reindex the image, 1-based.
-    imgidDict3 = [] # Reverse dict for image, 0-based.
-    # 3000 images train, 600 images valid, 3000 images test.
+            hidden7Train = imgOutFile['hidden7'][0 : numTrain]
+            mean = numpy.mean(hidden7Train, axis=0)
+            std = numpy.std(hidden7Train, axis=0)
+            hidden7Ms = (imgOutFile['hidden7'][:] - mean) / std
+            imgOutFile['hidden7_ms'] = hidden7Ms
+        else:
+            print 'Not building image features'
+
+        with open(imgidTrainFilename) as f:
+            lines = f.readlines()
+        trainStart = 0
+        trainEnd = len(lines) * 9 / 10
+        validStart = trainEnd
+        validEnd = len(lines)
+        with open(imgidValidFilename) as f:
+            lines.extend(f.readlines())
+        testStart = validEnd
+        testEnd = len(lines)
+    
+    # Mark for train/valid/test.
+    imgidDict = {} 
+    # Reindex the image, 1-based.
+    imgidDict2 = {}
+    # Reverse dict for image, 0-based.
+    imgidDict3 = []
+
+    # Separate image ids into train-valid-test
     # 0 for train, 1 for valid, 2 for test.
-
     cocoImgIdRegex = 'COCO_((train)|(val))2014_0*(?P<imgid>[1-9][0-9]*)'
-
-    for i in range(trainLen):
+    for i in range(trainStart, trainEnd):
         match = re.search(cocoImgIdRegex, lines[i])
         imgid = match.group('imgid')
         imgidDict[imgid] = 0
         imgidDict2[imgid] = i + 1
         imgidDict3.append(imgid)
 
-    for i in range(trainLen, validLen):
+    for i in range(validStart, validEnd):
         match = re.search(cocoImgIdRegex, lines[i])
         imgid = match.group('imgid')
         imgidDict[imgid] = 1
         imgidDict2[imgid] = i + 1
         imgidDict3.append(imgid)
 
-    for i in range(validLen, testLen):
+    for i in range(testStart, testEnd):
         match = re.search(cocoImgIdRegex, lines[i])
         imgid = match.group('imgid')
         imgidDict[imgid] = 2
@@ -193,13 +272,22 @@ if __name__ == '__main__':
     trainQuestions = []
     trainAnswers = []
     trainImgIds = []
+    trainQuestionTypes = []
     validQuestions = []
     validAnswers = []
     validImgIds = []
+    validQuestionTypes = []
     testQuestions = []
     testAnswers = []
     testImgIds = []
+    testQuestionTypes = []
+    baseline = []
+    colorAnswer = 'white'
+    numberAnswer = 'two'
+    objectAnswer = 'cat'
+    locationAnswer = 'room'
 
+    # Separate dataset into train-valid-test.
     for item in qaAll:
         imgid = item[2]
         if imgidDict.has_key(imgid):
@@ -207,74 +295,102 @@ if __name__ == '__main__':
                 trainQuestions.append(item[0][:-2])
                 trainAnswers.append(item[1])
                 trainImgIds.append(imgidDict2[imgid])
+                trainQuestionTypes.append(item[3])
             elif imgidDict[imgid] == 1:
                 validQuestions.append(item[0][:-2])
                 validAnswers.append(item[1])
                 validImgIds.append(imgidDict2[imgid])
+                validQuestionTypes.append(item[3])
             elif imgidDict[imgid] == 2:
                 testQuestions.append(item[0][:-2])
                 testAnswers.append(item[1])
                 testImgIds.append(imgidDict2[imgid])
+                testQuestionTypes.append(item[3])
 
     print 'Train Questions Before Trunk: ', len(trainQuestions)
     print 'Valid Questions Before Trunk: ', len(validQuestions)
     print 'Test Questions Before Trunk: ', len(testQuestions)
 
-    # Truncate rare answers.
-    trainQuestions, trainAnswers, trainImgIds = removeQuestions(trainQuestions, trainAnswers, trainImgIds, 20, 200)
-    validQuestions, validAnswers, validImgIds = removeQuestions(validQuestions, validAnswers, validImgIds,  3, 30)
-    testQuestions, testAnswers, testImgIds = removeQuestions(testQuestions, testAnswers, testImgIds, 10, 100)
-    trainCount = [0,0,0]
-    validCount = [0,0,0]
-    testCount = [0,0,0]
+    # Shuffle the questions.
+    r = np.random.RandomState(1)
+    shuffle = r.permutation(len(trainQuestions))
+    trainQuestions = np.array(trainQuestions, dtype=object)[shuffle]
+    trainAnswers = np.array(trainAnswers, dtype=object)[shuffle]
+    trainImgIds = np.array(trainImgIds, dtype=object)[shuffle]
+    trainQuestionTypes = np.array(
+        trainQuestionTypes,dtype=object)[shuffle]
+
+    shuffle = r.permutation(len(validQuestions))
+    validQuestions = np.array(validQuestions, dtype=object)[shuffle]
+    validAnswers = np.array(validAnswers, dtype=object)[shuffle]
+    validImgIds = np.array(validImgIds, dtype=object)[shuffle]
+    validQuestionTypes = np.array(
+        validQuestionTypes, dtype=object)[shuffle]
+
+    shuffle = r.permutation(len(testQuestions))
+    testQuestions = np.array(testQuestions, dtype=object)[shuffle]
+    testAnswers = np.array(testAnswers, dtype=object)[shuffle]
+    testImgIds = np.array(testImgIds, dtype=object)[shuffle]
+    testQuestionTypes = np.array(
+        testQuestionTypes, dtype=object)[shuffle]
+
+    # Truncate rare-common answers.
+    survivor = np.array(removeQuestions(
+        trainAnswers, trainLB, trainUB))
+    trainQuestions = trainQuestions[survivor]
+    trainAnswers = trainAnswers[survivor]
+    trainImgIds = trainImgIds[survivor]
+    trainQuestionTypes = trainQuestionTypes[survivor]
+
+    survivor = np.array(removeQuestions(
+        validAnswers, validLB, validUB))
+    validQuestions = validQuestions[survivor]
+    validAnswers = validAnswers[survivor]
+    validImgIds = validImgIds[survivor]
+    validQuestionTypes = validQuestionTypes[survivor]
+
+    survivor = np.array(removeQuestions(
+        testAnswers, testLB, testUB))
+    testQuestions = testQuestions[survivor]
+    testAnswers = testAnswers[survivor]
+    testImgIds = testImgIds[survivor]
+    testQuestionTypes = testQuestionTypes[survivor]
+
+    # Build statistics
+    trainCount = np.zeros(4, dtype=int)
+    validCount = np.zeros(4, dtype=int)
+    testCount = np.zeros(4, dtype=int)
     
-    numberAns = {}
-    colorAns = {}
     for n in range(0, len(trainQuestions)):
         question = trainQuestions[n]
-        if 'how many' in question:
-            typ = 1
-        elif question.startswith('what is the color'):
-            typ = 2
-        else:
-            typ = 0
-        trainCount[typ] += 1
+        trainCount[trainQuestionTypes[n]] += 1
     for n in range(0, len(validQuestions)):
         question = validQuestions[n]
-        if 'how many' in question:
-            typ = 1
-        elif question.startswith('what is the color'):
-            typ = 2
-        else:
-            typ = 0
-        validCount[typ] += 1
+        validCount[validQuestionTypes[n]] += 1
     for n in range(0, len(testQuestions)):
         question = testQuestions[n]
-        if 'how many' in question:
-            typ = 1
-            numberAns[testAnswers[n]] = 1
-        elif question.startswith('what is the color'):
-            typ = 2
-            colorAns[testAnswers[n]] = 1
-        else:
-            typ = 0
-        testCount[typ] += 1
+        testCount[testQuestionTypes[n]] += 1
 
-    print numberAns
-    print colorAns
     print 'Train Questions After Trunk: ', len(trainQuestions)
     print 'Train Question Dist: ', trainCount
+    print 'Train Question Dist: ', \
+            trainCount / float(len(trainQuestions))
     print 'Valid Questions After Trunk: ', len(validQuestions)
-    print 'Valid Question Dst: ', validCount
+    print 'Valid Question Dist: ', validCount
+    print 'Valid Question Dist: ', \
+            validCount / float(len(validQuestions))
+
     trainValidQuestionsLen = len(trainQuestions) + len(validQuestions)
     print 'Train+Valid questions: ', trainValidQuestionsLen
-    print 'Train+Valid Dist: ', np.array(trainCount) + np.array(validCount)
-    print 'Trian+Valid Dist: ', (np.array(trainCount) + np.array(validCount)) / float(trainValidQuestionsLen)
+    print 'Train+Valid Dist: ', trainCount + validCount
+    print 'Trian+Valid Dist: ', \
+            (trainCount + validCount) / float(trainValidQuestionsLen)
 
     print 'Test Questions After Trunk: ', len(testQuestions)
     print 'Test Question Dist: ', testCount
-    print 'Test Question Dist: ', np.array(testCount) / float(len(testQuestions))
+    print 'Test Question Dist: ', testCount / float(len(testQuestions))
     
+    # Build dictionary based on training questions/answers.
     worddict, idict, _ = buildDict(trainQuestions, 1, pr=False)
     ansdict, iansdict, _ = buildDict(trainAnswers, 0, pr=True)
 
@@ -283,16 +399,56 @@ if __name__ == '__main__':
     print 'Test answer distribution'
     buildDict(testAnswers, 0, pr=True)
 
+    # Shuffle the questions again...
+    # After applying rare-common answer rejection.
+    r = np.random.RandomState(2)
+    shuffle = r.permutation(len(trainQuestions))
+    trainQuestions = np.array(trainQuestions, dtype=object)[shuffle]
+    trainAnswers = np.array(trainAnswers, dtype=object)[shuffle]
+    trainImgIds = np.array(trainImgIds, dtype=object)[shuffle]
+    trainQuestionTypes = np.array(
+        trainQuestionTypes,dtype=object)[shuffle]
+
+    shuffle = r.permutation(len(validQuestions))
+    validQuestions = np.array(validQuestions, dtype=object)[shuffle]
+    validAnswers = np.array(validAnswers, dtype=object)[shuffle]
+    validImgIds = np.array(validImgIds, dtype=object)[shuffle]
+    validQuestionTypes = np.array(
+        validQuestionTypes, dtype=object)[shuffle]
+
+    shuffle = r.permutation(len(testQuestions))
+    testQuestions = np.array(testQuestions, dtype=object)[shuffle]
+    testAnswers = np.array(testAnswers, dtype=object)[shuffle]
+    testImgIds = np.array(testImgIds, dtype=object)[shuffle]
+    testQuestionTypes = np.array(
+        testQuestionTypes, dtype=object)[shuffle]
+
+    # Build baseline solution
+    for n in range(0, len(testQuestions)):
+        if testQuestionTypes[n] == 0:
+            baseline.append(objectAnswer)
+        elif testQuestionTypes[n] == 1:
+            baseline.append(numberAnswer)
+        elif testQuestionTypes[n] == 2:
+            baseline.append(colorAnswer)
+        elif testQuestionTypes[n] == 3:
+            baseline.append(locationAnswer)
+
+    # Find max length
+    maxlen = findMaxlen(np.concatenate((trainQuestions, validQuestions, testQuestions)))
+    
+    # Build output
     trainInput = combine(\
-        lookupQID(trainQuestions, worddict), trainImgIds)
+        lookupQID(trainQuestions, worddict, maxlen), trainImgIds)
     trainTarget = lookupAnsID(trainAnswers, ansdict)
     validInput = combine(\
-        lookupQID(validQuestions, worddict), validImgIds)
+        lookupQID(validQuestions, worddict, maxlen), validImgIds)
     validTarget = lookupAnsID(validAnswers, ansdict)
     testInput = combine(\
-        lookupQID(testQuestions, worddict), testImgIds)
+        lookupQID(testQuestions, worddict, maxlen), testImgIds)
     testTarget = lookupAnsID(testAnswers, ansdict)
 
+    # Training files
     np.save(\
         os.path.join(outputFolder, 'train.npy'),\
         np.array((trainInput, trainTarget, 0),\
@@ -305,41 +461,26 @@ if __name__ == '__main__':
         os.path.join(outputFolder, 'test.npy'),\
         np.array((testInput, testTarget, 0),\
             dtype=object))
-
-    trainInput = combineAttention(\
-        lookupQID(trainQuestions, worddict), trainImgIds)
-    trainTarget = lookupAnsID(trainAnswers, ansdict)
-    validInput = combineAttention(\
-        lookupQID(validQuestions, worddict), validImgIds)
-    validTarget = lookupAnsID(validAnswers, ansdict)
-    testInput = combineAttention(\
-        lookupQID(testQuestions, worddict), testImgIds)
-    testTarget = lookupAnsID(testAnswers, ansdict)
-
-    np.save(\
-        os.path.join(outputFolder, 'train-att.npy'),\
-        np.array((trainInput, trainTarget, 0),\
-            dtype=object))
-    np.save(\
-        os.path.join(outputFolder, 'valid-att.npy'),\
-        np.array((validInput, validTarget, 0),\
-            dtype=object))
-    np.save(\
-        os.path.join(outputFolder, 'test-toy-att.npy'),\
-        np.array((testInput, testTarget, 0),\
-            dtype=object))
     np.save(\
         os.path.join(outputFolder, 'vocab-dict.npy'),\
         np.array((worddict, idict, 
             ansdict, iansdict, 0), dtype=object))
 
-    with open(os.path.join(outputFolder, 'question_vocabs.txt'), 'w+') as f:
+    # Vocabulary files
+    with open(os.path.join(outputFolder, \
+        'question_vocabs.txt'), 'w+') as f:
         for word in idict:
             f.write(word + '\n')
-
-    with open(os.path.join(outputFolder, 'answer_vocabs.txt'), 'w+') as f:
+    with open(os.path.join(outputFolder, \
+        'answer_vocabs.txt'), 'w+') as f:
         for word in iansdict:
             f.write(word + '\n')
 
+    # Image ID file
     with open(os.path.join(outputFolder, 'imgid_dict.pkl'), 'wb') as f:
         pkl.dump(imgidDict3, f)
+
+    # GUESS baseline
+    with open(os.path.join(outputFolder, 'baseline.txt'), 'w+') as f:
+        for answer in baseline:
+            f.write(answer + '\n')
