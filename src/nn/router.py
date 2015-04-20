@@ -15,6 +15,8 @@ from maxpool1d import *
 from meanpool1d import *
 from normalize import *
 
+from scipy import sparse
+
 import h5py
 import pickle
 
@@ -408,11 +410,17 @@ def addStage(stageDict):
             outputdEdX=outputdEdX
         )
     elif stageDict['type'] == 'normalize':
+        if stageDict.has_key('format') and stageDict['format'] == 'h5':
+            mean = h5py.File(stageDict['mean'])[stageDict['meanKey']][:]
+            std = h5py.File(stageDict['std'])[stageDict['stdKey']][:]
+        else:
+            mean = np.load(stageDict['mean'])
+            std = np.load(stageDict['std'])
         stage = Normalize(
             name=stageDict['name'],
             inputNames=inputList,
-            mean=np.load(stageDict['mean']),
-            std=np.load(stageDict['std']),
+            mean=mean,
+            std=std,
             outputDim=stageDict['outputDim'],
             outputdEdX=outputdEdX
         )

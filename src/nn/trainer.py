@@ -285,6 +285,8 @@ class Trainer:
                     self.save()
                 if trainOpt.has_key('stopScore') and \
                     Tscore < trainOpt['stopScore']:
+                    print 'Training score is lower than %.4f , ealy stop.' % \
+                        trainOpt['stopScore'] 
                     stop = True                    
 
             # Anneal learning rate
@@ -300,9 +302,7 @@ class Trainer:
                 plotter.plot()
 
             # Terminate
-            if stop:
-                print 'Training score is lower than %.4f , ealy stop.' % \
-                trainOpt['stopScore']                
+            if stop:       
                 break
 
         # Record final epoch number

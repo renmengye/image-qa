@@ -12,8 +12,6 @@ qaTrainFilename = '../../../data/mscoco/train/qa.pkl'
 qaValidFilename = '../../../data/mscoco/valid/qa.pkl'
 imgHidFeatTrainFilename = '/ais/gobi3/u/mren/data/mscoco/hidden_oxford_train.h5'
 imgHidFeatValidFilename = '/ais/gobi3/u/mren/data/mscoco/hidden_oxford_valid.h5'
-imgHidFeatOutFilename = '/ais/gobi3/u/mren/data/cocoqa-toy/hidden_oxford.h5'
-#imgConvFeatOutFilename = '../data/cocoqa/hidden5_4_conv.txt'
 
 def buildDict(lines, keystart, pr=False):
     # From word to number.
@@ -152,6 +150,8 @@ if __name__ == '__main__':
         # Build toy dataset
         print 'Building toy dataset'
         outputFolder = '../data/cocoqa-toy'
+        imgHidFeatOutFilename = \
+            '/ais/gobi3/u/mren/data/cocoqa-toy/hidden_oxford.h5'
         numTrain = 6000
         numValid = 1200
         numTest = 6000
@@ -179,6 +179,8 @@ if __name__ == '__main__':
                 if std[i] == 0.0: std[i] = 1.0
             hidden7Ms = (imgOutFile['hidden7'][:] - mean) / std
             imgOutFile['hidden7_ms'] = hidden7Ms.astype('float32')
+            imgOutFile['hidden7_mean'] = mean
+            imgOutFile['hidden7_std'] = std
         else:
             print 'Not building image features'
         
@@ -198,6 +200,8 @@ if __name__ == '__main__':
         # Build full dataset
         print 'Building full dataset'
         outputFolder = '../data/cocoqa-full/'
+        imgHidFeatOutFilename = \
+            '/ais/gobi3/u/mren/data/cocoqa-full/hidden_oxford.h5'
         trainLB = 20
         trainUB = 200
         validLB = 3
@@ -210,21 +214,20 @@ if __name__ == '__main__':
             imgHidFeatTrain = h5py.File(imgHidFeatTrainFilename)
             imgHidFeatValid = h5py.File(imgHidFeatValidFilename)
             imgOutFile = h5py.File(imgHidFeatOutFilename, 'w')
-            numTrain = 0
-
             for name in ['hidden7', 'hidden6', 'hidden5_maxpool']:
                 hidFeatTrain = imgHidFeatTrain[name][:]
                 if name == 'hidden7':
                     numTrain = hidFeatTrain.shape[0]
                 hidFeatValid = imgHidFeatValid[name][:]
                 hidFeat = np.concatenate((hidFeatTrain, hidFeatValid), axis=0)
+                print hidFeat
+                print hidFeat.shape
                 hidFeatSparse = sparse.csr_matrix(hidFeat)
                 imgOutFile[name + '_shape'] = hidFeatSparse._shape
                 imgOutFile[name + '_data'] = hidFeatSparse.data
-                imgOutFile[name + 'indices'] = hidFeatSparse.indices
-                imgOutFile[name + 'indptr'] = hidFeatSparse.indptr
-
-            hidden7Train = imgOutFile['hidden7'][0 : numTrain]
+                imgOutFile[name + '_indices'] = hidFeatSparse.indices
+                imgOutFile[name + '_indptr'] = hidFeatSparse.indptr
+            hidden7Train = imgHidFeatTrain['hidden7'][:]
             mean = np.mean(hidden7Train, axis=0)
             std = np.std(hidden7Train, axis=0)
             for i in range(std.shape[0]):
