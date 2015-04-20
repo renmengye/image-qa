@@ -32,20 +32,22 @@ specs:
     - name: 'imgUnfold'
       type: 'timeUnfold'
       inputs: 'imgSel'
+      outputdEdX: false
     - name: 'imgFeat'
       type: 'lut'
       inputs: 'imgUnfold'
       inputDim: 13200
       outputDim: 4096
-      initWeights: '/ais/gobi3/u/mren/data/cocoqa-toy/hidden_oxford.h5'
+      initWeights: '/ais/gobi3/u/mren/data/cocoqa-toy/hidden7_oxford.h5'
       format: 'h5'
-      h5key: 'hidden7'
+      h5key: 'hidden7_ms'
       learningRate: 0.0
+      outputdEdX: false
     - name: 'imgMap'
       type: 'map'
       inputs: 'imgFeat'
       activeFn: 'identity'
-      bias: true
+      bias: false
       outputDim: 300
       initRange: 0.05
       initSeed: 1
@@ -61,6 +63,7 @@ specs:
     - name: 'txtUnfold'
       type: 'timeUnfold'
       inputs: 'txtSel'
+      outputdEdX: false
     - name: 'txtDict'
       type: 'lut'
       inputs: 'txtUnfold'
@@ -74,6 +77,7 @@ specs:
       type: 'timeFold'
       inputs: 'txtDict'
       timespan: 39
+      outputdEdX: false
     - name: 'concat'
       type: 'concat'
       inputs: 'imgFold, txtFold'

@@ -1,5 +1,5 @@
 name: 'imgword'
-costFn: 'crossEntIdx'
+costFn: 'rankingLoss'
 decisionFn: 'argmax'
 stages:
     - 'imgSel'
@@ -14,8 +14,10 @@ stages:
     - 'concat'
     - 'dropout'
     - 'lstm'
-    - 'softmax'
-outputs: 'softmax'
+    - 'answer'
+    - 'collector'
+    - 'cosine'
+outputs: 'cosine'
 specs:
     - name: 'imgSel'
       type: 'selector'
@@ -27,32 +29,31 @@ specs:
       type: 'selector'
       inputs: 'input'
       start: 1
-      end: 40
+      end: 28
       axis: 1
     - name: 'imgUnfold'
       type: 'timeUnfold'
       inputs: 'imgSel'
+      outputdEdX: false
     - name: 'imgFeat'
       type: 'lut'
       inputs: 'imgUnfold'
-      inputDim: 13200
+      inputDim: 1449
       outputDim: 4096
-      initWeights: '/ais/gobi3/u/mren/data/cocoqa-toy/hidden_oxford.h5'
-      format: 'h5'
-      h5key: 'hidden7'
+      initWeights: '../data/imgword/oxford-feat.npy'
       learningRate: 0.0
+      outputdEdX: false
     - name: 'imgMap'
       type: 'map'
       inputs: 'imgFeat'
       activeFn: 'identity'
-      bias: true
       outputDim: 300
-      initRange: 0.05
+      initRange: 0.1
       initSeed: 1
       learningRate: 0.8
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 100.0
+      weightClip: 50.0
       outputdEdX: false
     - name: 'imgFold'
       type: 'timeFold'
@@ -61,19 +62,20 @@ specs:
     - name: 'txtUnfold'
       type: 'timeUnfold'
       inputs: 'txtSel'
+      outputdEdX: false
     - name: 'txtDict'
       type: 'lut'
       inputs: 'txtUnfold'
-      inputDim: 3663
+      inputDim: 868
       outputDim: 300
-      initRange: 1.0
-      initSeed: 2
+      initWeights: '../data/imgword/word-embed-0-q.npy'
       learningRate: 0.0
       outputdEdX: false
     - name: 'txtFold'
       type: 'timeFold'
       inputs: 'txtDict'
-      timespan: 39
+      timespan: 27
+      outputdEdX: false
     - name: 'concat'
       type: 'concat'
       inputs: 'imgFold, txtFold'
@@ -81,15 +83,15 @@ specs:
     - name: 'dropout'
       type: 'dropout'
       inputs: 'concat'
-      dropoutRate: 0.2
+      dropoutRate: 0.5
       initSeed: 3
       outputDim: 300
     - name: 'lstm'
       type: 'lstm'
       inputs: 'dropout'
       inputDim: 300
-      outputDim: 150
-      timespan: 40
+      outputDim: 300
+      timespan: 28
       initRange: 0.1
       initSeed: 4
       cutOffZeroEnd: true
@@ -101,16 +103,18 @@ specs:
       weightClip: 100.0
       weightRegConst: 0.00005
       outputdEdX: true
-    - name: 'softmax'
-      type: 'map'
-      inputs: 'lstm'
-      activeFn: 'softmax'
-      outputDim: 237
-      initRange: 0.1
-      initSeed: 7
-      learningRate: 0.01
-      learningRateAnnealConst: 0.0
-      momentum: 0.9
-      gradientClip: 0.1
-      weightClip: 15.0
-      weightRegConst: 0.00005
+    - name: 'answer'
+      type: 'constWeights'
+      inputDim: 300
+      outputDim: 63
+      initWeights: '../data/imgword/word-embed-0-a.npy'
+      learningRate: 0.0
+      momentum: 0.0
+    - name: 'collector'
+      type: 'concat'
+      inputs: 'answer, lstm'
+      axis: 0
+    - name: 'cosine'
+      type: 'cosSimilarity'
+      inputs: 'collector'
+      bankDim: 63

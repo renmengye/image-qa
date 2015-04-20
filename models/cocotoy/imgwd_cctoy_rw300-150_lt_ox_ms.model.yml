@@ -32,7 +32,6 @@ specs:
     - name: 'imgUnfold'
       type: 'timeUnfold'
       inputs: 'imgSel'
-      outputdEdX: false
     - name: 'imgFeat'
       type: 'lut'
       inputs: 'imgUnfold'
@@ -42,7 +41,6 @@ specs:
       format: 'h5'
       h5key: 'hidden7_ms'
       learningRate: 0.0
-      outputdEdX: false
     - name: 'imgMap'
       type: 'map'
       inputs: 'imgFeat'
@@ -63,7 +61,6 @@ specs:
     - name: 'txtUnfold'
       type: 'timeUnfold'
       inputs: 'txtSel'
-      outputdEdX: false
     - name: 'txtDict'
       type: 'lut'
       inputs: 'txtUnfold'
@@ -77,7 +74,6 @@ specs:
       type: 'timeFold'
       inputs: 'txtDict'
       timespan: 39
-      outputdEdX: false
     - name: 'concat'
       type: 'concat'
       inputs: 'imgFold, txtFold'
@@ -104,7 +100,6 @@ specs:
       gradientClip: 0.1
       weightClip: 100.0
       weightRegConst: 0.00005
-      outputdEdX: true
     - name: 'softmax'
       type: 'map'
       inputs: 'lstm'
