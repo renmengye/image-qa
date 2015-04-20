@@ -102,7 +102,7 @@ specs:
       type: 'map'
       inputs: 'lstm'
       activeFn: 'softmax'
-      outputDim: 68
+      outputDim: 67
       initRange: 0.1
       initSeed: 7
       learningRate: 0.01
