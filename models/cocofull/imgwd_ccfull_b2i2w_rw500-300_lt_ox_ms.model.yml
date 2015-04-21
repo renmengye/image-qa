@@ -50,7 +50,7 @@ specs:
     - name: 'imgFeat'
       type: 'lut'
       inputs: 'imgSel'
-      inputDim: 13200
+      inputDim: 123288
       outputDim: 4096
       initWeights: '/ais/gobi3/u/mren/data/cocoqa-full/hidden_oxford.h5'
       sparse: true
