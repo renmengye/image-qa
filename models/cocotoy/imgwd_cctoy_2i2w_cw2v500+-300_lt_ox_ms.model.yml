@@ -34,6 +34,7 @@ specs:
     - name: 'txtDict'
       type: 'lut'
       inputs: 'txtSel'
+      intConversion: true
       inputDim: 3663
       outputDim: 500
       initWeights: '../data/cocoqa-full/word-embed-q-500.npy'
