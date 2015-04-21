@@ -51,13 +51,15 @@ specs:
       timespan: 52
     - name: 'imgFeat'
       type: 'lut'
-      inputs: 'imgSel'
+      inputs: 'imgUnfold'
       inputDim: 123288
       outputDim: 4096
       initWeights: '/ais/gobi3/u/mren/data/cocoqa-full/hidden_oxford.h5'
+      sparse: true
       format: 'h5'
-      h5key: 'hidden7_ms'
+      h5key: 'hidden7'
       learningRate: 0.0
+      outputdEdX: false
     - name: 'imgFeatNorm'
       type: 'normalize'
       inputs: 'imgFeat'
