@@ -103,7 +103,8 @@ if __name__ == '__main__':
             testOutput = nn.test(model, testInput)
             testRate, c, t = nn.calcRate(model, testOutput, testTarget)
             print 'Test rate: ', testRate
-            with open(os.path.join(trainer.outputFolder, 'result.txt'), 'w+') as f:
+            with open(os.path.join(
+                trainer.outputFolder, 'result.txt'), 'w+') as f:
                 f.write('Test rate: %f\n' % testRate)
     
     # Send email
@@ -143,9 +144,9 @@ if __name__ == '__main__':
             testOutput = nn.test(model, testInput)
             testRate, c, t = nn.calcRate(model, testOutput, testTarget)
             print 'Test rate: ', testRate
-
-        with open(os.path.join(trainer.outputFolder, 'result.txt'), 'w+') as f:
-            f.write('Test rate: %f' % testRate)
+            with open(os.path.join(
+                trainer.outputFolder, 'result.txt'), 'w+') as f:
+                f.write('Test rate: %f' % testRate)
         
         # Send email
         if trainOpt.has_key('sendEmail') and trainOpt['sendEmail']:

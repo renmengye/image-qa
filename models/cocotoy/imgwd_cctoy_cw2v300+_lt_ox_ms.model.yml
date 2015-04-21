@@ -64,6 +64,7 @@ specs:
     - name: 'txtDict'
       type: 'lut'
       inputs: 'txtUnfold'
+      intConversion: true
       inputDim: 3663
       outputDim: 300
       initWeights: '../data/cocoqa-toy/word-embed-custom-q.npy'

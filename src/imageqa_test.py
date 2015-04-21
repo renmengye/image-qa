@@ -71,13 +71,13 @@ def outputTxt(Y, T, answerArray, answerFilename, truthFilename):
             f.write(answerArray[np.argmax(Y[n, :])] + '\n')
 
 def runWups(answerFilename, truthFilename):
-    w1 = calculate_wups.runAll(truthFilename, answerFilename, -1)
+    w10 = calculate_wups.runAll(truthFilename, answerFilename, -1)
     w09 = calculate_wups.runAll(truthFilename, answerFilename, 0.9)
-    w0 = calculate_wups.runAll(truthFilename, answerFilename, 0.0)
-    print 'WUPS @ 1.0: %.4f' % w1
+    w00 = calculate_wups.runAll(truthFilename, answerFilename, 0.0)
+    print 'WUPS @ 1.0: %.4f' % w10
     print 'WUPS @ 0.9: %.4f' % w09
-    print 'WUPS @ 0.0: %.4f' % w0
-    return (w1, w09, w0)
+    print 'WUPS @ 0.0: %.4f' % w00
+    return (w10, w09, w00)
 
 def testAll(taskId, model, dataFolder, resultsFolder):
     testAnswerFile = os.path.join(resultsFolder, taskId, '%s.test.o.txt' % taskId)

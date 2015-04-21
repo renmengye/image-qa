@@ -165,6 +165,8 @@ def wup_measure(a,b,similarity_threshold=0.925):
 ###
 
 def runAll(gt_filepath, pred_filepath, thresh):
+    global word_pair_dict
+    word_pair_dict = {}
     input_gt=file2list(gt_filepath)
     input_pred=file2list(pred_filepath)
 

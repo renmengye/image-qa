@@ -1,5 +1,5 @@
 TARGET=$1
-COCOWD=../../../data/mscoco/train/word2vec.txt
+COCOWD=../../../data/mscoco/train/word2vec300.txt
 VOCAB_LIST_FILE_Q=question_vocabs.txt
 VOCAB_LIST_FILE_A=answer_vocabs.txt
 VOCAB_NPY_FILE_Q=question_vocabs_vec.npy
