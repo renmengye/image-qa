@@ -74,7 +74,7 @@ specs:
       outputDim: 500
     - name: 'softmax'
       type: 'map'
-      inputs: 'bow'
+      inputs: 'bow, imgMap'
       activeFn: 'softmax'
       outputDim: 237
       initRange: 0.01
