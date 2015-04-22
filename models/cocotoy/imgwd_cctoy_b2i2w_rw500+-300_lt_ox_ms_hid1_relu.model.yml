@@ -18,7 +18,6 @@ stages:
     - 'dropoutBackward'
     - 'lstmF'
     - 'lstmB'
-    - 'dropoutHidden'
     - 'hidden'
     - 'answer'
 outputs: 'answer'
@@ -154,22 +153,17 @@ specs:
       weightClip: 100.0
       weightRegConst: 0.00005
       outputdEdX: true
-    - name: 'dropoutHidden'
-      inputs: 'lstmF, lstmB'
-      type: 'dropout'
-      dropoutRate: 0.5
-      initSeed: 3
-      outputDim: 500
     - name: 'hidden'
-      inputs: 'dropoutHidden'
+      inputs: 'lstmF, lstmB'
       type: 'map'
       activeFn: 'relu'
       initRange: 0.08
       initSeed: 16
       outputDim: 500
       learningRate: 0.01
+      gradientClip: 0.1
       momentum: 0.9
-      weightClip: 100.0
+      weightClip: 50.0
       weightRegConst: 0.00005
     - name: 'answer'
       type: 'map'

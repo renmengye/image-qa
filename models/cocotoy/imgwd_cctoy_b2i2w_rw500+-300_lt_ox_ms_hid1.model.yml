@@ -168,8 +168,9 @@ specs:
       initSeed: 16
       outputDim: 500
       learningRate: 0.01
+      gradientClip: 0.1
       momentum: 0.9
-      weightClip: 100.0
+      weightClip: 20.0
       weightRegConst: 0.00005
     - name: 'answer'
       type: 'map'
