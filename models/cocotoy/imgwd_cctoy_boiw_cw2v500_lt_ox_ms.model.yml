@@ -9,9 +9,8 @@ stages:
     - 'txtUnfold'
     - 'txtDict'
     - 'txtFold'
+    - 'concat'
     - 'bow'
-    - 'dropout'
-    - 'hidden'
     - 'softmax'
 outputs: 'softmax'
 specs:
@@ -69,31 +68,18 @@ specs:
       type: 'timeFold'
       inputs: 'txtDict'
       timespan: 39
+    - name: 'concat'
+      type: 'concat'
+      inputs: 'imgFold, txtFold'
+      axis: 1
     - name: 'bow'
       type: 'sum2'
-      inputs: 'txtFold'
-      numComponents: 39
+      inputs: 'concat'
+      numComponents: 40
       outputDim: 500
-    - name: 'dropout'
-      inputs: 'bow, imgMap'
-      type: 'dropout'
-      dropoutRate: 0.5
-      initSeed: 3
-      outputDim: 1000
-    - name: 'hidden'
-      inputs: 'dropout'
-      type: 'map'
-      activeFn: 'tanh'
-      initRange: 0.01
-      initSeed: 2
-      outputDim: 500
-      learningRate: 0.01
-      momentum: 0.9
-      weightClip: 100.0
-      weightRegConst: 0.00005
     - name: 'softmax'
       type: 'map'
-      inputs: 'hidden'
+      inputs: 'bow'
       activeFn: 'softmax'
       outputDim: 237
       initRange: 0.01
