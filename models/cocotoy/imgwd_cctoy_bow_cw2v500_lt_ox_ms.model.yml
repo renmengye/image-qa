@@ -3,7 +3,6 @@ costFn: 'crossEntIdx'
 decisionFn: 'argmax'
 stages:
     - 'imgSel'
-    - 'imgUnfold'
     - 'imgFeat'
     - 'imgMap'
     - 'txtSel'
@@ -28,8 +27,6 @@ specs:
       start: 1
       end: 40
       axis: 1
-    - name: 'imgUnfold'
-      type: 'timeUnfold'
     - name: 'imgFeat'
       type: 'lut'
       inputs: 'imgSel'
