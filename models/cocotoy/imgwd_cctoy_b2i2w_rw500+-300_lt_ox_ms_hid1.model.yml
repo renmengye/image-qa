@@ -173,7 +173,7 @@ specs:
       weightRegConst: 0.00005
     - name: 'answer'
       type: 'map'
-      inputs: 'dropout'
+      inputs: 'hidden'
       outputDim: 237
       activeFn: 'softmax'
       initRange: 0.1
