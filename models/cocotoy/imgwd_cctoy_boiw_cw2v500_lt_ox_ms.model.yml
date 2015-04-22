@@ -5,6 +5,7 @@ stages:
     - 'imgSel'
     - 'imgFeat'
     - 'imgMap'
+    - 'imgFold'
     - 'txtSel'
     - 'txtUnfold'
     - 'txtDict'
