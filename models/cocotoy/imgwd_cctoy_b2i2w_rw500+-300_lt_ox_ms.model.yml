@@ -38,9 +38,13 @@ specs:
       inputs: 'txtSel'
       inputDim: 3663
       outputDim: 500
+      intConversion: true
       initRange: 1.0
       initSeed: 2
-      learningRate: 0.0
+      learningRate: 0.8
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 1000.0
       outputdEdX: false
     - name: 'txtFold'
       type: 'timeFold'

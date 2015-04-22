@@ -38,8 +38,7 @@ specs:
       inputs: 'txtSel'
       inputDim: 3663
       outputDim: 500
-      initRange: 1.0
-      initSeed: 2
+      initWeights: '../data/cocoqa-toy/word-embed-custom-q-500.npy'
       learningRate: 0.0
       outputdEdX: false
     - name: 'txtFold'
