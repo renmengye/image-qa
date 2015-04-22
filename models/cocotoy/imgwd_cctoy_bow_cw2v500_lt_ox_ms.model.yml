@@ -30,6 +30,7 @@ specs:
       axis: 1
     - name: 'imgUnfold'
       type: 'timeUnfold'
+    - name: 'imgFeat'
       inputs: 'imgSel'
       inputDim: 13200
       outputDim: 4096
