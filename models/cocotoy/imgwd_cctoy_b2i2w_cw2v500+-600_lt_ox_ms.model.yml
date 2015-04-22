@@ -123,7 +123,7 @@ specs:
       type: 'lstm'
       inputs: 'dropoutForward'
       inputDim: 500
-      outputDim: 300
+      outputDim: 600
       timespan: 41
       initRange: 0.1
       initSeed: 5
@@ -139,7 +139,7 @@ specs:
       type: 'lstm'
       inputs: 'dropoutBackward'
       inputDim: 500
-      outputDim: 300
+      outputDim: 600
       timespan: 41
       initRange: 0.1
       initSeed: 6
@@ -156,10 +156,10 @@ specs:
       inputs: 'lstmF, lstmB'
       outputDim: 237
       activeFn: 'softmax'
-      initRange: 0.1
+      initRange: 0.05
       initSeed: 6
       learningRate: 0.01
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 15.0
+      weightClip: 100.0
       weightRegConst: 0.00005
