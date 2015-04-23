@@ -10,8 +10,6 @@ stages:
     - 'txtDict'
     - 'txtFold'
     - 'bow'
-    - 'dropout'
-    - 'hidden'
     - 'softmax'
 outputs: 'softmax'
 specs:
@@ -74,26 +72,9 @@ specs:
       inputs: 'txtFold'
       numComponents: 39
       outputDim: 500
-    - name: 'dropout'
-      inputs: 'bow, imgMap'
-      type: 'dropout'
-      dropoutRate: 0.5
-      initSeed: 3
-      outputDim: 1000
-    - name: 'hidden'
-      inputs: 'dropout'
-      type: 'map'
-      activeFn: 'tanh'
-      initRange: 0.01
-      initSeed: 2
-      outputDim: 500
-      learningRate: 0.01
-      momentum: 0.9
-      weightClip: 100.0
-      weightRegConst: 0.00005
     - name: 'softmax'
       type: 'map'
-      inputs: 'hidden'
+      inputs: 'bow, imgMap'
       activeFn: 'softmax'
       outputDim: 237
       initRange: 0.01
