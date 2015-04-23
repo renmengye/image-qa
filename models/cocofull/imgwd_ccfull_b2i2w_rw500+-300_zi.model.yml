@@ -1,0 +1,95 @@
+costFn: 'crossEntIdx'
+decisionFn: 'argmax'
+stages:
+    - 'txtSel'
+    - 'txtDict'
+    - 'txtFold'
+    - 'txtRev'
+    - 'dropoutForward'
+    - 'dropoutBackward'
+    - 'lstmF'
+    - 'lstmB'
+    - 'answer'
+outputs: 'answer'
+specs:
+    - name: 'txtSel'
+      type: 'selector'
+      inputs: 'input'
+      start: 1
+      end: 53
+      axis: 1
+    - name: 'txtDict'
+      type: 'lut'
+      inputs: 'txtSel'
+      intConversion: true
+      inputDim: 9881
+      outputDim: 500
+      initRange: 1.0
+      initSeed: 2
+      learningRate: 0.8
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 1000.0
+      outputdEdX: false
+    - name: 'txtFold'
+      type: 'timeFold'
+      inputs: 'txtDict'
+      timespan: 52
+    - name: 'txtRev'
+      type: 'timeReverse'
+      inputs: 'txtFold'
+    - name: 'dropoutForward'
+      type: 'dropout'
+      inputs: 'txtFold'
+      dropoutRate: 0.4
+      initSeed: 3
+      outputDim: 500
+    - name: 'dropoutBackward'
+      type: 'dropout'
+      inputs: 'txtRev'
+      dropoutRate: 0.4
+      initSeed: 4
+      outputDim: 500
+    - name: 'lstmF'
+      type: 'lstm'
+      inputs: 'dropoutForward'
+      inputDim: 500
+      outputDim: 300
+      timespan: 52
+      initRange: 0.1
+      initSeed: 5
+      multiOutput: false
+      learningRate: 0.8
+      learningRateAnnealConst: 0.0
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 100.0
+      weightRegConst: 0.00005
+      outputdEdX: true
+    - name: 'lstmB'
+      type: 'lstm'
+      inputs: 'dropoutBackward'
+      inputDim: 500
+      outputDim: 300
+      timespan: 52
+      initRange: 0.1
+      initSeed: 6
+      multiOutput: false
+      learningRate: 0.8
+      learningRateAnnealConst: 0.0
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 100.0
+      weightRegConst: 0.00005
+    - name: 'answer'
+      type: 'map'
+      inputs: 'lstmF, lstmB'
+      outputDim: 410
+      activeFn: 'softmax'
+      initRange: 0.1
+      initSeed: 6
+      learningRate: 0.01
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 15.0
+      weightRegConst: 0.00005
