@@ -16,6 +16,7 @@ class Map(Stage):
                  initSeed=2,
                  needInit=True,
                  initWeights=0,
+                 initType='zeroMean',
                  learningRate=0.0,
                  learningRateAnnealConst=0.0,
                  momentum=0.0,
@@ -55,19 +56,28 @@ class Map(Stage):
             self.W = None
         self.initRange = initRange
         self.biasInitConst = biasInitConst
+        self.initType = initType
         self.X = 0
         self.Y = 0
         pass
 
     def initWeights(self):
+        if self.initType == 'zeroMean':
+            r0 = -self.initRange/2.0
+            r1 = self.initRange/2.0
+        elif self.initType == 'positive':
+            r0 = 0.0
+            r1 = self.initRange
+        else:
+            raise Exception('Unknown initialization type: ' + self.initType)
         if self.bias:
             if self.biasInitConst >= 0.0:
                 self.W = np.concatenate((self.random.uniform(
-                    -self.initRange/2.0, self.initRange/2.0, (self.inputDim, self.outputDim)),
+                    r0, r1, (self.inputDim, self.outputDim)),
                     np.ones((1, self.outputDim)) * self.biasInitConst), axis=0)
             else:
                 self.W = self.random.uniform(
-                    -self.initRange/2.0, self.initRange/2.0, (self.inputDim + 1, self.outputDim))
+                    r0, r1, (self.inputDim + 1, self.outputDim))
 
         else:
             self.W = self.random.uniform(
