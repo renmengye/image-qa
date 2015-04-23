@@ -4,6 +4,7 @@ decisionFn: 'argmax'
 stages:
     - 'imgSel'
     - 'imgFeat'
+    - 'imgFeatNorm'
     - 'imgMap'
     - 'txtSel'
     - 'txtUnfold'
