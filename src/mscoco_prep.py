@@ -5,6 +5,7 @@ import numpy as np
 import h5py
 import sys
 from scipy import sparse
+import calculate_wups
 
 imgidTrainFilename = '../../../data/mscoco/train/image_list.txt'
 imgidValidFilename = '../../../data/mscoco/valid/image_list.txt'
@@ -406,7 +407,7 @@ if __name__ == '__main__':
     print 'Test Question Dist: ', testCount / float(len(testQuestions))
     
     # Build dictionary based on training questions/answers.
-    worddict, idict, _ = buildDict(trainQuestions, 1, pr=False)
+    worddict, idict, wordfreq = buildDict(trainQuestions, 1, pr=False)
     ansdict, iansdict, _ = buildDict(trainAnswers, 0, pr=True)
 
     print 'Valid answer distribution'
@@ -439,15 +440,35 @@ if __name__ == '__main__':
         testQuestionTypes, dtype=object)[shuffle]
 
     # Build baseline solution
+    baselineCorrect = np.zeros(4)
+    baselineTotal = np.zeros(4)
     for n in range(0, len(testQuestions)):
         if testQuestionTypes[n] == 0:
             baseline.append(objectAnswer)
+            if testAnswers[n] == objectAnswer:
+                baselineCorrect[0] += 1
+            baselineTotal[0] += 1
         elif testQuestionTypes[n] == 1:
             baseline.append(numberAnswer)
+            if testAnswers[n] == numberAnswer:
+                baselineCorrect[1] += 1
+            baselineTotal[1] += 1
         elif testQuestionTypes[n] == 2:
             baseline.append(colorAnswer)
+            if testAnswers[n] == colorAnswer:
+                baselineCorrect[2] += 1
+            baselineTotal[2] += 1
         elif testQuestionTypes[n] == 3:
             baseline.append(locationAnswer)
+            if testAnswers[n] == locationAnswer:
+                baselineCorrect[3] += 1
+            baselineTotal[3] += 1
+    baselineRate = baselineCorrect / baselineTotal.astype('float')
+    print 'Baseline rate: %.4f' % (np.sum(baselineCorrect) / np.sum(baselineTotal).astype('float'))
+    print 'Baseline object: %.4f' % baselineRate[0]
+    print 'Baseline number: %.4f' % baselineRate[1]
+    print 'Baseline color: %.4f' % baselineRate[2]
+    print 'Baseline scene: %.4f' % baselineRate[3]
 
     # Find max length
     maxlen = findMaxlen(np.concatenate((trainQuestions, validQuestions, testQuestions)))
@@ -491,11 +512,28 @@ if __name__ == '__main__':
         for word in iansdict:
             f.write(word + '\n')
 
+    # Frequency file
+    with open(os.path.join(outputFolder, \
+        'question_vocabs_freq.txt'), 'w+') as f:
+        for i in wordfreq:
+            f.write('%d\n' % i)
+
     # Image ID file
     with open(os.path.join(outputFolder, 'imgid_dict.pkl'), 'wb') as f:
         pkl.dump(imgidDict3, f)
 
     # GUESS baseline
-    with open(os.path.join(outputFolder, 'baseline.txt'), 'w+') as f:
+    baselineFilename = os.path.join(outputFolder, 'baseline.txt')
+    groundTruthFilename = os.path.join(outputFolder, 'ground_truth.txt')
+    with open(baselineFilename, 'w+') as f:
         for answer in baseline:
             f.write(answer + '\n')
+    with open(groundTruthFilename, 'w+') as f:
+        for answer in testAnswers:
+            f.write(answer + '\n')
+    wups = np.zeros(3)
+    for i, thresh in enumerate([-1, 0.9, 0.0]):
+        wups[i] = calculate_wups.runAll(groundTruthFilename, baselineFilename, thresh)
+    print 'Baseline WUPS -1: %.4f' % wups[0]
+    print 'Baseline WUPS 0.9: %.4f' % wups[1]
+    print 'Baseline WUPS 0.0: %.4f' % wups[2]
