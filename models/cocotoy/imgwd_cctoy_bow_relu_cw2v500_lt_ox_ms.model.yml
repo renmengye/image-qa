@@ -85,7 +85,6 @@ specs:
       type: 'map'
       activeFn: 'relu'
       initRange: 0.01
-      initType: 'positive'
       initSeed: 2
       outputDim: 500
       learningRate: 0.01

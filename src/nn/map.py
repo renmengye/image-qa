@@ -78,7 +78,6 @@ class Map(Stage):
             else:
                 self.W = self.random.uniform(
                     r0, r1, (self.inputDim + 1, self.outputDim))
-
         else:
             self.W = self.random.uniform(
                     -self.initRange/2.0, self.initRange/2.0, (self.inputDim, self.outputDim))
