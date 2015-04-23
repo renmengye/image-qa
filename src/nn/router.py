@@ -189,7 +189,7 @@ def addStage(stageDict):
             initSeed=initSeed,
             initRange=initRange,
             initWeights=initWeights,
-            initType=stageDict['initType'] if stageDict.has_key('initType') else 'zeroMean'
+            initType=stageDict['initType'] if stageDict.has_key('initType') else 'zeroMean',
             bias=stageDict['bias'] if stageDict.has_key('bias') else True,
             biasInitConst=biasInitConst,
             needInit=needInit,
