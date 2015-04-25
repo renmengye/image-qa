@@ -119,8 +119,8 @@ def readImgDictCoco(imgidDict):
     for item in caption['images']:
         urlDict[item['id']] = item['url']
     urlList = [None] * len(imgidDict)
-    for key in imgidDict.keys():
-        urlList[imgidDict[key] - 1] = urlDict[key]
+    for i, key in enumerate(imgidDict):
+        urlList[i] = urlDict[int(key)]
     return urlList
 
 def readImgDictDaquar():
