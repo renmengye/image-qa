@@ -33,8 +33,11 @@ def renderHtml(
         result = []
         numPages = X.shape[0] / 2000 + 1
         for i in range(numPages):
+            start = 2000 * i
+            end = min(X.shape[0], 2000 * (i + 1))
             page = renderSinglePage(
-                X, Y, T, questionArray, answerArray,
+                X[start:end], Y[start:end], T[start:end], 
+                questionArray, answerArray,
                 topK, urlDict, imgidDict, i, numPages)
             result.append(page)
         return result
