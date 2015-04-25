@@ -2,6 +2,7 @@ import numpy as np
 import re
 import sys
 import os
+import calculate_wups
 
 def escapeNumber(line):
     line = re.sub('^21$', 'twenty_one', line)
@@ -175,6 +176,25 @@ def combineAttention(wordids, imgids):
             (np.array(imgid_t).reshape(len(imgids), wordids.shape[1], 1),
             wordids), axis=-1)
 
+def getQuestionType(answer):
+    if answer == 'one' or answer == 'two' or answer == 'three' or\
+        answer == 'four' or answer == 'five' or answer == 'six' or\
+        answer == 'seven' or answer == 'eight' or answer == 'nine' or\
+        answer == 'ten' or answer == 'eleven' or answer == 'twelve' or\
+        answer == 'thirteen' or answer == 'fourteen' or answer == 'fifteen' or\
+        answer == 'sixteen' or answer == 'seventeen' or answer == 'eighteen' or\
+        answer == 'nineteen' or answer == 'twenty' or answer == 'twenty-one' or\
+        answer == 'twenty-two' or answer == 'twenty-three' or answer == 'twenty-four' or\
+        answer == 'twenty-five' or answer == 'twenty-six' or answer == 'twenty-seven':
+        return 1
+    elif answer == 'red' or answer == 'orange' or answer == 'yellow' or\
+        answer == 'green' or answer == 'blue' or answer == 'black' or\
+        answer == 'white' or answer == 'brown' or answer == 'grey' or\
+        answer == 'gray' or answer == 'purple' or answer == 'pink':
+        return 2
+    else:
+        return 0
+
 if __name__ == '__main__':
     """
     Usage: imgword_prep.py -train trainQAFile -test testQAFile -o outputFolder
@@ -197,78 +217,69 @@ if __name__ == '__main__':
 
     (questions, answers, imgids) = extractQA(lines)
     split = trainValidSplit(imgids)
-    t_questions, v_questions = dataSplit(questions, imgids, split)
-    t_answers, v_answers = dataSplit(answers, imgids, split)
-    t_imgids, v_imgids = dataSplit(imgids, imgids, split)
+    trainQuestions, validQuestions = dataSplit(questions, imgids, split)
+    trainAnswers, validAnswers = dataSplit(answers, imgids, split)
+    trainImgIds, validImgIds = dataSplit(imgids, imgids, split)
 
-    print len(t_questions) + len(v_questions)
+    print len(trainQuestions) + len(validQuestions)
 
     # Read test file.
     with open(testQAFilename) as f:
         lines = f.readlines()
 
-    (r_questions, r_answers, r_imgids) = extractQA(lines)
+    (testQuestions, testAnswers, testImgIds) = extractQA(lines)
 
-    print len(r_questions)
+    print len(testQuestions)
     # Build a dictionary only for training questions.
-    worddict, idict = buildDict(t_questions, 1, pr=False)
-    ansdict, iansdict = buildDict(t_answers, 0, pr=True)
-    v_ansdict, v_iansdict = buildDict(v_answers, 0, pr=True)
-    r_ansdict, r_ansidict = buildDict(r_answers, 1, pr=True)
+    worddict, idict = buildDict(trainQuestions, 1, pr=False)
+    ansdict, iansdict = buildDict(trainAnswers, 0, pr=True)
+    validAnsDict, validIAnsDict = buildDict(validAnswers, 0, pr=True)
+    testAnsDict, testIAnsDict = buildDict(testAnswers, 1, pr=True)
 
-    trainCount = [0,0,0]
-    validCount = [0,0,0]
-    testCount = [0,0,0]
-    for n in range(0, len(t_questions)):
-        question = t_questions[n]
-        if 'how many' in question:
-            typ = 1
-        elif 'what' in question and 'color' in question:
-            typ = 2
-        else:
-            typ = 0
-        trainCount[typ] += 1
-    for n in range(0, len(v_questions)):
-        question = v_questions[n]
-        if 'how many' in question:
-            typ = 1
-        elif 'what' in question and 'color' in question:
-            typ = 2
-        else:
-            typ = 0
-        validCount[typ] += 1
-    for n in range(0, len(r_questions)):
-        question = r_questions[n]
-        if 'how many' in question:
-            typ = 1
-        elif 'what' in question and 'color' in question:
-            typ = 2
-        else:
-            typ = 0
-        testCount[typ] += 1
+    trainQuestionTypes = np.zeros(len(trainQuestions), dtype=int)
+    trainCount = np.zeros(3)
+    validQuestionTypes = np.zeros(len(validQuestions), dtype=int)
+    validCount = np.zeros(3)
+    testQuestionTypes = np.zeros(len(testQuestions), dtype=int)
+    testCount = np.zeros(3)
+    for i in range(len(trainQuestions)):
+        trainQuestionTypes[i] = getQuestionType(trainAnswers[i])
+        trainCount[trainQuestionTypes[i]] += 1
+    for i in range(len(validQuestions)):
+        validQuestionTypes[i] = getQuestionType(validAnswers[i])
+        validCount[validQuestionTypes[i]] += 1
+    for i in range(len(testQuestions)):
+        testQuestionTypes[i] = getQuestionType(testAnswers[i])
+        testCount[testQuestionTypes[i]] += 1
     
-    print 'Train Questions After Trunk: ', len(t_questions)
+    print 'Train Questions After Trunk: ', len(trainQuestions)
     print 'Train Question Dist: ', trainCount
-    print 'Valid Questions After Trunk: ', len(v_questions)
-    print 'Valid: Question Dst: ', validCount
-    trainValidQuestionsLen = len(t_questions) + len(v_questions)
-    print 'Train+Valid questions: ', trainValidQuestionsLen
-    print 'Train+Valid Dist: ', np.array(trainCount) + np.array(validCount)
-    print 'Trian+Valid Dist: ', (np.array(trainCount) + np.array(validCount)) / float(trainValidQuestionsLen)
+    print 'Train Question Dist: ', \
+            trainCount / float(len(trainQuestions))
 
-    print 'Test Questions After Trunk: ', len(r_questions)
+    print 'Valid Questions After Trunk: ', len(validQuestions)
+    print 'Valid Question Dist: ', validCount
+    print 'Valid Question Dist: ', \
+            validCount / float(len(validQuestions))
+    trainValidQuestionsLen = len(trainQuestions) + len(validQuestions)
+    print 'Train+Valid questions: ', trainValidQuestionsLen
+    print 'Train+Valid Dist: ', trainCount + validCount
+    print 'Trian+Valid Dist: ', \
+            (trainCount + validCount) / float(trainValidQuestionsLen)
+
+    print 'Test Questions After Trunk: ', len(testQuestions)
     print 'Test Question Dist: ', testCount
-    print 'Test Question Dist: ', np.array(testCount) / float(len(r_questions))
+    print 'Test Question Dist: ', testCount / float(len(testQuestions))
 
     trainInput = combine(\
-        lookupQID(t_questions, worddict), t_imgids)
-    trainTarget = lookupAnsID(t_answers, ansdict)
+        lookupQID(trainQuestions, worddict), trainImgIds)
+    trainTarget = lookupAnsID(trainAnswers, ansdict)
     validInput = combine(\
-        lookupQID(v_questions, worddict), v_imgids)
-    validTarget = lookupAnsID(v_answers, ansdict)
+        lookupQID(validQuestions, worddict), validImgIds)
+    validTarget = lookupAnsID(validAnswers, ansdict)
     testInput = combine(\
-        lookupQID(r_questions, worddict), r_imgids)
-    testTarget = lookupAnsID(r_answers, ansdict)
+        lookupQID(testQuestions, worddict), testImgIds)
+    testTarget = lookupAnsID(testAnswers, ansdict)
 
     worddict_all, idict_all = buildDict(questions, 1)
     ansdict_all, iansdict_all = buildDict(answers, 0, pr=True)
@@ -303,11 +314,11 @@ if __name__ == '__main__':
             ansdict_all, iansdict_all, 0), dtype=object))
 
     trainInput = combineAttention(\
-        lookupQID(t_questions, worddict), t_imgids)
+        lookupQID(trainQuestions, worddict), trainImgIds)
     validInput = combineAttention(\
-        lookupQID(v_questions, worddict), v_imgids)
+        lookupQID(validQuestions, worddict), validImgIds)
     testInput = combineAttention(\
-        lookupQID(r_questions, worddict), r_imgids)
+        lookupQID(testQuestions, worddict), testImgIds)
     allInput = combineAttention(\
         lookupQID(questions, worddict_all), imgids)
     np.save(\
@@ -342,3 +353,49 @@ if __name__ == '__main__':
     with open(os.path.join(outputFolder, 'train_imgids.txt'), 'w+') as f:
         for i in trainImgIds:
             f.write(str(i) + '\n')
+
+    # Build baseline solution
+    colorAnswer = 'white'
+    numberAnswer = 'two'
+    objectAnswer = 'table'
+
+    baseline = []
+    baselineCorrect = np.zeros(3)
+    baselineTotal = np.zeros(3)
+    for n in range(0, len(testQuestions)):
+        if testQuestionTypes[n] == 0:
+            baseline.append(objectAnswer)
+            if testAnswers[n] == objectAnswer:
+                baselineCorrect[0] += 1
+            baselineTotal[0] += 1
+        elif testQuestionTypes[n] == 1:
+            baseline.append(numberAnswer)
+            if testAnswers[n] == numberAnswer:
+                baselineCorrect[1] += 1
+            baselineTotal[1] += 1
+        elif testQuestionTypes[n] == 2:
+            baseline.append(colorAnswer)
+            if testAnswers[n] == colorAnswer:
+                baselineCorrect[2] += 1
+            baselineTotal[2] += 1
+    baselineRate = baselineCorrect / baselineTotal.astype('float')
+    print 'Baseline rate: %.4f' % (np.sum(baselineCorrect) / np.sum(baselineTotal).astype('float'))
+    print 'Baseline object: %.4f' % baselineRate[0]
+    print 'Baseline number: %.4f' % baselineRate[1]
+    print 'Baseline color: %.4f' % baselineRate[2]
+
+    baselineFilename = os.path.join(outputFolder, 'baseline.txt')
+    groundTruthFilename = os.path.join(outputFolder, 'ground_truth.txt')
+    with open(baselineFilename, 'w+') as f:
+        for answer in baseline:
+            f.write(answer + '\n')
+    with open(groundTruthFilename, 'w+') as f:
+        for answer in testAnswers:
+            f.write(answer + '\n')
+
+    wups = np.zeros(3)
+    for i, thresh in enumerate([-1, 0.9, 0.0]):
+        wups[i] = calculate_wups.runAll(groundTruthFilename, baselineFilename, thresh)
+    print 'Baseline WUPS -1: %.4f' % wups[0]
+    print 'Baseline WUPS 0.9: %.4f' % wups[1]
+    print 'Baseline WUPS 0.0: %.4f' % wups[2]

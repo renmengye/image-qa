@@ -44,7 +44,7 @@ def renderHtml(
 
 def renderMenu(iPage, numPages):
     htmlList = []
-    htmlList.append('<div style="text-align:center">Navigation: ')
+    htmlList.append('<div>Navigation: ')
     for n in range(numPages):
         if n != iPage:
             htmlList.append('<a href=%s> %d </a>' % \

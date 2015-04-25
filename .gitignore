@@ -4,11 +4,19 @@ data/*
 # Bin folder
 bin/*
 
+# Results folder
+results/*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 
 *.swp
+
+# Binary files
+*.npy
+*.npz
+*.pkl
 
 # C extensions
 *.so
