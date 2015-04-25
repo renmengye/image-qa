@@ -137,16 +137,11 @@ if __name__ == '__main__':
     model.loadWeights(
         np.load('../results/%s/%s.w.npy' % (taskId, taskId)))
 
-    trainDataFile = os.path.join(dataFolder, 'train.npy')
     testDataFile = os.path.join(dataFolder, 'test.npy')
-    trainData = np.load(trainDataFile)
     testData = np.load(testDataFile)
 
-    inputTrain = trainData[0]
-    outputTrain = nn.test(model, X)
-    targetTrain = trainData[1]
     inputTest = testData[0]
-    outputTest = nn.test(model, TX)
+    outputTest = nn.test(model, inputTest)
     targetTest = testData[1]
     questionArray = vocabDict[1]
     answerArray = vocabDict[3]
