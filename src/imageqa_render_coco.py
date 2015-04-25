@@ -101,8 +101,9 @@ def renderSinglePage(
                         %s</span><br/></div></td>' % answerArray[T[n, 0]])
         if np.mod(n, imgPerRow) == imgPerRow - 1:
             htmlList.append('</tr>')
+    htmlList.append('</table>')
     htmlList.append(renderMenu(iPage, numPages))
-    htmlList.append('</table></body></html>')
+    htmlList.append('</body></html>')
     return ''.join(htmlList)
 
 def readImgDict():
