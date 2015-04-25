@@ -1,14 +1,13 @@
 import sys
 import time
 import numpy as np
-import lstm as l
-
+import lstm_old as l
 
 start = time.time()
 timespan = 100
 multiErr = len(sys.argv) > 1 and sys.argv[1] == 'm'
 for i in range(0, 10):
-    lstm = l.LSTM(
+    lstm = l.LSTM_Old(
         inputDim=100,
         outputDim=100,
         initRange=.1,

@@ -1,26 +1,23 @@
-from stage import *
+from container import *
 
-class Model(Stage):
-    def __init__(self, stage, costFn, decisionFn=None, specFilename=None):
-        self.stage = stage
+class GraphModel(Container):
+    def __init__(self,
+                 stages, 
+                 outputStageNames,
+                 costFn,
+                 inputDim=0,
+                 outputDim=0,
+                 name=None,
+                 decisionFn=None, 
+                 specFilename=None):
+        Container.__init__(self,
+                 name=name,
+                 stages=stages,
+                 inputNames=['input'],
+                 outputStageNames=outputStageNames,
+                 inputDim=inputDim,
+                 outputDim=outputDim,
+                 outputdEdX=True)
         self.getCost = costFn
         self.predict = decisionFn
         self.specFilename = specFilename
-
-    def forward(self, X, dropout=True):
-        return self.stage.forward(X, dropout)
-
-    def backward(self, dEdY):
-        return self.stage.backward(dEdY)
-
-    def updateWeights(self):
-        return self.stage.updateWeights()
-
-    def updateLearningParams(self, numEpoch):
-        return self.stage.updateLearningParams(numEpoch)
-
-    def getWeights(self):
-        return self.stage.getWeights()
-
-    def loadWeights(self, W):
-        return self.stage.loadWeights(W)

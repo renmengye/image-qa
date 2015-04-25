@@ -45,7 +45,7 @@ def argmax(Y):
 def rankingLoss(Y, T):
     alpha = 0.1
     dEdY = np.zeros(Y.shape)
-    E = 0
+    E = 0.0
     for n in range(T.size):
         cost = Y[n] - Y[n, T[n]] + alpha
         valid = (cost > 0).astype(int)
@@ -54,6 +54,6 @@ def rankingLoss(Y, T):
         dEdY[n] = valid
         dEdY[n, T[n]] = -nvalid
         E += np.sum(cost) - alpha
-    E /= T.size
-    dEdY /= T.size
+    E /= float(T.size)
+    dEdY /= float(T.size)
     return E, dEdY

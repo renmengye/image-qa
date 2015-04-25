@@ -2,20 +2,22 @@ from stage import *
 
 class Dropout(Stage):
     def __init__(self,
+                 name,
+                 inputNames,
+                 outputDim,
                  dropoutRate,
                  initSeed,
-                 debug=False,
-                 name=None):
-        Stage.__init__(self, name=name)
-        self.W = 0
-        self.X = 0
+                 debug=False):
+        Stage.__init__(self,
+            name=name,
+            inputNames=inputNames,
+            outputDim=outputDim)
         self.dropout = True
         self.dropoutVec = 0
         self.dropoutRate = dropoutRate
         self.debug = debug
         self.random = np.random.RandomState(initSeed)
         self.seed = initSeed
-        pass
 
     def forward(self, X):
         if self.dropoutRate > 0.0 and self.dropout:
@@ -30,12 +32,10 @@ class Dropout(Stage):
         return Y
 
     def backward(self, dEdY):
-        self.dEdW = 0
         dEdX = None
         if self.outputdEdX:
             if self.dropout:
                 dEdX = dEdY * self.dropoutVec
             else:
                 dEdX = dEdY / (1 - self.dropoutRate)
-
         return dEdX

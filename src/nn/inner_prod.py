@@ -6,7 +6,9 @@ class InnerProduct(Stage):
     Two vectors aligns on the second axis (time-axis).
     """
     def __init__(self,
-                name=None,
+                name,
+                inputNames,
+                outputDim,
                 learningRate=0.0,
                 learningRateAnnealConst=0.0,
                 momentum=0.0,
@@ -17,6 +19,8 @@ class InnerProduct(Stage):
                 outputdEdX=True):
         Stage.__init__(self,
                  name=name,
+                 outputDim=outputDim,
+                 inputNames=inputNames,
                  learningRate=learningRate,
                  learningRateAnnealConst=learningRateAnnealConst,
                  momentum=momentum,

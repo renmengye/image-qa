@@ -8,7 +8,6 @@ writeRecord: true
 saveModel: true
 plotFigs: true
 calcError: true
-stopCost: 0.01
 progress: true
 patience: 20
 sendEmail: true

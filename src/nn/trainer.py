@@ -129,7 +129,8 @@ class Trainer:
         self.name = name + time.strftime("-%Y%m%d-%H%M%S")
         self.resultsFolder = outputFolder
         self.outputFolder = os.path.join(outputFolder, self.name)
-        self.modelFilename = os.path.join(self.outputFolder, self.name + '.w.npy')
+        self.modelFilename = \
+            os.path.join(self.outputFolder, self.name + '.w.npy')
         self.trainOpt = trainOpt
         self.startTime = time.time()
         self.random = np.random.RandomState(seed)
@@ -180,8 +181,10 @@ class Trainer:
         logger.logMsg('Trainer ' + self.name)
         plotter = Plotter(self)
         bestVscore = None
+        bestTscore = None
         bestEpoch = 0
         nAfterBest = 0
+        stop = False
 
         # Train loop through epochs
         for epoch in range(0, numEpoch):
@@ -218,7 +221,8 @@ class Trainer:
 
                 # Prediction error
                 if calcError:
-                    rate_, correct_, total_ = tester.calcRate(self.model, Y_bat, T_bat)
+                    rate_, correct_, total_ = \
+                        tester.calcRate(self.model, Y_bat, T_bat)
                     correct += correct_
                     total += total_
 
@@ -229,6 +233,17 @@ class Trainer:
                 rate = correct / float(total)
                 self.rate[epoch] = rate
             self.loss[epoch] = E
+
+            if not trainOpt.has_key('criterion'):
+                Tscore = E
+            else:
+                if trainOpt['criterion'] == 'loss':
+                    Tscore = E
+                elif trainOpt['criterion'] == 'rate':
+                    Tscore = 1 - rate
+                else:
+                    raise Exception('Unknown stopping criterion "%s"' % \
+                        trainOpt['criterion'])
 
             # Run validation
             if trainOpt['needValid']:
@@ -248,9 +263,11 @@ class Trainer:
                     elif trainOpt['criterion'] == 'rate':
                         Vscore = 1 - Vrate
                     else:
-                        raise Exception('Unknown stopping criterion "%s"' % trainOpt['criterion'])
+                        raise Exception('Unknown stopping criterion "%s"' % \
+                            trainOpt['criterion'])
                 if (bestVscore is None) or (Vscore < bestVscore):
                     bestVscore = Vscore
+                    bestTscore = Tscore
                     nAfterBest = 0
                     bestEpoch = epoch
                     # Save trainer if VE is best
@@ -260,26 +277,39 @@ class Trainer:
                     nAfterBest += 1
                     # Stop training if above patience level
                     if nAfterBest > trainOpt['patience']:
-                        break
+                        print 'Patience level reached, early stop.'
+                        print 'Will stop at score ', bestTscore
+                        stop = True
             else:
                 if trainOpt['saveModel']:
                     self.save()
+                if trainOpt.has_key('stopScore') and \
+                    Tscore < trainOpt['stopScore']:
+                    print 'Training score is lower than %.4f , ealy stop.' % \
+                        trainOpt['stopScore'] 
+                    stop = True                    
 
             # Anneal learning rate
             self.model.updateLearningParams(epoch)
 
             # Print statistics
             logger.logTrainStats()
-
+            if trainOpt['needValid']:
+                print 'BT: %.4f' % bestTscore
+            
             # Plot train curves
             if trainOpt['plotFigs']:
                 plotter.plot()
 
+            # Terminate
+            if stop:       
+                break
+
         # Record final epoch number
+        self.stoppedTrainScore = bestTscore
         self.stoppedEpoch = bestEpoch if trainOpt['needValid'] else epoch
 
     def save(self, filename=None):
         if filename is None:
             filename = self.modelFilename
         np.save(filename, self.model.getWeights())
-        pass

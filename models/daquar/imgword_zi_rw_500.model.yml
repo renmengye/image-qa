@@ -1,0 +1,73 @@
+name: 'imgword'
+costFn: 'crossEntIdx'
+decisionFn: 'argmax'
+stages:
+    - 'txtSel'
+    - 'txtUnfold'
+    - 'txtDict'
+    - 'txtFold'
+    - 'dropout'
+    - 'lstm'
+    - 'softmax'
+outputs: 'softmax'
+specs:
+    - name: 'txtSel'
+      type: 'selector'
+      inputs: 'input'
+      start: 1
+      end: 28
+      axis: 1
+    - name: 'txtUnfold'
+      type: 'timeUnfold'
+      inputs: 'txtSel'
+      outputdEdX: false
+    - name: 'txtDict'
+      type: 'lut'
+      inputs: 'txtUnfold'
+      inputDim: 868
+      outputDim: 500
+      initRange: 1.0
+      initSeed: 2
+      learningRate: 0.0
+      outputdEdX: false
+    - name: 'txtFold'
+      type: 'timeFold'
+      inputs: 'txtDict'
+      timespan: 27
+      outputdEdX: false
+    - name: 'dropout'
+      type: 'dropout'
+      inputs: 'txtFold'
+      dropoutRate: 0.2
+      initSeed: 3
+      outputDim: 500
+    - name: 'lstm'
+      type: 'lstm'
+      inputs: 'dropout'
+      inputDim: 500
+      outputDim: 150
+      timespan: 28
+      initRange: 0.1
+      initSeed: 4
+      cutOffZeroEnd: true
+      multiErr: false
+      learningRate: 0.8
+      learningRateAnnealConst: 0.0
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 100.0
+      weightRegConst: 0.00005
+      outputdEdX: true
+    - name: 'softmax'
+      type: 'map'
+      inputs: 'lstm'
+      activeFn: 'softmax'
+      outputDim: 67
+      initRange: 0.1
+      initSeed: 7
+      learningRate: 0.01
+      learningRateAnnealConst: 0.0
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 15.0
+      weightRegConst: 0.00005

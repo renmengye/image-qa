@@ -9,13 +9,14 @@ from nltk.corpus import wordnet
 import sys
 
 if len(sys.argv) < 2:
-    parseFilename = '../../../data/mscoco/mscoco_caption.parse.txt'
-    imgidsFilename = '../../../data/mscoco/mscoco_imgids.txt'
-    outputFilename = '../../../data/mscoco/mscoco_qa.pkl'
+    parseFilename = '../../../data/mscoco/train/caption.parse.txt'
+    imgidsFilename = '../../../data/mscoco/train/imgids.txt'
+    outputFilename = '../../../data/mscoco/train/qa.pkl'
 else:
-    parseFilename = '../../../data/%s/%s_caption.parse.txt' %(sys.argv[1],sys.argv[1])
-    imgidsFilename = '../../../data/%s/%s_imgids.txt' %(sys.argv[1],sys.argv[1])
-    outputFilename = '../../../data/%s/%s_qa.pkl' %(sys.argv[1],sys.argv[1])
+    folder = sys.argv[1]
+    parseFilename = '%s/caption.parse.txt' %(sys.argv[1],sys.argv[1])
+    imgidsFilename = '%s/imgids.txt' %(sys.argv[1],sys.argv[1])
+    outputFilename = '%s/qa.pkl' %(sys.argv[1],sys.argv[1])
 
 lemmatizer = WordNetLemmatizer()
 
@@ -170,19 +171,6 @@ class QuestionGenerator:
                 insideNP = True
             elif insideNP and item.className == 'VP':
                 insideVP = True
-
-                # Testing!!!!
-                # Now if inside the NP, then move the entire NP
-                # cont = False
-                # for child in item.children:
-                #     if child.className == 'VP':
-                #         if child is not topVP:
-                #             #print 'VP inside NP'
-                #             return False
-                #         else:
-                #             cont = True
-                # if not cont:
-                #     whPosition = whStack.index(item)
                 pass
 
         # Look for VP
@@ -363,7 +351,7 @@ class QuestionGenerator:
             if node.className == 'NP' and ccNoun:
                 cont = False            
             if len(node.children) > 1 and \
-            node.children[1].className == 'PP':
+                node.children[1].className == 'PP':
                 node.children.remove(node.children[1])
             # if node.className == 'NP' and \
             # len(node.children) > 1 and \
@@ -508,6 +496,10 @@ class QuestionGenerator:
                     child.text == 'violet'):
                         found[0] = True
                         answer[0] = child
+                    if child.className == 'CC' and child.text == 'and':
+                        # Blue and white? No.
+                        found[0] = False
+                        answer[0] = None
                     if child.className == 'NN' or child.className == 'NNS':
                         obj[0] = child
                 if found[0] and obj[0] is not None:
@@ -574,7 +566,7 @@ class TreeParser:
 
     @staticmethod
     def isText(s):
-        if TreeParser.isAlpha(s) or TreeParser.isNumber(s) or s == '.' or s == ',' or s == '-' or s == '\'' or s == '`' or s == '/' or s == '>' or s == ':' or s == ';' or s == '\\' or s == '!' or s == '?' or s == '&' or s == '-' or s == '=' or s == '#' or s == '$' or s == '@' or s == '_' or s == '*' or s == '+' or s == chr(194) or s == chr(160):
+        if TreeParser.isAlpha(s) or TreeParser.isNumber(s) or s == '.' or s == ',' or s == '-' or s == '\'' or s == '`' or s == '/' or s == '>' or s == ':' or s == ';' or s == '\\' or s == '!' or s == '?' or s == '&' or s == '-' or s == '=' or s == '#' or s == '$' or s == '@' or s == '_' or s == '*' or s == '+' or s == '%' or s == chr(194) or s == chr(160):
             return True
         else:
             return False 
@@ -690,23 +682,23 @@ def questionGen():
                 originalSent = parser.rootsList[0].toSentence()
                 hasItem = False
                 for qaitem in gen.askWhoWhat(parser.rootsList[0].copy()):
+                    if qaitem[0] == 'what ?' or qaitem == 'who ?':
+                        continue
+                    else:
+                        question = qaitem[0]
                     questionCount += 1
                     questionWhatCount += 1
                     hasItem = True
-                    if qaitem[0] == 'what ?':
-                        question = 'what is this?'
-                    else:
-                        question = qaitem[0]
-                    print ('Question %d:' % questionCount), question, 'Answer:', qaitem[1]
+                    print ('Question %d:' % questionCount), qaitem[0], 'Answer:', qaitem[1]
                     # 0 is what-who question type
-                    questionAll.append((question, qaitem[1], imgid, 0))
+                    questionAll.append((qaitem[0], qaitem[1], imgid, 0))
                 for qaitem in gen.askHowMany(parser.rootsList[0].copy()):
                     questionCount += 1
                     questionHowmanyCount += 1
                     hasItem = True
                     print ('Question %d:' % questionCount), qaitem[0], 'Answer:', qaitem[1]
                     # 1 is how-many question type
-                    questionAll.append((question, qaitem[1], imgid, 1))
+                    questionAll.append((qaitem[0], qaitem[1], imgid, 1))
                 for qaitem in gen.askColor(parser.rootsList[0].copy()):
                     questionCount += 1
                     questionColorCount += 1
@@ -715,9 +707,9 @@ def questionGen():
                     # 2 is color question type
                     questionAll.append((qaitem[0], qaitem[1], imgid, 2))
                 if hasItem:
+                    print 'Original:', originalSent
+                    print '-' * 20
                     pass
-                    #print 'Original:', originalSent
-                    #print '-' * 20
                 del(parser.rootsList[0])
                 numSentences += 1
             parser.parse(line)
@@ -732,14 +724,29 @@ def questionGen():
     print 'Number of what questions:', questionWhatCount
     print 'Number of how many questions:', questionHowmanyCount
     print 'Number of color questions:', questionColorCount
-    with open(outputFilename, 'wb') as f:
-        pkl.dump(questionAll, f)
+
+    # Output a list of tuples (q, a, imgid)
+    # with open(outputFilename, 'wb') as f:
+    #     pkl.dump(questionAll, f)
+    with open(outputFilename+'.csv', 'w') as f:
+        f.write('#,question,answer,type\n')
+        for i,item in enumerate(questionAll):
+            question = item[0]
+            if 'how many' in question:
+                typ = 2
+            elif question.startswith('what is the color'):
+                typ = 3
+            elif 'who' in question:
+                typ = 4
+            else:
+                typ = 1
+            f.write(str(i+1)+','+item[0].replace(',','')+','+item[1]+','+str(typ)+'\n')
 
 def testHook():
     #s = stanfordParse('There are two ovens in a kitchen restaurant , and one of them is being used .')
     #s = stanfordParse('A bathroom with two sinks a bathtub and a shower with lots of lighting from the windows .')
     #s = stanfordParse('A man waits at the crosswalk with his bicycle .')
-    s = stanfordParse('A brown horse is grazing grass near a red house .')
+    s = stanfordParse('A boy is playing with two dogs .')
 
     #print s
     s = s.split('\n')

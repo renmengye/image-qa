@@ -164,22 +164,12 @@ def wup_measure(a,b,similarity_threshold=0.925):
     return final_score 
 ###
 
-
-if __name__ == '__main__':
-
-    if len(sys.argv) < 4:
-        print 'Usage: path to true answers, path to predicted answers, threshold'
-        print 'If threshold is -1, then the standard Accuracy is used'
-        sys.exit("3 arguments must be given")
-
-    # folders
-    gt_filepath=sys.argv[1]
-    pred_filepath=sys.argv[2]
-
+def runAll(gt_filepath, pred_filepath, thresh):
+    global word_pair_dict
+    word_pair_dict = {}
     input_gt=file2list(gt_filepath)
     input_pred=file2list(pred_filepath)
 
-    thresh=float(sys.argv[3])
     if thresh == -1:
         our_element_membership=dirac_measure
     else:
@@ -201,4 +191,18 @@ if __name__ == '__main__':
     #print 'full score:', score_list
     #print 'full score:', score_list
     print 'final score:', final_score
+    return final_score
 
+
+if __name__ == '__main__':
+
+    if len(sys.argv) < 4:
+        print 'Usage: path to true answers, path to predicted answers, threshold'
+        print 'If threshold is -1, then the standard Accuracy is used'
+        sys.exit("3 arguments must be given")
+
+    # folders
+    gt_filepath=sys.argv[1]
+    pred_filepath=sys.argv[2]
+    thresh=float(sys.argv[3])
+    runAll(gt_filepath, pred_filepath, thresh)

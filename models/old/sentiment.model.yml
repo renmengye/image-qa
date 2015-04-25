@@ -1,0 +1,102 @@
+name: 'sentiment'
+costFn: 'crossEntOne'
+decisionFn: 'hardLimit'
+stages:
+    - 'unfold'
+    - 'dict'
+    - 'fold'
+    #- 'dropout'
+    #- 'lstm1'
+    - 'conv'
+    - 'meanpool'
+    #- 'relu'
+    - 'lstm2'
+    - 'sigmoid'
+outputs: 'sigmoid'
+specs:
+    - name: 'unfold'
+      type: 'timeUnfold'
+      inputs: 'input'
+    - name: 'dict'
+      type: 'lut'
+      inputs: 'unfold'
+      inputDim: 16547
+      outputDim: 300
+      initWeights: '../data/sentiment/word-embed.npy'
+      learningRate: 0.0
+    - name: 'fold'
+      type: 'timeFold'
+      inputs: 'dict'
+      timespan: 60
+      outputdEdX: false
+    #- name: 'dropout'
+    #  type: 'dropout'
+    #  inputs: 'fold'
+    #  dropoutRate: 0.2
+    #  initSeed: 3
+    #  outputDim: 300
+    #  outputdEdX: false
+    #- name: 'lstm1'
+    #  type: 'lstm'
+    #  inputs: 'dropout'
+    #  inputDim: 300
+    #  outputDim: 150
+    #  timespan: 60
+    #  initRange: 0.1
+    #  initSeed: 4
+    #  multiOutput: true
+    #  learningRate: 0.8
+    #  momentum: 0.9
+    #  gradientClip: 0.1
+    #  weightClip: 100.0
+    #  weightRegConst: 0.00005
+    #  outputdEdX: false
+    - name: 'conv'
+      type: 'conv1d'
+      inputs: 'fold'
+      windowSize: 4
+      numFilters: 50
+      numChannels: 300
+      initRange: 0.1
+      initSeed: 100
+      learningRate: 0.8
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 50.0
+    - name: 'meanpool'
+      type: 'meanpool1d'
+      inputs: 'conv'
+      windowSize: 3
+      outputDim: 50
+    #- name: 'relu'
+    #  type: 'active'
+    #  inputs: 'maxpool'
+    #  activeFn: 'relu'
+    #  outputDim: 50
+    - name: 'lstm2'
+      type: 'lstm'
+      inputs: 'meanpool'
+      inputDim: 50
+      outputDim: 50
+      timespan: 60
+      initRange: 0.1
+      initSeed: 4
+      multiOutput: false
+      learningRate: 0.8
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 50.0
+      weightRegConst: 0.00005
+    - name: 'sigmoid'
+      type: 'map'
+      inputs: 'lstm2'
+      activeFn: 'sigmoid'
+      outputDim: 1
+      initRange: 0.1
+      initSeed: 7
+      learningRate: 0.01
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 5.0
+      learningRateAnnealConst: 0.0
+      weightRegConst: 0.00005

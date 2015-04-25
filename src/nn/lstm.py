@@ -1,16 +1,20 @@
-from stage import *
-import lstmpy as lstmx
+from recurrent import *
+from elem_prod import *
+from sum import *
+from active import *
 
-class LSTM(Stage):
+class LSTM(RecurrentContainer):
     def __init__(self,
                  inputDim,
                  outputDim,
+                 timespan,
+                 inputNames,
+                 defaultValue=0.0,
                  initRange=1.0,
                  initSeed=2,
                  needInit=True,
                  initWeights=0,
-                 cutOffZeroEnd=False,
-                 multiErr=False,
+                 multiOutput=False,
                  learningRate=0.0,
                  learningRateAnnealConst=0.0,
                  momentum=0.0,
@@ -20,80 +24,164 @@ class LSTM(Stage):
                  weightRegConst=0.0,
                  outputdEdX=True,
                  name=None):
-        Stage.__init__(self,
-                 name=name,
+        D2 = outputDim
+        multiOutput = multiOutput
+        if name is None: print 'Warning: name is None.'
+        self.inputDim = inputDim
+        self.outputDim = outputDim
+        self.I = RecurrentAdapter(Map(
+                 name=name + '.I',
+                 inputNames=['input(0)', name + '.H(-1)', name + '.C(-1)'],
+                 outputDim=D2,
+                 activeFn=SigmoidActiveFn(),
+                 initRange=initRange,
+                 initSeed=initSeed,
+                 biasInitConst=1.0,
                  learningRate=learningRate,
                  learningRateAnnealConst=learningRateAnnealConst,
                  momentum=momentum,
                  deltaMomentum=deltaMomentum,
-                 weightClip=weightClip,
                  gradientClip=gradientClip,
-                 weightRegConst=weightRegConst,
-                 outputdEdX=outputdEdX)
-        self.inputDim = inputDim
-        self.outputDim = outputDim
-        self.cutOffZeroEnd = cutOffZeroEnd
-        self.multiErr = multiErr
-        self.random = np.random.RandomState(initSeed)
+                 weightClip=weightClip,
+                 weightRegConst=weightRegConst))
 
-        if needInit:
-            start = -initRange / 2.0
-            end = initRange / 2.0
-            Wxi = self.random.uniform(start, end, (self.outputDim, self.inputDim))
-            Wxf = self.random.uniform(start, end, (self.outputDim, self.inputDim))
-            Wxc = self.random.uniform(start, end, (self.outputDim, self.inputDim))
-            Wxo = self.random.uniform(start, end, (self.outputDim, self.inputDim))
-            Wyi = self.random.uniform(start, end, (self.outputDim, self.outputDim))
-            Wyf = self.random.uniform(start, end, (self.outputDim, self.outputDim))
-            Wyc = self.random.uniform(start, end, (self.outputDim, self.outputDim))
-            Wyo = self.random.uniform(start, end, (self.outputDim, self.outputDim))
-            Wci = self.random.uniform(start, end, (self.outputDim, self.outputDim))
-            Wcf = self.random.uniform(start, end, (self.outputDim, self.outputDim))
-            Wco = self.random.uniform(start, end, (self.outputDim, self.outputDim))
-            Wbi = np.ones((self.outputDim, 1))
-            Wbf = np.ones((self.outputDim, 1))
-            Wbc = np.zeros((self.outputDim, 1))
-            Wbo = np.ones((self.outputDim, 1))
+        self.F = RecurrentAdapter(Map(
+                 name=name + '.F',
+                 inputNames=['input(0)', name + '.H(-1)', name + '.C(-1)'],
+                 outputDim=D2,
+                 activeFn=SigmoidActiveFn(),
+                 initRange=initRange,
+                 initSeed=initSeed+1,
+                 biasInitConst=1.0,
+                 learningRate=learningRate,
+                 learningRateAnnealConst=learningRateAnnealConst,
+                 momentum=momentum,
+                 deltaMomentum=deltaMomentum,
+                 gradientClip=gradientClip,
+                 weightClip=weightClip,
+                 weightRegConst=weightRegConst))
 
-            Wi = np.concatenate((Wxi, Wyi, Wci, Wbi), axis=1)
-            Wf = np.concatenate((Wxf, Wyf, Wcf, Wbf), axis=1)
-            Wc = np.concatenate((Wxc, Wyc, Wbc), axis=1)
-            Wo = np.concatenate((Wxo, Wyo, Wco, Wbo), axis=1)
-            self.W = np.concatenate((Wi, Wf, Wc, Wo), axis = 1)
+        self.Z = RecurrentAdapter(Map(
+                 name=name + '.Z',
+                 inputNames=['input(0)', name + '.H(-1)'],
+                 outputDim=D2,
+                 activeFn=TanhActiveFn(),
+                 initRange=initRange,
+                 initSeed=initSeed+2,
+                 biasInitConst=0.0,
+                 learningRate=learningRate,
+                 learningRateAnnealConst=learningRateAnnealConst,
+                 momentum=momentum,
+                 deltaMomentum=deltaMomentum,
+                 gradientClip=gradientClip,
+                 weightClip=weightClip,
+                 weightRegConst=weightRegConst))
+
+        self.O = RecurrentAdapter(Map(
+                 name=name + '.O',
+                 inputNames=['input(0)', name + '.H(-1)', name + '.C(0)'],
+                 outputDim=D2,
+                 activeFn=SigmoidActiveFn(),
+                 initRange=initRange,
+                 initSeed=initSeed+3,
+                 biasInitConst=1.0,
+                 learningRate=learningRate,
+                 learningRateAnnealConst=learningRateAnnealConst,
+                 momentum=momentum,
+                 deltaMomentum=deltaMomentum,
+                 gradientClip=gradientClip,
+                 weightClip=weightClip,
+                 weightRegConst=weightRegConst))
+        
+        if not needInit:
+            self.I.W, self.F.W, self.Z.W, self.O.W = self.splitWeights(initWeights)
+
+        self.FC = RecurrentAdapter(ElementProduct(
+                  name=name + '.F*C',
+                  inputNames=[name + '.F', name + '.C(-1)'],
+                  outputDim=D2))
+
+        self.IZ = RecurrentAdapter(ElementProduct(
+                  name=name + '.I*Z',
+                  inputNames=[name + '.I', name + '.Z'],
+                  outputDim=D2))
+
+        self.C = RecurrentAdapter(Sum(
+                 name=name + '.C',
+                 inputNames=[name + '.F*C', name + '.I*Z'],
+                 numComponents=2,
+                 outputDim=D2))
+
+        self.U = RecurrentAdapter(Active(
+                 name=name + '.U',
+                 inputNames=[name + '.C'],
+                 outputDim=D2,
+                 activeFn=TanhActiveFn()))
+
+        self.H = RecurrentAdapter(ElementProduct(
+                 name=name + '.H',
+                 inputNames=[name + '.O', name + '.U'],
+                 outputDim=D2,
+                 defaultValue=defaultValue))
+
+        stages = [self.I, self.F, self.Z, self.FC, self.IZ, self.C, self.O, self.U, self.H]
+        RecurrentContainer.__init__(self,
+                           stages=stages,
+                           timespan=timespan,
+                           inputNames=inputNames,
+                           outputStageNames=[name + '.H'],
+                           inputDim=inputDim,
+                           outputDim=outputDim,
+                           multiOutput=multiOutput,
+                           name=name,
+                           outputdEdX=outputdEdX)
+
+    def getWeights(self):
+        if self.I.stages[0].gpu:
+            return np.concatenate((
+                    gpu.as_numpy_array(self.I.getWeights()),
+                    gpu.as_numpy_array(self.F.getWeights()),
+                    gpu.as_numpy_array(self.Z.getWeights()),
+                    gpu.as_numpy_array(self.O.getWeights())), axis=0)
         else:
-            self.W = initWeights
-        self.X = 0
-        self.Xend = 0
-        self.Y = 0
-        self.C = 0
-        self.Z = 0
-        self.Gi = 0
-        self.Gf = 0
-        self.Go = 0
-        pass
+            return np.concatenate((self.I.getWeights(),
+                               self.F.getWeights(),
+                               self.Z.getWeights(),
+                               self.O.getWeights()), axis=0)
 
-    def forward(self, X):
-        Y, C, Z, Gi, Gf, Go, Xend = \
-            lstmx.forwardPassN(
-            X, self.cutOffZeroEnd, self.W)
+    def getGradient(self):
+        if self.I.stages[0].gpu:
+            return np.concatenate((
+                gpu.as_numpy_array(self.I.getGradient()),
+                gpu.as_numpy_array(self.F.getGradient()),
+                gpu.as_numpy_array(self.Z.getGradient()),
+                gpu.as_numpy_array(self.O.getGradient())), axis=0)
+        else:
+            return np.concatenate((self.I.getGradient(),
+                                   self.F.getGradient(),
+                                   self.Z.getGradient(),
+                                   self.O.getGradient()), axis=0)
 
-        self.X = X
-        self.Y = Y
-        self.C = C
-        self.Z = Z
-        self.Gi = Gi
-        self.Gf = Gf
-        self.Go = Go
-        self.Xend = Xend
+    def splitWeights(self, W):
+        D = self.inputDim
+        D2 = self.outputDim
+        s = D + D2 + D2 + 1
+        s2 = D + D2 + 1
+        IW = W[:s, :]
+        FW = W[s:s + s, :]
+        ZW = W[s + s:s + s + s2, :]
+        OW = W[s + s +s2:s + s + s2 + s, :]
+        return IW, FW, ZW, OW
 
-        return Y if self.multiErr else Y[:,-1]
-
-    def backward(self, dEdY):
-        self.dEdW, dEdX = lstmx.backPropagateN(dEdY,self.X,self.Y,
-                                self.C,self.Z,self.Gi,
-                                self.Gf,self.Go,
-                                self.Xend,self.cutOffZeroEnd,
-                                self.multiErr,self.outputdEdX,
-                                self.W)
-        self.dEdX = dEdX
-        return dEdX if self.outputdEdX else None
+    def loadWeights(self, W):
+        IW, FW, ZW, OW = self.splitWeights(W)
+        if self.I.stages[0].gpu:
+            self.I.loadWeights(gpu.as_garray(IW))
+            self.F.loadWeights(gpu.as_garray(FW))
+            self.Z.loadWeights(gpu.as_garray(ZW))
+            self.O.loadWeights(gpu.as_garray(OW))
+        else:
+            self.I.loadWeights(IW)
+            self.F.loadWeights(FW)
+            self.Z.loadWeights(ZW)
+            self.O.loadWeights(OW)

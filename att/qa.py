@@ -77,19 +77,19 @@ def init_params(options):
     # NOTE: Consider initializing this to pretrained word2vec
     params['Wemb'] = norm_weight(options['n_words'], options['dim_word'])
 
-    # Initial LSTM state and memory - optionally more layers
+    # Initial LSTM_Old state and memory - optionally more layers
     ctx_dim = options['ctx_dim']
     for lidx in xrange(1, options['n_layers_init']):
         params = get_layer('ff')[0](options, params, prefix='ff_init_%d'%lidx, nin=ctx_dim, nout=ctx_dim)
     params = get_layer('ff')[0](options, params, prefix='ff_state', nin=ctx_dim, nout=options['dim'])
     params = get_layer('ff')[0](options, params, prefix='ff_memory', nin=ctx_dim, nout=options['dim'])
 
-    # LSTM decoder. Note that this assumes only 1 LSTM layer
+    # LSTM_Old decoder. Note that this assumes only 1 LSTM_Old layer
     params = get_layer('lstm_cond')[0](options, params, prefix='decoder',
                                        nin=options['dim_word'], dim=options['dim'],
                                        dimctx=ctx_dim)
 
-    # LSTM hidden state -> hidden layer
+    # LSTM_Old hidden state -> hidden layer
     #params = get_layer('ff')[0](options, params, prefix='ff_logit_lstm', nin=options['dim'], nout=options['dim_word'])
     
     # This is if you connect the context into the answer prediction
@@ -123,7 +123,7 @@ def load_params(path, params):
     return params
 
 # layers: 'name': ('parameter initializer', 'feedforward')
-# ff: feedforward layer, lstm-cond: conditional LSTM layer
+# ff: feedforward layer, lstm-cond: conditional LSTM_Old layer
 layers = {'ff': ('param_init_fflayer', 'fflayer'),
           'lstm_cond': ('param_init_lstm_cond', 'lstm_cond_layer'),
           }
@@ -187,10 +187,10 @@ def param_init_fflayer(options, params, prefix='ff', nin=None, nout=None):
 def fflayer(tparams, state_below, options, prefix='rconv', activ='lambda x: tensor.tanh(x)', **kwargs):
     return eval(activ)(tensor.dot(state_below, tparams[_p(prefix,'W')])+tparams[_p(prefix,'b')])
 
-# Conditional LSTM layer with Attention
+# Conditional LSTM_Old layer with Attention
 def param_init_lstm_cond(options, params, prefix='lstm_cond', nin=None, dim=None, dimctx=None):
     """
-    Initialize all conditional LSTM parameters.
+    Initialize all conditional LSTM_Old parameters.
     It might be helpful to look at the computation graph construction to see where these are all used.
     """
     if nin == None:
@@ -200,24 +200,24 @@ def param_init_lstm_cond(options, params, prefix='lstm_cond', nin=None, dim=None
     if dimctx == None:
         dimctx = options['dim']
 
-    # input to LSTM
+    # input to LSTM_Old
     W = numpy.concatenate([norm_weight(nin,dim),
                            norm_weight(nin,dim),
                            norm_weight(nin,dim),
                            norm_weight(nin,dim)], axis=1)
     params[_p(prefix,'W')] = W
 
-    # LSTM to LSTM - use orthogonal weight init. for recurrent connections
+    # LSTM_Old to LSTM_Old - use orthogonal weight init. for recurrent connections
     U = numpy.concatenate([ortho_weight(dim),
                            ortho_weight(dim),
                            ortho_weight(dim),
                            ortho_weight(dim)], axis=1)
     params[_p(prefix,'U')] = U
 
-    # bias to LSTM
+    # bias to LSTM_Old
     params[_p(prefix,'b')] = numpy.zeros((4 * dim,)).astype('float32')
 
-    # context to LSTM
+    # context to LSTM_Old
     Wc = norm_weight(dimctx,dim*4)
     params[_p(prefix,'Wc')] = Wc
 
@@ -225,7 +225,7 @@ def param_init_lstm_cond(options, params, prefix='lstm_cond', nin=None, dim=None
     Wc_att = norm_weight(dimctx, ortho=False)
     params[_p(prefix,'Wc_att')] = Wc_att
 
-    # attention: LSTM -> hidden
+    # attention: LSTM_Old -> hidden
     Wd_att = norm_weight(dim,dimctx)
     params[_p(prefix,'Wd_att')] = Wd_att
 
@@ -255,7 +255,7 @@ def param_init_lstm_cond(options, params, prefix='lstm_cond', nin=None, dim=None
 
     return params
 
-# Set up the computational graph for the conditional LSTM
+# Set up the computational graph for the conditional LSTM_Old
 # This is the most complex part of the code: everything needs to be set up specifically for 'scan'
 def lstm_cond_layer(tparams, state_below, options, prefix='lstm',
                     mask=None, context=None, one_step=False,
@@ -545,7 +545,7 @@ def validate_options(options):
 
 def train(dim_word=100, # word vector dimensionality
           ctx_dim=512, # context vector dimensionality
-          dim=1000, # the number of LSTM units
+          dim=1000, # the number of LSTM_Old units
           n_layers_att=1,
           n_layers_init=1,
           n_answers=5,
@@ -611,6 +611,8 @@ def train(dim_word=100, # word vector dimensionality
     # before any regularizer
     f_pred_probs = \
         theano.function((inps[0], inps[1], inps[2]), probs, profile=False)
+    f_alpha = \
+        theano.function(inps, alphas, name='f_alpha', on_unused_input='ignore')
     cost = cost.mean()
     if decay_c > 0.:
         decay_c = theano.shared(numpy.float32(decay_c), name='decay_c')
@@ -637,15 +639,19 @@ def train(dim_word=100, # word vector dimensionality
         test_correct = 0
         test_total = 0
         test_iter = HomogeneousData(test, maxlen=maxlen)
+        tsave_total = []
         for tbatch in test_iter:
             tx, tx_mask, tctx, ty = prepare_data(\
                 tbatch, test[1], worddict)
             tlogprob = f_pred_probs(tx, tx_mask, tctx)
+            talpha = f_alpha(tx, tx_mask, tctx, ty)
             tout = numpy.argmax(tlogprob, axis=-1)
+            tsave_total.append((tbatch, tlogprob, talpha))
             test_correct += numpy.sum((tout == ty).astype('int64'))
             test_total += ty.size
         tr = test_correct / float(test_total)
         print 'Test Acc %.5f' % tr
+        numpy.save('test.out.npy', numpy.array(tsave_total, dtype=object))
         sys.exit()
 
     print 'Optimization'
@@ -700,18 +706,24 @@ def train(dim_word=100, # word vector dimensionality
             valid, batch_size=100, maxlen=maxlen)
         vcorrect = 0
         vtotal = 0
+        vcost_total = 0.0
         for vbatch in valid_iter:
             vx, vx_mask, vctx, vy = prepare_data(\
                 vbatch, valid[1], worddict)
             vlogprob = f_pred_probs(vx, vx_mask, vctx)
+            vcost_total += f_grad_shared(vx, vx_mask, vctx, vy) * vy.size
             vout = numpy.argmax(vlogprob, axis=-1)
             vcorrect += numpy.sum((vout == vy).astype('int64'))
             vtotal += vy.size
         vr = vcorrect / float(vtotal)
-        history_errs.append(1-vr)
+        vcost = vcost_total / float(vtotal)
+        # history_errs.append(1-vr)
+        history_errs.append(vcost)
+        print 'VCost %.5f' % vcost,
         print 'Valid Acc %.5f' % vr,
         print 'Time', int(time.time() - ep_start)
-        if uidx == 0 or 1-vr <= numpy.array(history_errs).min():
+        if uidx == 0 or vcost <= numpy.array(history_errs).min():
+        #if uidx == 0 or 1-vr <= numpy.array(history_errs).min():
             best_p = unzip(tparams)
             bad_counter = 0
             numpy.savez(saveto, history_errs=history_errs, **best_p)
@@ -724,7 +736,7 @@ def train(dim_word=100, # word vector dimensionality
             break
     
 if __name__ == '__main__':
-    dropout = True
+    dropout = False
     #train(dataset='daquar', \
     #    n_answers=63, \
     #    use_dropout=dropout, \

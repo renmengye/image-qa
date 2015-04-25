@@ -77,7 +77,7 @@ def init_params(options):
     # Embedding
     params['Wemb'] = norm_weight(options['n_words'], options['dim_word'])
 
-    # encoder: bidirectional LSTM
+    # encoder: bidirectional LSTM_Old
     params = get_layer('lstm')[0](options, params, prefix='encoder', nin=options['dim_word'], dim=options['dim'])
     params = get_layer('lstm')[0](options, params, prefix='encoder_r', nin=options['dim_word'], dim=options['dim'])
 
@@ -90,7 +90,7 @@ def init_params(options):
     params = get_layer('ff')[0](options, params, prefix='ff_state', nin=options['ctx_dim'], nout=options['dim'])
     params = get_layer('ff')[0](options, params, prefix='ff_memory', nin=options['ctx_dim'], nout=options['dim'])
 
-    # decoder: LSTM
+    # decoder: LSTM_Old
     params = get_layer('lstm_cond')[0](options, params, prefix='decoder', nin=options['ctx_dim'], dim=options['dim'], dimctx=options['ctx_dim'])
 
     return params
@@ -208,7 +208,7 @@ def param_init_fflayer(options, params, prefix='ff', nin=None, nout=None):
 def fflayer(tparams, state_below, options, prefix='rconv', activ='lambda x: tensor.tanh(x)', **kwargs):
     return eval(activ)(tensor.dot(state_below, tparams[_p(prefix,'W')])+tparams[_p(prefix,'b')])
 
-# LSTM layer
+# LSTM_Old layer
 def param_init_lstm(options, params, prefix='lstm', nin=None, dim=None):
     if nin == None:
         nin = options['dim_proj']
@@ -279,29 +279,29 @@ def lstm_layer(tparams, state_below, options, prefix='lstm', mask=None, **kwargs
                                 n_steps=nsteps, profile=False)
     return rval
 
-# Conditional LSTM layer with Attention
+# Conditional LSTM_Old layer with Attention
 def param_init_lstm_cond(options, params, prefix='lstm_cond', nin=None, dim=None, dimctx=None):
     """
-    Initialize all parameters for conditional LSTM
+    Initialize all parameters for conditional LSTM_Old
     """
     if dim == None:
         dim = options['dim']
 
-    # input to LSTM
+    # input to LSTM_Old
     W = numpy.concatenate([norm_weight(nin,dim),
                            norm_weight(nin,dim),
                            norm_weight(nin,dim),
                            norm_weight(nin,dim)], axis=1)
     params[_p(prefix,'W')] = W
 
-    # LSTM to LSTM
+    # LSTM_Old to LSTM_Old
     U = numpy.concatenate([ortho_weight(dim),
                            ortho_weight(dim),
                            ortho_weight(dim),
                            ortho_weight(dim)], axis=1)
     params[_p(prefix,'U')] = U
 
-    # bias to LSTM
+    # bias to LSTM_Old
     #params[_p(prefix,'b')] = numpy.concatenate([numpy.ones((3 * dim,)).astype('float32'),
     #                                            numpy.zeros((1 * dim,)).astype('float32')], axis=1)
     params[_p(prefix,'b')] = numpy.zeros((4 * dim,)).astype('float32')
@@ -310,11 +310,11 @@ def param_init_lstm_cond(options, params, prefix='lstm_cond', nin=None, dim=None
     Wc_att = norm_weight(dimctx, ortho=False)
     params[_p(prefix,'Wc_att')] = Wc_att
 
-    # attention: LSTM -> hidden
+    # attention: LSTM_Old -> hidden
     Wd_att = norm_weight(dim,dimctx)
     params[_p(prefix,'Wd_att')] = Wd_att
 
-    # attention: bidirectional LSTM -> hidden
+    # attention: bidirectional LSTM_Old -> hidden
     We_att = norm_weight(dim,dimctx)
     params[_p(prefix,'We_att')] = We_att
 
@@ -349,9 +349,9 @@ def lstm_cond_layer(tparams, state_below, options, prefix='lstm',
                     trng=None, use_noise=None,
                     **kwargs):
     """
-    Pass through conditional LSTM layer
+    Pass through conditional LSTM_Old layer
     Context refers to the image context
-    state_below: output from bidirectional LSTM
+    state_below: output from bidirectional LSTM_Old
     """
 
     assert context, 'Context must be provided'
@@ -795,7 +795,7 @@ def validate_options(options):
 
 def train(dim_word=256, # word vector dimensionality
           ctx_dim=512, # context vector dimensionality
-          dim=256, # the number of LSTM units
+          dim=256, # the number of LSTM_Old units
           margin=0.2, # margin for pairwise ranking loss. Should be (0,1] if use_norm is on
           use_norm=True, # whether to L2norm vectors prior to loss
           use_ctx_mean=False, # whether to initialze decoder to annotation means

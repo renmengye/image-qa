@@ -98,6 +98,9 @@ def extract_qa(lines):
     lineMax = 0
     for i in range(0, len(lines) / 2):
         n = i * 2
+        if ',' in lines[n + 1]:
+            # No multiple words answer for now.
+            continue
         match = re.search('image(\d+)', lines[n])
         number = int((re.search('\d+', match.group())).group())
         line = lines[n]
@@ -110,11 +113,8 @@ def extract_qa(lines):
         questions.append(line)
         answer = escapeNumber(re.sub('\s$', '', lines[n + 1]))
         answers.append(answer)
-
         # Important! Here image id is 0-based.
         imgIds.append(number - 1)
-        l = len(questions[i].split())
-        if l > lineMax: lineMax = l
     return (questions, answers, imgIds)
 
 def build_dict(lines, keystart):

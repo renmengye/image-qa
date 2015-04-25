@@ -2,6 +2,7 @@ import sys
 import os
 
 from nn.func import *
+from imageqa_test import *
 
 imageFolder = '../../data/nyu-depth-v2/jpg/'
 
@@ -35,7 +36,11 @@ def renderHtml(X, Y, T, questionArray, answerArray, topK):
                 colorStr = 'style="color:red"'
             else:
                 colorStr = ''
-            htmlList.append('<span %s>%d. %s %.4f</span><br/>' % (colorStr, i + 1, answerArray[sortIdx[i]], Y[n, sortIdx[i]]))
+            if sortIdx[i] >= len(answerArray):
+                answer = 'UNK'
+            else:
+                answer = answerArray[sortIdx[i]]
+            htmlList.append('<span %s>%d. %s %.4f</span><br/>' % (colorStr, i + 1, answer, Y[n, sortIdx[i]]))
         htmlList.append('Correct answer: <span style="color:green">%s</span><br/></div></td>' % answerArray[T[n, 0]])
 
         if np.mod(n, imgPerRow) == imgPerRow - 1:
@@ -45,37 +50,46 @@ def renderHtml(X, Y, T, questionArray, answerArray, topK):
 
 if __name__ == '__main__':
     """
-    Usage: imageqa_render.py id -train trainData.npy -test testData.npy -dict vocabDict.npy
+    Usage: imageqa_render.py id -data {dataFolder}
     """
     taskId = sys.argv[1]
     for i in range(2, len(sys.argv)):
-        if sys.argv[i] == '-train':
-            trainDataFile = sys.argv[i + 1]
-        elif sys.argv[i] == '-test':
-            testDataFile = sys.argv[i + 1]
-        elif sys.argv[i] == '-dict':
-            dictFile = sys.argv[i + 1]
+        if sys.argv[i] == '-data':
+            dataFolder = sys.argv[i + 1]
     resultFolder = '../results/%s' % taskId
+    print taskId
 
-    # Train
-    trainOutputFilename = os.path.join(resultFolder, '%s.train.o.npy' % taskId)
-    trainHtmlFilename = os.path.join(resultFolder, '%s.train.o.html' % taskId)
-    Y = np.load(trainOutputFilename)
+    vocabDict = np.load(os.path.join(dataFolder, 'vocab-dict.npy'))
+
+    resultFolder = '../results/%s' % taskId
+    modelFile = '../results/%s/%s.model.yml' % (taskId, taskId)
+    model = nn.load(modelFile)
+    model.loadWeights(
+        np.load('../results/%s/%s.w.npy' % (taskId, taskId)))
+
+    trainDataFile = os.path.join(dataFolder, 'train.npy')
+    testDataFile = os.path.join(dataFolder, 'test.npy')
     trainData = np.load(trainDataFile)
     testData = np.load(testDataFile)
-    vocabDict = np.load(dictFile)
-    X = trainData[0]
-    T = trainData[1]
-    html = renderHtml(X, Y, T, vocabDict[1], vocabDict[3], 10)
+
+    inputTrain = trainData[0]
+    outputTrain = nn.test(model, X)
+    targetTrain = trainData[1]
+    inputTest = testData[0]
+    outputTest = nn.test(model, TX)
+    targetTest = testData[1]
+    questionArray = vocabDict[1]
+    answerArray = vocabDict[3]
+
+    # Render
+    trainHtmlFilename = os.path.join(resultFolder, '%s.train.o.html' % taskId)
+    html = renderHtml(inputTrain, outputTrain, targetTrain, 
+        questionArrayTrain, answerArrayTrain, 10)
     with open(trainHtmlFilename, 'w+') as f:
         f.writelines(html)
 
-    # Test
-    testOutputFilename = os.path.join(resultFolder, '%s.test.o.npy' % taskId)
     testHtmlFilename = os.path.join(resultFolder, '%s.test.o.html' % taskId)
-    TY = np.load(testOutputFilename)
-    TX = testData[0]
-    TT = testData[1]
-    html = renderHtml(TX, TY, TT, vocabDict[1], vocabDict[3], 10)
+    html = renderHtml(inputTest, outputTest, targetTest, 
+        questionArray, answerArray, 10)
     with open(testHtmlFilename, 'w+') as f:
         f.writelines(html)

@@ -1,0 +1,145 @@
+costFn: 'crossEntIdx'
+decisionFn: 'argmax'
+stages:
+    - 'attModel'
+    - 'answer'
+outputs: 'answer'
+specs:
+    - name: 'imgSel'
+      type: 'selector'
+      inputs: 'input($0)'
+      start: 0
+      end: 1
+      recurrent: true
+    - name: 'txtSel'
+      type: 'selector'
+      inputs: 'input'
+      start: 1
+      end: 2
+      recurrent: true
+    - name: 'imgFeat'
+      type: 'lut'
+      inputs: 'imgSel($0)'
+      inputDim: 1449
+      outputDim: 120
+      #outputDim: 100352
+      #initWeights: '../../../data/nyu-depth/hidden5_4_conv.pkl'
+      initRange: 0.1
+      initSeed: 1
+      sparse: true
+      learningRate: 0.0
+      outputdEdX: false
+      recurrent: true
+    - name: 'txtDict'
+      type: 'lut'
+      inputs: 'txtSel'
+      inputDim: 871
+      outputDim: 10
+      #outputDim: 300
+      #initWeights: '../data/imgword/word-embed-0-q.npy'
+      initRange: 0.1
+      initSeed: 3
+      learningRate: 0.0
+      outputdEdX: false
+      recurrent: true
+    - name: 'imgReshape'
+      type: 'reshape'
+      inputs: 'imgFeat($0)'
+      #reshapeFn: '(x[0], 196, x[1]/196)'
+      reshapeFn: '(x[0], 12, x[1]/12)'
+      outputDim: 10
+      #outputDim: 512
+      recurrent: true
+    - name: 'attReshape'
+      type: 'reshape'
+      inputs: 'attOut'
+      reshapeFn: '(x[0], x[1], 1)'
+      #outputDim: 196
+      outputDim: 12
+      recurrent: true
+    - name: 'attCtx'
+      type: 'sumProd'
+      inputs: 'attReshape, imgReshape($0)'
+      sumAxis: 1
+      beta: 100.0
+      #outputDim: 512
+      outputDim: 10
+      recurrent: true
+    - name: 'imglstm'
+      type: 'lstm'
+      inputs: 'attCtx'
+      #inputDim: 512
+      #outputDim: 300
+      inputDim: 10
+      outputDim: 10
+      timespan: 28
+      initRange: 0.1
+      initSeed: 4
+      cutOffZeroEnd: true
+      multiErr: false
+      learningRate: 0.8
+      learningRateAnnealConst: 0.0
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 100.0
+      outputdEdX: true
+    - name: 'wordlstm'
+      type: 'lstm'
+      inputs: 'txtDict'
+      inputDim: 10
+      outputDim: 12
+      timespan: 28
+      initRange: 0.1
+      initSeed: 5
+      cutOffZeroEnd: true
+      multiErr: true
+      learningRate: 0.8
+      learningRateAnnealConst: 0.0
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 100.0
+      outputdEdX: true
+    - name: 'attOut'
+      type: 'map'
+      inputs: 'wordlstm'
+      outputDim: 12
+      activeFn: 'softmax'
+      defaultValue: 0.083333333
+      initRange: 0.1
+      initSeed: 7
+      learningRate: 0.1
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 50
+      recurrent: true
+    - name: 'attModel'
+      type: 'recurrent'
+      inputs: 'input'
+      stages:
+          - 'imgSel'
+          - 'txtSel'
+          - 'imgFeat'
+          - 'txtDict'
+          - 'imgReshape'
+          - 'wordlstm'
+          - 'attOut'
+          - 'attReshape'
+          - 'attCtx'
+          - 'imglstm'
+      outputs: 'imglstm'
+      inputDim: 2
+      outputDim: 10 
+      timespan: 27
+      multiOutput: false
+      outputdEdX: false
+    - name: 'answer'
+      type: 'map'
+      inputs: 'attModel'
+      outputDim: 63
+      activeFn: 'softmax'
+      initRange: 0.1
+      initSeed: 6
+      learningRate: 0.01
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 10
