@@ -68,7 +68,7 @@ def renderSinglePage(
                     numPages):
     htmlList = []
     htmlList.append('<html><head></head><body>\n')
-    htmlList.append('<table style="width:1250px;border=0">')
+    htmlList.append('<table style="width:1250px;border:0;text-align:center">')
     imgPerRow = 4
     htmlList.append(renderMenu(iPage, numPages))
     for n in range(X.shape[0]):
