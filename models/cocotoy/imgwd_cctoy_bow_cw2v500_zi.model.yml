@@ -1,0 +1,50 @@
+name: 'bow'
+costFn: 'crossEntIdx'
+decisionFn: 'argmax'
+stages:
+    - 'txtSel'
+    - 'txtUnfold'
+    - 'txtDict'
+    - 'txtFold'
+    - 'bow'
+    - 'softmax'
+outputs: 'softmax'
+specs:
+    - name: 'txtSel'
+      type: 'selector'
+      inputs: 'input'
+      start: 1
+      end: 40
+      axis: 1
+    - name: 'txtUnfold'
+      type: 'timeUnfold'
+      inputs: 'txtSel'
+      outputdEdX: false
+    - name: 'txtDict'
+      type: 'lut'
+      inputs: 'txtUnfold'
+      inputDim: 3663
+      outputDim: 500
+      initWeights: '../data/cocoqa-toy/word-embed-custom-q-500.npy'
+      learningRate: 0.0
+    - name: 'txtFold'
+      type: 'timeFold'
+      inputs: 'txtDict'
+      timespan: 39
+    - name: 'bow'
+      type: 'sum2'
+      inputs: 'txtFold'
+      numComponents: 39
+      outputDim: 500
+    - name: 'softmax'
+      type: 'map'
+      inputs: 'bow'
+      activeFn: 'softmax'
+      outputDim: 237
+      initRange: 0.01
+      initSeed: 7
+      learningRate: 0.01
+      learningRateAnnealConst: 0.0
+      momentum: 0.9
+      weightClip: 15.0
+      weightRegConst: 0.00005
