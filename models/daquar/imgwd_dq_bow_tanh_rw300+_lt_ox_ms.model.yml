@@ -94,7 +94,7 @@ specs:
       activeFn: 'tanh'
       initRange: 0.01
       initSeed: 2
-      outputDim: 500
+      outputDim: 600
       learningRate: 0.01
       momentum: 0.9
       gradientClip: 0.1
@@ -105,11 +105,11 @@ specs:
       inputs: 'hidden'
       activeFn: 'softmax'
       outputDim: 68
-      initRange: 0.1
+      initRange: 0.01
       initSeed: 7
       learningRate: 0.01
       learningRateAnnealConst: 0.0
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 5.0
+      weightClip: 15.0
       weightRegConst: 0.00005

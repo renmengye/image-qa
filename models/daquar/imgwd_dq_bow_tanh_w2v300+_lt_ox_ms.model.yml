@@ -93,7 +93,7 @@ specs:
       activeFn: 'tanh'
       initRange: 0.01
       initSeed: 2
-      outputDim: 500
+      outputDim: 600
       learningRate: 0.01
       momentum: 0.9
       gradientClip: 0.1
@@ -110,5 +110,5 @@ specs:
       learningRateAnnealConst: 0.0
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 5.0
+      weightClip: 15.0
       weightRegConst: 0.00005

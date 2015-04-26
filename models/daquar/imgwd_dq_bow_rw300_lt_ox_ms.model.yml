@@ -86,5 +86,5 @@ specs:
       learningRate: 0.01
       momentum: 0.9
       gradientClip: 0.01
-      weightClip: 5.0
+      weightClip: 15.0
       weightRegConst: 0.00005
