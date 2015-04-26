@@ -43,8 +43,9 @@ specs:
       type: 'map'
       inputs: 'imgFeat'
       activeFn: 'identity'
+      bias: false
       outputDim: 300
-      initRange: 0.1
+      initRange: 0.05
       initSeed: 1
       learningRate: 0.8
       momentum: 0.9
