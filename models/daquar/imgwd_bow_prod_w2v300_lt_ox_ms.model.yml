@@ -1,0 +1,95 @@
+name: 'bow'
+costFn: 'crossEntIdx'
+decisionFn: 'argmax'
+stages:
+    - 'imgSel'
+    - 'imgUnfold'
+    - 'imgFeat'
+    - 'imgMap'
+    - 'txtSel'
+    - 'txtUnfold'
+    - 'txtDict'
+    - 'txtFold'
+    - 'bow'
+    - 'componentProd'
+    - 'softmax'
+outputs: 'softmax'
+specs:
+    - name: 'imgSel'
+      type: 'selector'
+      inputs: 'input'
+      start: 0
+      end: 1
+      axis: 1
+    - name: 'txtSel'
+      type: 'selector'
+      inputs: 'input'
+      start: 1
+      end: 28
+      axis: 1
+    - name: 'imgUnfold'
+      type: 'timeUnfold'
+      inputs: 'imgSel'
+      outputdEdX: false
+    - name: 'imgFeat'
+      type: 'lut'
+      inputs: 'imgUnfold'
+      inputDim: 1449
+      outputDim: 4096
+      initWeights: '/ais/gobi3/u/mren/data/nyu-depth/hidden_oxford.h5'
+      format: 'h5'
+      h5key: 'hidden7_ms'
+      learningRate: 0.0
+    - name: 'imgMap'
+      type: 'map'
+      inputs: 'imgFeat'
+      activeFn: 'identity'
+      bias: false
+      outputDim: 300
+      initRange: 0.05
+      initSeed: 1
+      learningRate: 0.8
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 100.0
+    - name: 'imgFold'
+      type: 'timeFold'
+      inputs: 'imgMap'
+      timespan: 1
+    - name: 'txtUnfold'
+      type: 'timeUnfold'
+      inputs: 'txtSel'
+      outputdEdX: false
+    - name: 'txtDict'
+      type: 'lut'
+      inputs: 'txtUnfold'
+      inputDim: 868
+      outputDim: 300
+      initWeights: '../data/daquar-37/word-embed-q.npy'
+      learningRate: 0.0
+    - name: 'txtFold'
+      type: 'timeFold'
+      inputs: 'txtDict'
+      timespan: 27
+    - name: 'bow'
+      type: 'sum2'
+      inputs: 'txtFold'
+      numComponents: 27
+      outputDim: 300  
+    - name: 'componentProd'
+      inputs: 'bow, imgMap'
+      type: 'componentProd'
+      outputDim: 300
+    - name: 'softmax'
+      type: 'map'
+      inputs: 'componentProd'
+      activeFn: 'softmax'
+      outputDim: 68
+      initRange: 0.001
+      initSeed: 7
+      learningRate: 0.01
+      learningRateAnnealConst: 0.0
+      momentum: 0.9
+      gradientClip: 0.01
+      weightClip: 5.0
+      weightRegConst: 0.00005
