@@ -16,6 +16,10 @@ specs:
       start: 1
       end: 28
       axis: 1
+    - name: 'imgFold'
+      type: 'timeFold'
+      inputs: 'imgMap'
+      timespan: 1
     - name: 'txtUnfold'
       type: 'timeUnfold'
       inputs: 'txtSel'
@@ -26,8 +30,7 @@ specs:
       intConversion: true
       inputDim: 868
       outputDim: 300
-      initRange: 1.0
-      initSeed: 2
+      initWeights: '../data/daquar-37/word-embed-q.npy'
       learningRate: 0.8
       momentum: 0.9
       gradientClip: 0.1

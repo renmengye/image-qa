@@ -10,43 +10,12 @@ stages:
     - 'softmax'
 outputs: 'softmax'
 specs:
-    - name: 'imgSel'
-      type: 'selector'
-      inputs: 'input'
-      start: 0
-      end: 1
-      axis: 1
     - name: 'txtSel'
       type: 'selector'
       inputs: 'input'
       start: 1
       end: 28
       axis: 1
-    - name: 'imgUnfold'
-      type: 'timeUnfold'
-      inputs: 'imgSel'
-      outputdEdX: false
-    - name: 'imgFeat'
-      type: 'lut'
-      inputs: 'imgUnfold'
-      inputDim: 1449
-      outputDim: 4096
-      initWeights: '/ais/gobi3/u/mren/data/nyu-depth/hidden_oxford.h5'
-      format: 'h5'
-      h5key: 'hidden7_ms'
-      learningRate: 0.0
-    - name: 'imgMap'
-      type: 'map'
-      inputs: 'imgFeat'
-      activeFn: 'identity'
-      bias: false
-      outputDim: 300
-      initRange: 0.05
-      initSeed: 1
-      learningRate: 0.8
-      momentum: 0.9
-      gradientClip: 0.1
-      weightClip: 100.0
     - name: 'imgFold'
       type: 'timeFold'
       inputs: 'imgMap'
