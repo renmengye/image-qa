@@ -36,7 +36,9 @@ specs:
       inputs: 'imgUnfold'
       inputDim: 1449
       outputDim: 4096
-      initWeights: '../data/imgword/oxford-feat.npy'
+      initWeights: '/ais/gobi3/u/mren/data/nyu-depth/hidden_oxford.h5'
+      format: 'h5'
+      h5key: 'hidden7_ms'
       learningRate: 0.0
     - name: 'imgMap'
       type: 'map'
@@ -62,7 +64,7 @@ specs:
       inputs: 'txtUnfold'
       inputDim: 868
       outputDim: 300
-      initWeights: '../data/imgword/word-embed-0-q.npy'
+      initWeights: '../data/daquar-37/word-embed-q.npy'
       learningRate: 0.0
     - name: 'txtFold'
       type: 'timeFold'
