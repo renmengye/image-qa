@@ -45,7 +45,7 @@ specs:
       activeFn: 'identity'
       bias: false
       outputDim: 300
-      initRange: 0.001
+      initRange: 0.01
       initSeed: 1
       learningRate: 0.8
       momentum: 0.9
@@ -83,7 +83,7 @@ specs:
       outputDim: 68
       initRange: 0.01
       initSeed: 7
-      learningRate: 0.01
+      learningRate: 0.001
       learningRateAnnealConst: 0.0
       momentum: 0.9
       gradientClip: 0.1
