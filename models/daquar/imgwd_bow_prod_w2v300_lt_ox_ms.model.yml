@@ -84,8 +84,8 @@ specs:
       type: 'map'
       inputs: 'componentProd'
       activeFn: 'softmax'
-      outputDim: 68
-      initRange: 0.001
+      outputDim: 67
+      initRange: 0.1
       initSeed: 7
       learningRate: 0.01
       learningRateAnnealConst: 0.0
