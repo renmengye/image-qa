@@ -313,31 +313,6 @@ if __name__ == '__main__':
         np.array((worddict_all, idict_all, 
             ansdict_all, iansdict_all, 0), dtype=object))
 
-    trainInput = combineAttention(\
-        lookupQID(trainQuestions, worddict), trainImgIds)
-    validInput = combineAttention(\
-        lookupQID(validQuestions, worddict), validImgIds)
-    testInput = combineAttention(\
-        lookupQID(testQuestions, worddict), testImgIds)
-    allInput = combineAttention(\
-        lookupQID(questions, worddict_all), imgids)
-    np.save(\
-        os.path.join(outputFolder, 'train-att.npy'),\
-        np.array((trainInput, trainTarget, 0),\
-            dtype=object))
-    np.save(\
-        os.path.join(outputFolder, 'valid-att.npy'),\
-        np.array((validInput, validTarget, 0),\
-            dtype=object))
-    np.save(\
-        os.path.join(outputFolder, 'test-att.npy'),\
-        np.array((testInput, testTarget, 0),\
-            dtype=object))
-    np.save(\
-        os.path.join(outputFolder, 'all-att.npy'),\
-        np.array((allInput, allTarget, 0),\
-            dtype=object))
-
     with open(os.path.join(outputFolder, 'question_vocabs.txt'), 'w+') as f:
         for word in idict:
             f.write(word + '\n')

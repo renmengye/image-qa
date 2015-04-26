@@ -2,6 +2,7 @@ import numpy as np
 import calculate_wups
 import os
 import nn
+import sys
 
 def decodeQuestion(X, questionArray):
     sentence = ''
@@ -80,8 +81,10 @@ def runWups(answerFilename, truthFilename):
     return (w10, w09, w00)
 
 def testAll(taskId, model, dataFolder, resultsFolder):
-    testAnswerFile = os.path.join(resultsFolder, taskId, '%s.test.o.txt' % taskId)
-    testTruthFile = os.path.join(resultsFolder, taskId, '%s.test.t.txt' % taskId)
+    testAnswerFile = os.path.join(
+                    resultsFolder, taskId, '%s.test.o.txt' % taskId)
+    testTruthFile = os.path.join(
+                    resultsFolder, taskId, '%s.test.t.txt' % taskId)
     testDataFile = os.path.join(dataFolder, 'test.npy')
     vocabDictFile = os.path.join(dataFolder, 'vocab-dict.npy')
     vocabDict = np.load(vocabDictFile)
@@ -93,7 +96,8 @@ def testAll(taskId, model, dataFolder, resultsFolder):
     answerArray = vocabDict[3]
     print len(answerArray)
     print outputTest.shape
-    outputTxt(outputTest, targetTest, answerArray, testAnswerFile, testTruthFile)
+    outputTxt(outputTest, targetTest, answerArray, 
+              testAnswerFile, testTruthFile)
     resultsRank = calcPrecision(outputTest, targetTest)
     correct, total = calcRate(inputTest, outputTest, targetTest, questionArray)
     resultsCategory = correct / total.astype(float)
@@ -110,3 +114,26 @@ def testAll(taskId, model, dataFolder, resultsFolder):
         f.write('WUPS 1.0: %.4f\n' % resultsWups[0])
         f.write('WUPS 0.9: %.4f\n' % resultsWups[1])
         f.write('WUPS 0.0: %.4f\n' % resultsWups[2])
+
+if __name__ == '__main__':
+    """
+    Usage python imageqa_test.py {taskId} 
+                                 -d[ata] {dataFolder} 
+                                 [-r[esult] {resultFolder}]
+    """
+    taskId = sys.argv[1]
+    print taskId
+    dataFolder = None
+    resultFolder = None
+    for i in range(len(sys.argv)):
+        if sys.argv[i] == '-d' or sys.argv[i] == '-data':
+            dataFolder = sys.argv[i + 1]
+        elif sys.argv[i] == '-r' or sys.argv[i] == '-result':
+            resultFolder = sys.argv[i + 1]
+    if resultFolder is None:
+        resultFolder = '../results'
+    modelSpecFile = '%s/%s/%s.model.yml' % (resultFolder, taskId, taskId)
+    modelWeightsFile = '%s/%s/%s.w.npy' % (resultFolder, taskId, taskId)
+    model = nn.load(modelSpecFile)
+    model.loadWeights(np.load(modelWeightsFile))
+    testAll(taskId, model, dataFolder, resultFolder)
