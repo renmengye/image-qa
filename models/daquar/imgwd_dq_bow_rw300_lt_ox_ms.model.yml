@@ -45,7 +45,7 @@ specs:
       activeFn: 'identity'
       bias: false
       outputDim: 300
-      initRange: 0.05
+      initRange: 0.001
       initSeed: 1
       learningRate: 0.8
       momentum: 0.9
@@ -64,7 +64,7 @@ specs:
       inputs: 'txtUnfold'
       inputDim: 868
       outputDim: 300
-      initRange: 0.01
+      initRange: 0.001
       initSeed: 2
       learningRate: 0.0
     - name: 'txtFold'
@@ -81,7 +81,7 @@ specs:
       inputs: 'bow, imgMap'
       activeFn: 'softmax'
       outputDim: 68
-      initRange: 0.1
+      initRange: 0.01
       initSeed: 7
       learningRate: 0.01
       learningRateAnnealConst: 0.0
