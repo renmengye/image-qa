@@ -45,7 +45,7 @@ specs:
       inputs: 'bow'
       activeFn: 'softmax'
       outputDim: 237
-      initRange: 0.01
+      initRange: 0.1
       initSeed: 7
       learningRate: 0.01
       gradientClip: 0.1
