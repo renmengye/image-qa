@@ -28,10 +28,7 @@ specs:
       outputDim: 300
       initRange: 1.0
       initSeed: 2
-      learningRate: 0.8
-      momentum: 0.9
-      gradientClip: 0.1
-      weightClip: 500.0
+      learningRate: 0.0
     - name: 'txtFold'
       type: 'timeFold'
       inputs: 'txtDict'
