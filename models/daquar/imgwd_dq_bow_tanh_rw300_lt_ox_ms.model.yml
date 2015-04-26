@@ -91,7 +91,8 @@ specs:
       initSeed: 2
       outputDim: 500
       learningRate: 0.01
-      momentum: 0.9
+      momentum: 0.
+      gradientClip: 0.1
       weightClip: 100.0
       weightRegConst: 0.00005
     - name: 'softmax'

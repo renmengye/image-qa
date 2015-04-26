@@ -64,7 +64,7 @@ specs:
       inputs: 'txtUnfold'
       inputDim: 868
       outputDim: 300
-      initRange: 0.001
+      initRange: 1.0
       initSeed: 2
       learningRate: 0.0
     - name: 'txtFold'
