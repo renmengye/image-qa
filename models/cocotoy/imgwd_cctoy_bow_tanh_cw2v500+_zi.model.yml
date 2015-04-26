@@ -43,7 +43,7 @@ specs:
       numComponents: 39
       outputDim: 500
     - name: 'dropout'
-      inputs: 'bow, imgMap'
+      inputs: 'bow'
       type: 'dropout'
       dropoutRate: 0.5
       initSeed: 3
