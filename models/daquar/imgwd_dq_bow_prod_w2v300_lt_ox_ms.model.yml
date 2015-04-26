@@ -1,4 +1,4 @@
-name: 'imgword'
+name: 'bow'
 costFn: 'crossEntIdx'
 decisionFn: 'argmax'
 stages:
@@ -6,14 +6,12 @@ stages:
     - 'imgUnfold'
     - 'imgFeat'
     - 'imgMap'
-    - 'imgFold'
     - 'txtSel'
     - 'txtUnfold'
     - 'txtDict'
     - 'txtFold'
-    - 'concat'
-    - 'dropout'
-    - 'lstm'
+    - 'bow'
+    - 'componentProd'
     - 'softmax'
 outputs: 'softmax'
 specs:
@@ -27,7 +25,7 @@ specs:
       type: 'selector'
       inputs: 'input'
       start: 1
-      end: 56
+      end: 28
       axis: 1
     - name: 'imgUnfold'
       type: 'timeUnfold'
@@ -36,24 +34,24 @@ specs:
     - name: 'imgFeat'
       type: 'lut'
       inputs: 'imgUnfold'
-      inputDim: 123287
+      inputDim: 1449
       outputDim: 4096
-      initRange: 0.1
-      initSeed: 0
+      initWeights: '/ais/gobi3/u/mren/data/nyu-depth/hidden_oxford.h5'
+      format: 'h5'
+      h5key: 'hidden7_ms'
       learningRate: 0.0
-      outputdEdX: false
     - name: 'imgMap'
       type: 'map'
       inputs: 'imgFeat'
       activeFn: 'identity'
+      bias: false
       outputDim: 300
-      initRange: 0.1
+      initRange: 0.05
       initSeed: 1
       learningRate: 0.8
       momentum: 0.9
       gradientClip: 0.1
       weightClip: 100.0
-      outputdEdX: false
     - name: 'imgFold'
       type: 'timeFold'
       inputs: 'imgMap'
@@ -65,53 +63,33 @@ specs:
     - name: 'txtDict'
       type: 'lut'
       inputs: 'txtUnfold'
-      inputDim: 13049
+      inputDim: 868
       outputDim: 300
-      initWeights: '../data/cocoqa-full/word-embed-q.npy'
+      initWeights: '../data/daquar-37/word-embed-q.npy'
       learningRate: 0.0
-      outputdEdX: false
     - name: 'txtFold'
       type: 'timeFold'
       inputs: 'txtDict'
-      timespan: 55
-      outputdEdX: false
-    - name: 'concat'
-      type: 'concat'
-      inputs: 'imgFold, txtFold'
-      axis: 1
-    - name: 'dropout'
-      type: 'dropout'
-      inputs: 'concat'
-      dropoutRate: 0.2
-      initSeed: 3
+      timespan: 27
+    - name: 'bow'
+      type: 'sum2'
+      inputs: 'txtFold'
+      numComponents: 27
+      outputDim: 300  
+    - name: 'componentProd'
+      inputs: 'bow, imgMap'
+      type: 'componentProd'
       outputDim: 300
-    - name: 'lstm'
-      type: 'lstm'
-      inputs: 'dropout'
-      inputDim: 300
-      outputDim: 150
-      timespan: 56
-      initRange: 0.1
-      initSeed: 4
-      cutOffZeroEnd: true
-      multiErr: false
-      learningRate: 0.8
-      learningRateAnnealConst: 0.0
-      momentum: 0.9
-      gradientClip: 0.1
-      weightClip: 100.0
-      weightRegConst: 0.00005
-      outputdEdX: true
     - name: 'softmax'
       type: 'map'
-      inputs: 'lstm'
+      inputs: 'componentProd'
       activeFn: 'softmax'
-      outputDim: 794
+      outputDim: 67
       initRange: 0.1
       initSeed: 7
       learningRate: 0.01
       learningRateAnnealConst: 0.0
       momentum: 0.9
-      gradientClip: 0.1
-      weightClip: 50.0
+      gradientClip: 0.01
+      weightClip: 5.0
       weightRegConst: 0.00005
