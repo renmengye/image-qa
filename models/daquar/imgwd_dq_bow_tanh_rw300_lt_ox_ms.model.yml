@@ -103,7 +103,6 @@ specs:
       initRange: 0.1
       initSeed: 7
       learningRate: 0.01
-      learningRateAnnealConst: 0.0
       momentum: 0.9
       gradientClip: 0.1
       weightClip: 5.0

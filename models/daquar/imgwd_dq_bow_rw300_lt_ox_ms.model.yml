@@ -81,10 +81,9 @@ specs:
       inputs: 'bow, imgMap'
       activeFn: 'softmax'
       outputDim: 68
-      initRange: 0.01
+      initRange: 0.05
       initSeed: 7
-      learningRate: 0.001
-      learningRateAnnealConst: 0.0
+      learningRate: 0.01
       momentum: 0.9
       gradientClip: 0.1
       weightClip: 5.0
