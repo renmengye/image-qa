@@ -79,11 +79,6 @@ specs:
       type: 'sum2'
       inputs: 'txtFold'
       numComponents: 27
-      outputDim: 300    
-    - name: 'sum'
-      inputs: 'bow, imgMap'
-      type: 'sum'
-      numComponents: 2
       outputDim: 300
     - name: 'softmax'
       type: 'map'

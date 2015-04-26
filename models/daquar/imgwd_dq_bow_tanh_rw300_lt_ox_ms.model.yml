@@ -45,6 +45,7 @@ specs:
       type: 'map'
       inputs: 'imgFeat'
       activeFn: 'identity'
+      bias: false
       outputDim: 300
       initRange: 0.1
       initSeed: 1
