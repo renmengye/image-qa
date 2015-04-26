@@ -65,7 +65,7 @@ specs:
       intConversion: true
       inputDim: 868
       outputDim: 300
-      initRange: 1.0
+      initRange: 0.1
       initSeed: 2
       learningRate: 0.8
       momentum: 0.9

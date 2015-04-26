@@ -45,7 +45,7 @@ specs:
       activeFn: 'identity'
       bias: false
       outputDim: 300
-      initRange: 0.01
+      initRange: 0.05
       initSeed: 1
       learningRate: 0.8
       momentum: 0.9
@@ -64,7 +64,7 @@ specs:
       inputs: 'txtUnfold'
       inputDim: 868
       outputDim: 300
-      initRange: 1.0
+      initRange: 0.1
       initSeed: 2
       learningRate: 0.0
     - name: 'txtFold'
