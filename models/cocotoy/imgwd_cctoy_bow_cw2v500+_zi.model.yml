@@ -23,10 +23,14 @@ specs:
     - name: 'txtDict'
       type: 'lut'
       inputs: 'txtUnfold'
+      intConversion: true
       inputDim: 3663
       outputDim: 500
       initWeights: '../data/cocoqa-toy/word-embed-custom-q-500.npy'
-      learningRate: 0.0
+      learningRate: 0.8
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 500.0
     - name: 'txtFold'
       type: 'timeFold'
       inputs: 'txtDict'
