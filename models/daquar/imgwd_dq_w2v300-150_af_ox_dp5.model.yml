@@ -66,14 +66,10 @@ specs:
     - name: 'txtDict'
       type: 'lut'
       inputs: 'txtUnfold'
-      intConversion: true
       inputDim: 868
       outputDim: 300
       initWeights: '../data/daquar-37/word-embed-q.npy'
-      learningRate: 0.8
-      momentum: 0.9
-      gradientClip: 0.1
-      weightClip: 300.0
+      learningRate: 0.0
     - name: 'txtFold'
       type: 'timeFold'
       inputs: 'txtDict'
