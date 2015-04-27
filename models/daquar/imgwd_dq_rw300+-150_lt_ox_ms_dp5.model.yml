@@ -1,0 +1,120 @@
+name: 'imgword'
+costFn: 'crossEntIdx'
+decisionFn: 'argmax'
+stages:
+    - 'imgSel'
+    - 'imgUnfold'
+    - 'imgFeat'
+    - 'imgMap'
+    - 'imgFold'
+    - 'txtSel'
+    - 'txtUnfold'
+    - 'txtDict'
+    - 'txtFold'
+    - 'concat'
+    - 'dropout'
+    - 'lstm'
+    - 'softmax'
+outputs: 'softmax'
+specs:
+    - name: 'imgSel'
+      type: 'selector'
+      inputs: 'input'
+      start: 0
+      end: 1
+      axis: 1
+    - name: 'txtSel'
+      type: 'selector'
+      inputs: 'input'
+      start: 1
+      end: 28
+      axis: 1
+    - name: 'imgUnfold'
+      type: 'timeUnfold'
+      inputs: 'imgSel'
+      outputdEdX: false
+    - name: 'imgFeat'
+      type: 'lut'
+      inputs: 'imgUnfold'
+      inputDim: 1449
+      outputDim: 4096
+      initWeights: '/ais/gobi3/u/mren/data/nyu-depth/hidden_oxford.h5'
+      h5key: 'hidden7_ms'
+      format: 'h5'
+      learningRate: 0.0
+      outputdEdX: false
+    - name: 'imgMap'
+      type: 'map'
+      inputs: 'imgFeat'
+      activeFn: 'identity'
+      outputDim: 300
+      initRange: 0.0541
+      initSeed: 1
+      learningRate: 0.8
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 100.0
+      outputdEdX: false
+    - name: 'imgFold'
+      type: 'timeFold'
+      inputs: 'imgMap'
+      timespan: 1
+    - name: 'txtUnfold'
+      type: 'timeUnfold'
+      inputs: 'txtSel'
+      outputdEdX: false
+    - name: 'txtDict'
+      type: 'lut'
+      inputs: 'txtUnfold'
+      intConversion: true
+      inputDim: 868
+      outputDim: 300
+      initRange: 1.0
+      initSeed: 2
+      learningRate: 0.8
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 300.0
+    - name: 'txtFold'
+      type: 'timeFold'
+      inputs: 'txtDict'
+      timespan: 27
+    - name: 'concat'
+      type: 'concat'
+      inputs: 'imgFold, txtFold'
+      axis: 1
+    - name: 'dropout'
+      type: 'dropout'
+      inputs: 'concat'
+      dropoutRate: 0.5
+      initSeed: 3
+      outputDim: 300
+    - name: 'lstm'
+      type: 'lstm'
+      inputs: 'dropout'
+      inputDim: 300
+      outputDim: 150
+      timespan: 28
+      initRange: 0.1
+      initSeed: 4
+      cutOffZeroEnd: true
+      multiErr: false
+      learningRate: 0.8
+      learningRateAnnealConst: 0.0
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 100.0
+      outputdEdX: true
+    - name: 'softmax'
+      type: 'map'
+      inputs: 'lstm'
+      activeFn: 'softmax'
+      outputDim: 68
+      initRange: 0.1
+      initSeed: 7
+      learningRate: 0.01
+      learningRateAnnealConst: 0.0
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 15.0
+      weightRegConst: 0.00005
