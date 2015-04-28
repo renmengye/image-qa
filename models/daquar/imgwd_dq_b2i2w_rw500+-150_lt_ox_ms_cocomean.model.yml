@@ -79,7 +79,7 @@ specs:
       gradientClip: 0.1
       weightClip: 100.0
       outputdEdX: false
-    - name: 'imgMapLastNorm'
+    - name: 'imgMapLast'
       type: 'map'
       inputs: 'imgFeat'
       activeFn: 'identity'
