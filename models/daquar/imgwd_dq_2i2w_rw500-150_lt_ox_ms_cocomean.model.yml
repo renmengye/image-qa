@@ -61,7 +61,7 @@ specs:
       outputDim: 4096
     - name: 'imgMapFirst'
       type: 'map'
-      inputs: 'imgFeat'
+      inputs: 'imgFeatNorm'
       activeFn: 'identity'
       outputDim: 500
       bias: false
@@ -74,7 +74,7 @@ specs:
       outputdEdX: false
     - name: 'imgMapLast'
       type: 'map'
-      inputs: 'imgFeat'
+      inputs: 'imgFeatNorm'
       activeFn: 'identity'
       outputDim: 500
       bias: false
