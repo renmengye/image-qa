@@ -44,11 +44,11 @@ specs:
       inputs: 'txtFold'
       dropoutRate: 0.2
       initSeed: 3
-      outputDim: 500
+      outputDim: 300
     - name: 'lstm'
       type: 'lstm'
       inputs: 'dropout'
-      inputDim: 500
+      inputDim: 300
       outputDim: 150
       timespan: 28
       initRange: 0.1
