@@ -6,6 +6,7 @@ stages:
     - 'txtDict'
     - 'txtFold'
     - 'imgFeat'
+    - 'imgFeatNorm'
     - 'imgMapFirst'
     - 'imgMapLast'
     - 'imgFoldFirst'
@@ -57,11 +58,17 @@ specs:
       outputDim: 4096
       initWeights: '/ais/gobi3/u/mren/data/nyu-depth/hidden_oxford.h5'
       format: 'h5'
-      h5key: 'hidden7_ms'
+      h5key: 'hidden7'
       learningRate: 0.0
+    - name: 'imgFeatNorm'
+      type: 'normalize'
+      inputs: 'imgFeat'
+      mean: '/ais/gobi3/u/mren/models/coco_vgg/mean.npy'
+      std: '/ais/gobi3/u/mren/models/coco_vgg/std.npy'
+      outputDim: 4096
     - name: 'imgMapFirst'
       type: 'map'
-      inputs: 'imgFeat'
+      inputs: 'imgFeatNorm'
       activeFn: 'identity'
       outputDim: 500
       bias: false
@@ -72,7 +79,7 @@ specs:
       gradientClip: 0.1
       weightClip: 100.0
       outputdEdX: false
-    - name: 'imgMapLast'
+    - name: 'imgMapLastNorm'
       type: 'map'
       inputs: 'imgFeat'
       activeFn: 'identity'

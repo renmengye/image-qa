@@ -5,6 +5,7 @@ stages:
     - 'imgSel'
     - 'imgUnfold'
     - 'imgFeat'
+    - 'imgFeatNorm'
     - 'imgMap'
     - 'imgFold'
     - 'txtSel'
@@ -35,17 +36,22 @@ specs:
       outputdEdX: false
     - name: 'imgFeat'
       type: 'lut'
-      inputs: 'imgUnfold'
+      inputs: 'imgSel'
       inputDim: 1449
       outputDim: 4096
       initWeights: '/ais/gobi3/u/mren/data/nyu-depth/hidden_oxford.h5'
-      h5key: 'hidden7_ms'
       format: 'h5'
+      h5key: 'hidden7'
       learningRate: 0.0
-      outputdEdX: false
+    - name: 'imgFeatNorm'
+      type: 'normalize'
+      inputs: 'imgFeat'
+      mean: '/ais/gobi3/u/mren/models/coco_vgg/mean.npy'
+      std: '/ais/gobi3/u/mren/models/coco_vgg/std.npy'
+      outputDim: 4096
     - name: 'imgMap'
       type: 'map'
-      inputs: 'imgFeat'
+      inputs: 'imgFeatNorm'
       activeFn: 'identity'
       bias: false
       outputDim: 500
