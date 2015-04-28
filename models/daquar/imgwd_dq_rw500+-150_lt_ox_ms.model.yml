@@ -49,7 +49,7 @@ specs:
       activeFn: 'identity'
       bias: false
       outputDim: 500
-      initRange: 0.05
+      initRange: 0.1
       initSeed: 1
       learningRate: 0.8
       momentum: 0.9
