@@ -51,7 +51,7 @@ specs:
       inputs: 'imgSel'
       inputDim: 1449
       outputDim: 4096
-      initWeights: '/ais/gobi3/u/mren/data/nyu-depth/hidden7_oxford.h5'
+      initWeights: '/ais/gobi3/u/mren/data/nyu-depth/hidden_oxford.h5'
       format: 'h5'
       h5key: 'hidden7_ms'
       learningRate: 0.0
