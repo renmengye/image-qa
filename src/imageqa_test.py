@@ -13,23 +13,31 @@ def decodeQuestion(X, questionArray):
     sentence += '?'
     return sentence
 
-def calcRate(X, Y, T, questionArray):
+def estimateQuestionType(question):
+    if 'how many' in question:
+        typ = 1
+    elif question.startswith('what is the color') or \
+        question.startswith('what') and 'colour' in question:
+        typ = 2
+    elif question.startswith('where'):
+        typ = 3
+    else:
+        typ = 0
+    return typ
+
+
+def calcRate(X, Y, T, questionArray=None, questionTypeArray=None):
     correct = np.zeros(4, dtype=int)
     total = np.zeros(4, dtype=int)
     for n in range(0, X.shape[0]):        
         sortIdx = np.argsort(Y[n], axis=0)
         sortIdx = sortIdx[::-1]
         A = sortIdx[0]
-        question = decodeQuestion(X[n], questionArray)
-        if 'how many' in question:
-            typ = 1
-        elif question.startswith('what is the color') or \
-            question.startswith('what') and 'colour' in question:
-            typ = 2
-        elif question.startswith('where'):
-            typ = 3
+        if questionTypeArray is None:
+            question = decodeQuestion(X[n], questionArray)
+            typ = estimateQuestionType(question)
         else:
-            typ = 0
+            typ = questionTypeArray[n]
         total[typ] += 1
         if A == T[n, 0]:
             correct[typ] += 1
@@ -87,6 +95,7 @@ def testAll(taskId, model, dataFolder, resultsFolder):
                     resultsFolder, taskId, '%s.test.t.txt' % taskId)
     testDataFile = os.path.join(dataFolder, 'test.npy')
     vocabDictFile = os.path.join(dataFolder, 'vocab-dict.npy')
+    qtypeFile = os.path.join(dataFolder, 'test-qtype.npy')
     vocabDict = np.load(vocabDictFile)
     testData = np.load(testDataFile)
     inputTest = testData[0]
@@ -94,12 +103,14 @@ def testAll(taskId, model, dataFolder, resultsFolder):
     targetTest = testData[1]
     questionArray = vocabDict[1]
     answerArray = vocabDict[3]
+    questionTypeArray = np.load(qtypeFile)
     print len(answerArray)
     print outputTest.shape
     outputTxt(outputTest, targetTest, answerArray, 
               testAnswerFile, testTruthFile)
     resultsRank = calcPrecision(outputTest, targetTest)
-    correct, total = calcRate(inputTest, outputTest, targetTest, questionArray)
+    correct, total = calcRate(inputTest, 
+        outputTest, targetTest, questionTypeArray=questionTypeArray)
     resultsCategory = correct / total.astype(float)
     resultsFile = os.path.join(resultsFolder, taskId, 'result.txt')
     resultsWups = runWups(testAnswerFile, testTruthFile)

@@ -484,7 +484,7 @@ if __name__ == '__main__':
         lookupQID(testQuestions, worddict, maxlen), testImgIds)
     testTarget = lookupAnsID(testAnswers, ansdict)
 
-    # Training files
+    # Dataset files
     np.save(\
         os.path.join(outputFolder, 'train.npy'),\
         np.array((trainInput, trainTarget, 0),\
@@ -497,6 +497,9 @@ if __name__ == '__main__':
         os.path.join(outputFolder, 'test.npy'),\
         np.array((testInput, testTarget, 0),\
             dtype=object))
+    np.save(\
+        os.path.join(outputFolder, 'test-qtype.npy'),\
+        testQuestionTypes)
     np.save(\
         os.path.join(outputFolder, 'vocab-dict.npy'),\
         np.array((worddict, idict, 

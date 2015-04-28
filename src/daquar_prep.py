@@ -301,6 +301,10 @@ if __name__ == '__main__':
         np.array((testInput, testTarget, 0),\
             dtype=object))
     np.save(\
+        os.path.join(outputFolder, 'test-qtype.npy'),\
+        testQuestionTypes)
+
+    np.save(\
         os.path.join(outputFolder, 'all.npy'),\
         np.array((allInput, allTarget, 0),\
             dtype=object))
