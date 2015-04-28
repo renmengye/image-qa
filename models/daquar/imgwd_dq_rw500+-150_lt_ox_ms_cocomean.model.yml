@@ -86,7 +86,6 @@ specs:
       type: 'timeFold'
       inputs: 'txtDict'
       timespan: 27
-      outputdEdX: false
     - name: 'concat'
       type: 'concat'
       inputs: 'imgFold, txtFold'

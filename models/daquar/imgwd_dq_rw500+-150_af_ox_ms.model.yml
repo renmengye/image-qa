@@ -39,7 +39,7 @@ specs:
       inputDim: 1449
       outputDim: 4096
       initWeights: '/ais/gobi3/u/mren/data/nyu-depth/hidden_oxford.h5'
-      h5key: 'hidden7_ms'
+      h5key: 'hidden7'
       format: 'h5'
       learningRate: 0.0
       outputdEdX: false
@@ -47,7 +47,7 @@ specs:
       type: 'map'
       inputs: 'imgFeat'
       activeFn: 'identity'
-      bias: false
+      bias: true
       outputDim: 500
       initRange: 0.1
       initSeed: 1
@@ -79,7 +79,6 @@ specs:
       type: 'timeFold'
       inputs: 'txtDict'
       timespan: 27
-      outputdEdX: false
     - name: 'concat'
       type: 'concat'
       inputs: 'imgFold, txtFold'
