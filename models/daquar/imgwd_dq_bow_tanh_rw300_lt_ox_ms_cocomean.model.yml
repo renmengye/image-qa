@@ -95,7 +95,7 @@ specs:
       inputs: 'dropout'
       type: 'map'
       activeFn: 'tanh'
-      initRange: 0.01
+      initRange: 0.1
       initSeed: 2
       outputDim: 600
       learningRate: 0.01
@@ -108,7 +108,7 @@ specs:
       inputs: 'hidden'
       activeFn: 'softmax'
       outputDim: 68
-      initRange: 0.01
+      initRange: 0.1
       initSeed: 7
       learningRate: 0.01
       momentum: 0.9
