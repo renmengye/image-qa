@@ -102,7 +102,7 @@ specs:
       initRange: 0.1
       initSeed: 2
       outputDim: 600
-      learningRate: 0.01
+      learningRate: 0.1
       momentum: 0.9
       gradientClip: 0.1
       weightClip: 100.0
