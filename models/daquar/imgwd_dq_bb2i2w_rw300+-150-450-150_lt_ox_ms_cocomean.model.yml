@@ -80,9 +80,9 @@ specs:
       gradientClip: 0.1
       weightClip: 100.0
       outputdEdX: false
-    - name: 'imgMapLastNorm'
+    - name: 'imgMapLast'
       type: 'map'
-      inputs: 'imgFeat'
+      inputs: 'imgFeatNorm'
       activeFn: 'identity'
       outputDim: 300
       bias: false

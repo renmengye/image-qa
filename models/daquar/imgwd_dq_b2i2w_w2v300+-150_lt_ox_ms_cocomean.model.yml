@@ -80,7 +80,7 @@ specs:
       outputdEdX: false
     - name: 'imgMapLast'
       type: 'map'
-      inputs: 'imgFeat'
+      inputs: 'imgFeatNorm'
       activeFn: 'identity'
       outputDim: 300
       bias: false
