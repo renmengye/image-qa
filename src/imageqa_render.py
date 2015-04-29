@@ -86,6 +86,7 @@ def renderLatex(
                 outputFolder,
                 topK=10,
                 comments=None,
+                caption=None,
                 modelOutputs=None,
                 modelNames=None,
                 questionIds=None
@@ -131,7 +132,7 @@ def renderLatex(
         else:
             result.append('&\n')
     result.append('\end{tabular}\n')
-    result.append('\caption{}\n')
+    result.append('\caption{%s}\n' % caption if caption is not None else '')
     result.append('\end{table*}\n')
     latexStr = ''.join(result)
     with open(os.path.join(outputFolder, 'result.tex'), 'w') as f:

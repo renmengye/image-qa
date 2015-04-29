@@ -62,14 +62,20 @@ if __name__ == '__main__':
 
     selectionIds = []
     selectionComments = []
+    caption = ''
     with open(inputFile) as f:
+        i = 0
         for line in f:
-            parts = line.split(',')
-            selectionIds.append(int(parts[0]))
-            if len(parts) > 1:
-                selectionComments.append(parts[1][:-1])
+            if i == 0 and ',' not in line:
+                caption = line[:-1]
             else:
-                selectionComments.append('')
+                parts = line.split(',')
+                selectionIds.append(int(parts[0]))
+                if len(parts) > 1:
+                    selectionComments.append(parts[1][:-1])
+                else:
+                    selectionComments.append('')
+            i += 1
     idx = np.array(selectionIds, dtype='int')
     inputTestSel = inputTest[idx]
     targetTestSel = targetTest[idx]
@@ -99,6 +105,7 @@ if __name__ == '__main__':
                 topK=K,
                 outputFolder=outputFolder,
                 comments=selectionComments,
+                caption=caption,
                 modelOutputs=modelOutputs,
                 modelNames=modelNames,
                 questionIds=idx)
