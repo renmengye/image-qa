@@ -12,11 +12,125 @@ import cPickle as pkl
 from nn.func import *
 from imageqa_test import *
 
+import requests
+
 jsonTrainFilename = '../../../data/mscoco/train/captions.json'
 jsonValidFilename = '../../../data/mscoco/valid/captions.json'
 htmlHyperLink = '%d.html'
 cssHyperLink = 'style.css'
 daquarImageFolder = 'http://www.cs.toronto.edu/~mren/imageqa/data/nyu-depth-v2/jpg/'
+
+def renderLatexAnswerList(
+                            correctAnswer, 
+                            topAnswers, 
+                            topAnswerScores):
+    result = []
+    for i, answer in enumerate(topAnswers):
+        if answer == correctAnswer:
+            colorStr = '\colorbox{green}{%s}'
+        elif i == 0:
+            colorStr = '\colorbox{red}{%s}'
+        else:
+            colorStr = ''
+        result.append(colorStr % ('%s (%.4f) ' % \
+                    answer, topAnswerScores[i]))
+    return ''.join(result)
+
+def renderLatexSingleItem(
+                    questionIndex,
+                    question,
+                    correctAnswer,
+                    description=None,
+                    topAnswers=None,
+                    topAnswerScores=None,
+                    modelNames=None):
+    result = []
+    result.append('    \\scalebox{0.3}{\n')
+    result.append('        \\includegraphics[width=\\textwidth, height=.7\\textwidth]{img/%d.jpg}}\n' % questionIndex)
+    result.append('    \\parbox{5cm}{\n')
+    result.append('        \\vskip 0.05in\n')
+    result.append('        Q%d: %s\\\\\n' % (questionIndex, question))
+    result.append('        Ground truth: four\\\\\n')
+
+    i = 0
+    if modelNames is not None and len(modelNames) > 1:
+        for modelAnswer, modelAnswerScore, modelName in \
+            zip(topAnswers, topAnswerScores, modelNames):
+            result.append('%s:' % modelName)
+            result.append(
+                renderLatexAnswerList(
+                                 correctAnswer,
+                                 modelAnswer,
+                                 modelAnswerScore))
+            if i != len(modelNames) - 1:
+                result.append('\\\\')
+            i += 1
+            result.append('\n')
+    elif topAnswers is not None:
+        result.append(
+            renderLatexAnswerList(
+                             correctAnswer,
+                             topAnswers, 
+                             topAnswerScores))
+            result.append('\n')
+    if description is not None:
+        result.append(description)
+    result.append('    }\n')
+    return ''.join(result)
+
+def renderLatex(
+                inputData,
+                targetData,
+                questionArray,
+                answerArray,
+                urlDict,
+                outputFolder,
+                topK=10,
+                description=None,
+                modelOutputs=None,
+                modelNames=None,
+                questionIds=None
+                ):
+    result = []
+    result.append('\\begin{table*}[ht!]\n')
+    result.append('\\small\n')
+    result.append('\\begin{tabular}{p{5cm} p{5cm} p{5cm}}\n')
+    imgPerRow = 3
+    imgFolder = os.path.join(outputFolder, 'img')
+    for n in range(inputData.shape[0]):
+        # Download the images
+        imageId = inputData[n, 0, 0]
+        imageFilename = urlDict[imageId - 1]
+        r = requests.get(imageFilename)
+        qid = questionIds[n] if questionIds is not None else n
+        if not os.path.exists(imgFolder):
+            os.makedirs(imgFolder)
+        with open(os.path.join(imgFolder, '%d.jpg' % qid, 'wb') as f:
+            f.write(r.content)
+        question = decodeQuestion(inputData[n], questionArray)
+        answer = answerArray[targetData[n, 0]]
+        topAnswers, topAnswerScores = pickTopAnswers(
+                                            answerArray, 
+                                            modelOutputs, 
+                                            modelNames)
+        result.append(renderLatexSingleItem(
+                                            qid,
+                                            question,
+                                            answer,
+                                            topAnswers,
+                                            topAnswerScores,
+                                            description=description[n],
+                                            modelNames=modelNames))
+        if np.mod(n, imgPerRow) == imgPerRow - 1:
+            result.append('\\\\\n')
+        else:
+            result.append('&\n')
+    result.append('\end{tabular}\n')
+    result.append('\caption{}\n')
+    result.append('\end{table*}\n')
+    latexStr = ''.join(result)
+    with open(os.path.join(outputFolder, 'result.tex'), 'w') as f:
+        f.write(latexStr)
 
 def renderHtml(
                 inputData,
@@ -162,6 +276,47 @@ def renderSingleItem(
     htmlList.append('</div></td>')
     return ''.join(htmlList)
 
+def pickTopAnswers(
+                    answerArray,
+                    modelOutputs=None, 
+                    modelNames=None):
+    if modelNames is not None and len(modelNames) > 1:
+        topAnswers = []
+        topAnswerScores = []
+        for j, modelOutput in enumerate(modelOutputs):
+            sortIdx = np.argsort(modelOutput[n], axis=0)
+            sortIdx = sortIdx[::-1]
+            topAnswers.append([])
+            topAnswerScores.append([])
+            for i in range(0, topK):
+                topAnswers[-1].append(answerArray[sortIdx[i]])
+                topAnswerScores[-1].append(modelOutput[n, sortIdx[i]])
+    elif modelOutputs is not None:
+        sortIdx = np.argsort(modelOutputs[n], axis=0)
+        sortIdx = sortIdx[::-1]
+        topAnswers = []
+        topAnswerScores = []
+        for i in range(0, topK):
+            topAnswers.append(answerArray[sortIdx[i]])
+            topAnswerScores.append(modelOutputs[n, sortIdx[i]])
+        qid = questionIds[n] if questionIds is not None else n
+        htmlList.append(renderSingleItem(
+                                        imageFilename, 
+                                        qid, 
+                                        question, 
+                                        answerArray[targetData[n, 0]], 
+                                        topAnswers=topAnswers, 
+                                        topAnswerScores=topAnswerScores))
+    else:
+        topAnswers = None
+        topAnswerScores = None
+        htmlList.append(renderSingleItem(
+                                        imageFilename, 
+                                        qid, 
+                                        question, 
+                                        answerArray[targetData[n, 0]]))
+    return topAnswers, topAnswerScores
+
 def renderSinglePage(
                     inputData, 
                     targetData, 
@@ -188,48 +343,20 @@ def renderSinglePage(
         imageFilename = urlDict[imageId - 1]
         question = decodeQuestion(inputData[n], questionArray)
 
-        if modelNames is not None and len(modelNames) > 1:
-            topAnswers = []
-            topAnswerScores = []
-            for j, modelOutput in enumerate(modelOutputs):
-                sortIdx = np.argsort(modelOutput[n], axis=0)
-                sortIdx = sortIdx[::-1]
-                topAnswers.append([])
-                topAnswerScores.append([])
-                for i in range(0, topK):
-                    topAnswers[-1].append(answerArray[sortIdx[i]])
-                    topAnswerScores[-1].append(modelOutput[n, sortIdx[i]])
-            qid = questionIds[n] if questionIds is not None else n
-            htmlList.append(renderSingleItem(
-                                            imageFilename, 
-                                            qid, 
-                                            question, 
-                                            answerArray[targetData[n, 0]], 
-                                            topAnswers, 
-                                            topAnswerScores, 
-                                            modelNames))
-        elif modelOutputs is not None:
-            sortIdx = np.argsort(modelOutputs[n], axis=0)
-            sortIdx = sortIdx[::-1]
-            topAnswers = []
-            topAnswerScores = []
-            for i in range(0, topK):
-                topAnswers.append(answerArray[sortIdx[i]])
-                topAnswerScores.append(modelOutputs[n, sortIdx[i]])
-            qid = questionIds[n] if questionIds is not None else n
-            htmlList.append(renderSingleItem(
-                                            imageFilename, 
-                                            qid, 
-                                            question, 
-                                            answerArray[targetData[n, 0]], 
-                                            topAnswers=topAnswers, 
-                                            topAnswerScores=topAnswerScores))
-        else:
-            htmlList.append(renderSingleItem(
-                                            imageFilename, 
-                                            qid, 
-                                            question, 
-                                            answerArray[targetData[n, 0]]))
+        qid = questionIds[n] if questionIds is not None else n
+        topAnswers, topAnswerScores = pickTopAnswers(
+                                        answerArray, 
+                                        modelOutputs, 
+                                        modelNames)
+        htmlList.append(renderSingleItem(
+                                        imageFilename, 
+                                        qid, 
+                                        question, 
+                                        answerArray[targetData[n, 0]], 
+                                        topAnswers, 
+                                        topAnswerScores, 
+                                        modelNames))
+
         if np.mod(n, imgPerRow) == imgPerRow - 1:
             htmlList.append('</tr>')
     htmlList.append('</table>')

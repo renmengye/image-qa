@@ -161,8 +161,8 @@ if __name__ == '__main__':
             inputTestSubset = inputTest[idx]
             targetTestSubset = targetTest[idx]
             modelOutputsSubset = []
-            for i in range(numModels):
-                modelOutputsSubset.append(modelOutputs[i][idx])
+            for j in range(numModels):
+                modelOutputsSubset.append(modelOutputs[j][idx])
             if not os.path.exists(outputSubFolder):
                 os.makedirs(outputSubFolder)
             htmlHyperLink = '%d.html'
@@ -176,7 +176,7 @@ if __name__ == '__main__':
                         modelOutputs=modelOutputsSubset,
                         modelNames=modelNames,
                         questionIds=idx)
-            for i, page in enumerate(pages):
+            for j, page in enumerate(pages):
                 with open(os.path.join(outputSubFolder, 
-                        htmlHyperLink % i), 'w') as f:
+                        htmlHyperLink % j), 'w') as f:
                     f.write(page)
