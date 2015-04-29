@@ -116,7 +116,7 @@ if __name__ == '__main__':
     # Sort questions by question types.
     # Sort questions by correctness differences.
     print('Sorting questions...')
-    numCategories = 4
+    numCategories = np.max(testQuestionType) + 1
     numModels = len(modelNames)
     numCorrect = 1 << numModels
     numBins = numCategories * numCorrect
