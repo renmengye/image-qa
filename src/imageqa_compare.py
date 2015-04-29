@@ -57,9 +57,14 @@ if __name__ == '__main__':
     testQuestionTypeFile = os.path.join(dataFolder, 'test-qtype.npy')
     testQuestionType = np.load(testQuestionTypeFile)
 
-    for modelName in modelNames:
+    for modelName, modelId in zip(modelNames, modelIds):
         print 'Running test data on model %s...' \
                 % modelName
+        resultFolder = '../results/%s' % modelId
+        modelFile = '../results/%s/%s.model.yml' % (modelId, modelId)
+        model = nn.load(modelFile)
+        model.loadWeights(
+            np.load('../results/%s/%s.w.npy' % (modelId, modelId)))
         outputTest = nn.test(model, inputTest)
         modelOutputs.append(outputTest)
 
