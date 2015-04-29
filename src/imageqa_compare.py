@@ -20,7 +20,6 @@ def getBinName(n):
 def getName(catName, binName):
     return catName + '-' + binName
 
-
 def renderIndex(modelNames, numCategories, bins):
     htmlList = []
     htmlList.append('<html><head><style>%s</style><body>' % \

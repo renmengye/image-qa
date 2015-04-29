@@ -19,38 +19,55 @@ cssHyperLink = 'style.css'
 daquarImageFolder = 'http://www.cs.toronto.edu/~mren/imageqa/data/nyu-depth-v2/jpg/'
 
 def renderHtml(
-                X, 
-                Y, 
-                T, 
-                questionArray, 
-                answerArray, 
-                topK, 
+                inputData,
+                targetData,
+                questionArray,
+                answerArray,
                 urlDict,
+                topK=10,
+                modelOutputs=None,
                 modelNames=None,
                 questionIds=None):
     imgPerPage = 1000
-    if X.shape[0] < imgPerPage:
+    if inputData.shape[0] < imgPerPage:
         return [renderSinglePage(
-            X, Y, T, questionArray, answerArray, 
-            topK, urlDict, 0, 1, 
-            modelNames=modelNames, questionIds=questionIds)]
+                                inputData,
+                                targetData,
+                                questionArray,
+                                answerArray,
+                                urlDict,
+                                iPage=0,
+                                numPages=1,
+                                topK=topK
+                                modelOutputs=modelOutputs,
+                                modelNames=modelNames, 
+                                questionIds=questionIds)]
     else:
         result = []
-        numPages = X.shape[0] / imgPerPage + 1
+        numPages = inputData.shape[0] / imgPerPage + 1
         for i in range(numPages):
             start = imgPerPage * i
-            end = min(X.shape[0], imgPerPage * (i + 1))
-            if modelNames != None:
-                Yslice = []
+            end = min(inputData.shape[0], imgPerPage * (i + 1))
+            if modelNames is not None:
+                modelOutputSlice = []
                 for j in range(len(modelNames)):
-                    Yslice.append(Y[j][start:end])
+                    modelOutputSlice.append(modelOutputs[j][start:end])
+            elif modelOutputs is not None:
+                modelOutputSlice = modelOutputs[start:end]
             else:
-                Yslice = Y[start:end]
+                modelOutputSlice = modelOutputs
             page = renderSinglePage(
-                X[start:end], Yslice, T[start:end], 
-                questionArray, answerArray,
-                topK, urlDict, i, numPages, 
-                modelNames=modelNames, questionIds=questionIds)
+                                    inputData[start:end],
+                                    targetData[start:end],
+                                    questionArray,
+                                    answerArray,
+                                    urlDict, 
+                                    iPages=i,
+                                    numPages=numPages, 
+                                    topK=topK,
+                                    modelOutputs=modelOutputSlice,
+                                    modelNames=modelNames, 
+                                    questionIds=questionIds)
             result.append(page)
         return result
 
@@ -87,7 +104,10 @@ def renderCss():
     cssList.append('span.bad {color:red;}\n')
     return ''.join(cssList)
 
-def renderAnswerList(topAnswers, topAnswerScores, correctAnswer):
+def renderAnswerList(
+                    correctAnswer, 
+                    topAnswers, 
+                    topAnswerScores):
     htmlList = []
     for i, answer in enumerate(topAnswers):
         if answer == correctAnswer:
@@ -102,12 +122,12 @@ def renderAnswerList(topAnswers, topAnswerScores, correctAnswer):
     return ''.join(htmlList)
 
 def renderSingleItem(
-                    imageFilename, 
-                    questionIndex, 
-                    question, 
+                    imageFilename,
+                    questionIndex,
+                    question,
                     correctAnswer,
-                    topAnswers,
-                    topAnswerScores,
+                    topAnswers=None,
+                    topAnswerScores=None,
                     modelNames=None):
     """
     Render a single item.
@@ -131,7 +151,7 @@ def renderSingleItem(
             htmlList.append(
                 renderAnswerList(modelAnswer, modelAnswerScore,
                                  correctAnswer))
-    else:
+    elif topAnswers is not None:
         htmlList.append(
             renderAnswerList(topAnswers, topAnswerScores, 
                              correctAnswer))
@@ -139,15 +159,15 @@ def renderSingleItem(
     return ''.join(htmlList)
 
 def renderSinglePage(
-                    X, 
-                    Y,
-                    T, 
+                    inputData, 
+                    targetData, 
                     questionArray, 
                     answerArray, 
-                    topK, 
                     urlDict,
-                    iPage, 
-                    numPages,
+                    iPage=0, 
+                    numPages=1,
+                    topK=10,
+                    modelOutputs=None,
                     modelNames=None,
                     questionIds=None):
     htmlList = []
@@ -157,40 +177,55 @@ def renderSinglePage(
     htmlList.append('<table>')
     imgPerRow = 4
     htmlList.append(renderMenu(iPage, numPages))
-    for n in range(X.shape[0]):
+    for n in range(inputData.shape[0]):
         if np.mod(n, imgPerRow) == 0:
             htmlList.append('<tr>')
-        imageId = X[n, 0, 0]
+        imageId = inputData[n, 0, 0]
         imageFilename = urlDict[imageId - 1]
-        question = decodeQuestion(X[n], questionArray)
+        question = decodeQuestion(inputData[n], questionArray)
 
         if modelNames is not None and len(modelNames) > 1:
             topAnswers = []
             topAnswerScores = []
-            for j, y in enumerate(Y):
-                sortIdx = np.argsort(y[n], axis=0)
+            for j, modelOutput in enumerate(modelOutputs):
+                sortIdx = np.argsort(modelOutput[n], axis=0)
                 sortIdx = sortIdx[::-1]
                 topAnswers.append([])
                 topAnswerScores.append([])
                 for i in range(0, topK):
                     topAnswers[-1].append(answerArray[sortIdx[i]])
-                    topAnswerScores[-1].append(y[n, sortIdx[i]])
+                    topAnswerScores[-1].append(modelOutput[n, sortIdx[i]])
             qid = questionIds[n] if questionIds is not None else n
-            htmlList.append(renderSingleItem(imageFilename, 
-                qid, question, answerArray[T[n, 0]], topAnswers, 
-                topAnswerScores, modelNames))
-        else:
-            sortIdx = np.argsort(Y[n], axis=0)
+            htmlList.append(renderSingleItem(
+                                            imageFilename, 
+                                            qid, 
+                                            question, 
+                                            answerArray[targetData[n, 0]], 
+                                            topAnswers, 
+                                            topAnswerScores, 
+                                            modelNames))
+        elif modelOutputs is not None:
+            sortIdx = np.argsort(modelOutputs[n], axis=0)
             sortIdx = sortIdx[::-1]
             topAnswers = []
             topAnswerScores = []
             for i in range(0, topK):
                 topAnswers.append(answerArray[sortIdx[i]])
-                topAnswerScores.append(Y[n, sortIdx[i]])
+                topAnswerScores.append(modelOutputs[n, sortIdx[i]])
             qid = questionIds[n] if questionIds is not None else n
-            htmlList.append(renderSingleItem(imageFilename, 
-                qid, question, answerArray[T[n, 0]], topAnswers, 
-                topAnswerScores))
+            htmlList.append(renderSingleItem(
+                                            imageFilename, 
+                                            qid, 
+                                            question, 
+                                            answerArray[targetData[n, 0]], 
+                                            topAnswers=topAnswers, 
+                                            topAnswerScores=topAnswerScores))
+        else:
+            htmlList.append(renderSingleItem(
+                                            imageFilename, 
+                                            qid, 
+                                            question, 
+                                            answerArray[targetData[n, 0]]))
         if np.mod(n, imgPerRow) == imgPerRow - 1:
             htmlList.append('</tr>')
     htmlList.append('</table>')
@@ -275,8 +310,14 @@ if __name__ == '__main__':
     htmlOutputFolder = os.path.join(resultFolder, outputFolder)
     if not os.path.exists(htmlOutputFolder):
         os.makedirs(htmlOutputFolder)
-    pages = renderHtml(inputTest, outputTest, targetTest, 
-                questionArray, answerArray, 10, urlDict)
+    pages = renderHtml(
+                        inputTest, 
+                        targetTest, 
+                        questionArray, 
+                        answerArray, 
+                        urlDict, 
+                        topK=10, 
+                        modelOutputs=outputTest)
     for i, page in enumerate(pages):
         with open(os.path.join(htmlOutputFolder, 
                 htmlHyperLink % i), 'w') as f:
