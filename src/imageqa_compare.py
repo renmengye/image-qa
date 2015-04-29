@@ -21,7 +21,7 @@ def getName(catName, binName):
     return catName + '-' + binName
 
 
-def renderIndex(modelNames, numCategories):
+def renderIndex(modelNames, numCategories, bins):
     htmlList = []
     htmlList.append('<html><head><style>%s</style><body>' % \
         'span.good {color:green;} span.bad {color:red;} table{border-spacing:10px;}')
@@ -35,6 +35,7 @@ def renderIndex(modelNames, numCategories):
         htmlList.append('<table>')
         for j in range(numCorrect):
             htmlList.append('<tr>')
+            binId = numCorrect * i + j
             for k, c in enumerate(getBinName(j)):
                 htmlList.append('<td>')
                 if c == '1':
@@ -42,6 +43,7 @@ def renderIndex(modelNames, numCategories):
                 elif c == '0':
                     htmlList.append('<span class="bad">%s</span>' % modelNames[k])
                 htmlList.append('</td>')
+            htmlList.append('<td>%d items</td>' % len(bins[binId]))
             htmlList.append('<td><a href="%s/0.html">link</a></td>' % \
                 getName(getCatName(i), getBinName(j)))
             htmlList.append('</tr>')
@@ -149,7 +151,7 @@ if __name__ == '__main__':
     if not os.path.exists(outputFolder):
         os.makedirs(outputFolder)
     with open(os.path.join(outputFolder, 'index.html'), 'w') as f:
-        f.write(renderIndex(modelNames, numCategories))
+        f.write(renderIndex(modelNames, numCategories, bins))
 
     for i in range(numBins):
         if bins[i] is not None:
