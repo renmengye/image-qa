@@ -31,7 +31,7 @@ def renderHtml(
     if X.shape[0] < 1000:
         return [renderSinglePage(
             X, Y, T, questionArray, answerArray, 
-            topK, urlDict, 0, 1)]
+            topK, urlDict, 0, 1, modelNames)]
     else:
         result = []
         numPages = X.shape[0] / imgPerPage + 1
@@ -47,7 +47,7 @@ def renderHtml(
             page = renderSinglePage(
                 X[start:end], Yslice, T[start:end], 
                 questionArray, answerArray,
-                topK, urlDict, i, numPages)
+                topK, urlDict, i, numPages, modelNames)
             result.append(page)
         return result
 
