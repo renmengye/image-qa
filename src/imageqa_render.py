@@ -125,7 +125,9 @@ def renderLatex(
                                             topAnswerScores=topAnswerScores,
                                             modelNames=modelNames))
         if np.mod(n, imgPerRow) == imgPerRow - 1:
-            result.append('\\\\\n \\abovespace \n')
+            result.append('\\\\\n')
+            if n != inputData.shape[0] - 1:
+                result.append('\\noalign{\\smallskip}\\noalign{\\smallskip}\\noalign{\\smallskip}\n')
         else:
             result.append('&\n')
     result.append('\end{tabular}\n')
