@@ -56,7 +56,7 @@ def renderLatexSingleItem(
     if modelNames is not None and len(modelNames) > 1:
         for modelAnswer, modelAnswerScore, modelName in \
             zip(topAnswers, topAnswerScores, modelNames):
-            result.append('%s:' % modelName)
+            result.append('%s: ' % modelName)
             result.append(
                 renderLatexAnswerList(
                                  correctAnswer,
@@ -126,7 +126,7 @@ def renderLatex(
                                             topAnswerScores=topAnswerScores,
                                             modelNames=modelNames))
         if np.mod(n, imgPerRow) == imgPerRow - 1:
-            result.append('\\\\\n\\vskip 0.15in \n')
+            result.append('\\\\\n \\abovespace \n')
         else:
             result.append('&\n')
     result.append('\end{tabular}\n')

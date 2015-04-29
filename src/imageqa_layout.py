@@ -70,9 +70,13 @@ if __name__ == '__main__':
                 selectionComments.append(parts[1][:-1])
             else:
                 selectionComments.append('')
+    print selectionIds
+    print selectionComments
     idx = np.array(selectionIds, dtype='int')
     inputTestSel = inputTest[idx]
     targetTestSel = targetTest[idx]
+    for i in range(targetTestSel.shape[0]):
+        print answerArray[targetTestSel[i, 0]]
 
     modelOutputs = []
     for modelName, modelId in zip(modelNames, modelIds):
