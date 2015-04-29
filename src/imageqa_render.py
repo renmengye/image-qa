@@ -16,7 +16,7 @@ jsonTrainFilename = '../../../data/mscoco/train/captions.json'
 jsonValidFilename = '../../../data/mscoco/valid/captions.json'
 htmlHyperLink = '%d.html'
 cssHyperLink = 'style.css'
-daquarImageFolder = '../../data/nyu-depth-v2/jpg/'
+daquarImageFolder = 'http://www.cs.toronto.edu/~mren/imageqa/data/nyu-depth-v2/jpg/'
 
 def renderHtml(
                 X, 
