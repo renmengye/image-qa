@@ -72,13 +72,14 @@ if __name__ == '__main__':
     # categoryInput = np.zeros(4, dtype='object')
 
     # Render
+    print('Rendering webpages...')
     if not os.path.exists(outputFolder):
         os.makedirs(outputFolder)
-
+    htmlHyperLink = '%d.html'
     pages = renderHtml(inputTest, modelOutputs, targetTest, 
-                questionArray, answerArray, 10, urlDict, modelNames)
+                questionArray, answerArray, K, urlDict, modelNames)
     for i, page in enumerate(pages):
-        with open(os.path.join(htmlOutputFolder, 
+        with open(os.path.join(outputFolder, 
                 htmlHyperLink % i), 'w') as f:
             f.write(page)
 

@@ -41,7 +41,7 @@ def renderHtml(
             if modelNames != None:
                 Yslice = []
                 for j in range(len(modelNames)):
-                    Yslice.append(Y[j, start:end])
+                    Yslice.append(Y[j][start:end])
             else:
                 Yslice = Y[start:end]
             page = renderSinglePage(
@@ -84,7 +84,7 @@ def renderCss():
     cssList.append('span.bad {color:red;}\n')
     return ''.join(cssList)
 
-def renderAnswerList(topAnswers, topAnswerScores):
+def renderAnswerList(topAnswers, topAnswerScores, correctAnswer):
     htmlList = []
     for i, answer in enumerate(topAnswers):
         if answer == correctAnswer:
@@ -119,15 +119,20 @@ def renderSingleItem(
                     imageFilename)
     htmlList.append('<div class="ans">Q%d: %s<br/>' % \
                     (questionIndex + 1, question))
+    htmlList.append('Correct answer: <span class="good">\
+                    %s</span><br/>' % correctAnswer)
     if modelNames is not None and len(modelNames) > 1:
         for modelAnswer, modelAnswerScore, modelName in \
             zip(topAnswers, topAnswerScores, modelNames):
             htmlList.append('%s:<br/>' % modelName)
-            htmlList.append(renderAnswerList(modelAnswer, modelAnswerScore))
+            htmlList.append(
+                renderAnswerList(modelAnswer, modelAnswerScore,
+                                 correctAnswer))
     else:
-        htmlList.append(renderAnswerList(topAnswers, topAnswerScores))
-    htmlList.append('Correct answer: <span class="good">\
-                    %s</span><br/></div></td>' % correctAnswer)
+        htmlList.append(
+            renderAnswerList(topAnswers, topAnswerScores, 
+                             correctAnswer))
+    htmlList.append('</div></td>')
     return ''.join(htmlList)
 
 def renderSinglePage(
