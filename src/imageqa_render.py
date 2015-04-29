@@ -26,16 +26,17 @@ def renderHtml(
                 answerArray, 
                 topK, 
                 urlDict):
+    imgPerPage = 200
     if X.shape[0] < 1000:
         return [renderSinglePage(
             X, Y, T, questionArray, answerArray, 
             topK, urlDict, 0, 1)]
     else:
         result = []
-        numPages = X.shape[0] / 2000 + 1
+        numPages = X.shape[0] / imgPerPage + 1
         for i in range(numPages):
-            start = 2000 * i
-            end = min(X.shape[0], 2000 * (i + 1))
+            start = imgPerPage * i
+            end = min(X.shape[0], imgPerPage * (i + 1))
             page = renderSinglePage(
                 X[start:end], Y[start:end], T[start:end], 
                 questionArray, answerArray,
@@ -56,14 +57,21 @@ def renderMenu(iPage, numPages):
     htmlList.append('</div>')
     return ''.join(htmlList)
 
-def renderCSS():
+def renderCss():
     cssList = []
-    cssList.append('table {width:1250px;border:0;text-align:center;}\n')
-    cssList.append('td.item {padding-top:0px;height=550px;}\n')
-    cssList.append('div.img {width:310px;height:210px;text-align:top;\
-                    margin-top:0px;padding-top:0px;line-height:0px;}\n')
-    cssList.append('div.ans {height:300px;text-align:bottom;\
-                    overflow:hidden;}')
+    cssList.append('table {\
+                            width:1200px;\
+                            border-spacing:10px\
+                          }\n')
+    cssList.append('td.item {\
+                             padding:5px;\
+                             border:1px solid gray;\
+                             vertical-align:top;\
+                            }\n')
+    cssList.append('div.ans {\
+                             margin-top:10px;\
+                             width:300px;\
+                            }')
     cssList.append('img {width:300px; height:200px}\n')
     cssList.append('span.good {color:green;}\n')
     cssList.append('span.bad {color:red;}\n')
@@ -116,7 +124,7 @@ def renderSinglePage(
                     numPages):
     htmlList = []
     htmlList.append('<html><head>\n')
-    htmlList.append('<style>%s</style>' % renderCSS())
+    htmlList.append('<style>%s</style>' % renderCss())
     htmlList.append('</head><body>\n')
     htmlList.append('<table>')
     imgPerRow = 4
@@ -139,6 +147,10 @@ def renderSinglePage(
             topAnswerScores))
         if np.mod(n, imgPerRow) == imgPerRow - 1:
             htmlList.append('</tr>')
+            #htmlList.append('<tr>')
+            #for i in range(imgPerRow):
+            #    htmlList.append('<td class="item"></td>')
+            #htmlList.append('</tr>')
     htmlList.append('</table>')
     htmlList.append(renderMenu(iPage, numPages))
     htmlList.append('</body></html>')
