@@ -75,8 +75,8 @@ if __name__ == '__main__':
     numModels = len(modelNames)
     numCorrect = 1 << numModels
     numBins = numCategories * numCorrect
-    modelAnswers = np.zeros(numModels, inputTest.shape[0], dtype='int')
-    bins = None * numBins
+    modelAnswers = np.zeros((numModels, inputTest.shape[0]), dtype='int')
+    bins = [None] * numBins
     names = []
     for i in range(numCategories):
         if i == 0:
@@ -87,22 +87,24 @@ if __name__ == '__main__':
             catName = 'color'
         elif i == 3:
             catName = 'location'
-        for j in numCorrect:
-            n = numCorrect
+        for j in range(numCorrect):
+            n = j
+            #print 'numCorrect', j
             bin = []
-            for k in range(numModels)
-                bin.append(str(n >> (numModels - k) << (numModels - k)))
-                n = n >> 1
+            for k in range(numModels):
+                bin.append(str(n >> (numModels - k - 1)))
+                n = n & (~(1 << (numModels - k - 1)))
+                #print 'n: ', n
             binName = ''.join(bin)
-            print binName
+            #print binName
             names.append(catName + '-' + binName)
     for i in range(numModels):
         modelAnswers[i] = np.argmax(modelOutputs[i], axis=-1)
-    for n in range(inputTest.shape[0])
+    for n in range(inputTest.shape[0]):
         correct = targetTest[n, 0]
         bintmp = 0
         for i in range(numModels):
-            if modelAnswers[i, n] == correct[n]:
+            if modelAnswers[i, n] == correct:
                 bintmp += 1 << (numModels - i - 1)
         category = testQuestionType[n]
         binNum = category * numCorrect + bintmp
@@ -116,6 +118,7 @@ if __name__ == '__main__':
     for i in range(numBins):
         if bins[i] is not None:
             # Need a better folder name!
+            print 'Rendering %s...' % names[i]
             outputSubFolder = os.path.join(outputFolder, names[i])
             idx = np.array(bins[i], dtype='int')
             inputTestSubset = inputTest[idx]
