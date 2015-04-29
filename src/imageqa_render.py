@@ -25,7 +25,8 @@ def renderHtml(
                 questionArray, 
                 answerArray, 
                 topK, 
-                urlDict):
+                urlDict,
+                modelNames=None):
     imgPerPage = 200
     if X.shape[0] < 1000:
         return [renderSinglePage(
@@ -37,8 +38,14 @@ def renderHtml(
         for i in range(numPages):
             start = imgPerPage * i
             end = min(X.shape[0], imgPerPage * (i + 1))
+            if modelNames != None:
+                Yslice = []
+                for j in range(len(modelNames)):
+                    Yslice.append(Y[j, start:end])
+            else:
+                Yslice = Y[start:end]
             page = renderSinglePage(
-                X[start:end], Y[start:end], T[start:end], 
+                X[start:end], Yslice, T[start:end], 
                 questionArray, answerArray,
                 topK, urlDict, i, numPages)
             result.append(page)
@@ -77,6 +84,20 @@ def renderCss():
     cssList.append('span.bad {color:red;}\n')
     return ''.join(cssList)
 
+def renderAnswerList(topAnswers, topAnswerScores):
+    htmlList = []
+    for i, answer in enumerate(topAnswers):
+        if answer == correctAnswer:
+            colorStr = 'class="good"'
+        elif i == 0:
+            colorStr = 'class="bad"'
+        else:
+            colorStr = ''
+        htmlList.append('<span %s>%d. %s %.4f</span><br/>' % \
+                    (colorStr, i + 1, 
+                    answer, topAnswerScores[i]))
+    return ''.join(htmlList)
+
 def renderSingleItem(
                     imageFilename, 
                     questionIndex, 
@@ -89,6 +110,7 @@ def renderSingleItem(
     Render a single item.
     topAnswers: a list of top answer strings
     topAnswerScores: a list of top answer scores
+    modelNames: if multiple items, then above are list of lists.
     """
     htmlList = []
     htmlList.append('<td class="item">\
@@ -97,31 +119,28 @@ def renderSingleItem(
                     imageFilename)
     htmlList.append('<div class="ans">Q%d: %s<br/>' % \
                     (questionIndex + 1, question))
-    for i, answer in enumerate(topAnswers):
-        if answer == correctAnswer:
-            colorStr = 'class="good"'
-        elif i == 0:
-            colorStr = 'class="bad"'
-        else:
-            colorStr = ''
-        htmlList.append('<span %s>%d. %s %.4f</span><br/>' % \
-                    (colorStr, i + 1, 
-                    answer, topAnswerScores[i]))
+    if modelNames is not None and len(modelNames) > 1:
+        for modelAnswer, modelAnswerScore, modelName in \
+            zip(topAnswers, topAnswerScores, modelNames):
+            htmlList.append('%s:<br/>' % modelName)
+            htmlList.append(renderAnswerList(modelAnswer, modelAnswerScore))
+    else:
+        htmlList.append(renderAnswerList(topAnswers, topAnswerScores))
     htmlList.append('Correct answer: <span class="good">\
                     %s</span><br/></div></td>' % correctAnswer)
-
     return ''.join(htmlList)
 
 def renderSinglePage(
                     X, 
-                    Y, 
+                    Y,
                     T, 
                     questionArray, 
                     answerArray, 
                     topK, 
                     urlDict,
                     iPage, 
-                    numPages):
+                    numPages,
+                    modelNames=None):
     htmlList = []
     htmlList.append('<html><head>\n')
     htmlList.append('<style>%s</style>' % renderCss())
@@ -135,22 +154,34 @@ def renderSinglePage(
         imageId = X[n, 0, 0]
         imageFilename = urlDict[imageId - 1]
         question = decodeQuestion(X[n], questionArray)
-        sortIdx = np.argsort(Y[n], axis=0)
-        sortIdx = sortIdx[::-1]
-        topAnswers = []
-        topAnswerScores = []
-        for i in range(0, topK):
-            topAnswers.append(answerArray[sortIdx[i]])
-            topAnswerScores.append(Y[n, sortIdx[i]])
-        htmlList.append(renderSingleItem(imageFilename, 
-            n, question, answerArray[T[n, 0]], topAnswers, 
-            topAnswerScores))
+
+        if modelNames is not None and len(modelNames) > 1:
+            topAnswers = []
+            topAnswerScores = []
+            for j, y in enumerate(Y):
+                sortIdx = np.argsort(y[n], axis=0)
+                sortIdx = sortIdx[::-1]
+                topAnswers.append([])
+                topAnswerScores.append([])
+                for i in range(0, topK):
+                    topAnswers[-1].append(answerArray[sortIdx[i]])
+                    topAnswerScores[-1].append(y[n, sortIdx[i]])
+            htmlList.append(renderSingleItem(imageFilename, 
+                n, question, answerArray[T[n, 0]], topAnswers, 
+                topAnswerScores, modelNames))
+        else:
+            sortIdx = np.argsort(Y[n], axis=0)
+            sortIdx = sortIdx[::-1]
+            topAnswers = []
+            topAnswerScores = []
+            for i in range(0, topK):
+                topAnswers.append(answerArray[sortIdx[i]])
+                topAnswerScores.append(Y[n, sortIdx[i]])
+            htmlList.append(renderSingleItem(imageFilename, 
+                n, question, answerArray[T[n, 0]], topAnswers, 
+                topAnswerScores))
         if np.mod(n, imgPerRow) == imgPerRow - 1:
             htmlList.append('</tr>')
-            #htmlList.append('<tr>')
-            #for i in range(imgPerRow):
-            #    htmlList.append('<td class="item"></td>')
-            #htmlList.append('</tr>')
     htmlList.append('</table>')
     htmlList.append(renderMenu(iPage, numPages))
     htmlList.append('</body></html>')
