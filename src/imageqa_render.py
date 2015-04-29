@@ -73,8 +73,8 @@ def renderLatexSingleItem(
                              topAnswerScores))
         result.append('\n')
     if comment is not None:
-        result.append('\\\\' + comment)
-    result.append('    }\n')
+        result.append('\\\\\n' + comment)
+    result.append('}\n')
     return ''.join(result)
 
 def renderLatex(
