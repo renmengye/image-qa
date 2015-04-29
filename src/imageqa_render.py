@@ -15,6 +15,7 @@ from imageqa_test import *
 jsonTrainFilename = '../../../data/mscoco/train/captions.json'
 jsonValidFilename = '../../../data/mscoco/valid/captions.json'
 htmlHyperLink = '%d.html'
+cssHyperLink = 'style.css'
 daquarImageFolder = '../../data/nyu-depth-v2/jpg/'
 
 def renderHtml(
@@ -55,6 +56,19 @@ def renderMenu(iPage, numPages):
     htmlList.append('</div>')
     return ''.join(htmlList)
 
+def renderCSS():
+    cssList = []
+    cssList.append('table {width:1250px;border:0;text-align:center;}\n')
+    cssList.append('td.item {padding-top:0px;height=550px;}\n')
+    cssList.append('div.img {width:310px;height:210px;text-align:top;\
+                    margin-top:0px;padding-top:0px;line-height:0px;}\n')
+    cssList.append('div.ans {height:300px;text-align:bottom;\
+                    overflow:hidden;}')
+    cssList.append('img {width:300px; height:200px}\n')
+    cssList.append('span.good {color:green;}\n')
+    cssList.append('span.bad {color:red;}\n')
+    return ''.join(cssList)
+
 def renderSingleItem(
                     imageUrl, 
                     questionIndex, 
@@ -69,25 +83,23 @@ def renderSingleItem(
     topAnswerScores: a list of top answer scores
     """
     htmlList = []
-    htmlList.append('<td style="padding-top:0px;height=550px">\
-                    <div style="width:310px;height:210px;text-align:top;\
-                    margin-top:0px;padding-top:0px;line-height:0px">\
-                    <img src="%s" width=300 height=200/></div>\n' % \
+    htmlList.append('<td class="item">\
+                    <div class="img">\
+                    <img src="%s"/></div>\n' % \
                     imageFilename)
-    htmlList.append('<div style="height:300px;text-align:bottom;\
-                    overflow:hidden;">Q%d: %s<br/>' % \
+    htmlList.append('<div class="ans">Q%d: %s<br/>' % \
                     (questionIndex + 1, question))
     for i, answer in enumerate(topAnswers):
         if answer == correctAnswer:
-            colorStr = 'style="color:green"'
+            colorStr = 'class="good"'
         elif i == 0:
-            colorStr = 'style="color:red"'
+            colorStr = 'class="bad"'
         else:
             colorStr = ''
         htmlList.append('<span %s>%d. %s %.4f</span><br/>' % \
                     (colorStr, i + 1, 
                     answer, topAnswerScores[i]))
-    htmlList.append('Correct answer: <span style="color:green">\
+    htmlList.append('Correct answer: <span class="good">\
                     %s</span><br/></div></td>' % correctAnswer)
 
     return ''.join(htmlList)
@@ -103,8 +115,10 @@ def renderSinglePage(
                     iPage, 
                     numPages):
     htmlList = []
-    htmlList.append('<html><head></head><body>\n')
-    htmlList.append('<table style="width:1250px;border:0;text-align:center">')
+    htmlList.append('<html><head>\n')
+    htmlList.append('<style>%s</style>' % renderCSS())
+    htmlList.append('</head><body>\n')
+    htmlList.append('<table>')
     imgPerRow = 4
     htmlList.append(renderMenu(iPage, numPages))
     for n in range(X.shape[0]):
