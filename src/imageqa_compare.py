@@ -103,7 +103,7 @@ if __name__ == '__main__':
         bintmp = 0
         for i in range(numModels):
             if modelAnswers[i, n] == correct[n]:
-                bintmp += 1 << i
+                bintmp += 1 << (numModels - i - 1)
         category = testQuestionType[n]
         binNum = category * numCorrect + bintmp
         if bins[binNum] == None:
@@ -114,13 +114,20 @@ if __name__ == '__main__':
     # Render
     print('Rendering webpages...')
     for i in range(numBins):
-        if bins[binNum] is not None:
+        if bins[i] is not None:
             # Need a better folder name!
             outputSubFolder = os.path.join(outputFolder, names[i])
+            idx = np.array(bins[i], dtype='int')
+            inputTestSubset = inputTest[idx]
+            targetTestSubset = targetTest[idx]
+            modelOutputsSubset = []
+            for i in range(numModels):
+                modelOutputsSubset.append(modelOutputs[i][idx])
             if not os.path.exists(outputSubFolder):
                 os.makedirs(outputSubFolder)
             htmlHyperLink = '%d.html'
-            pages = renderHtml(inputTest, modelOutputs, targetTest, 
+            pages = renderHtml(inputTestSubset, modelOutputsSubset, 
+                        targetTestSubset, 
                         questionArray, answerArray, K, urlDict, modelNames)
             for i, page in enumerate(pages):
                 with open(os.path.join(outputSubFolder, 
