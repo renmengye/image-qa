@@ -68,7 +68,7 @@ def renderCss():
     cssList = []
     cssList.append('table {\
                             width:1200px;\
-                            border-spacing:10px\
+                            border-spacing:10px;\
                           }\n')
     cssList.append('td.item {\
                              padding:5px;\
@@ -79,7 +79,7 @@ def renderCss():
                              margin-top:10px;\
                              width:300px;\
                             }')
-    cssList.append('img {width:300px; height:200px}\n')
+    cssList.append('img {width:300px; height:200px;}\n')
     cssList.append('span.good {color:green;}\n')
     cssList.append('span.bad {color:red;}\n')
     return ''.join(cssList)
