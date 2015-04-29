@@ -60,9 +60,6 @@ if __name__ == '__main__':
     for modelName in modelNames:
         print 'Running test data on model %s...' \
                 % modelName
-        testTruthFile = os.path.join(
-                        resultsFolder, taskId, 
-                        '%s.test.t.txt' % taskId)
         outputTest = nn.test(model, inputTest)
         modelOutputs.append(outputTest)
 
