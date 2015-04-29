@@ -71,13 +71,37 @@ def calcPrecision(Y, T):
     print 'rate @ 10: %.4f' % r10
     return (r1, r5, r10)
 
-def outputTxt(Y, T, answerArray, answerFilename, truthFilename):
+def outputTxt(Y, T, answerArray, 
+              answerFilename, 
+              truthFilename, 
+              topK=1, outputProb=False):
+    """
+    Output the results of all examples into a text file.
+    topK: top k answers, separated by comma.
+    outputProb: whether to output the probability of the answer as well.
+
+    Format will look like this:
+    q1ans1,0.99,a1ans2,0.01...
+    q2ans1,0.90,q2ans2,0.02...
+    """
     with open(truthFilename, 'w+') as f:
         for n in range(0, T.shape[0]):
             f.write(answerArray[T[n, 0]] + '\n')
     with open(answerFilename, 'w+') as f:
         for n in range(0, Y.shape[0]):
-            f.write(answerArray[np.argmax(Y[n, :])] + '\n')
+            if topK == 1:
+                f.write(answerArray[np.argmax(Y[n, :])])
+                if outputProb:
+                    f.write(',%.4f' % Y[n, np.argmax(Y[n, :])])
+                f.write('\n')
+            else:
+                sortIdx = np.argsort(Y[n], axis=0)
+                sortIdx = sortIdx[::-1]
+                for i in range(0, topK):
+                    f.write(answerArray[sortIdx[i]])
+                    if outputProb:
+                        f.write(',%.4f' % Y[n, sortIdx[i]])
+                    f.write('\n')
 
 def runWups(answerFilename, truthFilename):
     w10 = calculate_wups.runAll(truthFilename, answerFilename, -1)

@@ -55,6 +55,43 @@ def renderMenu(iPage, numPages):
     htmlList.append('</div>')
     return ''.join(htmlList)
 
+def renderSingleItem(
+                    imageUrl, 
+                    questionIndex, 
+                    question, 
+                    correctAnswer,
+                    topAnswers,
+                    topAnswerScores,
+                    modelNames=None):
+    """
+    Render a single item.
+    topAnswers: a list of top answer strings
+    topAnswerScores: a list of top answer scores
+    """
+    htmlList = []
+    htmlList.append('<td style="padding-top:0px;height=550px">\
+                    <div style="width:310px;height:210px;text-align:top;\
+                    margin-top:0px;padding-top:0px;line-height:0px">\
+                    <img src="%s" width=300 height=200/></div>\n' % \
+                    imageFilename)
+    htmlList.append('<div style="height:300px;text-align:bottom;\
+                    overflow:hidden;">Q%d: %s<br/>' % \
+                    (questionIndex + 1, question))
+    for i, answer in enumerate(topAnswers):
+        if answer == correctAnswer:
+            colorStr = 'style="color:green"'
+        elif i == 0:
+            colorStr = 'style="color:red"'
+        else:
+            colorStr = ''
+        htmlList.append('<span %s>%d. %s %.4f</span><br/>' % \
+                    (colorStr, i + 1, 
+                    answer, topAnswerScores[i]))
+    htmlList.append('Correct answer: <span style="color:green">\
+                    %s</span><br/></div></td>' % correctAnswer)
+
+    return ''.join(htmlList)
+
 def renderSinglePage(
                     X, 
                     Y, 
@@ -75,29 +112,17 @@ def renderSinglePage(
             htmlList.append('<tr>')
         imageId = X[n, 0, 0]
         imageFilename = urlDict[imageId - 1]
-        htmlList.append('<td style="padding-top:0px;height=550px">\
-                        <div style="width:310px;height:210px;text-align:top;\
-                        margin-top:0px;padding-top:0px;line-height:0px">\
-                        <img src="%s" width=300 height=200/></div>\n' % \
-                        imageFilename)
-        sentence = decodeQuestion(X[n], questionArray)
-        htmlList.append('<div style="height:300px;text-align:bottom;\
-                        overflow:hidden;">Q%d: %s<br/>' % (n + 1, sentence))
-        htmlList.append('Top %d answers: (confidence)<br/>' % topK)
+        question = decodeQuestion(X[n], questionArray)
         sortIdx = np.argsort(Y[n], axis=0)
         sortIdx = sortIdx[::-1]
+        topAnswers = []
+        topAnswerScores = []
         for i in range(0, topK):
-            if sortIdx[i] == T[n, 0]:
-                colorStr = 'style="color:green"'
-            elif i == 0:
-                colorStr = 'style="color:red"'
-            else:
-                colorStr = ''
-            htmlList.append('<span %s>%d. %s %.4f</span><br/>' % \
-                        (colorStr, i + 1, 
-                        answerArray[sortIdx[i]], Y[n, sortIdx[i]]))
-        htmlList.append('Correct answer: <span style="color:green">\
-                        %s</span><br/></div></td>' % answerArray[T[n, 0]])
+            topAnswers.append(answerArray[sortIdx[i]])
+            topAnswerScores.append(Y[n, sortIdx[i]])
+        htmlList.append(renderSingleItem(imageFilename, 
+            n, question, answerArray[T[n, 0]], topAnswers, 
+            topAnswerScores))
         if np.mod(n, imgPerRow) == imgPerRow - 1:
             htmlList.append('</tr>')
     htmlList.append('</table>')
@@ -131,13 +156,18 @@ def readImgDictDaquar():
 
 if __name__ == '__main__':
     """
-    Usage: imageqa_render.py id -data dataFolder
+    Usage: imageqa_render.py {id} 
+                             -d[ata] dataFolder 
+                             -o[utput] outputFolder
+                             -daquar/-coco
     """
     taskId = sys.argv[1]
     dataset = 'coco'
     for i in range(2, len(sys.argv)):
-        if sys.argv[i] == '-data':
+        if sys.argv[i] == '-d' or sys.argv[i] == '-data':
             dataFolder = sys.argv[i + 1]
+        elif sys.argv[i] == '-o' or sys.argv[i] == '-output':
+            outputFolder = sys.argv[i + 1]
         elif sys.argv[i] == '-daquar':
             dataset = 'daquar'
         elif sys.argv[i] == '-coco':
@@ -153,25 +183,27 @@ if __name__ == '__main__':
         urlDict = readImgDictCoco(imgidDict)
     elif dataset == 'daquar':
         urlDict = readImgDictDaquar()
-    print urlDict
 
+    print 'Loading model...'
     resultFolder = '../results/%s' % taskId
     modelFile = '../results/%s/%s.model.yml' % (taskId, taskId)
     model = nn.load(modelFile)
     model.loadWeights(
         np.load('../results/%s/%s.w.npy' % (taskId, taskId)))
 
+    print 'Loading test data...'
     testDataFile = os.path.join(dataFolder, 'test.npy')
     testData = np.load(testDataFile)
-
     inputTest = testData[0]
-    outputTest = nn.test(model, inputTest)
     targetTest = testData[1]
     questionArray = vocabDict[1]
     answerArray = vocabDict[3]
 
+    print 'Running model on test data...'
+    outputTest = nn.test(model, inputTest)
+
     # Render
-    htmlOutputFolder = os.path.join(resultFolder, 'html')
+    htmlOutputFolder = os.path.join(resultFolder, outputFolder)
     if not os.path.exists(htmlOutputFolder):
         os.makedirs(htmlOutputFolder)
     pages = renderHtml(inputTest, outputTest, targetTest, 
