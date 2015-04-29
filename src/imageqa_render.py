@@ -26,12 +26,14 @@ def renderHtml(
                 answerArray, 
                 topK, 
                 urlDict,
-                modelNames=None):
+                modelNames=None,
+                questionIds=None):
     imgPerPage = 1000
     if X.shape[0] < imgPerPage:
         return [renderSinglePage(
             X, Y, T, questionArray, answerArray, 
-            topK, urlDict, 0, 1, modelNames)]
+            topK, urlDict, 0, 1, 
+            modelNames=modelNames, questionIds=questionIds)]
     else:
         result = []
         numPages = X.shape[0] / imgPerPage + 1
@@ -47,7 +49,8 @@ def renderHtml(
             page = renderSinglePage(
                 X[start:end], Yslice, T[start:end], 
                 questionArray, answerArray,
-                topK, urlDict, i, numPages, modelNames)
+                topK, urlDict, i, numPages, 
+                modelNames=modelNames, questionIds=questionIds)
             result.append(page)
         return result
 
@@ -145,7 +148,8 @@ def renderSinglePage(
                     urlDict,
                     iPage, 
                     numPages,
-                    modelNames=None):
+                    modelNames=None,
+                    questionIds=None):
     htmlList = []
     htmlList.append('<html><head>\n')
     htmlList.append('<style>%s</style>' % renderCss())
@@ -171,8 +175,9 @@ def renderSinglePage(
                 for i in range(0, topK):
                     topAnswers[-1].append(answerArray[sortIdx[i]])
                     topAnswerScores[-1].append(y[n, sortIdx[i]])
+            qid = questionIds[n] if questionIds is not None else n
             htmlList.append(renderSingleItem(imageFilename, 
-                n, question, answerArray[T[n, 0]], topAnswers, 
+                qid, question, answerArray[T[n, 0]], topAnswers, 
                 topAnswerScores, modelNames))
         else:
             sortIdx = np.argsort(Y[n], axis=0)
@@ -182,8 +187,9 @@ def renderSinglePage(
             for i in range(0, topK):
                 topAnswers.append(answerArray[sortIdx[i]])
                 topAnswerScores.append(Y[n, sortIdx[i]])
+            qid = questionIds[n] if questionIds is not None else n
             htmlList.append(renderSingleItem(imageFilename, 
-                n, question, answerArray[T[n, 0]], topAnswers, 
+                qid, question, answerArray[T[n, 0]], topAnswers, 
                 topAnswerScores))
         if np.mod(n, imgPerRow) == imgPerRow - 1:
             htmlList.append('</tr>')

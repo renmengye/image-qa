@@ -165,9 +165,12 @@ if __name__ == '__main__':
             if not os.path.exists(outputSubFolder):
                 os.makedirs(outputSubFolder)
             htmlHyperLink = '%d.html'
-            pages = renderHtml(inputTestSubset, modelOutputsSubset, 
+            pages = renderHtml(
+                        inputTestSubset, modelOutputsSubset, 
                         targetTestSubset, 
-                        questionArray, answerArray, K, urlDict, modelNames)
+                        questionArray, answerArray, 
+                        K, urlDict, modelNames=modelNames,
+                        questionIds=idx)
             for i, page in enumerate(pages):
                 with open(os.path.join(outputSubFolder, 
                         htmlHyperLink % i), 'w') as f:
