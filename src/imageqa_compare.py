@@ -143,7 +143,9 @@ if __name__ == '__main__':
     # Render
     print('Rendering webpages...')
     print('Rendering index...')
-    with open(os.path.join(outputSubFolder, 'index.html')) as f:
+    if not os.path.exists(outputFolder):
+        os.makedirs(outputFolder)
+    with open(os.path.join(outputFolder, 'index.html'), 'w') as f:
         f.write(renderIndex(modelNames, numCategories))
 
     for i in range(numBins):
