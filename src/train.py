@@ -3,7 +3,7 @@ import numpy as np
 import os
 import sys
 import yaml
-import email
+import experiment_email as email
 import imageqa_test
 
 '''

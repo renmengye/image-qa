@@ -33,14 +33,14 @@ def renderLatexAnswerList(
         else:
             colorStr = ''
         result.append(colorStr % ('%s (%.4f) ' % \
-                    answer, topAnswerScores[i]))
+                    (answer, topAnswerScores[i])))
     return ''.join(result)
 
 def renderLatexSingleItem(
                     questionIndex,
                     question,
                     correctAnswer,
-                    description=None,
+                    comment=None,
                     topAnswers=None,
                     topAnswerScores=None,
                     modelNames=None):
@@ -72,9 +72,9 @@ def renderLatexSingleItem(
                              correctAnswer,
                              topAnswers, 
                              topAnswerScores))
-            result.append('\n')
-    if description is not None:
-        result.append(description)
+        result.append('\n')
+    if comment is not None:
+        result.append(comment)
     result.append('    }\n')
     return ''.join(result)
 
@@ -86,7 +86,7 @@ def renderLatex(
                 urlDict,
                 outputFolder,
                 topK=10,
-                description=None,
+                comments=None,
                 modelOutputs=None,
                 modelNames=None,
                 questionIds=None
@@ -105,21 +105,25 @@ def renderLatex(
         qid = questionIds[n] if questionIds is not None else n
         if not os.path.exists(imgFolder):
             os.makedirs(imgFolder)
-        with open(os.path.join(imgFolder, '%d.jpg' % qid, 'wb') as f:
+        with open(os.path.join(imgFolder, '%d.jpg' % qid), 'wb') as f:
             f.write(r.content)
         question = decodeQuestion(inputData[n], questionArray)
         answer = answerArray[targetData[n, 0]]
         topAnswers, topAnswerScores = pickTopAnswers(
-                                            answerArray, 
+                                            answerArray,
+                                            n,
+                                            topK,
                                             modelOutputs, 
                                             modelNames)
+        comment = comments[n] \
+                if comments is not None else None
         result.append(renderLatexSingleItem(
                                             qid,
                                             question,
                                             answer,
-                                            topAnswers,
-                                            topAnswerScores,
-                                            description=description[n],
+                                            comment=comment,
+                                            topAnswers=topAnswers,
+                                            topAnswerScores=topAnswerScores,
                                             modelNames=modelNames))
         if np.mod(n, imgPerRow) == imgPerRow - 1:
             result.append('\\\\\n')
@@ -278,6 +282,8 @@ def renderSingleItem(
 
 def pickTopAnswers(
                     answerArray,
+                    n,
+                    topK,
                     modelOutputs=None, 
                     modelNames=None):
     if modelNames is not None and len(modelNames) > 1:
@@ -346,6 +352,8 @@ def renderSinglePage(
         qid = questionIds[n] if questionIds is not None else n
         topAnswers, topAnswerScores = pickTopAnswers(
                                         answerArray, 
+                                        n,
+                                        topK,
                                         modelOutputs, 
                                         modelNames)
         htmlList.append(renderSingleItem(

@@ -40,7 +40,7 @@ if __name__ == '__main__':
             dataset = 'coco'
 
     resultsFolder = '../results'
-    K = 3 # Top-K answers
+    K = 1 # Top-K answers
 
     print 'Loading image urls...'
     if dataset == 'coco':
@@ -64,7 +64,7 @@ if __name__ == '__main__':
     selectionComments = []
     with open(inputFile) as f:
         for line in f:
-            parts = f.split(',')
+            parts = line.split(',')
             selectionIds.append(int(parts[0]))
             if len(parts) > 1:
                 selectionComments.append(parts[1][:-1])
@@ -90,13 +90,15 @@ if __name__ == '__main__':
     print('Rendering LaTeX...')
     if not os.path.exists(outputFolder):
         os.makedirs(outputFolder)
-    pages = renderLatex(
-                inputTestSubset, 
-                targetTestSubset, 
+    renderLatex(
+                inputTestSel, 
+                targetTestSel, 
                 questionArray, 
                 answerArray, 
                 urlDict, 
                 topK=K,
-                modelOutputs=modelOutputsSubset,
+                outputFolder=outputFolder,
+                comments=selectionComments,
+                modelOutputs=modelOutputs,
                 modelNames=modelNames,
                 questionIds=idx)
