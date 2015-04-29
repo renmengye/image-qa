@@ -12,6 +12,7 @@ if __name__ == '__main__':
                                    -d[ata] {dataFolder}
                                    -i[nput] {listFile}
                                    -o[utput] {outputFolder}
+                                   -f[ile] {outputTexFilename}
                                    -daquar/-coco
     Render a selection of examples into LaTeX.
     Input is the following format:
@@ -20,6 +21,7 @@ if __name__ == '__main__':
     ...
     """
     dataset = 'coco'
+    filename = 'result.tex'
     modelNames = None
     for i in range(1, len(sys.argv)):
         if sys.argv[i] == '-m' or sys.argv[i] == '-models':
@@ -34,6 +36,8 @@ if __name__ == '__main__':
             inputFile = sys.argv[i + 1]
         elif sys.argv[i] == '-o' or sys.argv[i] == '-output':
             outputFolder = sys.argv[i + 1]
+        elif sys.argv[i] == '-f' or sys.argv[i] == '-file':
+            filename = sys.argv[i + 1]
         elif sys.argv[i] == '-daquar':
             dataset = 'daquar'
         elif sys.argv[i] == '-coco':
@@ -66,8 +70,8 @@ if __name__ == '__main__':
     with open(inputFile) as f:
         i = 0
         for line in f:
-            if i == 0 and ',' not in line:
-                caption = line[:-1]
+            if i == 0 and line.startswith('caption:'):
+                caption = line[8:-1]
             else:
                 parts = line.split(',')
                 selectionIds.append(int(parts[0]))
@@ -108,4 +112,5 @@ if __name__ == '__main__':
                 caption=caption,
                 modelOutputs=modelOutputs,
                 modelNames=modelNames,
-                questionIds=idx)
+                questionIds=idx,
+                filename=filename)
