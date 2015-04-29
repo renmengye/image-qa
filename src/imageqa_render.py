@@ -89,7 +89,8 @@ def renderLatex(
                 caption=None,
                 modelOutputs=None,
                 modelNames=None,
-                questionIds=None
+                questionIds=None,
+                filename='result.tex'
                 ):
     result = []
     result.append('\\begin{table*}[ht!]\n')
@@ -135,7 +136,7 @@ def renderLatex(
     result.append('\caption{%s}\n' % caption if caption is not None else '')
     result.append('\end{table*}\n')
     latexStr = ''.join(result)
-    with open(os.path.join(outputFolder, 'result.tex'), 'w') as f:
+    with open(os.path.join(outputFolder, filename), 'w') as f:
         f.write(latexStr)
 
 def renderHtml(
