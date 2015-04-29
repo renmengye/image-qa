@@ -109,6 +109,7 @@ def renderLatex(
             f.write(r.content)
         question = decodeQuestion(inputData[n], questionArray)
         answer = answerArray[targetData[n, 0]]
+        print question, answer
         topAnswers, topAnswerScores = pickTopAnswers(
                                             answerArray,
                                             n,
