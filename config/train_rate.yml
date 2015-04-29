@@ -9,6 +9,6 @@ saveModel: true
 plotFigs: true
 calcError: true
 progress: true
-patience: 20
+patience: 10
 criterion: rate
 sendEmail: true

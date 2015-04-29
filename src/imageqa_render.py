@@ -29,7 +29,7 @@ def renderHtml(
     if X.shape[0] < 1000:
         return [renderSinglePage(
             X, Y, T, questionArray, answerArray, 
-            topK, urlDict, imgidDict, 0, 1)]
+            topK, urlDict, 0, 1)]
     else:
         result = []
         numPages = X.shape[0] / 2000 + 1
@@ -39,7 +39,7 @@ def renderHtml(
             page = renderSinglePage(
                 X[start:end], Y[start:end], T[start:end], 
                 questionArray, answerArray,
-                topK, urlDict, imgidDict, i, numPages)
+                topK, urlDict, i, numPages)
             result.append(page)
         return result
 
@@ -70,7 +70,7 @@ def renderCSS():
     return ''.join(cssList)
 
 def renderSingleItem(
-                    imageUrl, 
+                    imageFilename, 
                     questionIndex, 
                     question, 
                     correctAnswer,
@@ -170,18 +170,19 @@ def readImgDictDaquar():
 
 if __name__ == '__main__':
     """
-    Usage: imageqa_render.py {id} 
-                             -d[ata] dataFolder 
-                             -o[utput] outputFolder
+    Usage: imageqa_render.py -id {id} 
+                             -d[ata] {dataFolder}
+                             -o[utput] {outputFolder}
                              -daquar/-coco
     """
-    taskId = sys.argv[1]
     dataset = 'coco'
-    for i in range(2, len(sys.argv)):
+    for i in range(1, len(sys.argv)):
         if sys.argv[i] == '-d' or sys.argv[i] == '-data':
             dataFolder = sys.argv[i + 1]
         elif sys.argv[i] == '-o' or sys.argv[i] == '-output':
             outputFolder = sys.argv[i + 1]
+        elif sys.argv[i] == '-id':
+            taskId = sys.argv[i + 1]
         elif sys.argv[i] == '-daquar':
             dataset = 'daquar'
         elif sys.argv[i] == '-coco':
@@ -221,7 +222,7 @@ if __name__ == '__main__':
     if not os.path.exists(htmlOutputFolder):
         os.makedirs(htmlOutputFolder)
     pages = renderHtml(inputTest, outputTest, targetTest, 
-                questionArray, answerArray, 10, urlDict, imgidDict)
+                questionArray, answerArray, 10, urlDict)
     for i, page in enumerate(pages):
         with open(os.path.join(htmlOutputFolder, 
                 htmlHyperLink % i), 'w') as f:
