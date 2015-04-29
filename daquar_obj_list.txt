@@ -1,0 +1,16 @@
+caption:DAQUAR Object Questions
+212,Complex question, recognized correct object
+464,Small object
+585,Location of object
+3266,Small object
+2346,Could have been ``toilet'' if the model does know left or right
+2136,Left/right is good
+1426,Small object compared to bed and shelf. But ``on the table'' gives some hint
+969,Left/right image feature helps
+705,Fail and the blind model did very good reasoning
+800,Probably thinks the big picture hanging on the wall as television
+876,Books are likely to be on the table
+31,``on the wall'' seems to be strong enough signal
+1231,Nightstands are likely to be beside the bed
+2881,Floormats are always on the floor
+3278,Chairs are always around the dining table
