@@ -27,9 +27,9 @@ def renderLatexAnswerList(
     result = []
     for i, answer in enumerate(topAnswers):
         if answer == correctAnswer:
-            colorStr = '\colorbox{green}{%s}'
+            colorStr = '\\textcolor{green}{%s}'
         elif i == 0:
-            colorStr = '\colorbox{red}{%s}'
+            colorStr = '\\textcolor{red}{%s}'
         else:
             colorStr = ''
         result.append(colorStr % ('%s (%.4f) ' % \
@@ -74,7 +74,7 @@ def renderLatexSingleItem(
                              topAnswerScores))
         result.append('\n')
     if comment is not None:
-        result.append(comment)
+        result.append('\\\\' + comment)
     result.append('    }\n')
     return ''.join(result)
 
@@ -112,9 +112,9 @@ def renderLatex(
         topAnswers, topAnswerScores = pickTopAnswers(
                                             answerArray,
                                             n,
-                                            topK,
-                                            modelOutputs, 
-                                            modelNames)
+                                            topK=topK,
+                                            modelOutputs=modelOutputs, 
+                                            modelNames=modelNames)
         comment = comments[n] \
                 if comments is not None else None
         result.append(renderLatexSingleItem(
@@ -126,7 +126,7 @@ def renderLatex(
                                             topAnswerScores=topAnswerScores,
                                             modelNames=modelNames))
         if np.mod(n, imgPerRow) == imgPerRow - 1:
-            result.append('\\\\\n')
+            result.append('\\\\\n\\vskip 0.15in \n')
         else:
             result.append('&\n')
     result.append('\end{tabular}\n')
@@ -162,7 +162,7 @@ def renderHtml(
                                 questionIds=questionIds)]
     else:
         result = []
-        numPages = inputData.shape[0] / imgPerPage + 1
+        numPages = np.ceil(inputData.shape[0] / float(imgPerPage))
         for i in range(numPages):
             start = imgPerPage * i
             end = min(inputData.shape[0], imgPerPage * (i + 1))
@@ -259,7 +259,7 @@ def renderSingleItem(
                     <img src="%s"/></div>\n' % \
                     imageFilename)
     htmlList.append('<div class="ans">Q%d: %s<br/>' % \
-                    (questionIndex + 1, question))
+                    (questionIndex, question))
     htmlList.append('Correct answer: <span class="good">\
                     %s</span><br/>' % correctAnswer)
     if modelNames is not None and len(modelNames) > 1:
@@ -283,7 +283,7 @@ def renderSingleItem(
 def pickTopAnswers(
                     answerArray,
                     n,
-                    topK,
+                    topK=10,
                     modelOutputs=None, 
                     modelNames=None):
     if modelNames is not None and len(modelNames) > 1:
@@ -306,21 +306,9 @@ def pickTopAnswers(
             topAnswers.append(answerArray[sortIdx[i]])
             topAnswerScores.append(modelOutputs[n, sortIdx[i]])
         qid = questionIds[n] if questionIds is not None else n
-        htmlList.append(renderSingleItem(
-                                        imageFilename, 
-                                        qid, 
-                                        question, 
-                                        answerArray[targetData[n, 0]], 
-                                        topAnswers=topAnswers, 
-                                        topAnswerScores=topAnswerScores))
     else:
         topAnswers = None
         topAnswerScores = None
-        htmlList.append(renderSingleItem(
-                                        imageFilename, 
-                                        qid, 
-                                        question, 
-                                        answerArray[targetData[n, 0]]))
     return topAnswers, topAnswerScores
 
 def renderSinglePage(
@@ -353,17 +341,17 @@ def renderSinglePage(
         topAnswers, topAnswerScores = pickTopAnswers(
                                         answerArray, 
                                         n,
-                                        topK,
-                                        modelOutputs, 
-                                        modelNames)
+                                        topK=topK,
+                                        modelOutputs=modelOutputs, 
+                                        modelNames=modelNames)
         htmlList.append(renderSingleItem(
                                         imageFilename, 
                                         qid, 
                                         question, 
                                         answerArray[targetData[n, 0]], 
-                                        topAnswers, 
-                                        topAnswerScores, 
-                                        modelNames))
+                                        topAnswers=topAnswers, 
+                                        topAnswerScores=topAnswerScores, 
+                                        modelNames=modelNames))
 
         if np.mod(n, imgPerRow) == imgPerRow - 1:
             htmlList.append('</tr>')
