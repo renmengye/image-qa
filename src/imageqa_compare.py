@@ -28,10 +28,10 @@ def renderIndex(modelNames, numCategories):
     numModels = len(modelNames)
     numCorrect = 1 << numModels
     htmlList.append('<h1>Models comparisons</h1>')
-    htmlList.append('Notes: <span class="good">Green means the model gets correct</span><br/>')
+    htmlList.append('Notes:<br/><span class="good">Green means the model gets correct</span><br/>')
     htmlList.append('<span class="bad">Red means the model gets wrong</span>')
     for i in range(numCategories):
-        htmlList.append('<h2>%s type</h2>' % getCatName(i))
+        htmlList.append('<h2>%s</h2>' % getCatName(i))
         htmlList.append('<table>')
         for j in range(numCorrect):
             htmlList.append('<tr>')
