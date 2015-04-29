@@ -167,10 +167,14 @@ if __name__ == '__main__':
                 os.makedirs(outputSubFolder)
             htmlHyperLink = '%d.html'
             pages = renderHtml(
-                        inputTestSubset, modelOutputsSubset, 
+                        inputTestSubset, 
                         targetTestSubset, 
-                        questionArray, answerArray, 
-                        K, urlDict, modelNames=modelNames,
+                        questionArray, 
+                        answerArray, 
+                        urlDict, 
+                        topK=K,
+                        modelOutputs=modelOutputsSubset,
+                        modelNames=modelNames,
                         questionIds=idx)
             for i, page in enumerate(pages):
                 with open(os.path.join(outputSubFolder, 

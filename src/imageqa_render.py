@@ -38,7 +38,7 @@ def renderHtml(
                                 urlDict,
                                 iPage=0,
                                 numPages=1,
-                                topK=topK
+                                topK=topK,
                                 modelOutputs=modelOutputs,
                                 modelNames=modelNames, 
                                 questionIds=questionIds)]
@@ -62,7 +62,7 @@ def renderHtml(
                                     questionArray,
                                     answerArray,
                                     urlDict, 
-                                    iPages=i,
+                                    iPage=i,
                                     numPages=numPages, 
                                     topK=topK,
                                     modelOutputs=modelOutputSlice,
@@ -149,12 +149,16 @@ def renderSingleItem(
             zip(topAnswers, topAnswerScores, modelNames):
             htmlList.append('%s:<br/>' % modelName)
             htmlList.append(
-                renderAnswerList(modelAnswer, modelAnswerScore,
-                                 correctAnswer))
+                renderAnswerList(
+                                 correctAnswer,
+                                 modelAnswer,
+                                 modelAnswerScore))
     elif topAnswers is not None:
         htmlList.append(
-            renderAnswerList(topAnswers, topAnswerScores, 
-                             correctAnswer))
+            renderAnswerList(
+                             correctAnswer,
+                             topAnswers, 
+                             topAnswerScores))
     htmlList.append('</div></td>')
     return ''.join(htmlList)
 
