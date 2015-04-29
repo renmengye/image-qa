@@ -51,7 +51,7 @@ def renderLatexSingleItem(
     result.append('        \\vskip 0.05in\n')
     result.append('        Q%d: %s\\\\\n' % (questionIndex, question))
     result.append('        Ground truth: %s\\\\\n' % correctAnswer)
-
+    i = 0
     if modelNames is not None and len(modelNames) > 1:
         for modelAnswer, modelAnswerScore, modelName in \
             zip(topAnswers, topAnswerScores, modelNames):
