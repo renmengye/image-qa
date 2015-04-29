@@ -76,7 +76,7 @@ if __name__ == '__main__':
         os.makedirs(outputFolder)
 
     pages = renderHtml(inputTest, modelOutputs, targetTest, 
-                questionArray, answerArray, 10, urlDict)
+                questionArray, answerArray, 10, urlDict, modelNames)
     for i, page in enumerate(pages):
         with open(os.path.join(htmlOutputFolder, 
                 htmlHyperLink % i), 'w') as f:
