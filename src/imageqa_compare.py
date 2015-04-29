@@ -47,6 +47,7 @@ if __name__ == '__main__':
         urlDict = readImgDictDaquar()
 
     print 'Loading test data...'
+    vocabDict = np.load(os.path.join(dataFolder, 'vocab-dict.npy'))
     testDataFile = os.path.join(dataFolder, 'test.npy')
     testData = np.load(testDataFile)
     inputTest = testData[0]
