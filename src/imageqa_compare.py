@@ -69,18 +69,60 @@ if __name__ == '__main__':
         modelOutputs.append(outputTest)
 
     # Sort questions by question types.
-    # categoryInput = np.zeros(4, dtype='object')
+    # Sort questions by correctness differences.
+    print('Sorting questions...')
+    numCategories = 4
+    numModels = len(modelNames)
+    numCorrect = 1 << numModels
+    numBins = numCategories * numCorrect
+    modelAnswers = np.zeros(numModels, inputTest.shape[0], dtype='int')
+    bins = None * numBins
+    names = []
+    for i in range(numCategories):
+        if i == 0:
+            catName = 'object'
+        elif i == 1:
+            catName = 'number'
+        elif i == 2:
+            catName = 'color'
+        elif i == 3:
+            catName = 'location'
+        for j in numCorrect:
+            n = numCorrect
+            bin = []
+            for k in range(numModels)
+                bin.append(str(n >> (numModels - k) << (numModels - k)))
+                n = n >> 1
+            binName = ''.join(bin)
+            print binName
+            names.append(catName + '-' + binName)
+    for i in range(numModels):
+        modelAnswers[i] = np.argmax(modelOutputs[i], axis=-1)
+    for n in range(inputTest.shape[0])
+        correct = targetTest[n, 0]
+        bintmp = 0
+        for i in range(numModels):
+            if modelAnswers[i, n] == correct[n]:
+                bintmp += 1 << i
+        category = testQuestionType[n]
+        binNum = category * numCorrect + bintmp
+        if bins[binNum] == None:
+            bins[binNum] = [n]
+        else:
+            bins[binNum].append(n)
 
     # Render
     print('Rendering webpages...')
-    if not os.path.exists(outputFolder):
-        os.makedirs(outputFolder)
-    htmlHyperLink = '%d.html'
-    pages = renderHtml(inputTest, modelOutputs, targetTest, 
-                questionArray, answerArray, K, urlDict, modelNames)
-    for i, page in enumerate(pages):
-        with open(os.path.join(outputFolder, 
-                htmlHyperLink % i), 'w') as f:
-            f.write(page)
-
-    # Sort questions by correctness differences.
+    for i in range(numBins):
+        if bins[binNum] is not None:
+            # Need a better folder name!
+            outputSubFolder = os.path.join(outputFolder, names[i])
+            if not os.path.exists(outputSubFolder):
+                os.makedirs(outputSubFolder)
+            htmlHyperLink = '%d.html'
+            pages = renderHtml(inputTest, modelOutputs, targetTest, 
+                        questionArray, answerArray, K, urlDict, modelNames)
+            for i, page in enumerate(pages):
+                with open(os.path.join(outputSubFolder, 
+                        htmlHyperLink % i), 'w') as f:
+                    f.write(page)
