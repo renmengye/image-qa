@@ -50,9 +50,8 @@ def renderLatexSingleItem(
     result.append('    \\parbox{5cm}{\n')
     result.append('        \\vskip 0.05in\n')
     result.append('        Q%d: %s\\\\\n' % (questionIndex, question))
-    result.append('        Ground truth: four\\\\\n')
+    result.append('        Ground truth: %s\\\\\n' % correctAnswer)
 
-    i = 0
     if modelNames is not None and len(modelNames) > 1:
         for modelAnswer, modelAnswerScore, modelName in \
             zip(topAnswers, topAnswerScores, modelNames):
@@ -109,7 +108,6 @@ def renderLatex(
             f.write(r.content)
         question = decodeQuestion(inputData[n], questionArray)
         answer = answerArray[targetData[n, 0]]
-        print question, answer
         topAnswers, topAnswerScores = pickTopAnswers(
                                             answerArray,
                                             n,

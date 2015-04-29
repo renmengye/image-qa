@@ -70,8 +70,6 @@ if __name__ == '__main__':
                 selectionComments.append(parts[1][:-1])
             else:
                 selectionComments.append('')
-    print selectionIds
-    print selectionComments
     idx = np.array(selectionIds, dtype='int')
     inputTestSel = inputTest[idx]
     targetTestSel = targetTest[idx]
