@@ -27,8 +27,8 @@ def renderHtml(
                 topK, 
                 urlDict,
                 modelNames=None):
-    imgPerPage = 200
-    if X.shape[0] < 1000:
+    imgPerPage = 1000
+    if X.shape[0] < imgPerPage:
         return [renderSinglePage(
             X, Y, T, questionArray, answerArray, 
             topK, urlDict, 0, 1, modelNames)]

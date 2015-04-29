@@ -5,6 +5,48 @@ import numpy as np
 from imageqa_test import *
 from imageqa_render import *
 
+nameList = ['object', 'number', 'color', 'location']
+
+def getCatName(i):
+    return nameList[i]
+
+def getBinName(n):
+    bin = []
+    for k in range(numModels):
+        bin.append(str(n >> (numModels - k - 1)))
+        n = n & (~(1 << (numModels - k - 1)))
+    return ''.join(bin)
+
+def getName(catName, binName):
+    return catName + '-' + binName
+
+
+def renderIndex(modelNames, numCategories):
+    htmlList = []
+    htmlList.append('<html><head><style>%s</style><body>' % \
+        'span.good {color:green;} span.bad {color:red;}')
+    numModels = len(modelNames)
+    numCorrect = 1 << numModels
+    for i in range(numCategories):
+        htmlList.append('<h2>%s type</h2>' % getCatName(i))
+        htmlList.append('<table>')
+        for j in range(numCorrect):
+            htmlList.append('<tr>')
+            for k, c in enumerate(getBinName(j)):
+                htmlList.append('<td>')
+                if c == '1':
+                    htmlList.append('<span class="good">%s</span>' % modelNames[k])
+                elif c == '0':
+                    htmlList.append('<span class="bad">%s</span>' % modelNames[k])
+                htmlList.append('</td>')
+            htmlList.append('<td><a href="%s/0.html">link</a></td>' % \
+                getName(getCatName(i), getBinName(j)))
+            htmlList.append('</tr>')
+
+        htmlList.append('</table>')
+    htmlList.append('</head></body></html>')
+    return ''.join(htmlList)
+
 if __name__ == '__main__':
     """
     Usage python imageqa_compare.py -m[odels] {id1},{id2},{id3}...
@@ -79,25 +121,10 @@ if __name__ == '__main__':
     bins = [None] * numBins
     names = []
     for i in range(numCategories):
-        if i == 0:
-            catName = 'object'
-        elif i == 1:
-            catName = 'number'
-        elif i == 2:
-            catName = 'color'
-        elif i == 3:
-            catName = 'location'
+        catName = getCatName(i)
         for j in range(numCorrect):
-            n = j
-            #print 'numCorrect', j
-            bin = []
-            for k in range(numModels):
-                bin.append(str(n >> (numModels - k - 1)))
-                n = n & (~(1 << (numModels - k - 1)))
-                #print 'n: ', n
-            binName = ''.join(bin)
-            #print binName
-            names.append(catName + '-' + binName)
+            binName = getBinName(j)
+            names.append(getName(catName, binName))
     for i in range(numModels):
         modelAnswers[i] = np.argmax(modelOutputs[i], axis=-1)
     for n in range(inputTest.shape[0]):
@@ -115,6 +142,10 @@ if __name__ == '__main__':
 
     # Render
     print('Rendering webpages...')
+    print('Rendering index...')
+    with open(os.path.join(outputSubFolder, 'index.html')) as f:
+        f.write(renderIndex(modelNames, numCategories))
+
     for i in range(numBins):
         if bins[i] is not None:
             # Need a better folder name!
