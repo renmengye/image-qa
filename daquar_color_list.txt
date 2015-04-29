@@ -1,0 +1,12 @@
+caption:DAQUAR Color Questions
+2989,Focus on remote object color
+2511,Small object color
+746,Sofas are mostly brown
+842,We expect the image features to contain information about dominant color
+999,Focus on the only red objects in the image
+1085,Towels are white
+2355,Hard to see non-white toilet tissue paper
+1890,Focus to the poster instead of the bed but white is indeed the best blind guess
+24,Too hard to answer
+681,Sometimes it is oversensitice to red
+1025,Fails to do a good job on simple one like this

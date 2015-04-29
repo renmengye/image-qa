@@ -1,0 +1,7 @@
+caption:DAQUAR Number Questions
+35,Very hard question, the model probably doesn't know where are the knobs and guessing two is good strategy
+1908,Model simply doesn't count even for simple task like this
+1520,Not counting well
+1768,Not very obvious question, mostly the model gets number question right by guessing ``two''
+711,Not very obvious again
+1286,Kind of interesting maybe easy enough to answer
