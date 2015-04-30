@@ -144,7 +144,7 @@ def renderLatex(
                 answerArray,
                 urlDict,
                 outputFolder,
-                pictureFolder='img'
+                pictureFolder='img',
                 topK=10,
                 comments=None,
                 caption=None,
