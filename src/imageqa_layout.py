@@ -84,10 +84,10 @@ if __name__ == '__main__':
     inputTestSel = inputTest[idx]
     targetTestSel = targetTest[idx]
     
-    for i in range(len(questionArray))
+    for i in range(len(questionArray)):
         if '_' in questionArray[i]:
             questionArray[i] = questionArray[i].replace('_', '\\_')
-    for i in range(len(answerArray))
+    for i in range(len(answerArray)):
         if '_' in answerArray[i]:
             answerArray[i] = answerArray[i].replace('_', '\\_')
 
