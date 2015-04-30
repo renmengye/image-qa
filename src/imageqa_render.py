@@ -40,13 +40,15 @@ def renderLatexSingleItem(
                     questionIndex,
                     question,
                     correctAnswer,
+                    pictureFolder='img'
                     comment=None,
                     topAnswers=None,
                     topAnswerScores=None,
                     modelNames=None):
     result = []
+    imgPath = os.path.join(pictureFolder, '%d.jpg' % questionIndex)
     result.append('    \\scalebox{0.3}{\n')
-    result.append('        \\includegraphics[width=\\textwidth, height=.7\\textwidth]{img/%d.jpg}}\n' % questionIndex)
+    result.append('        \\includegraphics[width=\\textwidth, height=.7\\textwidth]{%s}}\n' % imgPath)
     result.append('    \\parbox{5cm}{\n')
     result.append('        \\vskip 0.05in\n')
     result.append('        Q%d: %s\\\\\n' % (questionIndex, question))
@@ -123,6 +125,7 @@ def renderLatexSinglePage(
                                             qid,
                                             question,
                                             answer,
+                                            pictureFolder=pictureFolder,
                                             comment=comment,
                                             topAnswers=topAnswers,
                                             topAnswerScores=topAnswerScores,
