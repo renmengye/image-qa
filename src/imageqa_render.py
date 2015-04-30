@@ -194,7 +194,7 @@ def renderLatex(
                                     caption=caption,
                                     modelOutputs=modelOutputSlice,
                                     modelNames=modelNames, 
-                                    questionIds=questionIds)
+                                    questionIds=questionIds[start:end])
             result.append(page)
         latexStr = ''.join(result)
     with open(os.path.join(outputFolder, filename), 'w') as f:
@@ -245,11 +245,11 @@ def renderHtml(
                                     answerArray,
                                     urlDict, 
                                     iPage=i,
-                                    numPages=numPages, 
+                                    numPages=numPages,
                                     topK=topK,
                                     modelOutputs=modelOutputSlice,
-                                    modelNames=modelNames, 
-                                    questionIds=questionIds)
+                                    modelNames=modelNames,
+                                    questionIds=questionIds[start:end])
             result.append(page)
         return result
 
