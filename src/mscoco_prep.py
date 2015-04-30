@@ -285,6 +285,7 @@ if __name__ == '__main__':
     with open(qaValidFilename) as qaf:
         qaAll.extend(pkl.load(qaf))
 
+    print 'Total number of images', len(imgidDict)
     trainQuestions = []
     trainAnswers = []
     trainImgIds = []

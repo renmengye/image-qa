@@ -11,6 +11,8 @@ if __name__ == '__main__':
                                    -n[ames] {name1},{name2}...
                                    -d[ata] {dataFolder}
                                    -i[nput] {listFile}
+                                   -k {top K answers}
+                                   -p[icture] {pictureFolder}
                                    -o[utput] {outputFolder}
                                    -f[ile] {outputTexFilename}
                                    -daquar/-coco
@@ -22,6 +24,8 @@ if __name__ == '__main__':
     """
     dataset = 'coco'
     filename = 'result.tex'
+    pictureFolder = 'img'
+    K = 1
     modelNames = None
     for i in range(1, len(sys.argv)):
         if sys.argv[i] == '-m' or sys.argv[i] == '-models':
@@ -34,6 +38,10 @@ if __name__ == '__main__':
             dataFolder = sys.argv[i + 1]
         elif sys.argv[i] == '-i' or sys.argv[i] == '-input':
             inputFile = sys.argv[i + 1]
+        elif sys.argv[i] == '-k':
+            K = int(sys.argv[i + 1])
+        elif sys.argv[i] == '-p' or sys.argv[i] == '-picture':
+            pictureFolder = sys.argv[i + 1]
         elif sys.argv[i] == '-o' or sys.argv[i] == '-output':
             outputFolder = sys.argv[i + 1]
         elif sys.argv[i] == '-f' or sys.argv[i] == '-file':
@@ -44,7 +52,6 @@ if __name__ == '__main__':
             dataset = 'coco'
 
     resultsFolder = '../results'
-    K = 1 # Top-K answers
 
     print 'Loading image urls...'
     if dataset == 'coco':
@@ -115,6 +122,7 @@ if __name__ == '__main__':
                 urlDict, 
                 topK=K,
                 outputFolder=outputFolder,
+                pictureFolder=pictureFolder,
                 comments=selectionComments,
                 caption=caption,
                 modelOutputs=modelOutputs,

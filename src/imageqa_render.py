@@ -84,6 +84,7 @@ def renderLatexSinglePage(
                             answerArray,
                             urlDict,
                             outputFolder,
+                            pictureFolder='img',
                             topK=10,
                             comments=None,
                             caption=None,
@@ -91,11 +92,11 @@ def renderLatexSinglePage(
                             modelNames=None,
                             questionIds=None):
     result = []
-    result.append('\\begin{table*}[ht!]\n')
+    result.append('\\begin{figure*}[ht!]\n')
     result.append('\\small\n')
-    result.append('\\begin{tabular}{p{5cm} p{5cm} p{5cm}}\n')
+    result.append('$\\begin{array}{p{5cm} p{5cm} p{5cm}}\n')
     imgPerRow = 3
-    imgFolder = os.path.join(outputFolder, 'img')
+    imgFolder = os.path.join(outputFolder, pictureFolder)
     for n in range(inputData.shape[0]):
         # Download the images
         imageId = inputData[n, 0, 0]
@@ -130,9 +131,9 @@ def renderLatexSinglePage(
                 result.append('\\noalign{\\smallskip}\\noalign{\\smallskip}\\noalign{\\smallskip}\n')
         else:
             result.append('&\n')
-    result.append('\end{tabular}\n')
+    result.append('\end{array}$\n')
     result.append('\caption{%s}\n' % caption if caption is not None else '')
-    result.append('\end{table*}\n')
+    result.append('\end{figure*}\n')
     return ''.join(result)
     
 
@@ -143,6 +144,7 @@ def renderLatex(
                 answerArray,
                 urlDict,
                 outputFolder,
+                pictureFolder='img'
                 topK=10,
                 comments=None,
                 caption=None,
