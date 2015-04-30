@@ -230,7 +230,7 @@ def renderHtml(
                                 questionIds=questionIds)]
     else:
         result = []
-        numPages = np.ceil(inputData.shape[0] / float(imgPerPage))
+        numPages = int(np.ceil(inputData.shape[0] / float(imgPerPage)))
         for i in range(numPages):
             start = imgPerPage * i
             end = min(inputData.shape[0], imgPerPage * (i + 1))
