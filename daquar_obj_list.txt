@@ -4,6 +4,7 @@ caption:DAQUAR Object Questions
 585,Location of object
 3266,Small object
 2346,Could have been ``toilet'' if the model does know left or right
+232,Image features are useful mostly when asking about the largest object
 2136,Left/right is good
 1426,Small object compared to bed and shelf. But ``on the table'' gives some hint
 969,Left/right image feature helps
@@ -14,3 +15,8 @@ caption:DAQUAR Object Questions
 1231,Nightstands are likely to be beside the bed
 2881,Floormats are always on the floor
 3278,Chairs are always around the dining table
+1466,Very hard question and ``lamp'' is a more reasonable answer
+2010,Very hard question that there are too many cluttered objects
+2047,Not very clear why CNN fails on this
+2731,CNN doesn't differ too much from blind and image features are not more useful than ``common-sense''
+241,Again the model fails
