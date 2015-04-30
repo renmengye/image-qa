@@ -96,7 +96,9 @@ def renderLatexSinglePage(
     result.append('\\small\n')
     result.append('$\\begin{array}{p{5cm} p{5cm} p{5cm}}\n')
     imgPerRow = 3
+    print pictureFolder
     imgFolder = os.path.join(outputFolder, pictureFolder)
+    print imgFolder
     for n in range(inputData.shape[0]):
         # Download the images
         imageId = inputData[n, 0, 0]
