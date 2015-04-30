@@ -149,12 +149,7 @@ def renderLatex(
                 modelOutputs=None,
                 modelNames=None,
                 questionIds=None,
-                filename='result.tex'
-                ):
-    # result = []
-    # result.append('\\begin{table*}[ht!]\n')
-    # result.append('\\small\n')
-    # result.append('\\begin{tabular}{p{5cm} p{5cm} p{5cm}}\n')
+                filename='result.tex'):
     imgPerRow = 3
     rowsPerPage = 3
     imgPerPage = imgPerRow * rowsPerPage
@@ -174,6 +169,7 @@ def renderLatex(
                                         modelNames=modelNames,
                                         questionIds=questionIds)
     else:
+        result = []
         numPages = int(np.ceil(inputData.shape[0] / float(imgPerPage)))
         for i in range(numPages):
             start = imgPerPage * i
@@ -186,21 +182,20 @@ def renderLatex(
                 modelOutputSlice = modelOutputs[start:end]
             else:
                 modelOutputSlice = modelOutputs
-            page = renderSinglePage(
+            page = renderLatexSinglePage(
                                     inputData[start:end],
                                     targetData[start:end],
                                     questionArray,
                                     answerArray,
                                     urlDict, 
                                     iPage=i,
-                                    numPages=numPages, 
+                                    numPages=numPages,
                                     topK=topK,
                                     modelOutputs=modelOutputSlice,
                                     modelNames=modelNames, 
                                     questionIds=questionIds)
             result.append(page)
-
-    latexStr = ''.join(result)
+        latexStr = ''.join(result)
     with open(os.path.join(outputFolder, filename), 'w') as f:
         f.write(latexStr)
 
