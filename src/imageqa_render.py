@@ -164,7 +164,7 @@ def renderLatex(
                                         outputFolder,
                                         topK=topK,
                                         comments=comments,
-                                        caption=caption
+                                        caption=caption,
                                         modelOutputs=modelOutputs,
                                         modelNames=modelNames,
                                         questionIds=questionIds)
@@ -187,9 +187,8 @@ def renderLatex(
                                     targetData[start:end],
                                     questionArray,
                                     answerArray,
-                                    urlDict, 
-                                    iPage=i,
-                                    numPages=numPages,
+                                    urlDict,
+                                    outputFolder,
                                     topK=topK,
                                     modelOutputs=modelOutputSlice,
                                     modelNames=modelNames, 
