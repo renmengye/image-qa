@@ -84,6 +84,13 @@ if __name__ == '__main__':
     inputTestSel = inputTest[idx]
     targetTestSel = targetTest[idx]
 
+    for word in questionArray:
+        if '_' in word:
+            word = word.replace('_', '\\_')
+    for word in answerArray:
+        if '_' in word:
+            word = word.replace('_', '\\_')
+
     modelOutputs = []
     for modelName, modelId in zip(modelNames, modelIds):
         print 'Running test data on model %s...' \
