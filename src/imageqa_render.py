@@ -77,21 +77,19 @@ def renderLatexSingleItem(
     result.append('}\n')
     return ''.join(result)
 
-def renderLatex(
-                inputData,
-                targetData,
-                questionArray,
-                answerArray,
-                urlDict,
-                outputFolder,
-                topK=10,
-                comments=None,
-                caption=None,
-                modelOutputs=None,
-                modelNames=None,
-                questionIds=None,
-                filename='result.tex'
-                ):
+def renderLatexSinglePage(
+                            inputData,
+                            targetData,
+                            questionArray,
+                            answerArray,
+                            urlDict,
+                            outputFolder,
+                            topK=10,
+                            comments=None,
+                            caption=None,
+                            modelOutputs=None,
+                            modelNames=None,
+                            questionIds=None):
     result = []
     result.append('\\begin{table*}[ht!]\n')
     result.append('\\small\n')
@@ -135,6 +133,73 @@ def renderLatex(
     result.append('\end{tabular}\n')
     result.append('\caption{%s}\n' % caption if caption is not None else '')
     result.append('\end{table*}\n')
+    return ''.join(result)
+    
+
+def renderLatex(
+                inputData,
+                targetData,
+                questionArray,
+                answerArray,
+                urlDict,
+                outputFolder,
+                topK=10,
+                comments=None,
+                caption=None,
+                modelOutputs=None,
+                modelNames=None,
+                questionIds=None,
+                filename='result.tex'
+                ):
+    # result = []
+    # result.append('\\begin{table*}[ht!]\n')
+    # result.append('\\small\n')
+    # result.append('\\begin{tabular}{p{5cm} p{5cm} p{5cm}}\n')
+    imgPerRow = 3
+    rowsPerPage = 3
+    imgPerPage = imgPerRow * rowsPerPage
+    imgFolder = os.path.join(outputFolder, 'img')
+    if inputData.shape[0] < imgPerPage:
+        latexStr = renderLatexSinglePage(
+                                        inputData,
+                                        targetData,
+                                        questionArray,
+                                        answerArray,
+                                        urlDict,
+                                        outputFolder,
+                                        topK=topK,
+                                        comments=comments,
+                                        caption=caption
+                                        modelOutputs=modelOutputs,
+                                        modelNames=modelNames,
+                                        questionIds=questionIds)
+    else:
+        numPages = int(np.ceil(inputData.shape[0] / float(imgPerPage)))
+        for i in range(numPages):
+            start = imgPerPage * i
+            end = min(inputData.shape[0], imgPerPage * (i + 1))
+            if modelNames is not None:
+                modelOutputSlice = []
+                for j in range(len(modelNames)):
+                    modelOutputSlice.append(modelOutputs[j][start:end])
+            elif modelOutputs is not None:
+                modelOutputSlice = modelOutputs[start:end]
+            else:
+                modelOutputSlice = modelOutputs
+            page = renderSinglePage(
+                                    inputData[start:end],
+                                    targetData[start:end],
+                                    questionArray,
+                                    answerArray,
+                                    urlDict, 
+                                    iPage=i,
+                                    numPages=numPages, 
+                                    topK=topK,
+                                    modelOutputs=modelOutputSlice,
+                                    modelNames=modelNames, 
+                                    questionIds=questionIds)
+            result.append(page)
+
     latexStr = ''.join(result)
     with open(os.path.join(outputFolder, filename), 'w') as f:
         f.write(latexStr)
