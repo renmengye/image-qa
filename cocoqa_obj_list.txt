@@ -1,0 +1,32 @@
+caption:COCO-QA Object Questions
+2,Image features are useful
+85,Image features are useful
+223,Occluded object are still focusable
+1213,Blind model has no clue from the text alone
+1549,Both models know plural form, good sentence model that remembers ``are''
+2007,When there are two objects present the model attend to the correct one
+4974,Reletively small object to focus on
+5429,Does not look like a regular cake and the model has to infer from the candles
+1965,The CNN-LSTM model knows the plural but CNN-BOW does not
+1966,The CNN-BOW again messed up the counting (mostly of the questions with LSTM win over BOW is on singular/plural)
+2950,LSTM learns to add plural form from the verb tense
+14930,Many items present but the LSTM figures out the correct item
+15178,From the text alone it is misleading that there might exist multiple motorcycles
+19533,BOW is not a good blend of visual information with the question semantics
+24952,BOW is not a good blend of visual information with the question semantics
+29528,Tray is hard to get
+30568,It is rare to see something stuck into something and here CNN-LSTM win over other 4 models shows a good combination of image and question semantics
+36019,LSTM remembers the beginning part of the question although the entire question is very long
+38613,The object is fairly small to focus on
+3098,In many cases where CNN-BOW wins over CNN-LSTM is just some synonyms of answers
+14124,CNN-LSTM fails on this one because it probably takes in too much textual information
+14518,CNN-LSTM fails
+15499,Synonyms again
+37066,Both objects are present but the LSTM output similar to Blind ones which tells us that it takes more textual information
+385,Yellow food doesn't have to be bananas
+1681,Overfits to people holding phones
+2608,Hard for a bear to hold cellphone
+828,Very long truck looks like a train?
+33,Image provides no extra information and blind LSTM really focuses on the text to get the right answer
+7231,Interesting that the blind model knows the correct answer whereas the CNN model thinks they are suitcases
+24432,Very hard to answer bananas but the blind model made it

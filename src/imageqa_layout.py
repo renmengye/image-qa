@@ -100,7 +100,7 @@ if __name__ == '__main__':
         model = nn.load(modelFile)
         model.loadWeights(
             np.load('../results/%s/%s.w.npy' % (modelId, modelId)))
-        outputTest = nn.test(model, inputTestSel)
+        outputTest = nn.test(model, inputTestSewl)
         modelOutputs.append(outputTest)
 
     # Render
