@@ -1,0 +1,22 @@
+caption: COCO-QA Number Questions
+3202,Couting regarding to an object with a specific color
+4305,Even counts to four
+6805,Six is very hard unless there is a training example about six donuts
+7270,Four again
+8112,Tricky question - four engines in total but the picture is only showing two on one side
+9148,Counting food is good because of the clear boundary
+32912,Multiple objects but asking about bottles
+28078,Multiple objects need to focus on different parts
+3757,Mostly CNN-LSTM outputs more ``three''s and CNN-BOW outputs more ``two''s
+9489,Seems to have no reason to answer ``four''
+170,Both CNN models agree on counting
+3449,This is not easy to get firstly because ``five'' is fairly large number to count and secondly because cutting cakes really doesn't imply five persons
+24263,Again five is not easy to count for both models
+6,Usually signs show ``one way''
+25552,Answer is revealed in the phrase ``each other''
+25671,Answer is revealed in the word ``is''
+24776,LSTM captures ``is'' whereas BOW doesn't
+811,Easy one but only blind BOW gets it
+33482,Again blind BOW tend to guess ``four'' when it has no clue and other models just don't get thecorrect answer
+12255,This one is impossible to get
+38217,Objects are overlapped probably the model just guesses four planes regardless
