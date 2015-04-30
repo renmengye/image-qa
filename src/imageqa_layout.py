@@ -83,13 +83,13 @@ if __name__ == '__main__':
     idx = np.array(selectionIds, dtype='int')
     inputTestSel = inputTest[idx]
     targetTestSel = targetTest[idx]
-
-    for word in questionArray:
-        if '_' in word:
-            word = word.replace('_', '\\_')
-    for word in answerArray:
-        if '_' in word:
-            word = word.replace('_', '\\_')
+    
+    for i in range(len(questionArray))
+        if '_' in questionArray[i]:
+            questionArray[i] = questionArray[i].replace('_', '\\_')
+    for i in range(len(answerArray))
+        if '_' in answerArray[i]:
+            answerArray[i] = answerArray[i].replace('_', '\\_')
 
     modelOutputs = []
     for modelName, modelId in zip(modelNames, modelIds):
