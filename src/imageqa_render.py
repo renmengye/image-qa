@@ -190,6 +190,8 @@ def renderLatex(
                                     urlDict,
                                     outputFolder,
                                     topK=topK,
+                                    comments=comments[start:end] if comments is not None else None,
+                                    caption=caption,
                                     modelOutputs=modelOutputSlice,
                                     modelNames=modelNames, 
                                     questionIds=questionIds)
