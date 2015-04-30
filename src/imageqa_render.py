@@ -40,7 +40,7 @@ def renderLatexSingleItem(
                     questionIndex,
                     question,
                     correctAnswer,
-                    pictureFolder='img'
+                    pictureFolder='img',
                     comment=None,
                     topAnswers=None,
                     topAnswerScores=None,
