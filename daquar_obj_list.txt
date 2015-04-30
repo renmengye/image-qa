@@ -1,5 +1,5 @@
 caption:DAQUAR Object Questions
-212,Complex question, recognized correct object
+212,Complex question and recognized correct object
 464,Small object
 585,Location of object
 3266,Small object
