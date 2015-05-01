@@ -25,7 +25,7 @@ def renderLatexAnswerList(
         elif i == 0:
             colorStr = '\\textcolor{red}{%s}'
         else:
-            colorStr = ''
+            colorStr = '%s'
         result.append(colorStr % ('%s (%.4f) ' % \
                     (answer, topAnswerScores[i])))
     return ''.join(result)
