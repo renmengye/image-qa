@@ -163,21 +163,21 @@ if __name__ == '__main__':
     for i, page in enumerate(pages):
         with open('../adhoc-%s-%d.html' % (dataset, i), 'w') as f:
             f.write(page)
-    # print('Rendering LaTeX...')
-    # if not os.path.exists(outputFolder):
-    #     os.makedirs(outputFolder)
-    # renderLatex(
-    #             inputTestSel, 
-    #             targetTestSel, 
-    #             questionArray, 
-    #             answerArray, 
-    #             urlDict, 
-    #             topK=K,
-    #             outputFolder=outputFolder,
-    #             pictureFolder=pictureFolder,
-    #             comments=selectionComments,
-    #             caption=caption,
-    #             modelOutputs=modelOutputs,
-    #             modelNames=modelNames,
-    #             questionIds=idx,
-    #             filename=filename)
+    print('Rendering LaTeX...')
+    if not os.path.exists(outputFolder):
+        os.makedirs(outputFolder)
+    renderLatex(
+                adhocInputTestSel,
+                adhocTargetTestSel,
+                questionArray, 
+                answerArray, 
+                urlDict, 
+                topK=K,
+                outputFolder=outputFolder,
+                pictureFolder=pictureFolder,
+                comments=None,
+                caption='',
+                modelOutputs=modelOutputs,
+                modelNames=modelNames,
+                questionIds=idx,
+                filename=filename)
