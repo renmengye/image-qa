@@ -3,7 +3,8 @@
 2007,what is sitting next to a banana,cup
 2007,what is to the right of a banana,cup
 2007,what is on the right side of the banana,cup
-30568,what is the knife stucking in,apple
+30568,what stuck in an apple,knife
+30568,what does the knife cut,apple
 29528,what is on the tray,pizza
 3202,how many green bus is parked by the red double decker buses,one
 3202,how many vehicles are there,four
@@ -11,10 +12,13 @@
 32912,how many bottles of beer are there,three
 28078,how many dogs are running,one
 9489,how many leaves are there,hundred
-25671,how many slices are there on the plate, one
+25671,how many slices are there on the plate,one
 1362,what is the color of the flowers,red
 1362,what is the color of the bench,blue
 34206,what is the color of the bowl,red
-34206,what is the color of the woman's clothes,blue
+34206,what is the color of the sweater,blue
 139,what is the color of the bear,black
 139,what is the color of the fruit,green
+4305,how many remotes are black,three
+4305,how many black remotes are there,three
+4305,how many remotes are white,one
