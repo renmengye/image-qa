@@ -154,9 +154,9 @@ if __name__ == '__main__':
                         answerArray,
                         urlDict,
                         topK=K,
-                        modelOutputs=None,
-                        modelNames=None,
-                        questionIds=None)
+                        modelOutputs=modelOutputs,
+                        modelNames=modelNames,
+                        questionIds=qids)
     for i, page in enumerate(pages):
         with open('../adhoc-%d.html' % i) as f:
             f.write(page)
