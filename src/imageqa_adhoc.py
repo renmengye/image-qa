@@ -158,7 +158,7 @@ if __name__ == '__main__':
                         modelNames=modelNames,
                         questionIds=qids)
     for i, page in enumerate(pages):
-        with open('../adhoc-%d.html' % i) as f:
+        with open('../adhoc-%d.html' % i, 'w') as f:
             f.write(page)
     # print('Rendering LaTeX...')
     # if not os.path.exists(outputFolder):
