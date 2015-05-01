@@ -22,3 +22,5 @@
 1955,what is the colour of the chairs,grey
 999,what is the colour of pillows on the sofa,red
 999,what is the colour of the sofa,white
+25218,where are the ripe bananas sitting,basket
+25218,what are in the basket,bananas

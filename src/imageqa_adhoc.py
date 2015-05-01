@@ -161,7 +161,7 @@ if __name__ == '__main__':
                         modelNames=modelNames,
                         questionIds=qids)
     for i, page in enumerate(pages):
-        with open('../adhoc-%s-%d.html' % (dataset, i), 'w') as f:
+        with open('../%s-%d.html' % (filename, i), 'w') as f:
             f.write(page)
     print('Rendering LaTeX...')
     if not os.path.exists(outputFolder):
@@ -180,4 +180,4 @@ if __name__ == '__main__':
                 modelOutputs=modelOutputs,
                 modelNames=modelNames,
                 questionIds=idx,
-                filename=filename)
+                filename=filename+'.tex')
