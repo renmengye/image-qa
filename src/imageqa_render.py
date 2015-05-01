@@ -1,9 +1,3 @@
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-print plt.get_backend()
-import matplotlib.cm as cm
-
 import sys
 import os
 import json
@@ -95,12 +89,10 @@ def renderLatexSinglePage(
                             questionIds=None):
     result = []
     result.append('\\begin{figure*}[ht!]\n')
-    result.append('\\small\n')
+    result.append('\\cenering\\small\n')
     result.append('$\\begin{array}{p{5cm} p{5cm} p{5cm}}\n')
     imgPerRow = 3
-    print pictureFolder
     imgFolder = os.path.join(outputFolder, pictureFolder)
-    print imgFolder
     for n in range(inputData.shape[0]):
         # Download the images
         imageId = inputData[n, 0, 0]
