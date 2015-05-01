@@ -41,14 +41,13 @@
 11586,what is the giraffe touching with its nose,car
 11586,what is in front of the car,giraffe
 24952,what is the black and white cat wearing,hat
-24952,what is the color of the hat on the cat,pink
+24952,what is the color of the hat,pink
+24952,what is the color of the cat,black
 218,what is in the bowl,banana
 218,what sits in a bowl,banana
-218,where is the banana,bow
+218,where is the banana,bowl
 218,what is the color of the banana,yellow
 218,what is the color of the bowl,blue
-218,what is the color of the cat,grey
-218,what is the color of the suitcase,blue
 6058,what is the color of the coat,yellow
 6058,what is the woman holding,umbrella
 6058,what is the color of the umbrella,red
@@ -56,3 +55,4 @@
 6200,what is the color of the bear,white
 17893,what is the color of the uniform,blue
 17893,what is the color of the woman in the background,yellow
+17893,what is the color of the uniform next to the blue one,yellow
