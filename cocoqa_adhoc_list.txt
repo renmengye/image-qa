@@ -28,5 +28,5 @@
 412,what is on the table beside the computer,scissors
 614,what is next to the mouse,keyboard
 614,what is next to the keyboard,mouse
-16378,what is the man wearing
-16378,what is the man holding
+16378,what is the man wearing,hat
+16378,what is the man holding,umbrella
