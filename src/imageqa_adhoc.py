@@ -161,7 +161,8 @@ if __name__ == '__main__':
                         modelNames=modelNames,
                         questionIds=qids)
     for i, page in enumerate(pages):
-        with open('../%s-%d.html' % (filename, i), 'w') as f:
+        with open(os.path.join(outputFolder,
+            '../%s-%d.html' % (filename, i)), 'w') as f:
             f.write(page)
     print('Rendering LaTeX...')
     if not os.path.exists(outputFolder):
