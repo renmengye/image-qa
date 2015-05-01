@@ -144,8 +144,8 @@ if __name__ == '__main__':
         model.loadWeights(
             np.load('../results/%s/%s.w.npy' % (modelId, modelId)))
         adhocOutputTest = nn.test(model, adhocInputTestSel)
-        outputTest = nn.test(model, inputTestSel)
-        print adhocOutputTest/outputTest
+        #outputTest = nn.test(model, inputTestSel)
+        #print adhocOutputTest/outputTest
         modelOutputs.append(adhocOutputTest)
 
     # Render
@@ -160,9 +160,9 @@ if __name__ == '__main__':
                         modelOutputs=modelOutputs,
                         modelNames=modelNames,
                         questionIds=qids)
-    # for i, page in enumerate(pages):
-    #     with open('../adhoc-%d.html' % i, 'w') as f:
-    #         f.write(page)
+    for i, page in enumerate(pages):
+        with open('../adhoc-%d.html' % i, 'w') as f:
+            f.write(page)
     # print('Rendering LaTeX...')
     # if not os.path.exists(outputFolder):
     #     os.makedirs(outputFolder)
