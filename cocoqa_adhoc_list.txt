@@ -55,4 +55,4 @@
 6200,what is the color of the cone,yellow
 6200,what is the color of the bear,white
 17893,what is the color of the uniform,blue
-17893,what is the color of the woman in the background
+17893,what is the color of the woman in the background,yellow
