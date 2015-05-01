@@ -131,6 +131,7 @@ if __name__ == '__main__':
     # for i in range(len(questions)):
     #     print questions[i], answers[i]
     #     print adhocInputTestSel[i]
+    #     print inputTest[qids[i]]
     #     print adhocTargetTestSel
 
     modelOutputs = []
@@ -142,8 +143,8 @@ if __name__ == '__main__':
         model = nn.load(modelFile)
         model.loadWeights(
             np.load('../results/%s/%s.w.npy' % (modelId, modelId)))
-        outputTest = nn.test(model, inputTestSel)
-        modelOutputs.append(outputTest)
+        adhocOutputTest = nn.test(model, adhocInputTestSel)
+        modelOutputs.append(adhocOutputTest)
 
     # Render
     print('Rendering HTML...')
@@ -157,9 +158,9 @@ if __name__ == '__main__':
                         modelOutputs=modelOutputs,
                         modelNames=modelNames,
                         questionIds=qids)
-    for i, page in enumerate(pages):
-        with open('../adhoc-%d.html' % i, 'w') as f:
-            f.write(page)
+    # for i, page in enumerate(pages):
+    #     with open('../adhoc-%d.html' % i, 'w') as f:
+    #         f.write(page)
     # print('Rendering LaTeX...')
     # if not os.path.exists(outputFolder):
     #     os.makedirs(outputFolder)
