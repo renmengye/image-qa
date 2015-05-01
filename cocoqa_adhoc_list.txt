@@ -22,3 +22,11 @@
 4305,how many remotes are black,three
 4305,how many black remotes are there,three
 4305,how many remotes are white,one
+144,what are standing behind the giraffe,elephants
+144,what is standing in front of the elephants,giraffe
+412,what is on the table with supplies,computer
+412,what is on the table beside the computer,scissors
+614,what is next to the mouse,keyboard
+614,what is next to the keyboard,mouse
+16378,what is the man wearing
+16378,what is the man holding
