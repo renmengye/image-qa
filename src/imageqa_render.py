@@ -89,7 +89,7 @@ def renderLatexSinglePage(
                             questionIds=None):
     result = []
     result.append('\\begin{figure*}[ht!]\n')
-    result.append('\\cenering\\small\n')
+    result.append('\\centering\\small\n')
     result.append('$\\begin{array}{p{5cm} p{5cm} p{5cm}}\n')
     imgPerRow = 3
     imgFolder = os.path.join(outputFolder, pictureFolder)
