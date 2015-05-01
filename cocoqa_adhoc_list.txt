@@ -56,3 +56,5 @@
 17893,what is the color of the uniform,blue
 17893,what is the color of the woman in the background,yellow
 17893,what is the color of the uniform next to the blue one,yellow
+25218,where are the ripe bananas sitting,basket
+25218,what are in the basket,bananas
