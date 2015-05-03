@@ -29,9 +29,9 @@ if __name__ == '__main__':
         model.loadWeights(np.load(modelWeights))
         models.append(model)
 
-    imageqa_test.testEnsemble(
-                                ensembleId='ensemble',
-                                taskIds=taskIds, 
-                                models=models, 
-                                dataFolder=dataFolder, 
-                                resultsFolder=resultsFolder)
+    testEnsemble(
+                    ensembleId='ensemble',
+                    taskIds=taskIds, 
+                    models=models, 
+                    dataFolder=dataFolder, 
+                    resultsFolder=resultsFolder)
