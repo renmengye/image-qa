@@ -211,9 +211,9 @@ def testEnsemble(
 
     ensembleAnswerFile = getAnswerFilename(ensembleId, resultsFolder)
     ensembleTruthFile = getTruthFilename(ensembleId, resultsFolder)
-    outputTxt(outputTest, targetTest, answerArray, 
+    outputTxt(ensembleOutput, targetTest, answerArray, 
               testAnswerFile, testTruthFile)
-    resultsRank = calcPrecision(outputTest, targetTest)
+    resultsRank = calcPrecision(ensembleOutput, targetTest)
     correct, total = calcRate(None, 
         ensembleOutput, targetTest, questionTypeArray=questionTypes)
     resultsCategory = correct / total.astype(float)
