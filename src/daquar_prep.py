@@ -202,14 +202,32 @@ if __name__ == '__main__':
     trainQAFilename = '../../../data/mpi-qa/qa.37.raw.train.txt'
     testQAFilename = '../../../data/mpi-qa/qa.37.raw.test.txt'
     outputFolder = '../data/daquar-37'
-    if len(sys.argv) > 6:
-        for i in range(1, len(sys.argv)):
-            if sys.argv[i] == '-train':
-                trainQAFilename = sys.argv[i + 1]
-            elif sys.argv[i] == '-test':
-                testQAFilename = sys.argv[i + 1]
-            elif sys.argv[i] == '-o':
-                outputFolder = sys.argv[i + 1]
+    buildObject = True
+    buildNumber = True
+    buildColor = True
+
+    for i in range(1, len(sys.argv)):
+        if sys.argv[i] == '-train':
+            trainQAFilename = sys.argv[i + 1]
+        elif sys.argv[i] == '-test':
+            testQAFilename = sys.argv[i + 1]
+        elif sys.argv[i] == '-o' or sys.argv[i] == '-output':
+            outputFolder = sys.argv[i + 1]
+        elif sys.argv[i] == '-object':
+            buildObject = True
+            buildNumber = False
+            buildColor = False
+        elif sys.argv[i] == '-number':
+            buildObject = False
+            buildNumber = True
+            buildColor = False
+        elif sys.argv[i] == '-color':
+            buildObject = False
+            buildNumber = False
+            buildColor = True
+
+    if not os.path.exists(outputFolder):
+        os.makedirs(outputFolder)
 
     # Read train file.
     with open(trainQAFilename) as f:
@@ -270,6 +288,39 @@ if __name__ == '__main__':
     print 'Test Questions After Trunk: ', len(testQuestions)
     print 'Test Question Dist: ', testCount
     print 'Test Question Dist: ', testCount / float(len(testQuestions))
+
+    # Convert to numpy array
+    trainQuestions = np.array(trainQuestions, dtype='object')
+    trainAnswers = np.array(trainAnswers, dtype='object')
+    trainImgIds = np.array(trainImgIds, dtype='object')
+    validQuestions = np.array(validQuestions, dtype='object')
+    validAnswers = np.array(validAnswers, dtype='object')
+    validImgIds = np.array(validImgIds, dtype='object')
+    testQuestions = np.array(testQuestions, dtype='object')
+    testAnswers = np.array(testAnswers, dtype='object')
+    testImgIds = np.array(testImgIds, dtype='object')
+
+    # Filter question types
+    if not (buildObject and buildNumber and buildColor):
+        # Now only build one type!
+        if buildObject:
+            typ = 0
+        elif buildNumber:
+            typ = 1
+        elif buildColor:
+            typ = 2
+        trainQuestions = trainQuestions[trainQuestionTypes == typ]
+        trainAnswers = trainAnswers[trainQuestionTypes == typ]
+        trainImgIds = trainImgIds[trainQuestionTypes == typ]
+        trainQuestionTypes = trainQuestionTypes[trainQuestionTypes == typ]
+        validQuestions = validQuestions[validQuestionTypes == typ]
+        validAnswers = validAnswers[validQuestionTypes == typ]
+        validImgIds = validImgIds[validQuestionTypes == typ]
+        validQuestionTypes = validQuestionTypes[validQuestionTypes == typ]
+        testQuestions = testQuestions[testQuestionTypes == typ]
+        testAnswers = testAnswers[testQuestionTypes == typ]
+        testImgIds = testImgIds[testQuestionTypes == typ]
+        testQuestionTypes = testQuestionTypes[testQuestionTypes == typ]
 
     trainInput = combine(\
         lookupQID(trainQuestions, worddict), trainImgIds)

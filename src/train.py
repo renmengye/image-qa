@@ -26,7 +26,7 @@ def readFlags():
     params['allDataFilename'] = None
     params['modelFilename'] = None
     params['imageqa'] = True
-    for i in range(1, len(sys.argv) - 1):
+    for i in range(1, len(sys.argv)):
         if sys.argv[i] == '-n' or sys.argv[i] == '-name':
             params['name'] == sys.argv[i + 1]
         elif sys.argv[i] == '-o' or sys.argv[i] == '-out':
