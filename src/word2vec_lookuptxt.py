@@ -29,7 +29,6 @@ with open(word2vecTxtFilename) as f:
         array[-1] = array[-1].reshape(1, array[-1].shape[0])
 
 array.insert(0, np.zeros((1, array[0].shape[-1]), dtype='float32'))
-print len(array)
 array = np.concatenate(array)
 
 wordIdx = []

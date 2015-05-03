@@ -11,6 +11,7 @@ Usage: python train.py {name} -d {train/valid/test folder}
                               -m {model spec} 
                               -c {config} 
                               -o {output folder}
+                              -b {board id}
                               [-imageqa]
 '''
 
@@ -45,6 +46,8 @@ def readFlags():
             params['modelFilename'] = sys.argv[i + 1]
         elif sys.argv[i] == '-c' or sys.argv[i] == '-config':
             params['configFilename'] = sys.argv[i + 1]
+        elif sys.argv[i] == '-b' or sys.argv[i] == '-board'
+            os.environ['GNUMPY_BOARD_ID'] = sys.argv[i + 1]
         elif sys.argv[i] == '-imageqa':
             params['imageqa'] = True
         elif sys.argv[i] == '-noimageqa':

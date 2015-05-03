@@ -67,8 +67,9 @@ def board_id_to_use():
   import gpu_lock
   return gpu_lock.obtain_lock_id()
  except:
-  print 'gnumpy: failed to use gpu_lock. Using board #0 without knowing whether it is in use or not.'
-  return int(_os.environ.get('GNUMPY_BOARD_ID', 0))
+  board_id = int(_os.environ.get('GNUMPY_BOARD_ID', 0))
+  print 'gnumpy: using board %d.' % board_id
+  return board_id
  
 class GnumpyGpuUnavailableException(Exception): pass
  

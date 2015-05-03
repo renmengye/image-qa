@@ -15,15 +15,21 @@ WDEMBED_FILE_CUSTOM_Q=word-embed-custom-q.npy
 WDEMBED_FILE_CUSTOM_A=word-embed-custom-a.npy
 WDEMBED_FILE_CUSTOM_Q_500=word-embed-custom-q-500.npy
 WDEMBED_FILE_CUSTOM_A_500=word-embed-custom-a-500.npy
+echo "Looking up Google News 300 embedding..."
 python word2vec_lookup.py $TARGET/$VOCAB_LIST_FILE_Q $TARGET/$VOCAB_NPY_FILE_Q
 python word2vec_lookup.py $TARGET/$VOCAB_LIST_FILE_A $TARGET/$VOCAB_NPY_FILE_A
+echo "Building Google News 300 embedding..."
 python word_embedding.py $TARGET/$VOCAB_NPY_FILE_Q $TARGET/$WDEMBED_FILE_Q 0 no
 python word_embedding.py $TARGET/$VOCAB_NPY_FILE_A $TARGET/$WDEMBED_FILE_A 0 no
+echo "Looking up COCO 300 embedding..."
 python word2vec_lookuptxt.py $TARGET/$VOCAB_LIST_FILE_Q $TARGET/$VOCAB_NPY_FILE_CUSTOM_Q $COCOWD
 python word2vec_lookuptxt.py $TARGET/$VOCAB_LIST_FILE_A $TARGET/$VOCAB_NPY_FILE_CUSTOM_A $COCOWD
+echo "Building COCO 300 embedding..."
 python word_embedding.py $TARGET/$VOCAB_NPY_FILE_CUSTOM_Q $TARGET/$WDEMBED_FILE_CUSTOM_Q 0 no
 python word_embedding.py $TARGET/$VOCAB_NPY_FILE_CUSTOM_Q $TARGET/$WDEMBED_FILE_CUSTOM_A 0 no
+echo "Looking up COCO 500 embedding..."
 python word2vec_lookuptxt.py $TARGET/$VOCAB_LIST_FILE_Q $TARGET/$VOCAB_NPY_FILE_CUSTOM_Q_500 $COCOWD500
 python word2vec_lookuptxt.py $TARGET/$VOCAB_LIST_FILE_A $TARGET/$VOCAB_NPY_FILE_CUSTOM_A_500 $COCOWD500
+echo "Building COCO 500 embedding..."
 python word_embedding.py $TARGET/$VOCAB_NPY_FILE_CUSTOM_Q_500 $TARGET/$WDEMBED_FILE_CUSTOM_Q_500 0 no
 python word_embedding.py $TARGET/$VOCAB_NPY_FILE_CUSTOM_Q_500 $TARGET/$WDEMBED_FILE_CUSTOM_A_500 0 no
