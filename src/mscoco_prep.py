@@ -142,15 +142,54 @@ if __name__ == '__main__':
 
     buildToy = False
     buildImage = False
-    for flag in sys.argv:
+    buildObject = True
+    buildNumber = True
+    buildColor = True
+    buildLocation = True
+    maxlen = -1
+    outputFolder = None
+
+    for i in range(len(sys.argv)):
+        flag = sys.argv[i]
         if flag == '-toy':
             buildToy = True
         elif flag == '-image':
             buildImage = True
+        elif flag == '-object':
+            print 'Only building object questions'
+            buildObject = True
+            buildNumber = False
+            buildColor = False
+            buildLocation = False
+        elif flag == '-number':
+            print 'Only building number questions'
+            buildObject = False
+            buildNumber = True
+            buildColor = False
+            buildLocation = False
+        elif flag == '-color':
+            print 'Only building color questions'
+            buildObject = False
+            buildNumber = False
+            buildColor = True
+            buildLocation = False
+        elif flag == '-location':
+            print 'Only building location questions'
+            buildObject = False
+            buildNumber = False
+            buildColor = False
+            buildLocation = True
+        elif flag == '-len':
+            maxlen = int(sys.argv[i + 1])
+        elif flag == '-o' or flag == '-output':
+            outputFolder = sys.argv[i + 1]
+    buildType = [buildObject, buildNumber, buildColor, buildLocation]
+
     if buildToy:
         # Build toy dataset
         print 'Building toy dataset'
-        outputFolder = '../data/cocoqa-toy'
+        if outputFolder is None:
+            outputFolder = '../data/cocoqa-toy'
         imgHidFeatOutFilename = \
             '/ais/gobi3/u/mren/data/cocoqa-toy/hidden_oxford.h5'
         numTrain = 6000
@@ -200,7 +239,8 @@ if __name__ == '__main__':
     else:
         # Build full dataset
         print 'Building full dataset'
-        outputFolder = '../data/cocoqa-full/'
+        if outputFolder is None:
+            outputFolder = '../data/cocoqa-full/'
         imgHidFeatOutFilename = \
             '/ais/gobi3/u/mren/data/cocoqa-full/hidden_oxford.h5'
         trainLB = 20
@@ -249,6 +289,10 @@ if __name__ == '__main__':
         testStart = validEnd
         testEnd = len(lines)
     
+    print 'Will build to', outputFolder
+    if not os.path.exists(outputFolder):
+        os.makedirs(outputFolder)
+
     # Mark for train/valid/test.
     imgidDict = {} 
     # Reindex the image, 1-based.
@@ -327,29 +371,31 @@ if __name__ == '__main__':
     print 'Train Questions Before Trunk: ', len(trainQuestions)
     print 'Valid Questions Before Trunk: ', len(validQuestions)
     print 'Test Questions Before Trunk: ', len(testQuestions)
+    print 'Test answer distribution'
+    buildDict(testAnswers, 0, pr=True)
 
     # Shuffle the questions.
     r = np.random.RandomState(1)
     shuffle = r.permutation(len(trainQuestions))
-    trainQuestions = np.array(trainQuestions, dtype=object)[shuffle]
-    trainAnswers = np.array(trainAnswers, dtype=object)[shuffle]
-    trainImgIds = np.array(trainImgIds, dtype=object)[shuffle]
+    trainQuestions = np.array(trainQuestions, dtype='object')[shuffle]
+    trainAnswers = np.array(trainAnswers, dtype='object')[shuffle]
+    trainImgIds = np.array(trainImgIds, dtype='object')[shuffle]
     trainQuestionTypes = np.array(
-        trainQuestionTypes,dtype=object)[shuffle]
+        trainQuestionTypes,dtype='int')[shuffle]
 
     shuffle = r.permutation(len(validQuestions))
-    validQuestions = np.array(validQuestions, dtype=object)[shuffle]
-    validAnswers = np.array(validAnswers, dtype=object)[shuffle]
-    validImgIds = np.array(validImgIds, dtype=object)[shuffle]
+    validQuestions = np.array(validQuestions, dtype='object')[shuffle]
+    validAnswers = np.array(validAnswers, dtype='object')[shuffle]
+    validImgIds = np.array(validImgIds, dtype='object')[shuffle]
     validQuestionTypes = np.array(
-        validQuestionTypes, dtype=object)[shuffle]
+        validQuestionTypes, dtype='int')[shuffle]
 
     shuffle = r.permutation(len(testQuestions))
-    testQuestions = np.array(testQuestions, dtype=object)[shuffle]
-    testAnswers = np.array(testAnswers, dtype=object)[shuffle]
-    testImgIds = np.array(testImgIds, dtype=object)[shuffle]
+    testQuestions = np.array(testQuestions, dtype='object')[shuffle]
+    testAnswers = np.array(testAnswers, dtype='object')[shuffle]
+    testImgIds = np.array(testImgIds, dtype='object')[shuffle]
     testQuestionTypes = np.array(
-        testQuestionTypes, dtype=object)[shuffle]
+        testQuestionTypes, dtype='int')[shuffle]
 
     # Truncate rare-common answers.
     survivor = np.array(removeQuestions(
@@ -374,9 +420,9 @@ if __name__ == '__main__':
     testQuestionTypes = testQuestionTypes[survivor]
 
     # Build statistics
-    trainCount = np.zeros(4, dtype=int)
-    validCount = np.zeros(4, dtype=int)
-    testCount = np.zeros(4, dtype=int)
+    trainCount = np.zeros(4, dtype='int')
+    validCount = np.zeros(4, dtype='int')
+    testCount = np.zeros(4, dtype='int')
     
     for n in range(0, len(trainQuestions)):
         question = trainQuestions[n]
@@ -420,25 +466,49 @@ if __name__ == '__main__':
     # After applying rare-common answer rejection.
     r = np.random.RandomState(2)
     shuffle = r.permutation(len(trainQuestions))
-    trainQuestions = np.array(trainQuestions, dtype=object)[shuffle]
-    trainAnswers = np.array(trainAnswers, dtype=object)[shuffle]
-    trainImgIds = np.array(trainImgIds, dtype=object)[shuffle]
+    trainQuestions = np.array(trainQuestions, dtype='object')[shuffle]
+    trainAnswers = np.array(trainAnswers, dtype='object')[shuffle]
+    trainImgIds = np.array(trainImgIds, dtype='object')[shuffle]
     trainQuestionTypes = np.array(
-        trainQuestionTypes,dtype=object)[shuffle]
+        trainQuestionTypes,dtype='int')[shuffle]
 
     shuffle = r.permutation(len(validQuestions))
-    validQuestions = np.array(validQuestions, dtype=object)[shuffle]
-    validAnswers = np.array(validAnswers, dtype=object)[shuffle]
-    validImgIds = np.array(validImgIds, dtype=object)[shuffle]
+    validQuestions = np.array(validQuestions, dtype='object')[shuffle]
+    validAnswers = np.array(validAnswers, dtype='object')[shuffle]
+    validImgIds = np.array(validImgIds, dtype='object')[shuffle]
     validQuestionTypes = np.array(
-        validQuestionTypes, dtype=object)[shuffle]
+        validQuestionTypes, dtype='int')[shuffle]
 
     shuffle = r.permutation(len(testQuestions))
-    testQuestions = np.array(testQuestions, dtype=object)[shuffle]
-    testAnswers = np.array(testAnswers, dtype=object)[shuffle]
-    testImgIds = np.array(testImgIds, dtype=object)[shuffle]
+    testQuestions = np.array(testQuestions, dtype='object')[shuffle]
+    testAnswers = np.array(testAnswers, dtype='object')[shuffle]
+    testImgIds = np.array(testImgIds, dtype='object')[shuffle]
     testQuestionTypes = np.array(
-        testQuestionTypes, dtype=object)[shuffle]
+        testQuestionTypes, dtype='int')[shuffle]
+
+    # Filter question types
+    if not (buildObject and buildNumber and buildColor and buildLocation):
+        # Now only build one type!
+        if buildObject:
+            typ = 0
+        elif buildNumber:
+            typ = 1
+        elif buildColor:
+            typ = 2
+        elif buildLocation:
+            typ = 3
+        trainQuestions = trainQuestions[trainQuestionTypes == typ]
+        trainAnswers = trainAnswers[trainQuestionTypes == typ]
+        trainImgIds = trainImgIds[trainQuestionTypes == typ]
+        trainQuestionTypes = trainQuestionTypes[trainQuestionTypes == typ]
+        validQuestions = validQuestions[validQuestionTypes == typ]
+        validAnswers = validAnswers[validQuestionTypes == typ]
+        validImgIds = validImgIds[validQuestionTypes == typ]
+        validQuestionTypes = validQuestionTypes[validQuestionTypes == typ]
+        testQuestions = testQuestions[testQuestionTypes == typ]
+        testAnswers = testAnswers[testQuestionTypes == typ]
+        testImgIds = testImgIds[testQuestionTypes == typ]
+        testQuestionTypes = testQuestionTypes[testQuestionTypes == typ]
 
     # Build baseline solution
     baselineCorrect = np.zeros(4)
@@ -472,8 +542,9 @@ if __name__ == '__main__':
     print 'Baseline scene: %.4f' % baselineRate[3]
 
     # Find max length
-    maxlen = findMaxlen(np.concatenate((trainQuestions, validQuestions, testQuestions)))
-    
+    if maxlen == -1:
+        maxlen = findMaxlen(np.concatenate((trainQuestions, validQuestions, testQuestions)))
+
     # Build output
     trainInput = combine(\
         lookupQID(trainQuestions, worddict, maxlen), trainImgIds)
