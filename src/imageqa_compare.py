@@ -53,22 +53,20 @@ def renderIndex(modelNames, numCategories, bins):
 
 if __name__ == '__main__':
     """
-    Usage python imageqa_compare.py -m[odel] {name1:modelId1}
-                                    -m[odel] {name2:modelId2}
-                                    -e[nsemble] {name3:modelId3,modelId4,...}
-                                    -d[ata] {dataFolder}
-                                    -o[utput] {outputFolder}
-                                    -daquar/-coco
+    Usage python imageqa_compare.py 
+                    -m[odel] {name1:modelId1}
+                    -m[odel] {name2:modelId2}
+                    -m[odel] {name3:ensembleModelId3,ensembleModelId4,...}
+                    -d[ata] {dataFolder}
+                    -o[utput] {outputFolder}
+                    -daquar/-coco
     """
     dataset = 'coco'
     modelNames = []
     modelIds = []
     for i in range(1, len(sys.argv)):
-        if sys.argv[i] == '-m' or sys.argv[i] == '-model':
-            parts = sys.argv[i + 1].split(':')
-            modelNames.append(parts[0])
-            modelIds.append(parts[1])
-        elif sys.argv[i] == '-e' or sys.argv[i] == '-ensemble':
+        if sys.argv[i] == '-m' or sys.argv[i] == '-model' or \
+           sys.argv[i] == '-e' or sys.argv[i] == '-ensemble':
             parts = sys.argv[i + 1].split(':')
             modelNames.append(parts[0])
             modelIds.append(parts[1])
@@ -106,14 +104,19 @@ if __name__ == '__main__':
     testQuestionType = np.load(testQuestionTypeFile)
 
     for modelName, modelId in zip(modelNames, modelIds):
-        print 'Running test data on model %s...' \
-                % modelName
-        resultFolder = '../results/%s' % modelId
-        modelFile = '../results/%s/%s.model.yml' % (modelId, modelId)
-        model = nn.load(modelFile)
-        model.loadWeights(
-            np.load('../results/%s/%s.w.npy' % (modelId, modelId)))
-        outputTest = nn.test(model, inputTest)
+        if ',' in modelId:
+            print 'Running test data on ensemble model %s...' \
+                    % modelName
+            models = loadEnsemble(modelId.split(','), resultsFolder)
+            outputTest = runEnsemble(
+                                        inputTest, 
+                                        models, 
+                                        testQuestionTypes)
+        else:
+            print 'Running test data on model %s...' \
+                    % modelName
+            model = loadModel(modelId, resultsFolder)
+            outputTest = nn.test(model, inputTest)
         modelOutputs.append(outputTest)
 
     # Sort questions by question types.

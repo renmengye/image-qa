@@ -143,6 +143,32 @@ def getTruthFilename(
                     taskId, 
                     '%s.test.t.txt' % taskId)
 
+def loadTestSet(dataFolder):
+    testDataFile = os.path.join(dataFolder, 'test.npy')
+    vocabDictFile = os.path.join(dataFolder, 'vocab-dict.npy')
+    qtypeFile = os.path.join(dataFolder, 'test-qtype.npy')
+    vocabDict = np.load(vocabDictFile)
+    testData = np.load(testDataFile)
+    questionTypeArray = np.load(qtypeFile)
+    inputTest = testData[0]
+    targetTest = testData[1]
+    questionArray = vocabDict[1]
+    answerArray = vocabDict[3]
+    return (inputTest, 
+            targetTest,
+            questionArray, 
+            answerArray, 
+            questionTypeArray)
+
+def loadModel(
+                taskId,
+                resultsFolder):
+    modelSpecFile = '%s/%s/%s.model.yml' % (resultsFolder, taskId, taskId)
+    modelWeightsFile = '%s/%s/%s.w.npy' % (resultsFolder, taskId, taskId)
+    model = nn.load(modelSpecFile)
+    model.loadWeights(np.load(modelWeightsFile))
+    return model
+
 def testAll(
             taskId, 
             model, 
@@ -150,25 +176,54 @@ def testAll(
             resultsFolder):
     testAnswerFile = getAnswerFilename(taskId, resultsFolder)
     testTruthFile = getTruthFilename(taskId, resultsFolder)
-    testDataFile = os.path.join(dataFolder, 'test.npy')
-    vocabDictFile = os.path.join(dataFolder, 'vocab-dict.npy')
-    qtypeFile = os.path.join(dataFolder, 'test-qtype.npy')
-    vocabDict = np.load(vocabDictFile)
-    testData = np.load(testDataFile)
-    inputTest = testData[0]
+    inputTest, 
+    targetTest, 
+    questionArray, 
+    answerArray, 
+    questionTypeArray = loadTestSet(dataFolder)
     outputTest = nn.test(model, inputTest)
-    targetTest = testData[1]
-    questionArray = vocabDict[1]
-    answerArray = vocabDict[3]
-    questionTypeArray = np.load(qtypeFile)
+    resultsRank,
+    resultsCategory,
+    resultsWups = runAllMetrics(
+                                inputTest,
+                                outputTest,
+                                targetTest,
+                                answerArray,
+                                questionTypeArray,
+                                testAnswerFile,
+                                testTruthFile)
+    writeMetricsToFile(
+                        taskId,
+                        resultsRank,
+                        resultsCategory,
+                        resultsWups,
+                        resultsFolder)
+    return outputTest
+
+def runAllMetrics(
+                    inputTest,
+                    outputTest, 
+                    targetTest, 
+                    answerArray, 
+                    questionTypeArray, 
+                    testAnswerFile, 
+                    testTruthFile):
     outputTxt(outputTest, targetTest, answerArray, 
               testAnswerFile, testTruthFile)
     resultsRank = calcPrecision(outputTest, targetTest)
     correct, total = calcRate(inputTest, 
         outputTest, targetTest, questionTypeArray=questionTypeArray)
     resultsCategory = correct / total.astype(float)
-    resultsFile = os.path.join(resultsFolder, taskId, 'result.txt')
     resultsWups = runWups(testAnswerFile, testTruthFile)
+    return (resultsRank, resultsCategory, resultsWups)
+
+def writeMetricsToFile(
+                        taskId, 
+                        resultsRank, 
+                        resultsCategory, 
+                        resultsWups, 
+                        resultsFolder):
+    resultsFile = os.path.join(resultsFolder, taskId, 'result.txt')
     with open(resultsFile, 'w') as f:
         f.write('rate @ 1: %.4f\n' % resultsRank[0])
         f.write('rate @ 5: %.4f\n' % resultsRank[1])
@@ -180,77 +235,86 @@ def testAll(
         f.write('WUPS 1.0: %.4f\n' % resultsWups[0])
         f.write('WUPS 0.9: %.4f\n' % resultsWups[1])
         f.write('WUPS 0.0: %.4f\n' % resultsWups[2])
-    return outputTest
+
+def loadEnsemble(
+                    taskIds, 
+                    resultsFolder):
+    models = []
+    for taskId in taskIds:
+        taskFolder = os.path.join(resultsFolder, taskId)
+        modelSpec = os.path.join(taskFolder, '%s.model.yml' % taskId)
+        modelWeights = os.path.join(taskFolder, '%s.w.npy' % taskId)
+        model = nn.load(modelSpec)
+        model.loadWeights(np.load(modelWeights))
+        models.append(model)
+    return models
+
+def runEnsemble(
+                inputTest,
+                models,
+                questionTypeArray):
+    allOutput = []
+    for i, model in enumerate(models):
+        print 'Running test set on model #%d' % i
+        outputTest = nn.test(model, inputTest)
+        allOutput.append(outputTest)
+    ensembleOutputTest = np.zeros(allOutput[0].shape)
+    for i in range(allOutput[0].shape[0]):
+        ensembleOutputTest[i] = allOutput[questionTypeArray[i]][i]
+    return ensembleOutputTest
 
 def testEnsemble(
                     ensembleId,
-                    taskIds, 
                     models, 
                     dataFolder, 
                     resultsFolder):
-    testDataFile = os.path.join(dataFolder, 'test.npy')
-    vocabDictFile = os.path.join(dataFolder, 'vocab-dict.npy')
-    questionTypesFile = os.path.join(dataFolder, 'test-qtype.npy')
-    vocabDict = np.load(vocabDictFile)
-    testData = np.load(testDataFile)
-    inputTest = testData[0]
-    targetTest = testData[1]
-    vocabDict = np.load(vocabDictFile)
-    answerArray = vocabDict[3]
-    questionTypes = np.load(questionTypesFile)
-    allOutput = []
-    for i, taskId in enumerate(taskIds):
-        testAnswerFile = getAnswerFilename(taskId, resultsFolder)
-        testTruthFile = getTruthFilename(taskId, resultsFolder)
-        print 'Running test set on model #%d' % i
-        outputTest = nn.test(models[i], inputTest)
-        allOutput.append(outputTest)
-    ensembleOutput = np.zeros(allOutput[0].shape)
-    for i in range(allOutput[0].shape[0]):
-        ensembleOutput[i] = allOutput[questionTypes[i]][i]
+    inputTest, 
+    targetTest, 
+    questionArray, 
+    answerArray, 
+    questionTypeArray = loadTestSet(dataFolder)
 
+    ensembleOutputTest = runEnsemble(
+                                        inputTest, 
+                                        models, 
+                                        questionTypeArray)
     ensembleAnswerFile = getAnswerFilename(ensembleId, resultsFolder)
     ensembleTruthFile = getTruthFilename(ensembleId, resultsFolder)
-    outputTxt(ensembleOutput, targetTest, answerArray, 
-              testAnswerFile, testTruthFile)
-    resultsRank = calcPrecision(ensembleOutput, targetTest)
-    correct, total = calcRate(None, 
-        ensembleOutput, targetTest, questionTypeArray=questionTypes)
-    resultsCategory = correct / total.astype(float)
-    resultsFile = os.path.join(resultsFolder, taskId, 'result.txt')
-    resultsWups = runWups(testAnswerFile, testTruthFile)
-    with open(resultsFile, 'w') as f:
-        f.write('rate @ 1: %.4f\n' % resultsRank[0])
-        f.write('rate @ 5: %.4f\n' % resultsRank[1])
-        f.write('rate @ 10: %.4f\n' % resultsRank[2])
-        f.write('object: %.4f\n' % resultsCategory[0])
-        f.write('number: %.4f\n' % resultsCategory[1])
-        f.write('color: %.4f\n' % resultsCategory[2])
-        f.write('scene: %.4f\n' % resultsCategory[3])
-        f.write('WUPS 1.0: %.4f\n' % resultsWups[0])
-        f.write('WUPS 0.9: %.4f\n' % resultsWups[1])
-        f.write('WUPS 0.0: %.4f\n' % resultsWups[2])
+
+    resultsRank,
+    resultsCategory,
+    resultsWups = runAllMetrics(
+                                inputTest,
+                                ensembleOutputTest,
+                                targetTest,
+                                answerArray,
+                                questionTypeArray,
+                                testAnswerFile,
+                                testTruthFile)
+    writeMetricsToFile(
+                        ensembleId,
+                        resultsRank,
+                        resultsCategory,
+                        resultsWups,
+                        resultsFolder)
+
     return ensembleOutput
 
 if __name__ == '__main__':
     """
-    Usage python imageqa_test.py {taskId} 
+    Usage python imageqa_test.py -i[d] {taskId} 
                                  -d[ata] {dataFolder} 
                                  [-r[esults] {resultsFolder}]
     """
-    taskId = sys.argv[1]
-    print taskId
     dataFolder = None
-    resultsFolder = None
-    for i in range(len(sys.argv)):
-        if sys.argv[i] == '-d' or sys.argv[i] == '-data':
+    resultsFolder = '../results'
+    for i, flag in enumerate(sys.argv):
+        if flag == '-d' or flag == '-data':
             dataFolder = sys.argv[i + 1]
-        elif sys.argv[i] == '-r' or sys.argv[i] == '-result':
+        elif flag == '-i' or flag == '-id':
+            taskId = sys.argv[i + 1]
+        elif flag == '-r' or flag == '-result':
             resultsFolder = sys.argv[i + 1]
-    if resultsFolder is None:
-        resultsFolder = '../results'
-    modelSpecFile = '%s/%s/%s.model.yml' % (resultsFolder, taskId, taskId)
-    modelWeightsFile = '%s/%s/%s.w.npy' % (resultsFolder, taskId, taskId)
-    model = nn.load(modelSpecFile)
-    model.loadWeights(np.load(modelWeightsFile))
+    print taskId
+    model = loadModel(taskIds, resultsFolder)
     testAll(taskId, model, dataFolder, resultsFolder)

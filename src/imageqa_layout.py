@@ -7,15 +7,18 @@ from imageqa_render import *
 
 if __name__ == '__main__':
     """
-    Usage python imageqa_layout.py -m[odels] {id1},{id2},{id3}...
-                                   -n[ames] {name1},{name2}...
-                                   -d[ata] {dataFolder}
-                                   -i[nput] {listFile}
-                                   -k {top K answers}
-                                   -p[icture] {pictureFolder}
-                                   -o[utput] {outputFolder}
-                                   -f[ile] {outputTexFilename}
-                                   -daquar/-coco
+    Usage python imageqa_layout.py 
+                    -m[odel] {name1:modelId1}
+                    -m[odel] {name2:modelId2}
+                    -m[odel] {name3:ensembleModelId3,ensembleModelId4,...}
+                    ...
+                    -d[ata] {dataFolder}
+                    -i[nput] {listFile}
+                    -o[utput] {outputFolder}
+                    [-k {top K answers}]
+                    [-p[icture] {pictureFolder}]
+                    [-f[ile] {outputTexFilename}]
+                    [-daquar/-coco]
     Render a selection of examples into LaTeX.
     Input is the following format:
     QID1[,Comment1]
@@ -23,32 +26,34 @@ if __name__ == '__main__':
     ...
     """
     dataset = 'coco'
-    filename = 'result.tex'
+    filename = 'result'
     pictureFolder = 'img'
     K = 1
-    modelNames = None
-    for i in range(1, len(sys.argv)):
-        if sys.argv[i] == '-m' or sys.argv[i] == '-models':
-            modelsStr = sys.argv[i + 1]
-            modelIds = modelsStr.split(',')
-        elif sys.argv[i] == '-n' or sys.argv[i] == '-names':
+    modelNames = []
+    modelIds = []
+    for i, flag in enumerate(sys.argv):
+        if flag == '-m' or flag == '-model':
+            parts = sys.argv[i + 1].split(':')
+            modelNames.append(parts[0])
+            modelIds.append(parts[1])
+        elif flag == '-n' or flag == '-names':
             namesStr = sys.argv[i + 1]
             modelNames = namesStr.split(',')
-        elif sys.argv[i] == '-d' or sys.argv[i] == '-data':
+        elif flag == '-d' or flag == '-data':
             dataFolder = sys.argv[i + 1]
-        elif sys.argv[i] == '-i' or sys.argv[i] == '-input':
+        elif flag == '-i' or flag == '-input':
             inputFile = sys.argv[i + 1]
-        elif sys.argv[i] == '-k':
+        elif flag == '-k':
             K = int(sys.argv[i + 1])
-        elif sys.argv[i] == '-p' or sys.argv[i] == '-picture':
+        elif flag == '-p' or flag == '-picture':
             pictureFolder = sys.argv[i + 1]
-        elif sys.argv[i] == '-o' or sys.argv[i] == '-output':
+        elif flag == '-o' or flag == '-output':
             outputFolder = sys.argv[i + 1]
-        elif sys.argv[i] == '-f' or sys.argv[i] == '-file':
+        elif flag == '-f' or flag == '-file':
             filename = sys.argv[i + 1]
-        elif sys.argv[i] == '-daquar':
+        elif flag == '-daquar':
             dataset = 'daquar'
-        elif sys.argv[i] == '-coco':
+        elif flag == '-coco':
             dataset = 'coco'
 
     resultsFolder = '../results'
@@ -100,14 +105,19 @@ if __name__ == '__main__':
 
     modelOutputs = []
     for modelName, modelId in zip(modelNames, modelIds):
-        print 'Running test data on model %s...' \
-                % modelName
-        resultFolder = '../results/%s' % modelId
-        modelFile = '../results/%s/%s.model.yml' % (modelId, modelId)
-        model = nn.load(modelFile)
-        model.loadWeights(
-            np.load('../results/%s/%s.w.npy' % (modelId, modelId)))
-        outputTest = nn.test(model, inputTestSel)
+        if ',' in modelId:
+            print 'Running test data on ensemble model %s...' \
+                    % modelName
+            models = loadEnsemble(modelId.split(','), resultsFolder)
+            outputTest = runEnsemble(
+                                        inputTest, 
+                                        models, 
+                                        testQuestionTypes)
+        else:
+            print 'Running test data on model %s...' \
+                    % modelName
+            model = loadModel(modelId, resultsFolder)
+            outputTest = nn.test(model, inputTest)
         modelOutputs.append(outputTest)
 
     # Render
@@ -128,4 +138,4 @@ if __name__ == '__main__':
                 modelOutputs=modelOutputs,
                 modelNames=modelNames,
                 questionIds=idx,
-                filename=filename)
+                filename=filename + '.tex')

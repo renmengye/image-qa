@@ -38,47 +38,49 @@ def lookupAnsID(answers, ansdict):
 
 if __name__ == '__main__':
     """
-    Usage python imageqa_adhoc.py  -m[odels] {id1},{id2},{id3}...
-                                   -n[ames] {name1},{name2}...
-                                   -d[ata] {dataFolder}
-                                   -i[nput] {listFile}
-                                   -k {top K answers}
-                                   /-p[icture] {pictureFolder}
-                                   /-o[utput] {outputFolder}
-                                   /-f[ile] {outputTexFilename}
-                                   -daquar/-coco
+    Usage python imageqa_adhoc.py  
+                    -m[odel] {name1:modelId1}
+                    -m[odel] {name2:modelId2}
+                    -m[odel] {name3:ensembleModelId3,ensembleModelId4,...}
+                    ...
+                    -d[ata] {dataFolder}
+                    -i[nput] {listFile}
+                    -o[utput] {outputFolder}
+                    [-k {top K answers}]
+                    [-p[icture] {pictureFolder}]
+                    [-f[ile] {outputTexFilename}]
+                    [-daquar/-coco]
     Ask adhoc questions on an image
     Input is the following format:
     QID1,Question1,Answer1
     QID2,Question2,Answer2
     """
     dataset = 'coco'
-    filename = 'result.tex'
+    filename = 'result'
     pictureFolder = 'img'
     K = 1
-    modelNames = None
-    for i in range(1, len(sys.argv)):
-        if sys.argv[i] == '-m' or sys.argv[i] == '-models':
-            modelsStr = sys.argv[i + 1]
-            modelIds = modelsStr.split(',')
-        elif sys.argv[i] == '-n' or sys.argv[i] == '-names':
-            namesStr = sys.argv[i + 1]
-            modelNames = namesStr.split(',')
-        elif sys.argv[i] == '-d' or sys.argv[i] == '-data':
+    modelNames = []
+    modelIds = []
+    for i, flag in enumerate(sys.argv):
+        if flag == '-m' or flag == '-model':
+            parts = sys.argv[i + 1].split(':')
+            modelNames.append(parts[0])
+            modelIds.append(parts[1])
+        elif flag == '-d' or flag == '-data':
             dataFolder = sys.argv[i + 1]
-        elif sys.argv[i] == '-i' or sys.argv[i] == '-input':
+        elif flag == '-i' or flag == '-input':
             inputFile = sys.argv[i + 1]
-        elif sys.argv[i] == '-k':
+        elif flag == '-k':
             K = int(sys.argv[i + 1])
-        elif sys.argv[i] == '-p' or sys.argv[i] == '-picture':
+        elif flag == '-p' or flag == '-picture':
             pictureFolder = sys.argv[i + 1]
-        elif sys.argv[i] == '-o' or sys.argv[i] == '-output':
+        elif flag == '-o' or flag == '-output':
             outputFolder = sys.argv[i + 1]
-        elif sys.argv[i] == '-f' or sys.argv[i] == '-file':
+        elif flag == '-f' or flag == '-file':
             filename = sys.argv[i + 1]
-        elif sys.argv[i] == '-daquar':
+        elif flag == '-daquar':
             dataset = 'daquar'
-        elif sys.argv[i] == '-coco':
+        elif flag == '-coco':
             dataset = 'coco'
 
     resultsFolder = '../results'
@@ -104,12 +106,16 @@ if __name__ == '__main__':
     answerArray = vocabDict[3]
     maxlen = inputTest.shape[1]
 
-    # for i in range(len(questionArray)):
-    #     if '_' in questionArray[i]:
-    #         questionArray[i] = questionArray[i].replace('_', '\\_')
-    # for i in range(len(answerArray)):
-    #     if '_' in answerArray[i]:
-    #         answerArray[i] = answerArray[i].replace('_', '\\_')
+    questionArrayLatex = []
+    answerArrayLatex = []
+    for i in range(len(questionArray)):
+        if '_' in questionArray[i]:
+            questionArrayLatex.append(
+                    questionArray[i].replace('_', '\\_'))
+    for i in range(len(answerArray)):
+        if '_' in answerArray[i]:
+            answerArrayLatex.append(
+                    answerArray[i].replace('_', '\\_'))
 
     qids = []
     questions = []
@@ -128,24 +134,21 @@ if __name__ == '__main__':
     adhocInputTestSel = combine(lookupQID(questions, worddict, maxlen), imgids)
     adhocTargetTestSel = lookupAnsID(answers, ansdict)
 
-    # for i in range(len(questions)):
-    #     print questions[i], answers[i]
-    #     print adhocInputTestSel[i]
-    #     print inputTest[qids[i]]
-    #     print adhocTargetTestSel
-
     modelOutputs = []
     for modelName, modelId in zip(modelNames, modelIds):
-        print 'Running test data on model %s...' \
-                % modelName
-        resultFolder = '../results/%s' % modelId
-        modelFile = '../results/%s/%s.model.yml' % (modelId, modelId)
-        model = nn.load(modelFile)
-        model.loadWeights(
-            np.load('../results/%s/%s.w.npy' % (modelId, modelId)))
-        adhocOutputTest = nn.test(model, adhocInputTestSel)
-        #outputTest = nn.test(model, inputTestSel)
-        #print adhocOutputTest/outputTest
+        if ',' in modelId:
+            print 'Running test data on ensemble model %s...' \
+                    % modelName
+            models = loadEnsemble(modelId.split(','), resultsFolder)
+            adhocOutputTest = runEnsemble(
+                                        inputTest, 
+                                        models, 
+                                        testQuestionTypes)
+        else:
+            print 'Running test data on model %s...' \
+                    % modelName
+            model = loadModel(modelId, resultsFolder)
+            adhocOutputTest = nn.test(model, inputTest)
         modelOutputs.append(adhocOutputTest)
 
     # Render
@@ -170,8 +173,8 @@ if __name__ == '__main__':
     renderLatex(
                 adhocInputTestSel,
                 adhocTargetTestSel,
-                questionArray, 
-                answerArray, 
+                questionArrayLatex, 
+                answerArrayLatex, 
                 urlDict, 
                 topK=K,
                 outputFolder=outputFolder,
