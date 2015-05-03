@@ -46,7 +46,7 @@ def readFlags():
             params['modelFilename'] = sys.argv[i + 1]
         elif sys.argv[i] == '-c' or sys.argv[i] == '-config':
             params['configFilename'] = sys.argv[i + 1]
-        elif sys.argv[i] == '-b' or sys.argv[i] == '-board'
+        elif sys.argv[i] == '-b' or sys.argv[i] == '-board':
             os.environ['GNUMPY_BOARD_ID'] = sys.argv[i + 1]
         elif sys.argv[i] == '-imageqa':
             params['imageqa'] = True
