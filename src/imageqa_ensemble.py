@@ -23,7 +23,7 @@ if __name__ == '__main__':
     models = []
     for taskId in taskIds:
         taskFolder = os.path.join(resultsFolder, taskId)
-        modelSpec = os.path.join(resultsFolder, '%s.model.yml' % taskId)
+        modelSpec = os.path.join(taskFolder, '%s.model.yml' % taskId)
         modelWeights = os.path.join(resultsFolder, '%s.w.npy' % taskId)
         model = nn.load(modelSpec)
         model.loadWeights(np.load(modelWeights))
