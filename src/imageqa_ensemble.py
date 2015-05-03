@@ -30,9 +30,8 @@ if __name__ == '__main__':
         models.append(model)
 
     imageqa_test.testEnsemble(
-                                ensembleId=,
+                                ensembleId='ensemble',
                                 taskIds=taskIds, 
-                                models, 
-                                dataFolder, 
-                                resultsFolder, 
-                                questionTypes)
+                                models=models, 
+                                dataFolder=dataFolder, 
+                                resultsFolder=resultsFolder)

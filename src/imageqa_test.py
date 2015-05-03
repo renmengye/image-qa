@@ -36,7 +36,7 @@ def calcRate(
                 questionTypeArray=None):
     correct = np.zeros(4, dtype=int)
     total = np.zeros(4, dtype=int)
-    for n in range(0, modelInput.shape[0]):        
+    for n in range(0, modelOutput.shape[0]):        
         sortIdx = np.argsort(modelOutput[n], axis=0)
         sortIdx = sortIdx[::-1]
         answer = sortIdx[0]
@@ -180,42 +180,57 @@ def testAll(
         f.write('WUPS 1.0: %.4f\n' % resultsWups[0])
         f.write('WUPS 0.9: %.4f\n' % resultsWups[1])
         f.write('WUPS 0.0: %.4f\n' % resultsWups[2])
+    return outputTest
 
 def testEnsemble(
                     ensembleId,
                     taskIds, 
                     models, 
                     dataFolder, 
-                    resultsFolder, 
-                    questionTypes):
-    allAnswers = []
-    truth = []
+                    resultsFolder):
+    testDataFile = os.path.join(dataFolder, 'test.npy')
+    vocabDictFile = os.path.join(dataFolder, 'vocab-dict.npy')
+    qtypeFile = os.path.join(dataFolder, 'test-qtype.npy')
+    vocabDict = np.load(vocabDictFile)
+    testData = np.load(testDataFile)
+    inputTest = testData[0]
+    targetTest = testData[1]
+    vocabDict = np.load(vocabDictFile)
+    answerArray = vocabDict[3]
+    questionTypes = np.load(questionTypesFile)
+    allOutput = []
     for i, taskId in enumerate(taskIds):
         testAnswerFile = getAnswerFilename(taskId, resultsFolder)
         testTruthFile = getTruthFilename(taskId, resultsFolder)
-        if not os.path.exists(testAnswerFile):
-            print 'Running test set on model #%d' % i
-            testAll(
-                    taskId, 
-                    models[i], 
-                    dataFolder, 
-                    resultFolder)
-        with open(testAnswerFile) as f:
-            allAnswers.append(f.readlines())
-        if len(truth) == 0:
-            with open(testTruthFile) as f:
-                truth = f.readlines()
-    ensembleAnswers = []
-    ensembleOutput = []
-    for questionType in questionTypes:
-        ensembleAnswers.append(allAnswers[questionType])
+        print 'Running test set on model #%d' % i
+        outputTest = nn.test(models[i], inputTest)
+        allOutput.append(outputTest)
+    ensembleOutput = np.zeros(allOutput[0].shape)
+    for i in range(allOutput[0].shape[0]):
+        ensembleOutput[i] = allOutput[questionTypes[i]]
+
     ensembleAnswerFile = getAnswerFilename(ensembleId, resultsFolder)
     ensembleTruthFile = getTruthFilename(ensembleId, resultsFolder)
-    with open(ensembleAnswerFile, 'w') as f:
-        f.writelines(ensembleAnswers)
-    with open(ensembleTruthFile, 'w') as f:
-        f.writelines(truth)
-    resultsWups = runWups(ensembleAnswerFile, ensembleTruthFile)
+    outputTxt(outputTest, targetTest, answerArray, 
+              testAnswerFile, testTruthFile)
+    resultsRank = calcPrecision(outputTest, targetTest)
+    correct, total = calcRate(None, 
+        ensembleOutput, targetTest, questionTypeArray=questionTypes)
+    resultsCategory = correct / total.astype(float)
+    resultsFile = os.path.join(resultsFolder, taskId, 'result.txt')
+    resultsWups = runWups(testAnswerFile, testTruthFile)
+    with open(resultsFile, 'w') as f:
+        f.write('rate @ 1: %.4f\n' % resultsRank[0])
+        f.write('rate @ 5: %.4f\n' % resultsRank[1])
+        f.write('rate @ 10: %.4f\n' % resultsRank[2])
+        f.write('object: %.4f\n' % resultsCategory[0])
+        f.write('number: %.4f\n' % resultsCategory[1])
+        f.write('color: %.4f\n' % resultsCategory[2])
+        f.write('scene: %.4f\n' % resultsCategory[3])
+        f.write('WUPS 1.0: %.4f\n' % resultsWups[0])
+        f.write('WUPS 0.9: %.4f\n' % resultsWups[1])
+        f.write('WUPS 0.0: %.4f\n' % resultsWups[2])
+    return ensembleOutput
 
 if __name__ == '__main__':
     """
