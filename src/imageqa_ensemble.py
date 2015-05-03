@@ -7,15 +7,20 @@ if __name__ == '__main__':
     """
     Test a type-specific ensemble model
     Usage:
-    python imageqa_ensemble.py -i[ds] {taskId1},{taskId2},...
+    python imageqa_ensemble.py -e[nsemble] {ensembleId}
+                               -m[odel] {modelId1}
+                               -m[odel] {modelId2},...
                                -d[ata] {dataFolder}
                                [-r[esults] {resultsFolder}]
     Results folder by default is '../results'
     """
     resultsFolder = '../results'
+    taskIds = []
     for i, flag in enumerate(sys.argv):
-        if flag == '-i' or flag == '-ids':
-            taskIds = sys.argv[i + 1].split(',')
+        if flag == '-m' or flag == '-model':
+            taskIds.append(sys.argv[i + 1])
+        elif flag == '-e' or flag == '-ensemble':
+            ensembleId = sys.argv[i + 1]
         elif flag == '-d' or flag == '-data':
             dataFolder = sys.argv[i + 1]
         elif flag == 'r' or flag == 'results':
@@ -30,7 +35,7 @@ if __name__ == '__main__':
         models.append(model)
 
     testEnsemble(
-                    ensembleId='ensemble',
+                    ensembleId=ensembleId,
                     taskIds=taskIds, 
                     models=models, 
                     dataFolder=dataFolder, 

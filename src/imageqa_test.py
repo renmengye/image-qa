@@ -207,7 +207,7 @@ def testEnsemble(
         allOutput.append(outputTest)
     ensembleOutput = np.zeros(allOutput[0].shape)
     for i in range(allOutput[0].shape[0]):
-        ensembleOutput[i] = allOutput[questionTypes[i]]
+        ensembleOutput[i] = allOutput[questionTypes[i]][i]
 
     ensembleAnswerFile = getAnswerFilename(ensembleId, resultsFolder)
     ensembleTruthFile = getTruthFilename(ensembleId, resultsFolder)

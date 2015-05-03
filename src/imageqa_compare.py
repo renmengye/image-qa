@@ -53,20 +53,25 @@ def renderIndex(modelNames, numCategories, bins):
 
 if __name__ == '__main__':
     """
-    Usage python imageqa_compare.py -m[odels] {id1},{id2},{id3}...
-                                    -n[ames] {name1},{name2}...
+    Usage python imageqa_compare.py -m[odel] {name1:modelId1}
+                                    -m[odel] {name2:modelId2}
+                                    -e[nsemble] {name3:modelId3,modelId4,...}
                                     -d[ata] {dataFolder}
                                     -o[utput] {outputFolder}
                                     -daquar/-coco
     """
     dataset = 'coco'
+    modelNames = []
+    modelIds = []
     for i in range(1, len(sys.argv)):
-        if sys.argv[i] == '-m' or sys.argv[i] == '-models':
-            modelsStr = sys.argv[i + 1]
-            modelIds = modelsStr.split(',')
-        elif sys.argv[i] == '-n' or sys.argv[i] == '-names':
-            namesStr = sys.argv[i + 1]
-            modelNames = namesStr.split(',')
+        if sys.argv[i] == '-m' or sys.argv[i] == '-model':
+            parts = sys.argv[i + 1].split(':')
+            modelNames.append(parts[0])
+            modelIds.append(parts[1])
+        elif sys.argv[i] == '-e' or sys.argv[i] == '-ensemble':
+            parts = sys.argv[i + 1].split(':')
+            modelNames.append(parts[0])
+            modelIds.append(parts[1])
         elif sys.argv[i] == '-d' or sys.argv[i] == '-data':
             dataFolder = sys.argv[i + 1]
         elif sys.argv[i] == '-o' or sys.argv[i] == '-output':
@@ -75,9 +80,6 @@ if __name__ == '__main__':
             dataset = 'daquar'
         elif sys.argv[i] == '-coco':
             dataset = 'coco'
-
-    if len(modelNames) != len(modelIds):
-        raise Exception('ID list length must be same as name list')
 
     resultsFolder = '../results'
     K = 3 # Top-K answers
