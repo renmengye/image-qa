@@ -190,7 +190,7 @@ def testEnsemble(
                     resultsFolder):
     testDataFile = os.path.join(dataFolder, 'test.npy')
     vocabDictFile = os.path.join(dataFolder, 'vocab-dict.npy')
-    qtypeFile = os.path.join(dataFolder, 'test-qtype.npy')
+    questionTypesFile = os.path.join(dataFolder, 'test-qtype.npy')
     vocabDict = np.load(vocabDictFile)
     testData = np.load(testDataFile)
     inputTest = testData[0]
