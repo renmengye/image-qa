@@ -4,12 +4,14 @@ import os
 import nn
 import sys
 
-def decodeQuestion(X, questionArray):
+def decodeQuestion(
+                    modelInput, 
+                    questionArray):
     sentence = ''
-    for t in range(1, X.shape[0]):
-        if X[t, 0] == 0:
+    for t in range(1, modelInput.shape[0]):
+        if modelInput[t, 0] == 0:
             break
-        sentence += questionArray[X[t, 0]- 1] + ' '
+        sentence += questionArray[modelInput[t, 0]- 1] + ' '
     sentence += '?'
     return sentence
 
@@ -26,20 +28,25 @@ def estimateQuestionType(question):
     return typ
 
 
-def calcRate(X, Y, T, questionArray=None, questionTypeArray=None):
+def calcRate(
+                modelInput, 
+                modelOutput, 
+                target, 
+                questionArray=None, 
+                questionTypeArray=None):
     correct = np.zeros(4, dtype=int)
     total = np.zeros(4, dtype=int)
-    for n in range(0, X.shape[0]):        
-        sortIdx = np.argsort(Y[n], axis=0)
+    for n in range(0, modelInput.shape[0]):        
+        sortIdx = np.argsort(modelOutput[n], axis=0)
         sortIdx = sortIdx[::-1]
-        A = sortIdx[0]
+        answer = sortIdx[0]
         if questionTypeArray is None:
-            question = decodeQuestion(X[n], questionArray)
+            question = decodeQuestion(modelInput[n], questionArray)
             typ = estimateQuestionType(question)
         else:
             typ = questionTypeArray[n]
         total[typ] += 1
-        if A == T[n, 0]:
+        if answer == target[n, 0]:
             correct[typ] += 1
     rate = correct / total.astype('float')
     print 'object: %.4f' % rate[0]
@@ -48,33 +55,39 @@ def calcRate(X, Y, T, questionArray=None, questionTypeArray=None):
     print 'scene: %.4f' % rate[3]
     return correct, total
 
-def calcPrecision(Y, T):
+def calcPrecision(
+                    modelOutput, 
+                    target):
     # Calculate precision
     correctAt1 = 0
     correctAt5 = 0
     correctAt10 = 0
-    for n in range(0, Y.shape[0]):
-        sortIdx = np.argsort(Y[n], axis=0)
+    for n in range(0, modelOutput.shape[0]):
+        sortIdx = np.argsort(modelOutput[n], axis=0)
         sortIdx = sortIdx[::-1]
         for i in range(0, 10):
-            if sortIdx[i] == T[n, 0]:
+            if sortIdx[i] == target[n, 0]:
                 if i == 0:
                     correctAt1 += 1
                 if i <= 4:
                     correctAt5 += 1
                 correctAt10 += 1
-    r1 = correctAt1 / float(Y.shape[0])
-    r5 = correctAt5 / float(Y.shape[0])
-    r10 = correctAt10 / float(Y.shape[0])
+    r1 = correctAt1 / float(modelOutput.shape[0])
+    r5 = correctAt5 / float(modelOutput.shape[0])
+    r10 = correctAt10 / float(modelOutput.shape[0])
     print 'rate @ 1: %.4f' % r1
     print 'rate @ 5: %.4f' % r5
     print 'rate @ 10: %.4f' % r10
     return (r1, r5, r10)
 
-def outputTxt(Y, T, answerArray, 
-              answerFilename, 
-              truthFilename, 
-              topK=1, outputProb=False):
+def outputTxt(
+                modelOutput, 
+                target, 
+                answerArray, 
+                answerFilename, 
+                truthFilename, 
+                topK=1, 
+                outputProb=False):
     """
     Output the results of all examples into a text file.
     topK: top k answers, separated by comma.
@@ -85,25 +98,27 @@ def outputTxt(Y, T, answerArray,
     q2ans1,0.90,q2ans2,0.02...
     """
     with open(truthFilename, 'w+') as f:
-        for n in range(0, T.shape[0]):
-            f.write(answerArray[T[n, 0]] + '\n')
+        for n in range(0, target.shape[0]):
+            f.write(answerArray[target[n, 0]] + '\n')
     with open(answerFilename, 'w+') as f:
-        for n in range(0, Y.shape[0]):
+        for n in range(0, modelOutput.shape[0]):
             if topK == 1:
-                f.write(answerArray[np.argmax(Y[n, :])])
+                f.write(answerArray[np.argmax(modelOutput[n, :])])
                 if outputProb:
-                    f.write(',%.4f' % Y[n, np.argmax(Y[n, :])])
+                    f.write(',%.4f' % modelOutput[n, np.argmax(modelOutput[n, :])])
                 f.write('\n')
             else:
-                sortIdx = np.argsort(Y[n], axis=0)
+                sortIdx = np.argsort(modelOutput[n], axis=0)
                 sortIdx = sortIdx[::-1]
                 for i in range(0, topK):
                     f.write(answerArray[sortIdx[i]])
                     if outputProb:
-                        f.write(',%.4f' % Y[n, sortIdx[i]])
+                        f.write(',%.4f' % modelOutput[n, sortIdx[i]])
                     f.write('\n')
 
-def runWups(answerFilename, truthFilename):
+def runWups(
+            answerFilename, 
+            truthFilename):
     w10 = calculate_wups.runAll(truthFilename, answerFilename, -1)
     w09 = calculate_wups.runAll(truthFilename, answerFilename, 0.9)
     w00 = calculate_wups.runAll(truthFilename, answerFilename, 0.0)
@@ -112,11 +127,29 @@ def runWups(answerFilename, truthFilename):
     print 'WUPS @ 0.0: %.4f' % w00
     return (w10, w09, w00)
 
-def testAll(taskId, model, dataFolder, resultsFolder):
-    testAnswerFile = os.path.join(
-                    resultsFolder, taskId, '%s.test.o.txt' % taskId)
-    testTruthFile = os.path.join(
-                    resultsFolder, taskId, '%s.test.t.txt' % taskId)
+def getAnswerFilename(
+                        taskId, 
+                        resultsFolder):
+    return os.path.join(
+                    resultsFolder, 
+                    taskId, 
+                    '%s.test.o.txt' % taskId)
+
+def getTruthFilename(
+                        taskId, 
+                        resultsFolder):
+    return os.path.join(
+                    resultsFolder, 
+                    taskId, 
+                    '%s.test.t.txt' % taskId)
+
+def testAll(
+            taskId, 
+            model, 
+            dataFolder, 
+            resultsFolder):
+    testAnswerFile = getAnswerFilename(taskId, resultsFolder)
+    testTruthFile = getTruthFilename(taskId, resultsFolder)
     testDataFile = os.path.join(dataFolder, 'test.npy')
     vocabDictFile = os.path.join(dataFolder, 'vocab-dict.npy')
     qtypeFile = os.path.join(dataFolder, 'test-qtype.npy')
@@ -128,8 +161,6 @@ def testAll(taskId, model, dataFolder, resultsFolder):
     questionArray = vocabDict[1]
     answerArray = vocabDict[3]
     questionTypeArray = np.load(qtypeFile)
-    print len(answerArray)
-    print outputTest.shape
     outputTxt(outputTest, targetTest, answerArray, 
               testAnswerFile, testTruthFile)
     resultsRank = calcPrecision(outputTest, targetTest)
@@ -150,25 +181,61 @@ def testAll(taskId, model, dataFolder, resultsFolder):
         f.write('WUPS 0.9: %.4f\n' % resultsWups[1])
         f.write('WUPS 0.0: %.4f\n' % resultsWups[2])
 
+def testEnsemble(
+                    ensembleId,
+                    taskIds, 
+                    models, 
+                    dataFolder, 
+                    resultsFolder, 
+                    questionTypes):
+    allAnswers = []
+    truth = []
+    for i, taskId in enumerate(taskIds):
+        testAnswerFile = getAnswerFilename(taskId, resultsFolder)
+        testTruthFile = getTruthFilename(taskId, resultsFolder)
+        if not os.path.exists(testAnswerFile):
+            print 'Running test set on model #%d' % i
+            testAll(
+                    taskId, 
+                    models[i], 
+                    dataFolder, 
+                    resultFolder)
+        with open(testAnswerFile) as f:
+            allAnswers.append(f.readlines())
+        if len(truth) == 0:
+            with open(testTruthFile) as f:
+                truth = f.readlines()
+    ensembleAnswers = []
+    ensembleOutput = []
+    for questionType in questionTypes:
+        ensembleAnswers.append(allAnswers[questionType])
+    ensembleAnswerFile = getAnswerFilename(ensembleId, resultsFolder)
+    ensembleTruthFile = getTruthFilename(ensembleId, resultsFolder)
+    with open(ensembleAnswerFile, 'w') as f:
+        f.writelines(ensembleAnswers)
+    with open(ensembleTruthFile, 'w') as f:
+        f.writelines(truth)
+    resultsWups = runWups(ensembleAnswerFile, ensembleTruthFile)
+
 if __name__ == '__main__':
     """
     Usage python imageqa_test.py {taskId} 
                                  -d[ata] {dataFolder} 
-                                 [-r[esult] {resultFolder}]
+                                 [-r[esults] {resultsFolder}]
     """
     taskId = sys.argv[1]
     print taskId
     dataFolder = None
-    resultFolder = None
+    resultsFolder = None
     for i in range(len(sys.argv)):
         if sys.argv[i] == '-d' or sys.argv[i] == '-data':
             dataFolder = sys.argv[i + 1]
         elif sys.argv[i] == '-r' or sys.argv[i] == '-result':
-            resultFolder = sys.argv[i + 1]
-    if resultFolder is None:
-        resultFolder = '../results'
-    modelSpecFile = '%s/%s/%s.model.yml' % (resultFolder, taskId, taskId)
-    modelWeightsFile = '%s/%s/%s.w.npy' % (resultFolder, taskId, taskId)
+            resultsFolder = sys.argv[i + 1]
+    if resultsFolder is None:
+        resultsFolder = '../results'
+    modelSpecFile = '%s/%s/%s.model.yml' % (resultsFolder, taskId, taskId)
+    modelWeightsFile = '%s/%s/%s.w.npy' % (resultsFolder, taskId, taskId)
     model = nn.load(modelSpecFile)
     model.loadWeights(np.load(modelWeightsFile))
-    testAll(taskId, model, dataFolder, resultFolder)
+    testAll(taskId, model, dataFolder, resultsFolder)
