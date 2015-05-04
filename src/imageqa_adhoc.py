@@ -154,6 +154,8 @@ if __name__ == '__main__':
         modelOutputs.append(adhocOutputTest)
 
     # Render
+    if not os.path.exists(outputFolder):
+        os.makedirs(outputFolder)
     print('Rendering HTML...')
     pages = renderHtml(
                         adhocInputTestSel,
@@ -167,11 +169,9 @@ if __name__ == '__main__':
                         questionIds=qids)
     for i, page in enumerate(pages):
         with open(os.path.join(outputFolder,
-            '../%s-%d.html' % (filename, i)), 'w') as f:
+            '%s-%d.html' % (filename, i)), 'w') as f:
             f.write(page)
     print('Rendering LaTeX...')
-    if not os.path.exists(outputFolder):
-        os.makedirs(outputFolder)
     renderLatex(
                 adhocInputTestSel,
                 adhocTargetTestSel,
