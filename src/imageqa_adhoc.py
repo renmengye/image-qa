@@ -97,6 +97,8 @@ if __name__ == '__main__':
     print 'Loading test data...'
     vocabDict = np.load(os.path.join(dataFolder, 'vocab-dict.npy'))
     testDataFile = os.path.join(dataFolder, 'test.npy')
+    testQuestionTypeFile = os.path.join(dataFolder, 'test-qtype.npy')
+    testQuestionTypes = np.load(testQuestionTypesFile)
     testData = np.load(testDataFile)
     inputTest = testData[0]
     targetTest = testData[1]
