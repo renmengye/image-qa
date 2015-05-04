@@ -101,7 +101,7 @@ if __name__ == '__main__':
     questionArray = vocabDict[1]
     answerArray = vocabDict[3]
     testQuestionTypeFile = os.path.join(dataFolder, 'test-qtype.npy')
-    testQuestionType = np.load(testQuestionTypeFile)
+    questionTypeArray = np.load(testQuestionTypeFile)
 
     for modelName, modelId in zip(modelNames, modelIds):
         if ',' in modelId:
@@ -111,7 +111,7 @@ if __name__ == '__main__':
             outputTest = runEnsemble(
                                         inputTest, 
                                         models, 
-                                        testQuestionTypes)
+                                        questionTypeArray)
         else:
             print 'Running test data on model %s...' \
                     % modelName
@@ -122,7 +122,7 @@ if __name__ == '__main__':
     # Sort questions by question types.
     # Sort questions by correctness differences.
     print('Sorting questions...')
-    numCategories = np.max(testQuestionType) + 1
+    numCategories = np.max(questionTypeArray) + 1
     numModels = len(modelNames)
     numCorrect = 1 << numModels
     numBins = numCategories * numCorrect
@@ -142,7 +142,7 @@ if __name__ == '__main__':
         for i in range(numModels):
             if modelAnswers[i, n] == correct:
                 bintmp += 1 << (numModels - i - 1)
-        category = testQuestionType[n]
+        category = questionTypeArray[n]
         binNum = category * numCorrect + bintmp
         if bins[binNum] == None:
             bins[binNum] = [n]
