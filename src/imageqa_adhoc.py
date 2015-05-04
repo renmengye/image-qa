@@ -111,13 +111,11 @@ if __name__ == '__main__':
     questionArrayLatex = []
     answerArrayLatex = []
     for i in range(len(questionArray)):
-        if '_' in questionArray[i]:
-            questionArrayLatex.append(
-                    questionArray[i].replace('_', '\\_'))
+        questionArrayLatex.append(
+                questionArray[i].replace('_', '\\_'))
     for i in range(len(answerArray)):
-        if '_' in answerArray[i]:
-            answerArrayLatex.append(
-                    answerArray[i].replace('_', '\\_'))
+        answerArrayLatex.append(
+                answerArray[i].replace('_', '\\_'))
 
     qids = []
     questions = []
