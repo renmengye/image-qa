@@ -24,10 +24,10 @@
 3531,how many young boys are riding horses,two
 3531,how many horses are there,two
 3531,how many animals are there,four
-871,what is the color of the ocean
-871,what is the color of the bird
-836,what is the color of the coat
-836,what is the color of the umbrella
-836,what is the color of the jeans
-836,what is the color of the suit
-836,what is the color of the board
+871,what is the color of the ocean,blue
+871,what is the color of the bird,white
+836,what is the color of the coat,black
+836,what is the color of the umbrella,white
+836,what is the color of the jeans,blue
+836,what is the color of the suit,black
+836,what is the color of the board,blue
