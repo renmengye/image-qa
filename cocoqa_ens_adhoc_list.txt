@@ -10,8 +10,6 @@
 8421,how many planes are there,four
 8421,how many airplanes flying in formation,four
 8421,how many airplanes are flying are in the air in formation,four
-1118,how many trays of food are there,four
-1118,how many plates are there,four
 12411,how many birds are standing in the water,three
 13790,how many food items are there,four
 13790,this is an open box containing how many black cucumbers,four
@@ -26,3 +24,10 @@
 3531,how many young boys are riding horses,two
 3531,how many horses are there,two
 3531,how many animals are there,four
+871,what is the color of the ocean
+871,what is the color of the bird
+836,what is the color of the coat
+836,what is the color of the umbrella
+836,what is the color of the jeans
+836,what is the color of the suit
+836,what is the color of the board
