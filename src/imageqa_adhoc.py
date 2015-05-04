@@ -133,6 +133,7 @@ if __name__ == '__main__':
     imgids = inputTestSel[:, 0, 0]
     adhocInputTestSel = combine(lookupQID(questions, worddict, maxlen), imgids)
     adhocTargetTestSel = lookupAnsID(answers, ansdict)
+    adhocQuestionTypeTestSel = testQuestionTypes[idx]
 
     modelOutputs = []
     for modelName, modelId in zip(modelNames, modelIds):
@@ -143,7 +144,7 @@ if __name__ == '__main__':
             adhocOutputTest = runEnsemble(
                                         adhocInputTestSel, 
                                         models, 
-                                        testQuestionTypes)
+                                        adhocQuestionTypeTestSel)
         else:
             print 'Running test data on model %s...' \
                     % modelName
