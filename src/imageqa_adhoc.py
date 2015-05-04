@@ -141,14 +141,14 @@ if __name__ == '__main__':
                     % modelName
             models = loadEnsemble(modelId.split(','), resultsFolder)
             adhocOutputTest = runEnsemble(
-                                        inputTest, 
+                                        adhocInputTestSel, 
                                         models, 
                                         testQuestionTypes)
         else:
             print 'Running test data on model %s...' \
                     % modelName
             model = loadModel(modelId, resultsFolder)
-            adhocOutputTest = nn.test(model, inputTest)
+            adhocOutputTest = nn.test(model, adhocInputTestSel)
         modelOutputs.append(adhocOutputTest)
 
     # Render
