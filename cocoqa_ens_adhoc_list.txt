@@ -34,3 +34,6 @@
 5859,what is the color of the frisbee,yellow
 5859,what is the color of the dog on the right,brown
 5859,what is the color of the dog on the left,black
+1350,what sits by two oranges and a bowl and a white plate,banana
+1350,what sits by a banana and two orages and a white plate,bowl
+1350,what sit by banana and a bowl and a white plate,oranges
