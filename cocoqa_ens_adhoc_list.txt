@@ -37,3 +37,6 @@
 1350,what sits by two oranges and a bowl and a white plate,banana
 1350,what sits by a banana and two orages and a white plate,bowl
 1350,what sit by banana and a bowl and a white plate,oranges
+1424,what holding a number of computers and a telephone,desk
+1424,what are on the desk,computers
+1424,what is on the desk beside some computers,telephone
