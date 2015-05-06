@@ -350,7 +350,8 @@ def pickTopAnswers(
                     n,
                     topK=10,
                     modelOutputs=None, 
-                    modelNames=None):
+                    modelNames=None,
+                    questionIds=None):
     if modelNames is not None and len(modelNames) > 1:
         topAnswers = []
         topAnswerScores = []
@@ -408,7 +409,8 @@ def renderSinglePage(
                                         n,
                                         topK=topK,
                                         modelOutputs=modelOutputs, 
-                                        modelNames=modelNames)
+                                        modelNames=modelNames,
+                                        questionIds=questionIds)
         htmlList.append(renderSingleItem(
                                         imageFilename, 
                                         qid, 
