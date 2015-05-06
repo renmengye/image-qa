@@ -130,17 +130,21 @@ def runWups(
 def getAnswerFilename(
                         taskId, 
                         resultsFolder):
+    folder = os.path.join(resultsFolder, taskId)
+    if not os.path.exists(folder):
+        os.makedirs(folder)
     return os.path.join(
-                    resultsFolder, 
-                    taskId, 
+                    folder, 
                     '%s.test.o.txt' % taskId)
 
 def getTruthFilename(
                         taskId, 
                         resultsFolder):
+    folder = os.path.join(resultsFolder, taskId)
+    if not os.path.exists(folder):
+        os.makedirs(folder)
     return os.path.join(
-                    resultsFolder, 
-                    taskId, 
+                    folder,
                     '%s.test.t.txt' % taskId)
 
 def loadTestSet(dataFolder):
