@@ -63,7 +63,11 @@ def score_it(A,T,m):
     if A==[] and T==[]:
         return 1
 
-    # print A,TT
+    """
+    Warning!! This is only for single-word answer!!
+    """
+    A = [A]
+    T = [T]
 
     score_left=0 if A==[] else prod(map(lambda a: m(a,T), A))
     score_right=0 if T==[] else prod(map(lambda t: m(t,A),T))
@@ -172,11 +176,11 @@ def runAll(gt_filepath, pred_filepath, thresh):
     input_gt=file2list(gt_filepath)
     input_pred=file2list(pred_filepath)
 
-    print 'input gt'
-    print input_gt
-    print 'input pred'
-    print input_pred
-    
+    # print 'input gt'
+    # print input_gt
+    # print 'input pred'
+    # print input_pred
+
     if thresh == -1:
         our_element_membership=dirac_measure
     else:
