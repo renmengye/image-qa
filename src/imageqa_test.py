@@ -289,8 +289,8 @@ def testEnsemble(
                                 targetTest,
                                 answerArray,
                                 questionTypeArray,
-                                testAnswerFile,
-                                testTruthFile)
+                                ensembleAnswerFile,
+                                ensembleTruthFile)
     writeMetricsToFile(
                         ensembleId,
                         resultsRank,
