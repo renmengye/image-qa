@@ -25,7 +25,7 @@ if __name__ == '__main__':
             dataFolder = sys.argv[i + 1]
         elif flag == 'r' or flag == 'results':
             resultsFolder = sys.argv[i + 1]
-    models = loadEnsemble(taskIds)
+    models = loadEnsemble(taskIds, resultsFolder)
     testEnsemble(
                     ensembleId=ensembleId,
                     models=models, 
