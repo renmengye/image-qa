@@ -157,6 +157,7 @@ def wup_measure(a,b,similarity_threshold=0.925):
     if global_max < similarity_threshold:
         interp_weight = 0.1
     else:
+        print 'bigger than threshold', a, b, global_max
         interp_weight = 1.0
 
     final_score=global_max*weight_a*weight_b*interp_weight*global_weight

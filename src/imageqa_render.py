@@ -509,7 +509,9 @@ if __name__ == '__main__':
                         answerArray, 
                         urlDict, 
                         topK=10, 
-                        modelOutputs=outputTest)
+                        modelOutputs=outputTest,
+                        modelNames=None,
+                        questionIds=np.arange(inputTest.shape[0]))
     for i, page in enumerate(pages):
         with open(os.path.join(htmlOutputFolder, 
                 htmlHyperLink % i), 'w') as f:
