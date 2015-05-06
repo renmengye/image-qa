@@ -176,14 +176,14 @@ def testAll(
             resultsFolder):
     testAnswerFile = getAnswerFilename(taskId, resultsFolder)
     testTruthFile = getTruthFilename(taskId, resultsFolder)
-    inputTest, 
-    targetTest, 
-    questionArray, 
-    answerArray, 
+    inputTest, \
+    targetTest, \
+    questionArray, \
+    answerArray, \
     questionTypeArray = loadTestSet(dataFolder)
     outputTest = nn.test(model, inputTest)
-    resultsRank,
-    resultsCategory,
+    resultsRank, \
+    resultsCategory, \
     resultsWups = runAllMetrics(
                                 inputTest,
                                 outputTest,
@@ -268,10 +268,10 @@ def testEnsemble(
                     models, 
                     dataFolder, 
                     resultsFolder):
-    inputTest, 
-    targetTest, 
-    questionArray, 
-    answerArray, 
+    inputTest, \
+    targetTest, \
+    questionArray, \
+    answerArray, \
     questionTypeArray = loadTestSet(dataFolder)
 
     ensembleOutputTest = runEnsemble(
@@ -281,8 +281,8 @@ def testEnsemble(
     ensembleAnswerFile = getAnswerFilename(ensembleId, resultsFolder)
     ensembleTruthFile = getTruthFilename(ensembleId, resultsFolder)
 
-    resultsRank,
-    resultsCategory,
+    resultsRank, \
+    resultsCategory, \
     resultsWups = runAllMetrics(
                                 inputTest,
                                 ensembleOutputTest,
