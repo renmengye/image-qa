@@ -172,6 +172,11 @@ def runAll(gt_filepath, pred_filepath, thresh):
     input_gt=file2list(gt_filepath)
     input_pred=file2list(pred_filepath)
 
+    print 'input gt'
+    print input_gt
+    print 'input pred'
+    print input_pred
+    
     if thresh == -1:
         our_element_membership=dirac_measure
     else:
