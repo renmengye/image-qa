@@ -89,7 +89,6 @@ def wup_measure(a,b,similarity_threshold=0.925):
         max_{x \in interp(a)} max_{y \in interp(b)} wup(x,y)
         where interp is a 'interpretation field'
     """
-    print a, b
     if word_pair_dict.has_key(a+','+b):
         return  word_pair_dict[a+','+b]
 
@@ -162,7 +161,6 @@ def wup_measure(a,b,similarity_threshold=0.925):
     if global_max < similarity_threshold:
         interp_weight = 0.1
     else:
-        print 'bigger than threshold', a, b, global_max
         interp_weight = 1.0
 
     final_score=global_max*weight_a*weight_b*interp_weight*global_weight
