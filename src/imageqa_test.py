@@ -302,7 +302,7 @@ def testEnsemble(
                         resultsWups,
                         resultsFolder)
 
-    return ensembleOutput
+    return ensembleOutputTest
 
 if __name__ == '__main__':
     """
