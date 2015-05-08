@@ -489,15 +489,17 @@ if __name__ == '__main__':
     questionArray, \
     answerArray, \
     questionTypeArray = loadTestSet(dataFolder)
-
     if ',' in taskId:
         print 'Loading ensemble model...'
         taskIds = taskId.split(',')
         models = loadEnsemble(taskIds, resultsFolder)
         outputTest = runEnsemble(inputTest, models, questionTypeArray)
+        taskFolder = os.path.join(resultsFolder, 
+            'ensemble-' + taskId.replace(',', '_'))
+        print 'Writing HTML to %s' % taskFolder
     else:
-        print 'Loading model...'
         taskFolder = os.path.join(resultsFolder, taskId)
+        print 'Loading model...'
         model = loadModel(taskId, resultsFolder)
 
         print 'Running model on test data...'
@@ -518,7 +520,7 @@ if __name__ == '__main__':
                         modelOutputs=outputTest,
                         modelNames=None,
                         questionIds=np.arange(inputTest.shape[0]))
-    
+
     for i, page in enumerate(pages):
         with open(os.path.join(htmlOutputFolder, 
                 htmlHyperLink % i), 'w') as f:
