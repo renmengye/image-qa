@@ -69,9 +69,9 @@ if __name__ == '__main__':
         -latex: Set output format to LaTeX.
 
     Input question list format:
-    QID1,Question1,GroundTruthAnswer1
-    QID2,Question2,GroundTruthAnswer2
-    ...
+        QID1,Question1,GroundTruthAnswer1
+        QID2,Question2,GroundTruthAnswer2
+        ...
     """
     usage = '\
     Ask adhoc questions with trained models.\
@@ -105,9 +105,9 @@ if __name__ == '__main__':
         -latex: Set output format to LaTeX\
 \
     Input question list format:\
-    QID1,Question1,GroundTruthAnswer1\
-    QID2,Question2,GroundTruthAnswer2\
-    ...'
+        QID1,Question1,GroundTruthAnswer1\
+        QID2,Question2,GroundTruthAnswer2\
+        ...'
     dataset = 'coco'
     filename = 'result'
     pictureFolder = 'img'
@@ -172,16 +172,6 @@ if __name__ == '__main__':
     answerArray = vocabDict[3]
     maxlen = inputTest.shape[1]
 
-    # For LaTeX only, replace underscore in vocabulary.
-    questionArrayLatex = []
-    answerArrayLatex = []
-    for i in range(len(questionArray)):
-        questionArrayLatex.append(
-                questionArray[i].replace('_', '\\_'))
-    for i in range(len(answerArray)):
-        answerArrayLatex.append(
-                answerArray[i].replace('_', '\\_'))
-
     qids = []
     questions = []
     answers = []
@@ -220,34 +210,45 @@ if __name__ == '__main__':
     # Render
     if not os.path.exists(outputFolder):
         os.makedirs(outputFolder)
-    print('Rendering HTML...')
-    pages = renderHtml(
-                        adhocInputTestSel,
-                        adhocTargetTestSel,
-                        questionArray,
-                        answerArray,
-                        urlDict,
-                        topK=K,
-                        modelOutputs=modelOutputs,
-                        modelNames=modelNames,
-                        questionIds=qids)
-    for i, page in enumerate(pages):
-        with open(os.path.join(outputFolder,
-            '%s-%d.html' % (filename, i)), 'w') as f:
-            f.write(page)
-    print('Rendering LaTeX...')
-    renderLatex(
-                adhocInputTestSel,
-                adhocTargetTestSel,
-                questionArrayLatex, 
-                answerArrayLatex, 
-                urlDict, 
-                topK=K,
-                outputFolder=outputFolder,
-                pictureFolder=pictureFolder,
-                comments=None,
-                caption='',
-                modelOutputs=modelOutputs,
-                modelNames=modelNames,
-                questionIds=idx,
-                filename=filename+'.tex')
+    if renderMode == 'html':
+        print('Rendering HTML...')
+        pages = renderHtml(
+                            adhocInputTestSel,
+                            adhocTargetTestSel,
+                            questionArray,
+                            answerArray,
+                            urlDict,
+                            topK=K,
+                            modelOutputs=modelOutputs,
+                            modelNames=modelNames,
+                            questionIds=qids)
+        for i, page in enumerate(pages):
+            with open(os.path.join(outputFolder,
+                '%s-%d.html' % (filename, i)), 'w') as f:
+                f.write(page)
+    elif renderMode == 'latex':
+        # For LaTeX only, replace underscore in vocabulary.
+        questionArrayLatex = []
+        answerArrayLatex = []
+        for i in range(len(questionArray)):
+            questionArrayLatex.append(
+                    questionArray[i].replace('_', '\\_'))
+        for i in range(len(answerArray)):
+            answerArrayLatex.append(
+                    answerArray[i].replace('_', '\\_'))
+        print('Rendering LaTeX...')
+        renderLatex(
+                    adhocInputTestSel,
+                    adhocTargetTestSel,
+                    questionArrayLatex, 
+                    answerArrayLatex, 
+                    urlDict, 
+                    topK=K,
+                    outputFolder=outputFolder,
+                    pictureFolder=pictureFolder,
+                    comments=None,
+                    caption='',
+                    modelOutputs=modelOutputs,
+                    modelNames=modelNames,
+                    questionIds=idx,
+                    filename=filename+'.tex')

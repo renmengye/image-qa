@@ -7,7 +7,8 @@ from imageqa_render import *
 
 if __name__ == '__main__':
     """
-    Usage python imageqa_layout.py 
+    Render a selection of examples into LaTeX.
+    Usage: python imageqa_layout.py 
                     -m[odel] {name1:modelId1}
                     -m[odel] {name2:modelId2}
                     -m[odel] {name3:ensembleModelId3,ensembleModelId4,...}
@@ -19,8 +20,16 @@ if __name__ == '__main__':
                     [-p[icture] {pictureFolder}]
                     [-f[ile] {outputTexFilename}]
                     [-daquar/-coco]
-    Render a selection of examples into LaTeX.
-    Input is the following format:
+    Parameters:
+        -m[odel]
+        -d[ata]
+        -i[nput]
+        -k
+        -p[icture]
+        -f[ile]
+        -daquar
+        -coco
+    Input file format:
     QID1[,Comment1]
     QID2[,Comment2]
     ...

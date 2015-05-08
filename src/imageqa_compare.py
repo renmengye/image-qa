@@ -53,7 +53,7 @@ def renderIndex(modelNames, numCategories, bins):
 
 if __name__ == '__main__':
     """
-    Usage python imageqa_compare.py 
+    Usage: python imageqa_compare.py 
                     -m[odel] {name1:modelId1}
                     -m[odel] {name2:modelId2}
                     -m[odel] {name3:ensembleModelId3,ensembleModelId4,...}

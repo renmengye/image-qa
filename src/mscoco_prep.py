@@ -612,3 +612,38 @@ if __name__ == '__main__':
     print 'Baseline WUPS -1: %.4f' % wups[0]
     print 'Baseline WUPS 0.9: %.4f' % wups[1]
     print 'Baseline WUPS 0.0: %.4f' % wups[2]
+
+    # For dataset release, output plain text file
+    releaseFolder = os.path.join(outputFolder, 'release')
+    if not os.path.exists(releaseFolder):
+        os.makedirs(releaseFolder)
+    trainFolder = os.path.join(releaseFolder, 'train')
+    testFolder = os.path.join(releaseFolder, 'test')
+    if not os.path.exists(trainFolder):
+        os.makedirs(trainFolder)
+    if not os.path.exists(testFolder):
+        os.makedirs(testFolder)
+    with open(os.path.join(releaseFolder, 'train', 'img_ids.txt'), 'w') as f:
+        for imgid in trainImgIds:
+            f.write('%d\n' % imgid)
+        for imgid in validImgIds:
+            f.write('%d\n' % imgid)
+    with open(os.path.join(releaseFolder, 'train', 'questions.txt'), 'w') as f:
+        for question in trainQuestions:
+            f.write(question + '\n')
+        for question in validQuestions:
+            f.write(question + '\n')
+    with open(os.path.join(releaseFolder, 'train', 'answers.txt'), 'w') as f:
+        for answer in trainAnswers:
+            f.write(answer + '\n')
+        for answer in validAnswers:
+            f.write(answer + '\n')
+    with open(os.path.join(releaseFolder, 'test', 'img_ids.txt'), 'w') as f:
+        for imgid in testImgIds:
+            f.write('%d\n' % imgid)
+    with open(os.path.join(releaseFolder, 'test', 'questions.txt'), 'w') as f:
+        for question in testQuestions:
+            f.write(question + '\n')
+    with open(os.path.join(releaseFolder, 'test', 'answers.txt'), 'w') as f:
+        for answer in testAnswers:
+            f.write(answer + '\n')

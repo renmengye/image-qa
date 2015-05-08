@@ -453,10 +453,12 @@ def readImgDictDaquar():
 
 if __name__ == '__main__':
     """
-    Usage: imageqa_render.py -id {id} 
-                             -d[ata] {dataFolder}
-                             -o[utput] {outputFolder}
-                             -daquar/-coco
+    Render HTML of a model
+    Usage: python imageqa_render.py 
+                            -id {id} 
+                            -d[ata] {dataFolder}
+                            -o[utput] {outputFolder}
+                            -daquar/-coco
     """
     dataset = 'coco'
     resultsFolder = '../results'
