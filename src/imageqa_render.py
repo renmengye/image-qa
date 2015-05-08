@@ -459,6 +459,7 @@ if __name__ == '__main__':
                              -daquar/-coco
     """
     dataset = 'coco'
+    resultsFolder = '../results'
     for i in range(1, len(sys.argv)):
         if sys.argv[i] == '-d' or sys.argv[i] == '-data':
             dataFolder = sys.argv[i + 1]
@@ -482,28 +483,31 @@ if __name__ == '__main__':
     elif dataset == 'daquar':
         urlDict = readImgDictDaquar()
 
-    print 'Loading model...'
-    resultFolder = '../results/%s' % taskId
-    modelFile = '../results/%s/%s.model.yml' % (taskId, taskId)
-    model = nn.load(modelFile)
-    model.loadWeights(
-        np.load('../results/%s/%s.w.npy' % (taskId, taskId)))
-
     print 'Loading test data...'
-    testDataFile = os.path.join(dataFolder, 'test.npy')
-    testData = np.load(testDataFile)
-    inputTest = testData[0]
-    targetTest = testData[1]
-    questionArray = vocabDict[1]
-    answerArray = vocabDict[3]
+    inputTest, \
+    targetTest, \
+    questionArray, \
+    answerArray, \
+    questionTypeArray = loadTestSet(dataFolder)
 
-    print 'Running model on test data...'
-    outputTest = nn.test(model, inputTest)
+    if ',' in taskId:
+        print 'Loading ensemble model...'
+        taskIds = taskId.split(',')
+        models = loadEnsemble(taskIds, resultsFolder)
+        outputTest = runEnsemble(inputTest, models, questionTypeArray)
+    else:
+        print 'Loading model...'
+        taskFolder = os.path.join(resultsFolder, taskId)
+        model = loadModel(taskId, resultsFolder)
+
+        print 'Running model on test data...'
+        outputTest = nn.test(model, inputTest)
 
     # Render
-    htmlOutputFolder = os.path.join(resultFolder, outputFolder)
+    htmlOutputFolder = os.path.join(taskFolder, outputFolder)
     if not os.path.exists(htmlOutputFolder):
         os.makedirs(htmlOutputFolder)
+
     pages = renderHtml(
                         inputTest, 
                         targetTest, 
@@ -514,6 +518,7 @@ if __name__ == '__main__':
                         modelOutputs=outputTest,
                         modelNames=None,
                         questionIds=np.arange(inputTest.shape[0]))
+    
     for i, page in enumerate(pages):
         with open(os.path.join(htmlOutputFolder, 
                 htmlHyperLink % i), 'w') as f:

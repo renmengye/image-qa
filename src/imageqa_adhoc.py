@@ -38,7 +38,9 @@ def lookupAnsID(answers, ansdict):
 
 if __name__ == '__main__':
     """
-    Usage python imageqa_adhoc.py  
+    Ask adhoc questions with trained models.
+
+    Usage: python imageqa_adhoc.py  
                     -m[odel] {name1:modelId1}
                     -m[odel] {name2:modelId2}
                     -m[odel] {name3:ensembleModelId3,ensembleModelId4,...}
@@ -48,19 +50,74 @@ if __name__ == '__main__':
                     -o[utput] {outputFolder}
                     [-k {top K answers}]
                     [-p[icture] {pictureFolder}]
+                    [-r[esults] {resultsFolder}]
                     [-f[ile] {outputTexFilename}]
                     [-daquar/-coco]
-    Ask adhoc questions on an image
-    Input is the following format:
-    QID1,Question1,Answer1
-    QID2,Question2,Answer2
+                    [-html/-latex]
+    Parameters:
+        -m[odel]: Model name and model ID
+        -d[ata]: Dataset dataFolder
+        -i[nput]: Adhoc question list filename
+        -o[utput]: Output folder of the rendered results
+        -k: Render top-K answers (default 1)
+        -p[icture]: Picture folder, only required in LaTeX mode (default "img")
+        -r[esults]: Results folder where trained models are stored (default "../results")
+        -f[ile]: Output filename, only required in LaTex mode
+        -coco: Use COCO dataset (default)
+        -daquar: Use DAQUAR dataset
+        -html: Set output format to HTML (default)
+        -latex: Set output format to LaTeX.
+
+    Input question list format:
+    QID1,Question1,GroundTruthAnswer1
+    QID2,Question2,GroundTruthAnswer2
+    ...
     """
+    usage = '\
+    Ask adhoc questions with trained models.\
+\
+    Usage: python imageqa_adhoc.py  \
+                    -m[odel] {name1:modelId1}\
+                    -m[odel] {name2:modelId2}\
+                    -m[odel] {name3:ensembleModelId3,ensembleModelId4,...}\
+                    ...\
+                    -d[ata] {dataFolder}\
+                    -i[nput] {listFile}\
+                    -o[utput] {outputFolder}\
+                    [-k {top K answers}]\
+                    [-p[icture] {pictureFolder}]\
+                    [-r[esults] {resultsFolder}]\
+                    [-f[ile] {outputTexFilename}]\
+                    [-daquar/-coco]\
+                    [-html/-latex]\
+    Parameters:\
+        -m[odel]: Model name and model ID\
+        -d[ata]: Dataset dataFolder\
+        -i[nput]: Adhoc question list filename\
+        -o[utput]: Output folder of the rendered results\
+        -k: Render top-K answers (default 1)\
+        -p[icture]: Picture folder, only required in LaTeX mode (default "img")\
+        -r[esults]: Results folder where trained models are stored (default "../results")\
+        -f[ile]: Output filename, only required in LaTex mode\
+        -coco: Use COCO dataset (default)\
+        -daquar: Use DAQUAR dataset\
+        -html: Set output format to HTML (default)\
+        -latex: Set output format to LaTeX\
+\
+    Input question list format:\
+    QID1,Question1,GroundTruthAnswer1\
+    QID2,Question2,GroundTruthAnswer2\
+    ...'
     dataset = 'coco'
     filename = 'result'
     pictureFolder = 'img'
     K = 1
+    resultsFolder = '../results'
     modelNames = []
     modelIds = []
+    renderMode = 'html'
+    dataFolder = None
+    inputFile = None
     for i, flag in enumerate(sys.argv):
         if flag == '-m' or flag == '-model':
             parts = sys.argv[i + 1].split(':')
@@ -82,8 +139,15 @@ if __name__ == '__main__':
             dataset = 'daquar'
         elif flag == '-coco':
             dataset = 'coco'
+        elif flag == '-latex':
+            renderMode = 'latex'
+        elif flag == '-html':
+            renderMode = 'html'
 
-    resultsFolder = '../results'
+    if len(modelNames) == 0 or len(modelIds) == 0 or \
+        dataFolder is None or inputFile is None:
+        print usage
+        sys.exit(0)
 
     print 'Loading image urls...'
     if dataset == 'coco':
@@ -108,6 +172,7 @@ if __name__ == '__main__':
     answerArray = vocabDict[3]
     maxlen = inputTest.shape[1]
 
+    # For LaTeX only, replace underscore in vocabulary.
     questionArrayLatex = []
     answerArrayLatex = []
     for i in range(len(questionArray)):
