@@ -42,7 +42,8 @@ def renderLatexSingleItem(
     result = []
     imgPath = os.path.join(pictureFolder, '%d.jpg' % questionIndex)
     result.append('    \\scalebox{0.3}{\n')
-    result.append('        \\includegraphics[width=\\textwidth, height=.7\\textwidth]{%s}}\n' % imgPath)
+    result.append('        \\includegraphics[width=\\textwidth, \
+                    height=.7\\textwidth]{%s}}\n' % imgPath)
     result.append('    \\parbox{5cm}{\n')
     result.append('        \\vskip 0.05in\n')
     result.append('        Q%d: %s\\\\\n' % (questionIndex, question))
@@ -105,27 +106,30 @@ def renderLatexSinglePage(
             f.write(r.content)
         question = decodeQuestion(inputData[n], questionArray)
         answer = answerArray[targetData[n, 0]]
-        topAnswers, topAnswerScores = pickTopAnswers(
-                                            answerArray,
-                                            n,
-                                            topK=topK,
-                                            modelOutputs=modelOutputs, 
-                                            modelNames=modelNames)
+        topAnswers, topAnswerScores = \
+                    pickTopAnswers(
+                                    answerArray,
+                                    n,
+                                    topK=topK,
+                                    modelOutputs=modelOutputs, 
+                                    modelNames=modelNames)
         comment = comments[n] \
                 if comments is not None else None
-        result.append(renderLatexSingleItem(
-                                            qid,
-                                            question,
-                                            answer,
-                                            pictureFolder=pictureFolder,
-                                            comment=comment,
-                                            topAnswers=topAnswers,
-                                            topAnswerScores=topAnswerScores,
-                                            modelNames=modelNames))
+        result.append(
+            renderLatexSingleItem(
+                                    qid,
+                                    question,
+                                    answer,
+                                    pictureFolder=pictureFolder,
+                                    comment=comment,
+                                    topAnswers=topAnswers,
+                                    topAnswerScores=topAnswerScores,
+                                    modelNames=modelNames))
         if np.mod(n, imgPerRow) == imgPerRow - 1:
             result.append('\\\\\n')
             if n != inputData.shape[0] - 1:
-                result.append('\\noalign{\\smallskip}\\noalign{\\smallskip}\\noalign{\\smallskip}\n')
+                result.append('\\noalign{\\smallskip}\\\
+                    noalign{\\smallskip}\\noalign{\\smallskip}\n')
         else:
             result.append('&\n')
     result.append('\end{array}$\n')
@@ -191,7 +195,8 @@ def renderLatex(
                                     outputFolder,
                                     pictureFolder=pictureFolder,
                                     topK=topK,
-                                    comments=comments[start:end] if comments is not None else None,
+                                    comments=comments[start:end] \
+                                    if comments is not None else None,
                                     caption=caption,
                                     modelOutputs=modelOutputSlice,
                                     modelNames=modelNames, 
@@ -455,13 +460,14 @@ if __name__ == '__main__':
     """
     Render HTML of a model
     Usage: python imageqa_render.py 
-                            -id {id} 
+                            -id {id}
                             -d[ata] {dataFolder}
                             -o[utput] {outputFolder}
                             -daquar/-coco
     """
     dataset = 'coco'
     resultsFolder = '../results'
+    taskId = None
     for i in range(1, len(sys.argv)):
         if sys.argv[i] == '-d' or sys.argv[i] == '-data':
             dataFolder = sys.argv[i + 1]
@@ -491,24 +497,29 @@ if __name__ == '__main__':
     questionArray, \
     answerArray, \
     questionTypeArray = loadTestSet(dataFolder)
-    if ',' in taskId:
-        print 'Loading ensemble model...'
-        taskIds = taskId.split(',')
-        models = loadEnsemble(taskIds, resultsFolder)
-        outputTest = runEnsemble(inputTest, models, questionTypeArray)
-        taskFolder = os.path.join(resultsFolder, 
-            'ensemble-' + taskId.replace(',', '_'))
-        print 'Writing HTML to %s' % taskFolder
-    else:
-        taskFolder = os.path.join(resultsFolder, taskId)
-        print 'Loading model...'
-        model = loadModel(taskId, resultsFolder)
 
-        print 'Running model on test data...'
-        outputTest = nn.test(model, inputTest)
+    if taskId is not None:
+        htmlOutputFolder = os.path.join(taskFolder, outputFolder)
+        if ',' in taskId:
+            print 'Loading ensemble model...'
+            taskIds = taskId.split(',')
+            models = loadEnsemble(taskIds, resultsFolder)
+            outputTest = runEnsemble(inputTest, models, questionTypeArray)
+            taskFolder = os.path.join(resultsFolder, 
+                'ensemble-' + taskId.replace(',', '_'))
+            print 'Writing HTML to %s' % taskFolder
+        else:
+            taskFolder = os.path.join(resultsFolder, taskId)
+            print 'Loading model...'
+            model = loadModel(taskId, resultsFolder)
+
+            print 'Running model on test data...'
+            outputTest = nn.test(model, inputTest)
+    else:
+        htmlOutputFolder = outputFolder
+        outputTest = None
 
     # Render
-    htmlOutputFolder = os.path.join(taskFolder, outputFolder)
     if not os.path.exists(htmlOutputFolder):
         os.makedirs(htmlOutputFolder)
 

@@ -46,32 +46,51 @@ def buildDict(lines, keystart, pr=False):
         print 'Dictionary length', len(word_dict)
     return  word_dict, word_array, word_freq
 
-def removeQuestions(answers, lowerBound, upperBound=100):
+def removeQuestions(
+                    answers, 
+                    lowerBound, 
+                    upperBound, 
+                    mustIncludeAns={}):
     """
     Removes questions with answer appearing less than N times.
-    Probability function to decide whether or not to enroll an answer (remove too frequent answers).
+    Probability function to decide whether or not to enroll an 
+    answer (remove too frequent answers).
+    Returns a list of enrolled IDs.
+    Parameters:
+    answers: list, answers of all questions before enrolment.
+    lowerBound: int, answers appearing less than the lower bound will
+                be rejected.
+    upperBound: int, answers above the upper bound will be rejected
+                according to some heuristics.
+    mustIncludeAns: dictionary, a set of answers that must be considered
+                without lower bound constraints.
+
     """
     answerdict, answeridict, answerfreq = buildDict(answers, 0)
     random = np.random.RandomState(2)
+    # Ongoing frequency count
     answerfreq2 = []
     survivor = []
     for item in answerfreq:
         answerfreq2.append(0)
-    for i in range(len(answers)):
-        if answerfreq[answerdict[answers[i]]] < lowerBound:
+    for i, ans in enumerate(answers):
+        if answerfreq[answerdict[ans]] < lowerBound and \
+            ((mustIncludeAns is not None and \
+            not mustIncludeAns.has_key(ans)) or \
+            mustIncludeAns is None):
             continue
         else:
-            if answerfreq2[answerdict[answers[i]]] <= 100:
+            if answerfreq2[answerdict[ans]] <= upperBound:
                 survivor.append(i)
-                answerfreq2[answerdict[answers[i]]] += 1
+                answerfreq2[answerdict[ans]] += 1
             else:
                 # Exponential distribution
-                prob = np.exp(-(answerfreq2[answerdict[answers[i]]] - \
+                prob = np.exp(-(answerfreq2[answerdict[ans]] - \
                     upperBound) / float(2 * upperBound))
                 r = random.uniform(0, 1, [1])
                 if r < prob:
                     survivor.append(i)
-                    answerfreq2[answerdict[answers[i]]] += 1
+                    answerfreq2[answerdict[ans]] += 1
     return survivor
 
 def lookupAnsID(answers, ansdict):
@@ -126,6 +145,79 @@ def combineAttention(wordids, imgids):
             (np.array(imgid_t).reshape(len(imgids), wordids.shape[1], 1),
             wordids), axis=-1)
 
+def buildImageFeature(
+                    trainFilename, 
+                    validFilename,
+                    outFilename,
+                    numTrain=0, 
+                    numValid=0, 
+                    numTest=0, 
+                    sparse=True):
+    """
+    Parameters:
+    trainFilename: H5 file produced by the CNN on the COCO training set.
+    validFilename: H5 file produced by the CNN on the COOC validation set.
+    outFilename: COCO-QA image features H5 file name.
+    numTrain: Number of training images. If 0, then build entire training set.
+    numValid: Number of validation images. If 0, then build entire training set.
+    numTest: Number of testing images. If 0, then build entire test set.
+    sparse: Whether output a sparse matrix.
+    """
+    # Build image features.
+    print 'Building image features'
+    imgHidFeatTrain = h5py.File(trainFilename)
+    imgHidFeatValid = h5py.File(validFilename)
+    imgOutFile = h5py.File(outFilename, 'w')
+    for name in ['hidden7', 'hidden6', 'hidden5_maxpool']:
+        hidFeat = np.concatenate((hidFeatTrain, hidFeatValid), axis=0)
+        imgOutFile[name] = hidFeat
+    hidden7Train = imgOutFile['hidden7'][0 : numTrain]
+    mean = np.mean(hidden7Train, axis=0)
+    std = np.std(hidden7Train, axis=0)
+    for i in range(std.shape[0]):
+        if std[i] == 0.0: std[i] = 1.0
+    hidden7Ms = (imgOutFile['hidden7'][:] - mean) / std
+    imgOutFile['hidden7_ms'] = hidden7Ms.astype('float32')
+    imgOutFile['hidden7_mean'] = mean
+    imgOutFile['hidden7_std'] = std
+
+    print 'Building image features'
+    imgHidFeatTrain = h5py.File(imgHidFeatTrainFilename)
+    imgHidFeatValid = h5py.File(imgHidFeatValidFilename)
+    imgOutFile = h5py.File(imgHidFeatOutFilename, 'w')
+    for name in ['hidden7', 'hidden6', 'hidden5_maxpool']:
+        if numTrain == 0 or numValid == 0:
+            hidFeatTrain = imgHidFeatTrain[name][:]
+        else:
+            hidFeatTrain = imgHidFeatTrain[name][0 : numTrain + numValid]
+        if numTest == 0:
+            hidFeatValid = imgHidFeatValid[name][:]
+        else:
+            hidFeatValid = imgHidFeatValid[name][0 : numTest]
+        hidFeat = np.concatenate((hidFeatTrain, hidFeatValid), axis=0)
+
+        if sparse:
+            hidFeatSparse = sparse.csr_matrix(hidFeat)
+            imgOutFile[name + '_shape'] = hidFeatSparse._shape
+            imgOutFile[name + '_data'] = hidFeatSparse.data
+            imgOutFile[name + '_indices'] = hidFeatSparse.indices
+            imgOutFile[name + '_indptr'] = hidFeatSparse.indptr
+        else:
+            imgOutFile[name] = hidFeat
+        print name, hidFeat.shape
+
+    if numTrain == 0:
+        hidden7Train = imgHidFeatTrain['hidden7'][:]
+    else:
+        hidden7Train = imgOutFile['hidden7'][0 : numTrain]
+    mean = np.mean(hidden7Train, axis=0)
+    std = np.std(hidden7Train, axis=0)
+    if not sparse:
+        hidden7Ms = (imgOutFile['hidden7'][:] - mean) / std
+        imgOutFile['hidden7_ms'] = hidden7Ms.astype('float32')
+    imgOutFile['hidden7_mean'] = mean.astype('float32')
+    imgOutFile['hidden7_std'] = std.astype('float32')
+
 if __name__ == '__main__':
     """
     Assemble COCO-QA dataset.
@@ -133,13 +225,18 @@ if __name__ == '__main__':
     This program only assembles generated questions.
 
     Usage:
-    mscoco_prep.py [-toy] [-image]
-    
-    Options:
-    -toy: Build the toy COCOQA dataset, default is full dataset.
-    -image: Build image features, default is not building.
+    mscoco_prep.py  [-toy] Build the toy set, default is full dataset
+                    [-image] Build image features, default is not building
+                    [-object] Object type question only
+                    [-number] Number type question only
+                    [-color] Color type question only
+                    [-location] Location type question only
+                    [-reindex] Reindex the dictionaries of type-specific dataset
+                    [-len] Maximum length/timespan
+                    [-o[utput]] Output folder, 
+                                default '../data/cocoqa-toy' or 
+                                        '../data/cocoqa-full'
     """
-
     buildToy = False
     buildImage = False
     buildObject = True
@@ -148,6 +245,7 @@ if __name__ == '__main__':
     buildLocation = True
     maxlen = -1
     outputFolder = None
+    reindex = False
 
     for i in range(len(sys.argv)):
         flag = sys.argv[i]
@@ -179,6 +277,8 @@ if __name__ == '__main__':
             buildNumber = False
             buildColor = False
             buildLocation = True
+        elif flag == '-reindex':
+            reindex = True
         elif flag == '-len':
             maxlen = int(sys.argv[i + 1])
         elif flag == '-o' or flag == '-output':
@@ -201,29 +301,7 @@ if __name__ == '__main__':
         validUB = 20
         testLB = 5
         testUB = 100
-        if buildImage:
-            # Build image features.
-            print 'Building image features'
-            imgHidFeatTrain = h5py.File(imgHidFeatTrainFilename)
-            imgHidFeatValid = h5py.File(imgHidFeatValidFilename)
-            imgOutFile = h5py.File(imgHidFeatOutFilename, 'w')
-            for name in ['hidden7', 'hidden6', 'hidden5_maxpool']:
-                hidFeatTrain = imgHidFeatTrain[name][0 : numTrain + numValid]
-                hidFeatValid = imgHidFeatValid[name][0 : numTest]
-                hidFeat = np.concatenate((hidFeatTrain, hidFeatValid), axis=0)
-                imgOutFile[name] = hidFeat
-            hidden7Train = imgOutFile['hidden7'][0 : numTrain]
-            mean = np.mean(hidden7Train, axis=0)
-            std = np.std(hidden7Train, axis=0)
-            for i in range(std.shape[0]):
-                if std[i] == 0.0: std[i] = 1.0
-            hidden7Ms = (imgOutFile['hidden7'][:] - mean) / std
-            imgOutFile['hidden7_ms'] = hidden7Ms.astype('float32')
-            imgOutFile['hidden7_mean'] = mean
-            imgOutFile['hidden7_std'] = std
-        else:
-            print 'Not building image features'
-        
+        sparse = False
         with open(imgidTrainFilename) as f:
             lines = f.readlines()
         trainStart = 0
@@ -231,7 +309,6 @@ if __name__ == '__main__':
         validStart = trainEnd
         validEnd = validStart + numValid
         totalTrainLen = len(lines)
-        
         with open(imgidValidFilename) as f:
             lines.extend(f.readlines())
         testStart = totalTrainLen 
@@ -242,42 +319,17 @@ if __name__ == '__main__':
         if outputFolder is None:
             outputFolder = '../data/cocoqa-full/'
         imgHidFeatOutFilename = \
-            '/ais/gobi3/u/mren/data/cocoqa-full/hidden_oxford.h5'
-        trainLB = 20
-        trainUB = 200
-        validLB = 3
-        validUB = 30
-        testLB = 10
-        testUB = 100
-        if buildImage:
-            # Build image features.
-            print 'Building image features'
-            imgHidFeatTrain = h5py.File(imgHidFeatTrainFilename)
-            imgHidFeatValid = h5py.File(imgHidFeatValidFilename)
-            imgOutFile = h5py.File(imgHidFeatOutFilename, 'w')
-            for name in ['hidden7', 'hidden6', 'hidden5_maxpool']:
-                hidFeatTrain = imgHidFeatTrain[name][:]
-                if name == 'hidden7':
-                    numTrain = hidFeatTrain.shape[0]
-                hidFeatValid = imgHidFeatValid[name][:]
-                hidFeat = np.concatenate((hidFeatTrain, hidFeatValid), axis=0)
-                print hidFeat
-                print hidFeat.shape
-                hidFeatSparse = sparse.csr_matrix(hidFeat)
-                imgOutFile[name + '_shape'] = hidFeatSparse._shape
-                imgOutFile[name + '_data'] = hidFeatSparse.data
-                imgOutFile[name + '_indices'] = hidFeatSparse.indices
-                imgOutFile[name + '_indptr'] = hidFeatSparse.indptr
-            hidden7Train = imgHidFeatTrain['hidden7'][:]
-            mean = np.mean(hidden7Train, axis=0)
-            std = np.std(hidden7Train, axis=0)
-            for i in range(std.shape[0]):
-                if std[i] == 0.0: std[i] = 1.0
-            imgOutFile['hidden7_mean'] = mean.astype('float32')
-            imgOutFile['hidden7_std'] = std.astype('float32')
-        else:
-            print 'Not building image features'
-
+            os.path.join(outputFolder, 'hidden_oxford.h5')
+        trainLB = 19
+        trainUB = 190
+        validLB = 4
+        validUB = 28
+        testLB = 12
+        testUB = 120
+        numTrain = 0
+        numValid = 0
+        numTest = 0
+        sparse = True
         with open(imgidTrainFilename) as f:
             lines = f.readlines()
         trainStart = 0
@@ -288,7 +340,20 @@ if __name__ == '__main__':
             lines.extend(f.readlines())
         testStart = validEnd
         testEnd = len(lines)
-    
+
+    if buildImage:
+        # Build image features.
+        buildImageFeature(
+            imgHidFeatTrainFilename,
+            imgHidFeatValidFilename,
+            imgHidFeatOutFilename,
+            numTrain=numTrain,
+            numValid=numValid,
+            numTest=numTest,
+            sparse=sparse)
+    else:
+        print 'Not building image features'
+
     print 'Will build to', outputFolder
     if not os.path.exists(outputFolder):
         os.makedirs(outputFolder)
@@ -399,21 +464,32 @@ if __name__ == '__main__':
 
     # Truncate rare-common answers.
     survivor = np.array(removeQuestions(
-        trainAnswers, trainLB, trainUB))
+        answers=trainAnswers, 
+        lowerBound=trainLB, 
+        upperBound=trainUB))
     trainQuestions = trainQuestions[survivor]
     trainAnswers = trainAnswers[survivor]
     trainImgIds = trainImgIds[survivor]
     trainQuestionTypes = trainQuestionTypes[survivor]
 
+    trainAnswersDict = {}
+    for ans in trainAnswers:
+        trainAnswersDict[ans] = 1
     survivor = np.array(removeQuestions(
-        validAnswers, validLB, validUB))
+        answers=validAnswers, 
+        lowerBound=validLB, 
+        upperBound=validUB,
+        mustIncludeAns=trainAnswersDict))
     validQuestions = validQuestions[survivor]
     validAnswers = validAnswers[survivor]
     validImgIds = validImgIds[survivor]
     validQuestionTypes = validQuestionTypes[survivor]
 
     survivor = np.array(removeQuestions(
-        testAnswers, testLB, testUB))
+        answers=testAnswers, 
+        lowerBound=testLB, 
+        upperBound=testUB,
+        mustIncludeAns=trainAnswersDict))
     testQuestions = testQuestions[survivor]
     testAnswers = testAnswers[survivor]
     testImgIds = testImgIds[survivor]
@@ -455,8 +531,8 @@ if __name__ == '__main__':
     
     # Build dictionary based on training questions/answers.
     worddict, idict, wordfreq = buildDict(trainQuestions, 1, pr=False)
+    print 'Train answer distribution'
     ansdict, iansdict, _ = buildDict(trainAnswers, 0, pr=True)
-
     print 'Valid answer distribution'
     buildDict(validAnswers, 0, pr=True)
     print 'Test answer distribution'
@@ -509,6 +585,15 @@ if __name__ == '__main__':
         testAnswers = testAnswers[testQuestionTypes == typ]
         testImgIds = testImgIds[testQuestionTypes == typ]
         testQuestionTypes = testQuestionTypes[testQuestionTypes == typ]
+
+    if reindex:
+        worddict, idict, wordfreq = buildDict(trainQuestions, 1, pr=False)
+        print 'Train answer distribution'
+        ansdict, iansdict, _ = buildDict(trainAnswers, 0, pr=True)
+        print 'Valid answer distribution'
+        buildDict(validAnswers, 0, pr=True)
+        print 'Test answer distribution'
+        buildDict(testAnswers, 0, pr=True)
 
     # Build baseline solution
     baselineCorrect = np.zeros(4)
@@ -647,3 +732,25 @@ if __name__ == '__main__':
     with open(os.path.join(releaseFolder, 'test', 'answers.txt'), 'w') as f:
         for answer in testAnswers:
             f.write(answer + '\n')
+
+    from calculate_wups import *
+
+    wups_dict = {}
+    # Plot answer distribution
+
+    # # Look for synonyms
+    # for a in range(len(iansdict)):
+    #     for b in range(a + 1, len(iansdict)):
+    #         ans1 = iansdict[a]
+    #         ans2 = iansdict[b]
+    #         score = wup_measure(ans1, ans2, similarity_threshold=0)
+    #         wups_dict[ans1 + '_' + ans2] = score
+    #         print a, ans1, b, ans2, score
+    # keys = wups_dict.keys()
+    # sorted_keys = sorted(keys, key=lambda k: wups_dict[k], reverse=True)
+    # for i in range(500):
+    #     print '%s %.4f' % (sorted_keys[i], wups_dict[sorted_keys[i]])
+
+    # with open(os.path.join(outputFolder, 'synonyms.txt'), 'w') as f:
+    #     for i in range(len(sorted_keys)):
+    #         f.write('%s %.4f\n' % (sorted_keys[i], wups_dict[sorted_keys[i]]))
