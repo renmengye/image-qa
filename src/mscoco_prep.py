@@ -6,6 +6,8 @@ import h5py
 import sys
 from scipy import sparse
 import calculate_wups
+import hist
+import matplotlib.pyplot as plt
 
 imgidTrainFilename = '../../../data/mscoco/train/image_list.txt'
 imgidValidFilename = '../../../data/mscoco/valid/image_list.txt'
@@ -49,7 +51,8 @@ def buildDict(lines, keystart, pr=False):
 def removeQuestions(
                     answers, 
                     lowerBound, 
-                    upperBound, 
+                    upperBound,
+                    upperUpperBound,
                     mustIncludeAns={}):
     """
     Removes questions with answer appearing less than N times.
@@ -62,6 +65,8 @@ def removeQuestions(
                 be rejected.
     upperBound: int, answers above the upper bound will be rejected
                 according to some heuristics.
+    upperUpperBound: half life of the exponential decay. Frequency at which
+                answers will be rejected at probability 0.5.
     mustIncludeAns: dictionary, a set of answers that must be considered
                 without lower bound constraints.
 
@@ -75,9 +80,7 @@ def removeQuestions(
         answerfreq2.append(0)
     for i, ans in enumerate(answers):
         if answerfreq[answerdict[ans]] < lowerBound and \
-            ((mustIncludeAns is not None and \
-            not mustIncludeAns.has_key(ans)) or \
-            mustIncludeAns is None):
+            not mustIncludeAns.has_key(ans):
             continue
         else:
             if answerfreq2[answerdict[ans]] <= upperBound:
@@ -86,7 +89,7 @@ def removeQuestions(
             else:
                 # Exponential distribution
                 prob = np.exp(-(answerfreq2[answerdict[ans]] - \
-                    upperBound) / float(2 * upperBound))
+                    upperBound) / float(upperUpperBound))
                 r = random.uniform(0, 1, [1])
                 if r < prob:
                     survivor.append(i)
@@ -144,6 +147,95 @@ def combineAttention(wordids, imgids):
     return np.concatenate(
             (np.array(imgid_t).reshape(len(imgids), wordids.shape[1], 1),
             wordids), axis=-1)
+
+def guessBaseline(
+                    questions, 
+                    answers, 
+                    questionTypes, 
+                    outputFolder=None, 
+                    calcWups=False):
+    """
+    Run mode-guessing baseline on a dataset.
+    If need to calculate WUPS score, outputFolder must be provided (for now).
+    """
+    baseline = []
+    typedAnswerFreq = [None] * 4
+    for q, a, typ in zip(questions, answers, questionTypes):
+        if typedAnswerFreq[typ] is None:
+            typedAnswerFreq[typ] = {a: 1}
+        else:
+            if typedAnswerFreq[typ].has_key(a):
+                typedAnswerFreq[typ][a] += 1
+            else:
+                typedAnswerFreq[typ][a] = 1
+    modeAnswers = []
+    for typ in range(4):
+        tempAnswer = None
+        tempFreq = 0
+        for k in typedAnswerFreq[typ].iterkeys():
+            if typedAnswerFreq[typ][k] > tempFreq:
+                tempAnswer = k
+                tempFreq = typedAnswerFreq[typ][k]
+        modeAnswers.append(tempAnswer)
+    for i, ans in enumerate(modeAnswers):
+        print 'Baseline answers %d: %s' % (i, ans)
+
+    # Print baseline performance
+    baselineCorrect = np.zeros(4)
+    baselineTotal = np.zeros(4)
+    for n in range(0, len(questions)):
+        i = questionTypes[n]
+        baseline.append(modeAnswers[i])
+        if answers[n] == modeAnswers[i]:
+            baselineCorrect[i] += 1
+        baselineTotal[i] += 1
+    baselineRate = baselineCorrect / baselineTotal.astype('float')
+    print 'Baseline rate: %.4f' % \
+        (np.sum(baselineCorrect) / np.sum(baselineTotal).astype('float'))
+    print 'Baseline object: %.4f' % baselineRate[0]
+    print 'Baseline number: %.4f' % baselineRate[1]
+    print 'Baseline color: %.4f' % baselineRate[2]
+    print 'Baseline scene: %.4f' % baselineRate[3]
+
+    if calcWups:
+        baselineFilename = os.path.join(outputFolder, 'baseline.txt')
+        groundTruthFilename = os.path.join(outputFolder, 'ground_truth.txt')
+        with open(baselineFilename, 'w+') as f:
+            for answer in baseline:
+                f.write(answer + '\n')
+        with open(groundTruthFilename, 'w+') as f:
+            for answer in answers:
+                f.write(answer + '\n')
+        wups = np.zeros(3)
+        for i, thresh in enumerate([-1, 0.9, 0.0]):
+            wups[i] = calculate_wups.runAll(groundTruthFilename, baselineFilename, thresh)
+        print 'Baseline WUPS -1: %.4f' % wups[0]
+        print 'Baseline WUPS 0.9: %.4f' % wups[1]
+        print 'Baseline WUPS 0.0: %.4f' % wups[2]
+
+    return baseline
+
+def synonymDetect(iansdict, output=None):
+    """
+    Look for synonyms using WUPS measure
+    """
+    wups_dict = {}
+    for a in range(len(iansdict)):
+        for b in range(a + 1, len(iansdict)):
+            ans1 = iansdict[a]
+            ans2 = iansdict[b]
+            score = calculate_wups.wup_measure(ans1, ans2, similarity_threshold=0)
+            wups_dict[ans1 + '_' + ans2] = score
+            print a, ans1, b, ans2, score
+    keys = wups_dict.keys()
+    sorted_keys = sorted(keys, key=lambda k: wups_dict[k], reverse=True)
+    for i in range(500):
+        print '%s %.4f' % (sorted_keys[i], wups_dict[sorted_keys[i]])
+
+    if output is not None:
+        with open(output, 'w') as f:
+            for i in range(len(sorted_keys)):
+                f.write('%s %.4f\n' % (sorted_keys[i], wups_dict[sorted_keys[i]]))
 
 def buildImageFeature(
                     trainFilename, 
@@ -295,12 +387,9 @@ if __name__ == '__main__':
         numTrain = 6000
         numValid = 1200
         numTest = 6000
-        trainLB = 5
-        trainUB = 100
-        validLB = 2
-        validUB = 20
-        testLB = 5
-        testUB = 100
+        LB = 8
+        UB = 150
+        UUB = 300
         sparse = False
         with open(imgidTrainFilename) as f:
             lines = f.readlines()
@@ -320,12 +409,9 @@ if __name__ == '__main__':
             outputFolder = '../data/cocoqa-full/'
         imgHidFeatOutFilename = \
             os.path.join(outputFolder, 'hidden_oxford.h5')
-        trainLB = 19
-        trainUB = 190
-        validLB = 4
-        validUB = 28
-        testLB = 12
-        testUB = 120
+        LB = 25
+        UB = 350
+        UUB = 700
         numTrain = 0
         numValid = 0
         numTest = 0
@@ -395,6 +481,52 @@ if __name__ == '__main__':
         qaAll.extend(pkl.load(qaf))
 
     print 'Total number of images', len(imgidDict)
+
+    allQuestions = []
+    allAnswers = []
+    allImgIds = []
+    allQuestionTypes = []
+
+    for item in qaAll:
+        allQuestions.append(item[0])
+        allAnswers.append(item[1])
+        allImgIds.append(item[2])
+        allQuestionTypes.append(item[3])
+
+    print 'Distribution Before Rejection'
+    beforeWorddict, beforeIdict, beforeFreq = \
+        buildDict(allAnswers, 0, pr=True)
+
+    print 'GUESS Before Rejection'
+    guessBaseline(allQuestions, allAnswers, allQuestionTypes)
+
+    # Shuffle the questions.
+    r = np.random.RandomState(1)
+    shuffle = r.permutation(len(allQuestions))
+    allQuestions = np.array(allQuestions, dtype='object')[shuffle]
+    allAnswers = np.array(allAnswers, dtype='object')[shuffle]
+    allImgIds = np.array(allImgIds, dtype='object')[shuffle]
+    allQuestionTypes = np.array(
+        allQuestionTypes,dtype='int')[shuffle]
+
+    # Truncate rare-common answers.
+    survivor = np.array(removeQuestions(
+        answers=allAnswers, 
+        lowerBound=LB, 
+        upperBound=UB,
+        upperUpperBound=UUB), dtype='int')
+    allQuestions = allQuestions[survivor]
+    allAnswers = allAnswers[survivor]
+    allImgIds = allImgIds[survivor]
+    allQuestionTypes = allQuestionTypes[survivor]
+
+    print 'Distribution After Rejection'
+    afterWorddict, afterIdict, afterFreq = \
+        buildDict(allAnswers, 0, pr=True)
+
+    print 'GUESS After Rejection on All Data'
+    guessBaseline(allQuestions, allAnswers, allQuestionTypes)
+
     trainQuestions = []
     trainAnswers = []
     trainImgIds = []
@@ -407,14 +539,9 @@ if __name__ == '__main__':
     testAnswers = []
     testImgIds = []
     testQuestionTypes = []
-    baseline = []
-    colorAnswer = 'white'
-    numberAnswer = 'two'
-    objectAnswer = 'cat'
-    locationAnswer = 'room'
 
     # Separate dataset into train-valid-test.
-    for item in qaAll:
+    for item in zip(allQuestions, allAnswers, allImgIds, allQuestionTypes):
         imgid = item[2]
         if imgidDict.has_key(imgid):
             if imgidDict[imgid] == 0:
@@ -432,68 +559,6 @@ if __name__ == '__main__':
                 testAnswers.append(item[1])
                 testImgIds.append(imgidDict2[imgid])
                 testQuestionTypes.append(item[3])
-
-    print 'Train Questions Before Trunk: ', len(trainQuestions)
-    print 'Valid Questions Before Trunk: ', len(validQuestions)
-    print 'Test Questions Before Trunk: ', len(testQuestions)
-    print 'Test answer distribution'
-    buildDict(testAnswers, 0, pr=True)
-
-    # Shuffle the questions.
-    r = np.random.RandomState(1)
-    shuffle = r.permutation(len(trainQuestions))
-    trainQuestions = np.array(trainQuestions, dtype='object')[shuffle]
-    trainAnswers = np.array(trainAnswers, dtype='object')[shuffle]
-    trainImgIds = np.array(trainImgIds, dtype='object')[shuffle]
-    trainQuestionTypes = np.array(
-        trainQuestionTypes,dtype='int')[shuffle]
-
-    shuffle = r.permutation(len(validQuestions))
-    validQuestions = np.array(validQuestions, dtype='object')[shuffle]
-    validAnswers = np.array(validAnswers, dtype='object')[shuffle]
-    validImgIds = np.array(validImgIds, dtype='object')[shuffle]
-    validQuestionTypes = np.array(
-        validQuestionTypes, dtype='int')[shuffle]
-
-    shuffle = r.permutation(len(testQuestions))
-    testQuestions = np.array(testQuestions, dtype='object')[shuffle]
-    testAnswers = np.array(testAnswers, dtype='object')[shuffle]
-    testImgIds = np.array(testImgIds, dtype='object')[shuffle]
-    testQuestionTypes = np.array(
-        testQuestionTypes, dtype='int')[shuffle]
-
-    # Truncate rare-common answers.
-    survivor = np.array(removeQuestions(
-        answers=trainAnswers, 
-        lowerBound=trainLB, 
-        upperBound=trainUB))
-    trainQuestions = trainQuestions[survivor]
-    trainAnswers = trainAnswers[survivor]
-    trainImgIds = trainImgIds[survivor]
-    trainQuestionTypes = trainQuestionTypes[survivor]
-
-    trainAnswersDict = {}
-    for ans in trainAnswers:
-        trainAnswersDict[ans] = 1
-    survivor = np.array(removeQuestions(
-        answers=validAnswers, 
-        lowerBound=validLB, 
-        upperBound=validUB,
-        mustIncludeAns=trainAnswersDict))
-    validQuestions = validQuestions[survivor]
-    validAnswers = validAnswers[survivor]
-    validImgIds = validImgIds[survivor]
-    validQuestionTypes = validQuestionTypes[survivor]
-
-    survivor = np.array(removeQuestions(
-        answers=testAnswers, 
-        lowerBound=testLB, 
-        upperBound=testUB,
-        mustIncludeAns=trainAnswersDict))
-    testQuestions = testQuestions[survivor]
-    testAnswers = testAnswers[survivor]
-    testImgIds = testImgIds[survivor]
-    testQuestionTypes = testQuestionTypes[survivor]
 
     # Build statistics
     trainCount = np.zeros(4, dtype='int')
@@ -536,31 +601,8 @@ if __name__ == '__main__':
     print 'Valid answer distribution'
     buildDict(validAnswers, 0, pr=True)
     print 'Test answer distribution'
-    buildDict(testAnswers, 0, pr=True)
-
-    # Shuffle the questions again...
-    # After applying rare-common answer rejection.
-    r = np.random.RandomState(2)
-    shuffle = r.permutation(len(trainQuestions))
-    trainQuestions = np.array(trainQuestions, dtype='object')[shuffle]
-    trainAnswers = np.array(trainAnswers, dtype='object')[shuffle]
-    trainImgIds = np.array(trainImgIds, dtype='object')[shuffle]
-    trainQuestionTypes = np.array(
-        trainQuestionTypes,dtype='int')[shuffle]
-
-    shuffle = r.permutation(len(validQuestions))
-    validQuestions = np.array(validQuestions, dtype='object')[shuffle]
-    validAnswers = np.array(validAnswers, dtype='object')[shuffle]
-    validImgIds = np.array(validImgIds, dtype='object')[shuffle]
-    validQuestionTypes = np.array(
-        validQuestionTypes, dtype='int')[shuffle]
-
-    shuffle = r.permutation(len(testQuestions))
-    testQuestions = np.array(testQuestions, dtype='object')[shuffle]
-    testAnswers = np.array(testAnswers, dtype='object')[shuffle]
-    testImgIds = np.array(testImgIds, dtype='object')[shuffle]
-    testQuestionTypes = np.array(
-        testQuestionTypes, dtype='int')[shuffle]
+    testAfterWorddict, testAfterIdict, testAfterFreq = \
+        buildDict(testAnswers, 0, pr=True)
 
     # Filter question types
     if not (buildObject and buildNumber and buildColor and buildLocation):
@@ -595,40 +637,17 @@ if __name__ == '__main__':
         print 'Test answer distribution'
         buildDict(testAnswers, 0, pr=True)
 
-    # Build baseline solution
-    baselineCorrect = np.zeros(4)
-    baselineTotal = np.zeros(4)
-    for n in range(0, len(testQuestions)):
-        if testQuestionTypes[n] == 0:
-            baseline.append(objectAnswer)
-            if testAnswers[n] == objectAnswer:
-                baselineCorrect[0] += 1
-            baselineTotal[0] += 1
-        elif testQuestionTypes[n] == 1:
-            baseline.append(numberAnswer)
-            if testAnswers[n] == numberAnswer:
-                baselineCorrect[1] += 1
-            baselineTotal[1] += 1
-        elif testQuestionTypes[n] == 2:
-            baseline.append(colorAnswer)
-            if testAnswers[n] == colorAnswer:
-                baselineCorrect[2] += 1
-            baselineTotal[2] += 1
-        elif testQuestionTypes[n] == 3:
-            baseline.append(locationAnswer)
-            if testAnswers[n] == locationAnswer:
-                baselineCorrect[3] += 1
-            baselineTotal[3] += 1
-    baselineRate = baselineCorrect / baselineTotal.astype('float')
-    print 'Baseline rate: %.4f' % (np.sum(baselineCorrect) / np.sum(baselineTotal).astype('float'))
-    print 'Baseline object: %.4f' % baselineRate[0]
-    print 'Baseline number: %.4f' % baselineRate[1]
-    print 'Baseline color: %.4f' % baselineRate[2]
-    print 'Baseline scene: %.4f' % baselineRate[3]
+    # print 'GUESS After Rejection on Test'
+    # baseline = guessBaseline(
+    #                 testQuestions, 
+    #                 testAnswers, 
+    #                 testQuestionTypes,
+    #                 outputFolder=outputFolder,
+    #                 calcWups=True)
 
     # Find max length
     if maxlen == -1:
-        maxlen = findMaxlen(np.concatenate((trainQuestions, validQuestions, testQuestions)))
+        maxlen = findMaxlen(allQuestions)
 
     # Build output
     trainInput = combine(\
@@ -682,22 +701,6 @@ if __name__ == '__main__':
     with open(os.path.join(outputFolder, 'imgid_dict.pkl'), 'wb') as f:
         pkl.dump(imgidDict3, f)
 
-    # GUESS baseline
-    baselineFilename = os.path.join(outputFolder, 'baseline.txt')
-    groundTruthFilename = os.path.join(outputFolder, 'ground_truth.txt')
-    with open(baselineFilename, 'w+') as f:
-        for answer in baseline:
-            f.write(answer + '\n')
-    with open(groundTruthFilename, 'w+') as f:
-        for answer in testAnswers:
-            f.write(answer + '\n')
-    wups = np.zeros(3)
-    for i, thresh in enumerate([-1, 0.9, 0.0]):
-        wups[i] = calculate_wups.runAll(groundTruthFilename, baselineFilename, thresh)
-    print 'Baseline WUPS -1: %.4f' % wups[0]
-    print 'Baseline WUPS 0.9: %.4f' % wups[1]
-    print 'Baseline WUPS 0.0: %.4f' % wups[2]
-
     # For dataset release, output plain text file
     releaseFolder = os.path.join(outputFolder, 'release')
     if not os.path.exists(releaseFolder):
@@ -733,24 +736,32 @@ if __name__ == '__main__':
         for answer in testAnswers:
             f.write(answer + '\n')
 
-    from calculate_wups import *
-
-    wups_dict = {}
     # Plot answer distribution
+    fig, ax = plt.subplots()
+    ax.set_yscale('log')
+    topKAnswers = min(100, len(afterFreq))
+    plt.rc('font',**{'family':'serif','serif':['Time New Roman']})
+    plt.rc('text', usetex=True)
 
-    # # Look for synonyms
-    # for a in range(len(iansdict)):
-    #     for b in range(a + 1, len(iansdict)):
-    #         ans1 = iansdict[a]
-    #         ans2 = iansdict[b]
-    #         score = wup_measure(ans1, ans2, similarity_threshold=0)
-    #         wups_dict[ans1 + '_' + ans2] = score
-    #         print a, ans1, b, ans2, score
-    # keys = wups_dict.keys()
-    # sorted_keys = sorted(keys, key=lambda k: wups_dict[k], reverse=True)
-    # for i in range(500):
-    #     print '%s %.4f' % (sorted_keys[i], wups_dict[sorted_keys[i]])
+    sorted_keys = sorted(range(len(afterFreq)), key=lambda k: afterFreq[k], reverse=True)
+    bins = np.linspace(0, topKAnswers, num=topKAnswers + 1)
+    beforeFreq2 = []
+    for k in sorted_keys[:topKAnswers]:
+        word = afterIdict[k]
+        beforeIndex = beforeWorddict[word]
+        beforeFreq2.append(beforeFreq[beforeIndex])
 
-    # with open(os.path.join(outputFolder, 'synonyms.txt'), 'w') as f:
-    #     for i in range(len(sorted_keys)):
-    #         f.write('%s %.4f\n' % (sorted_keys[i], wups_dict[sorted_keys[i]]))
+    (left, right, bottom, top) = hist.calcPath(beforeFreq2, bins)
+    hist.hist(left, right, bottom, top, ax, 'blue')
+    hist.setLimit(left, right, bottom, top, ax)
+
+    (left, right, bottom, top) = hist.calcPath(sorted(afterFreq)[::-1][:topKAnswers], bins)
+    hist.hist(left, right, bottom, top, ax, 'red')
+
+    plt.legend(['Before', 'After'])
+    plt.xlabel('Top 100 Answers')
+    plt.ylabel('Number of Appearances in the Entire COCO-QA')
+    plt.title(r'\textbf{Effect of Common Answer Rejection}')
+    
+    plt.savefig(os.path.join(outputFolder, 'answer_dist.pdf'))
+    plt.savefig(os.path.join(outputFolder, 'answer_dist.eps'))
