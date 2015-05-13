@@ -159,15 +159,14 @@ def guessBaseline(
     If need to calculate WUPS score, outputFolder must be provided (for now).
     """
     baseline = []
-    typedAnswerFreq = [None] * 4
+    typedAnswerFreq = []
+    for i in range(4):
+        typedAnswerFreq.append({})
     for q, a, typ in zip(questions, answers, questionTypes):
-        if typedAnswerFreq[typ] is None:
-            typedAnswerFreq[typ] = {a: 1}
+        if typedAnswerFreq[typ].has_key(a):
+            typedAnswerFreq[typ][a] += 1
         else:
-            if typedAnswerFreq[typ].has_key(a):
-                typedAnswerFreq[typ][a] += 1
-            else:
-                typedAnswerFreq[typ][a] = 1
+            typedAnswerFreq[typ][a] = 1
     modeAnswers = []
     for typ in range(4):
         tempAnswer = None
@@ -527,6 +526,21 @@ if __name__ == '__main__':
     print 'GUESS After Rejection on All Data'
     guessBaseline(allQuestions, allAnswers, allQuestionTypes)
 
+    # Filter question types
+    if not (buildObject and buildNumber and buildColor and buildLocation):
+        # Now only build one type!
+        if buildObject:
+            typ = 0
+        elif buildNumber:
+            typ = 1
+        elif buildColor:
+            typ = 2
+        elif buildLocation:
+            typ = 3
+        allQuestions = allQuestions[allQuestionTypes == typ]
+        allAnswers = allAnswers[allQuestionTypes == typ]
+        allImgIds = allImgIds[allQuestionTypes == typ]
+        allQuestionTypes = allQuestionTypes[allQuestionTypes == typ]
     trainQuestions = []
     trainAnswers = []
     trainImgIds = []
@@ -604,30 +618,6 @@ if __name__ == '__main__':
     testAfterWorddict, testAfterIdict, testAfterFreq = \
         buildDict(testAnswers, 0, pr=True)
 
-    # Filter question types
-    if not (buildObject and buildNumber and buildColor and buildLocation):
-        # Now only build one type!
-        if buildObject:
-            typ = 0
-        elif buildNumber:
-            typ = 1
-        elif buildColor:
-            typ = 2
-        elif buildLocation:
-            typ = 3
-        trainQuestions = trainQuestions[trainQuestionTypes == typ]
-        trainAnswers = trainAnswers[trainQuestionTypes == typ]
-        trainImgIds = trainImgIds[trainQuestionTypes == typ]
-        trainQuestionTypes = trainQuestionTypes[trainQuestionTypes == typ]
-        validQuestions = validQuestions[validQuestionTypes == typ]
-        validAnswers = validAnswers[validQuestionTypes == typ]
-        validImgIds = validImgIds[validQuestionTypes == typ]
-        validQuestionTypes = validQuestionTypes[validQuestionTypes == typ]
-        testQuestions = testQuestions[testQuestionTypes == typ]
-        testAnswers = testAnswers[testQuestionTypes == typ]
-        testImgIds = testImgIds[testQuestionTypes == typ]
-        testQuestionTypes = testQuestionTypes[testQuestionTypes == typ]
-
     if reindex:
         worddict, idict, wordfreq = buildDict(trainQuestions, 1, pr=False)
         print 'Train answer distribution'
@@ -637,13 +627,13 @@ if __name__ == '__main__':
         print 'Test answer distribution'
         buildDict(testAnswers, 0, pr=True)
 
-    # print 'GUESS After Rejection on Test'
-    # baseline = guessBaseline(
-    #                 testQuestions, 
-    #                 testAnswers, 
-    #                 testQuestionTypes,
-    #                 outputFolder=outputFolder,
-    #                 calcWups=True)
+    print 'GUESS After Rejection on Test'
+    baseline = guessBaseline(
+                    testQuestions, 
+                    testAnswers, 
+                    testQuestionTypes,
+                    outputFolder=outputFolder,
+                    calcWups=True)
 
     # Find max length
     if maxlen == -1:
