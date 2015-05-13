@@ -6,6 +6,8 @@ import h5py
 import sys
 from scipy import sparse
 import calculate_wups
+import matplotlib
+matplotlib.use('Agg')
 import hist
 import matplotlib.pyplot as plt
 
