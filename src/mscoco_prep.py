@@ -196,7 +196,7 @@ def guessBaseline(
     print 'Baseline object: %.4f' % baselineRate[0]
     print 'Baseline number: %.4f' % baselineRate[1]
     print 'Baseline color: %.4f' % baselineRate[2]
-    print 'Baseline scene: %.4f' % baselineRate[3]
+    print 'Baseline location: %.4f' % baselineRate[3]
 
     if calcWups:
         baselineFilename = os.path.join(outputFolder, 'baseline.txt')
