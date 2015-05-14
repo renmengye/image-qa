@@ -546,15 +546,18 @@ if __name__ == '__main__':
     trainQuestions = []
     trainAnswers = []
     trainImgIds = []
+    trainImgIdsRelease = []
     trainQuestionTypes = []
     validQuestions = []
     validAnswers = []
     validImgIds = []
+    validImgIdsRelease = []
     validQuestionTypes = []
     testQuestions = []
     testAnswers = []
     testImgIds = []
     testQuestionTypes = []
+    testImgIdsRelease = []
 
     # Separate dataset into train-valid-test.
     for item in zip(allQuestions, allAnswers, allImgIds, allQuestionTypes):
@@ -564,17 +567,20 @@ if __name__ == '__main__':
                 trainQuestions.append(item[0][:-2])
                 trainAnswers.append(item[1])
                 trainImgIds.append(imgidDict2[imgid])
+                trainImgIdsRelease.append(imgid)
                 trainQuestionTypes.append(item[3])
             elif imgidDict[imgid] == 1:
                 validQuestions.append(item[0][:-2])
                 validAnswers.append(item[1])
                 validImgIds.append(imgidDict2[imgid])
                 validQuestionTypes.append(item[3])
+                validImgIdsRelease.append(imgid)
             elif imgidDict[imgid] == 2:
                 testQuestions.append(item[0][:-2])
                 testAnswers.append(item[1])
                 testImgIds.append(imgidDict2[imgid])
                 testQuestionTypes.append(item[3])
+                testImgIdsRelease.append(imgid)
 
     # Build statistics
     trainCount = np.zeros(4, dtype='int')
@@ -704,10 +710,10 @@ if __name__ == '__main__':
     if not os.path.exists(testFolder):
         os.makedirs(testFolder)
     with open(os.path.join(releaseFolder, 'train', 'img_ids.txt'), 'w') as f:
-        for imgid in trainImgIds:
-            f.write('%d\n' % imgid)
-        for imgid in validImgIds:
-            f.write('%d\n' % imgid)
+        for imgid in trainImgIdsRelease:
+            f.write('%s\n' % imgid)
+        for imgid in validImgIdsRelease:
+            f.write('%s\n' % imgid)
     with open(os.path.join(releaseFolder, 'train', 'questions.txt'), 'w') as f:
         for question in trainQuestions:
             f.write(question + '\n')
@@ -718,15 +724,23 @@ if __name__ == '__main__':
             f.write(answer + '\n')
         for answer in validAnswers:
             f.write(answer + '\n')
+    with open(os.path.join(releaseFolder, 'train', 'types.txt'), 'w') as f:
+        for typ in trainQuestionTypes:
+            f.write(str(typ) + '\n')
+        for typ in validQuestionTypes:
+            f.write(str(typ) + '\n')
     with open(os.path.join(releaseFolder, 'test', 'img_ids.txt'), 'w') as f:
-        for imgid in testImgIds:
-            f.write('%d\n' % imgid)
+        for imgid in testImgIdsRelease:
+            f.write('%s\n' % imgid)
     with open(os.path.join(releaseFolder, 'test', 'questions.txt'), 'w') as f:
         for question in testQuestions:
             f.write(question + '\n')
     with open(os.path.join(releaseFolder, 'test', 'answers.txt'), 'w') as f:
         for answer in testAnswers:
             f.write(answer + '\n')
+    with open(os.path.join(releaseFolder, 'test', 'types.txt'), 'w') as f:
+        for typ in testQuestionTypes:
+            f.write(str(typ) + '\n')
 
     # Plot answer distribution
     fig, ax = plt.subplots()
