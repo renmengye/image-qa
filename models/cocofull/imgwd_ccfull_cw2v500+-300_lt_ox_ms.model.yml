@@ -28,7 +28,7 @@ specs:
       type: 'selector'
       inputs: 'input'
       start: 1
-      end: 53
+      end: 56
       axis: 1
     - name: 'imgUnfold'
       type: 'timeUnfold'
@@ -77,7 +77,7 @@ specs:
       type: 'lut'
       intConversion: true
       inputs: 'txtUnfold'
-      inputDim: 9881
+      inputDim: 9758
       outputDim: 500
       initWeights: '../data/cocoqa-full/word-embed-custom-q-500.npy'
       learningRate: 0.8
@@ -88,7 +88,7 @@ specs:
     - name: 'txtFold'
       type: 'timeFold'
       inputs: 'txtDict'
-      timespan: 52
+      timespan: 55
     - name: 'concat'
       type: 'concat'
       inputs: 'imgFold, txtFold'
@@ -104,7 +104,7 @@ specs:
       inputs: 'dropout'
       inputDim: 500
       outputDim: 300
-      timespan: 53
+      timespan: 56
       initRange: 0.1
       initSeed: 4
       cutOffZeroEnd: true
@@ -119,7 +119,7 @@ specs:
       type: 'map'
       inputs: 'lstm'
       activeFn: 'softmax'
-      outputDim: 410
+      outputDim: 438
       initRange: 0.1
       initSeed: 7
       learningRate: 0.01

@@ -16,7 +16,7 @@ specs:
       type: 'selector'
       inputs: 'input'
       start: 1
-      end: 53
+      end: 56
       axis: 1
     - name: 'txtUnfold'
       type: 'timeUnfold'
@@ -25,18 +25,18 @@ specs:
     - name: 'txtDict'
       type: 'lut'
       inputs: 'txtUnfold'
-      inputDim: 9881
+      inputDim: 9758
       outputDim: 500
       initWeights: '../data/cocoqa-full/word-embed-custom-q-500.npy'
       learningRate: 0.0
     - name: 'txtFold'
       type: 'timeFold'
       inputs: 'txtDict'
-      timespan: 52
+      timespan: 55
     - name: 'bow'
       type: 'sum2'
       inputs: 'txtFold'
-      numComponents: 52
+      numComponents: 55
       outputDim: 500
     - name: 'dropout'
       inputs: 'bow'
@@ -59,7 +59,7 @@ specs:
       type: 'map'
       inputs: 'hidden'
       activeFn: 'softmax'
-      outputDim: 410
+      outputDim: 438
       initRange: 0.01
       initSeed: 7
       learningRate: 0.01

@@ -32,13 +32,13 @@ specs:
       type: 'selector'
       inputs: 'input'
       start: 1
-      end: 53
+      end: 56
       axis: 1
     - name: 'txtDict'
       type: 'lut'
       intConversion: true
       inputs: 'txtSel'
-      inputDim: 9881
+      inputDim: 9758
       outputDim: 500
       initRange: 1.0
       initSeed: 2
@@ -50,7 +50,7 @@ specs:
     - name: 'txtFold'
       type: 'timeFold'
       inputs: 'txtDict'
-      timespan: 52
+      timespan: 55
     - name: 'imgFeat'
       type: 'lut'
       inputs: 'imgSel'
@@ -136,7 +136,7 @@ specs:
       inputs: 'dropoutForward'
       inputDim: 500
       outputDim: 300
-      timespan: 54
+      timespan: 57
       initRange: 0.1
       initSeed: 5
       multiOutput: false
@@ -152,7 +152,7 @@ specs:
       inputs: 'dropoutBackward'
       inputDim: 500
       outputDim: 300
-      timespan: 54
+      timespan: 57
       initRange: 0.1
       initSeed: 6
       multiOutput: false
@@ -166,7 +166,7 @@ specs:
     - name: 'answer'
       type: 'map'
       inputs: 'lstmF, lstmB'
-      outputDim: 410
+      outputDim: 438
       activeFn: 'softmax'
       initRange: 0.1
       initSeed: 6
