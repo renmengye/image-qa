@@ -105,8 +105,17 @@ if __name__ == '__main__':
     # (n, c)
     P_wai = P_w_a * P_a_i
     P_a_wi = P_wai / np.sum(P_wai, axis=1).reshape(P_wai.shape[0], 1)
+
+    print 'Output probs:'
     print P_a_wi
 
+    print 'Output idx:'
     outputMax = np.argmax(P_a_wi, axis=-1)
+    print outputMax
+
+    print 'Target:'
+    print testTarget
+
     print 'Accuracy:',
-    print np.sum((outputMax == testTarget).astype('int')) / float(testTarget.shape[0])
+    print np.sum((outputMax == testTarget).astype('int')) / \
+            float(testTarget.shape[0])
