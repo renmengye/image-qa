@@ -109,13 +109,10 @@ if __name__ == '__main__':
     print 'Output probs:'
     print P_a_wi
 
-    print 'Output idx:'
     outputMax = np.argmax(P_a_wi, axis=-1)
-    print outputMax
-
-    print 'Target:'
-    print testTarget
-
+    outputMax = outputMax.reshape(outputMax.size)
+    testTarget = testTarget.reshape(testTarget.size)
+    
     print 'Accuracy:',
     print np.sum((outputMax == testTarget).astype('int')) / \
-            float(testTarget.shape[0])
+            float(testTarget.size)
