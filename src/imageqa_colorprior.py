@@ -2,6 +2,7 @@ import sys
 import os
 
 import numpy as np
+import nn
 import imageqa_test
 
 def trainCount(trainData, questionIdict):
@@ -72,7 +73,6 @@ if __name__ == '__main__':
         for i in range(count_wa.shape[1]):
             print ansIdict[i], count_wa[objId, i],
         print
-    # print count_wa[objId, :]
     
     testInput = testData[0]
     testTarget = testData[0]
