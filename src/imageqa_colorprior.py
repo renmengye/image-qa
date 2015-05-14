@@ -76,10 +76,11 @@ if __name__ == '__main__':
     model = imageqa_test.loadModel(colorClassifierId, resultsFolder)
     testOutput = nn.test(model, testInput)
     testObjId = testInput[:, -2, 0].astype('int')
+    questionIdictArray = np.array(questionIdict, dtype='object')
     testObj = questionIdict[testObjId - 1]
     testObjId2 = np.zeros(testObjId.shape, dtype='int')
-    for i, obj in enumerate(testObj):
-        testObjId2[i] = objDict[obj]
+    for i in range(testObj.shape[0]):
+        testObjId2[i] = objDict[testObj[i]]
     testColor = testTarget[:, 0]
 
     # (n, c)
