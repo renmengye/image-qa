@@ -23,6 +23,7 @@ def trainCount(trainData, questionIdict):
             maxColorId = colorId
     objDict['UNK'] = len(objIdict)
     objIdict.append('UNK')
+    maxColorId += 1
     count_wa = np.zeros((len(objIdict), maxColorId + 1))
     count_a = np.zeros((maxColorId + 1))
     for n in range(trainData[0].shape[0]):
@@ -32,6 +33,7 @@ def trainCount(trainData, questionIdict):
         objId2 = objDict[obj]
         count_wa[objId2, colorId] += 1
         count_a[colorId] += 1
+    count_a[-1] += 1
     return count_wa, count_a, objDict, objIdict
 
 if __name__ == '__main__':
@@ -92,11 +94,11 @@ if __name__ == '__main__':
     testOutput = nn.test(model, testInput)
 
     # (n, c)
-    P_w_a = count_wa[testObjId2, testColor] 
-    P_w_a /= count_a[testColor] 
+    P_w_a = count_wa[testObjId2, :]
+    P_w_a /= count_a[:] 
     P_w_a += delta
     P_w_a /= (len(ansDict) * delta + 1)
-
+    
     # (n, c)
     P_a_i = testOutput
 
