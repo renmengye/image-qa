@@ -106,3 +106,7 @@ if __name__ == '__main__':
     P_wai = P_w_a * P_a_i
     P_a_wi = P_wai / np.sum(P_wai, axis=1).reshape(P_wai.shape[0], 1)
     print P_a_wi
+
+    outputMax = np.argmax(P_a_wi, axis=-1)
+    print 'Accuracy:',
+    print np.sum((outputMax == testTarget).astype('int')) / float(testTarget.shape[0])
