@@ -320,5 +320,5 @@ if __name__ == '__main__':
         elif flag == '-r' or flag == '-result':
             resultsFolder = sys.argv[i + 1]
     print taskId
-    model = loadModel(taskIds, resultsFolder)
+    model = loadModel(taskId, resultsFolder)
     testAll(taskId, model, dataFolder, resultsFolder)
