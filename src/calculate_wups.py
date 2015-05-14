@@ -3,7 +3,7 @@
 # Mateusz Malinowski
 # mmalinow@mpi-inf.mpg.de
 # Hash Speedup Modification made by Mengye Ren
-# m.ren@mail.utoronto.ca
+# mren@cs.toronto.edu
 
 # it assumes there are two files
 # - first file with ground truth answers
