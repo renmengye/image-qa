@@ -39,7 +39,6 @@ if __name__ == '__main__':
                                 -cid {colorClassifierId}
                                 -d[ata] {dataFolder}
                                 -r[esults] {resultsFolder}
-                                -obj {objName}
     """
     for i, flag in enumerate(sys.argv):
         if flag == '-cid':
@@ -48,8 +47,6 @@ if __name__ == '__main__':
             dataFolder = sys.argv[i + 1]
         elif flag == '-r' or flag == '-results':
             resultsFolder = sys.argv[i + 1]
-        elif flag == '-obj':
-            obj = sys.argv[i + 1]
 
     delta = 0.01
     trainDataFile = os.path.join(dataFolder, 'train.npy')
@@ -78,7 +75,7 @@ if __name__ == '__main__':
     testTarget = testData[0]
     model = imageqa_test.loadModel(colorClassifierId, resultsFolder)
     testOutput = nn.test(model, testInput)
-    testObjId = testInput[:, -2, 0]
+    testObjId = testInput[:, -2, 0].astype('int')
     testObj = questionIdict[testObjId - 1]
     testObjId2 = np.zeros(testObjId.shape, dtype='int')
     for i, obj in enumerate(testObj):
