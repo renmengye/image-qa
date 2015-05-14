@@ -104,5 +104,5 @@ if __name__ == '__main__':
 
     # (n, c)
     P_wai = P_w_a * P_a_i
-    P_a_wi = P_wai / np.sum(P_wai, axis=1)
+    P_a_wi = P_wai / np.sum(P_wai, axis=1).reshape(P_wai.shape[0], 1)
     print P_a_wi
