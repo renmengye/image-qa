@@ -21,6 +21,8 @@ def trainCount(trainData, questionIdict):
             objIdict.append(obj)
         if colorId > maxColorId:
             maxColorId = colorId
+    objDict['UNK'] = len(objIdict)
+    objIdict.append('UNK')
     count_wa = np.zeros((len(objIdict), maxColorId + 1))
     count_a = np.zeros((maxColorId + 1))
     for n in range(trainData[0].shape[0]):
@@ -72,20 +74,28 @@ if __name__ == '__main__':
         print
     
     testInput = testData[0]
-    testTarget = testData[0]
-    model = imageqa_test.loadModel(colorClassifierId, resultsFolder)
-    testOutput = nn.test(model, testInput)
+    testTarget = testData[1]
+
     testObjId = testInput[:, -2, 0].astype('int')
     questionIdictArray = np.array(questionIdict, dtype='object')
-    testObj = questionIdict[testObjId - 1]
+    testObjId = testObjId - 1
+    testObj = questionIdictArray[testObjId]
     testObjId2 = np.zeros(testObjId.shape, dtype='int')
     for i in range(testObj.shape[0]):
         testObjId2[i] = objDict[testObj[i]]
+    print testObjId2
     testColor = testTarget[:, 0]
+    print np.max(testObjId2)
+    print np.max(testColor)
+
+    model = imageqa_test.loadModel(colorClassifierId, resultsFolder)
+    testOutput = nn.test(model, testInput)
 
     # (n, c)
-    P_w_a = (count_wa[testObjId2, testColor] / count_a[testColor] + delta) /\
-            (len(ansDict) * delta + 1)
+    P_w_a = count_wa[testObjId2, testColor] 
+    P_w_a /= count_a[testColor] 
+    P_w_a += delta
+    P_w_a /= (len(ansDict) * delta + 1)
 
     # (n, c)
     P_a_i = testOutput
