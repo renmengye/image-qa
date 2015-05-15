@@ -326,6 +326,7 @@ if __name__ == '__main__':
                     [-location] Location type question only
                     [-reindex] Reindex the dictionaries of type-specific dataset
                     [-len] Maximum length/timespan
+                    [-noreject] No rejection
                     [-o[utput]] Output folder, 
                                 default '../data/cocoqa-toy' or 
                                         '../data/cocoqa-full'
@@ -339,6 +340,7 @@ if __name__ == '__main__':
     maxlen = -1
     outputFolder = None
     reindex = False
+    reject = True
 
     for i in range(len(sys.argv)):
         flag = sys.argv[i]
@@ -372,6 +374,8 @@ if __name__ == '__main__':
             buildLocation = True
         elif flag == '-reindex':
             reindex = True
+        elif flag == '-noreject':
+            reject = False
         elif flag == '-len':
             maxlen = int(sys.argv[i + 1])
         elif flag == '-o' or flag == '-output':
@@ -499,7 +503,7 @@ if __name__ == '__main__':
         buildDict(allAnswers, 0, pr=True)
 
     print 'GUESS Before Rejection'
-    guessBaseline(allQuestions, allAnswers, allQuestionTypes)
+    guessBaseline(allQuestions, allAnswers, allQuestionTypes)        
 
     # Shuffle the questions.
     r = np.random.RandomState(1)
@@ -510,16 +514,20 @@ if __name__ == '__main__':
     allQuestionTypes = np.array(
         allQuestionTypes,dtype='int')[shuffle]
 
-    # Truncate rare-common answers.
-    survivor = np.array(removeQuestions(
-        answers=allAnswers, 
-        lowerBound=LB, 
-        upperBound=UB,
-        upperUpperBound=UUB), dtype='int')
-    allQuestions = allQuestions[survivor]
-    allAnswers = allAnswers[survivor]
-    allImgIds = allImgIds[survivor]
-    allQuestionTypes = allQuestionTypes[survivor]
+    if reject:
+        # Truncate rare-common answers.
+        print 'Rejecting rare-common answers'
+        survivor = np.array(removeQuestions(
+            answers=allAnswers, 
+            lowerBound=LB, 
+            upperBound=UB,
+            upperUpperBound=UUB), dtype='int')
+        allQuestions = allQuestions[survivor]
+        allAnswers = allAnswers[survivor]
+        allImgIds = allImgIds[survivor]
+        allQuestionTypes = allQuestionTypes[survivor]
+    else:
+        print 'Not rejecting rare-common answers'
 
     print 'Distribution After Rejection'
     afterWorddict, afterIdict, afterFreq = \

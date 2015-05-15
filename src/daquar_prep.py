@@ -73,9 +73,11 @@ def extractQA(lines):
     imgIds = []
     discard = 0
     preserved = 0
+    total = 0
     lineMax = 0
     for i in range(0, len(lines) / 2):
         n = i * 2
+        total += 1
         if ',' in lines[n + 1]:
             # No multiple words answer for now.
             discard += 1
@@ -97,6 +99,7 @@ def extractQA(lines):
         imgIds.append(number)
     print 'Discard', discard
     print 'Preserved', preserved
+    print 'Total', total
     return (questions, answers, imgIds)
 
 def buildDict(lines, keystart, pr=False):

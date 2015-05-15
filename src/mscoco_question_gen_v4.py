@@ -163,6 +163,9 @@ blackListPrep = {
 }
 
 blackListLocation = {
+    't-shirt': 1,
+    't-shirts': 1,
+    'jeans': 1,
     'shirt': 1,
     'shirts': 1,
     'uniform': 1,
@@ -208,7 +211,47 @@ blackListLocation = {
     'round': 1,
     'rounds': 1,
     'area': 1,
-    'well': 1
+    'well': 1,
+    'skirt': 1,
+    'snowsuit': 1,
+    'sunglasses': 1,
+    'sweater': 1,
+    'mask': 1,
+    'frisbee': 1,
+    'frisbees': 1,
+    'shoe': 1,
+    'umbrella': 1,
+    'towel': 1,
+    'scarf': 1,
+    'phone': 1,
+    'cellphone': 1,
+    'motorcycle': 1,
+    'device': 1,
+    'computer': 1,
+    'cake': 1,
+    'hydrant': 1,
+    'desk': 1,
+    'stove': 1,
+    'sculpture': 1,
+    'lamp': 1,
+    'fireplace': 1, 
+    'bags': 1 ,
+    'laptop': 1,
+    'trolley': 1,
+    'toy': 1,
+    'bus': 1,
+    'counter': 1, 
+    'buffet': 1, 
+    'engine': 1, 
+    'graffiti':1,
+    'clock': 1,
+    'jet': 1,
+    'ramp': 1,
+    'brick': 1,
+    'taxi': 1,
+    'knife': 1,
+    'flag': 1,
+    'screen': 1,
 }
 
 blackListVerbLocation = {
@@ -226,6 +269,19 @@ blackListVerbLocation = {
     'contained': 1,
     'can': 1,
     'cans': 1
+}
+
+blackListNumberNoun = {
+    'pole': 1,
+    'vase': 1,
+    'kite': 1, 
+    'hay': 1,
+    'shower': 1,
+    'paddle': 1,
+    'buffet': 1,
+    'bicycle': 1,
+    'bike': 1,
+    'elephants': 1
 }
 
 synonymConvert = {
@@ -609,7 +665,7 @@ class QuestionGenerator:
                     c = node.children[1]
                     while(len(c.children) > 0):
                         c = c.children[0]
-                    if blackListVerbLocation.has_key(c.text):
+                    if blackListVerbLocation.has_key(c.text.lower()):
                         cont = False
 
             if not found[0] and cont and node.className != 'PP':
@@ -626,7 +682,7 @@ class QuestionGenerator:
 
                 if c.className == 'NN'and \
                     self.lookupLexname(c.text) == 'noun.artifact' and \
-                    not blackListLocation.has_key(c.text):
+                    not blackListLocation.has_key(c.text.lower()):
                     found[0] = True
                     answer[0] = c.text 
                     # Treat ``where'' as WHNP for now.
@@ -659,7 +715,7 @@ class QuestionGenerator:
             #if node.className != 'PP':
             cont = True
             # For now, not asking any questions inside PP.
-            if node.className == 'PP' and blackListPrep.has_key(node.text):
+            if node.className == 'PP' and blackListPrep.has_key(node.text.lower()):
                 cont = False
             if (node.level > 1 and node.className == 'S') or node.className == 'SBAR':
                 # Ignore possible answers in any clauses.
@@ -681,7 +737,7 @@ class QuestionGenerator:
                     c = node.children[1]
                     while(len(c.children) > 0):
                         c = c.children[0]
-                    if blackListVerb.has_key(c.text):
+                    if blackListVerb.has_key(c.text.lower()):
                         cont = False
             
             if node.className == 'VP' and \
@@ -727,13 +783,13 @@ class QuestionGenerator:
                         lexname = self.lookupLexname(child.text)
                         if lexname is not None:
                             if whiteListLexname.has_key(lexname) and \
-                                not blackListNoun.has_key(child.text):
+                                not blackListNoun.has_key(child.text.lower()):
                                     whword = 'what'
                             if whword is not None:
                                 answer[0] = child.text
                                 found[0] = True
                                 replace = child
-                if replace != None and not blackListNoun.has_key(answer[0]):
+                if replace != None and not blackListNoun.has_key(answer[0].lower()):
                     what = TreeNode('WP', whword, [], node.level + 1)
                     children_bak = copy.copy(node.children)
                     toremove = []
@@ -743,7 +799,7 @@ class QuestionGenerator:
                         if child != replace and (
                             lexname != 'noun.act' or \
                             child.className != 'NN' or \
-                            blackListCompoundNoun.has_key(child.text)):
+                            blackListCompoundNoun.has_key(child.text.lower())):
                             toremove.append(child)
                     for item in toremove:
                         node.children.remove(item)
@@ -805,7 +861,8 @@ class QuestionGenerator:
                         not node.children[-1].text.startswith('end'):
                         count = None
                         for child in node.children:
-                            if child.className == 'CD':
+                            if child.className == 'CD' and \
+                                not blackListNumberNoun.has_key(child.text.lower()):
                                 found[0] = True
                                 answer[0] = child
                                 count = child
@@ -819,6 +876,7 @@ class QuestionGenerator:
                                 node.children.index(count) + 1:])
                             node.children = children
                             node.className = 'WHNP'
+                            return
 
         roots = self.splitCCStructure(root)
 
@@ -828,7 +886,7 @@ class QuestionGenerator:
                 r.children[0].children.append(TreeNode('.', '?', [], 2))
             else:
                 r.children[0].children[-1].text = '?'
-            if found[0]:
+            if found[0] and not blackListNumberNoun.has_key(answer[0].text.lower()):
                 r.answer = answer[0]
                 self.whMovement(r)
                 yield (r.toSentence().lower(), self.escapeNumber(\
@@ -847,7 +905,7 @@ class QuestionGenerator:
             if node.className == 'NP':
                 for child in node.children:
                     if child.className == 'JJ' and \
-                        whiteListColorAdj.has_key(child.text):
+                        whiteListColorAdj.has_key(child.text.lower()):
                         found[0] = True
                         answer[0] = child
                     if child.className == 'CC' and \
@@ -857,7 +915,7 @@ class QuestionGenerator:
                         answer[0] = None
                         break
                     if (child.className == 'NN' or child.className == 'NNS') and \
-                        not blackListColorNoun.has_key(child.text):
+                        not blackListColorNoun.has_key(child.text.lower()):
                         obj[0] = child
                 if found[0] and obj[0] is not None:
                     qa[0].append((('what is the color of the %s ?' % \
