@@ -47,7 +47,8 @@ blackListColorNoun = {
     'frosting': 1,
     'glow': 1,
     'glowing': 1,
-    'resting': 1
+    'resting': 1,
+    'parked': 1
 }
 
 blackListNoun = {
@@ -115,7 +116,8 @@ blackListNoun = {
     'frosting': 1,
     'glow': 1,
     'glowing': 1,
-    'ground': 1
+    'ground': 1,
+    'parked': 1
 }
 
 blackListCompoundNoun = {
@@ -257,6 +259,7 @@ blackListLocation = {
     'knife': 1,
     'flag': 1,
     'screen': 1,
+    'parked': 1
 }
 
 blackListVerbLocation = {

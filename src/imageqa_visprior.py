@@ -5,11 +5,26 @@ import numpy as np
 import nn
 import imageqa_test
 
-def buildObjDict(trainData, questionIdict):
+def locateObjNumber(data, questionDict):
+    how = questionDict['how']
+    many = questionDict['many']
+    for t in range(data.shape[1] - 2):
+        if data[t, 0] == how and \
+            data[t + 1, 0] == many:
+            return data[t + 2, 0]
+
+def locateObjColor(data):
+    return data[-2, 0]
+
+def buildObjDict(trainData, questionIdict, 
+                questionType='color', questionDict=None):
     objDict = {}
     objIdict = []
     for n in range(trainData[0].shape[0]):
-        objId = trainData[0][n, -2, 0]
+        if questionType == 'color':
+            objId = locateObjColor(trainData[0][n])
+        elif questionType == 'number':
+            objId = locateObjNumber(trainData[0][n], questionDict)
         obj = questionIdict[objId - 1]
         colorId = trainData[1][n, 0]
         if not objDict.has_key(obj):
@@ -43,7 +58,9 @@ if __name__ == '__main__':
                                 -cid {colorClassifierId}
                                 -d[ata] {dataFolder}
                                 -r[esults] {resultsFolder}
+                                -color/-number
     """
+    questionType = 'color'
     for i, flag in enumerate(sys.argv):
         if flag == '-cid':
             colorClassifierId = sys.argv[i + 1]
@@ -51,6 +68,10 @@ if __name__ == '__main__':
             dataFolder = sys.argv[i + 1]
         elif flag == '-r' or flag == '-results':
             resultsFolder = sys.argv[i + 1]
+        elif flag == '-color':
+            questionType = 'color'
+        elif flag == '-number':
+            questionType == 'number'
 
     delta = 0.01
     trainDataFile = os.path.join(dataFolder, 'train.npy')
@@ -66,7 +87,10 @@ if __name__ == '__main__':
 
     print questionIdict
 
-    objDict, objIdict = buildObjDict(trainData, questionIdict)
+    objDict, objIdict = buildObjDict(trainData, 
+                                questionIdict,
+                                questionType,
+                                questionDict)
     count_wa, count_a = trainCount(trainData, 
                                 questionIdict,
                                 objDict,
