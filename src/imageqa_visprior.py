@@ -8,10 +8,12 @@ import imageqa_test
 def locateObjNumber(data, questionDict):
     how = questionDict['how']
     many = questionDict['many']
-    for t in range(data.shape[1] - 2):
+    for t in range(data.shape[0] - 2):
         if data[t, 0] == how and \
             data[t + 1, 0] == many:
+            #print 'found', data[t + 2, 0]
             return data[t + 2, 0]
+    print 'not found'
 
 def locateObjColor(data):
     return data[-2, 0]
@@ -34,14 +36,19 @@ def buildObjDict(trainData, questionIdict,
     objIdict.append('UNK')
     return objDict, objIdict
 
-def trainCount(trainData, questionIdict, objDict, objIdict, numAns):
+def trainCount(trainData, questionIdict, objDict, 
+                objIdict, numAns, 
+                questionType='color', questionDict=None):
     """
     Calculates count(w, a), count(a)
     """
     count_wa = np.zeros((len(objIdict), numAns))
     count_a = np.zeros((numAns))
     for n in range(trainData[0].shape[0]):
-        objId = trainData[0][n, -2, 0]
+        if questionType == 'color':
+            objId = locateObjColor(trainData[0][n])
+        elif questionType == 'number':
+            objId = locateObjNumber(trainData[0][n], questionDict)
         obj = questionIdict[objId - 1]
         colorId = trainData[1][n, 0]
         objId2 = objDict[obj]
@@ -71,7 +78,7 @@ if __name__ == '__main__':
         elif flag == '-color':
             questionType = 'color'
         elif flag == '-number':
-            questionType == 'number'
+            questionType = 'number'
 
     delta = 0.01
     trainDataFile = os.path.join(dataFolder, 'train.npy')
@@ -85,18 +92,19 @@ if __name__ == '__main__':
     ansDict = vocabDict[2]
     ansIdict = vocabDict[3]
 
-    print questionIdict
-
     objDict, objIdict = buildObjDict(trainData, 
                                 questionIdict,
                                 questionType,
                                 questionDict)
+    #print objDict
     count_wa, count_a = trainCount(trainData, 
                                 questionIdict,
                                 objDict,
                                 objIdict,
-                                len(ansIdict))
-
+                                len(ansIdict),
+                                questionType,
+                                questionDict)
+    print count_wa
     for obj in objIdict:
         objId = objDict[obj]
         print obj,
@@ -106,14 +114,24 @@ if __name__ == '__main__':
     
     testInput = testData[0]
     testTarget = testData[1]
+    testObjId = np.zeros((testInput.shape[0]), dtype='int')
 
-    testObjId = testInput[:, -2, 0].astype('int')
+    if questionType == 'color':
+        for i in range(testInput.shape[0]):
+            testObjId[i] = locateObjColor(testInput[i])
+    elif questionType == 'number':
+        for i in range(testInput.shape[0]):
+            testObjId[i] = locateObjNumber(testInput[i], questionDict)
+
     questionIdictArray = np.array(questionIdict, dtype='object')
     testObjId = testObjId - 1
     testObj = questionIdictArray[testObjId]
     testObjId2 = np.zeros(testObjId.shape, dtype='int')
     for i in range(testObj.shape[0]):
-        testObjId2[i] = objDict[testObj[i]]
+        if objDict.has_key(testObj[i]):
+            testObjId2[i] = objDict[testObj[i]]
+        else:
+            testObjId2[i] = objDict['UNK']
     print testObjId2
     testColor = testTarget[:, 0]
     print np.max(testObjId2)
