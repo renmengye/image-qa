@@ -46,7 +46,8 @@ blackListColorNoun = {
     'holding': 1,
     'frosting': 1,
     'glow': 1,
-    'glowing': 1
+    'glowing': 1,
+    'resting': 1
 }
 
 blackListNoun = {
@@ -113,13 +114,15 @@ blackListNoun = {
     'holding': 1,
     'frosting': 1,
     'glow': 1,
-    'glowing': 1
+    'glowing': 1,
+    'ground': 1
 }
 
 blackListCompoundNoun = {
     'tennis': 1,
     'delivery': 1,
     'soccer': 1,
+    'baseball': 1,
     'fighter': 1,
     'mother': 1,
     'window': 1
@@ -151,7 +154,9 @@ blackListVerb = {
     'tile': 1,
     'tiles': 1,
     'mouthwash': 1,
-    'mouthwashes': 1
+    'mouthwashes': 1,
+    'smoke': 1,
+    'smokes': 1
 }
 
 blackListPrep = {

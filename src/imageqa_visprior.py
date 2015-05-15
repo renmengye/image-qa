@@ -23,7 +23,7 @@ def trainCount(trainData, questionIdict, objDict, objIdict, numAns):
     """
     Calculates count(w, a), count(a)
     """
-    count_wa = np.zeros((len(objIdict), maxColorId + 1))
+    count_wa = np.zeros((len(objIdict), numAns))
     count_a = np.zeros((numAns))
     for n in range(trainData[0].shape[0]):
         objId = trainData[0][n, -2, 0]
