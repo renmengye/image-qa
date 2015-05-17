@@ -529,6 +529,14 @@ if __name__ == '__main__':
     else:
         print 'Not rejecting rare-common answers'
 
+    # Shuffle the questions again.
+    r = np.random.RandomState(2000)
+    shuffle = r.permutation(len(allQuestions))
+    allQuestions = allQuestions[shuffle]
+    allAnswers = allAnswers[shuffle]
+    allImgIds = allImgIds[shuffle]
+    allQuestionTypes = allQuestionTypes[shuffle]
+
     print 'Distribution After Rejection'
     afterWorddict, afterIdict, afterFreq = \
         buildDict(allAnswers, 0, pr=True)

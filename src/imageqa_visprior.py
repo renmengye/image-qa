@@ -132,7 +132,9 @@ if __name__ == '__main__':
     Usage:
     python imageqa_visprior.py
                                 -cid {colorClassifierId}
-                                -d[ata] {dataFolder}
+                                -id {mainModelId}
+                                -cd[ata] {colorDataFolder}
+                                -d[ata] {mainDataFolder}
                                 -r[esults] {resultsFolder}
                                 -color/-number
     """
@@ -140,6 +142,8 @@ if __name__ == '__main__':
     for i, flag in enumerate(sys.argv):
         if flag == '-cid':
             colorClassifierId = sys.argv[i + 1]
+        elif flag == '-cid':
+            modelId = sys.argv[i + 1]
         elif flag == '-d' or flag == '-data':
             dataFolder = sys.argv[i + 1]
         elif flag == '-r' or flag == '-results':
@@ -178,3 +182,9 @@ if __name__ == '__main__':
     print 'Accuracy:',
     print np.sum((outputMax == testTarget).astype('int')) / \
             float(testTarget.size)
+
+    if modelId is not None:
+        # re-index the test set...
+        otherModel = imageqa_test.loadModel(modelId, resultsFolder)
+        testOutput2 = nn.test(testInput, otherModel)
+        # Need to extract the color output from testOutput2
