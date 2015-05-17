@@ -25,7 +25,7 @@ specs:
     - name: 'txtDict'
       type: 'lut'
       inputs: 'txtUnfold'
-      inputDim: 9758
+      inputDim: 9738
       outputDim: 500
       initWeights: '../data/cocoqa-full/word-embed-custom-q-500.npy'
       learningRate: 0.0
@@ -59,7 +59,7 @@ specs:
       type: 'map'
       inputs: 'hidden'
       activeFn: 'softmax'
-      outputDim: 438
+      outputDim: 431
       initRange: 0.01
       initSeed: 7
       learningRate: 0.01

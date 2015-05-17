@@ -37,7 +37,7 @@ specs:
     - name: 'txtDict'
       type: 'lut'
       inputs: 'txtSel'
-      inputDim: 9881
+      inputDim: 9738
       outputDim: 300
       initWeights: '../data/cocoqa-full/word-embed-q.npy'
       learningRate: 0.0
@@ -161,7 +161,7 @@ specs:
     - name: 'answer'
       type: 'map'
       inputs: 'lstmF, lstmB'
-      outputDim: 438
+      outputDim: 431
       activeFn: 'softmax'
       initRange: 0.1
       initSeed: 6

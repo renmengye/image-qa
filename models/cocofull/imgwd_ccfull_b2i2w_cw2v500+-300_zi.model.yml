@@ -22,7 +22,7 @@ specs:
       type: 'lut'
       inputs: 'txtSel'
       intConversion: true
-      inputDim: 9758
+      inputDim: 9738
       outputDim: 500
       initWeights: '../data/cocoqa-full/word-embed-custom-q-500.npy'
       learningRate: 0.8
@@ -83,7 +83,7 @@ specs:
     - name: 'answer'
       type: 'map'
       inputs: 'lstmF, lstmB'
-      outputDim: 438
+      outputDim: 431
       activeFn: 'softmax'
       initRange: 0.1
       initSeed: 6

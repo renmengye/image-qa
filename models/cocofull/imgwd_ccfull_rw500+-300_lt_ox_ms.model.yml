@@ -77,7 +77,7 @@ specs:
       type: 'lut'
       intConversion: true
       inputs: 'txtUnfold'
-      inputDim: 9758
+      inputDim: 9738
       outputDim: 500
       initRange: 1.0
       initSeed: 2
@@ -120,7 +120,7 @@ specs:
       type: 'map'
       inputs: 'lstm'
       activeFn: 'softmax'
-      outputDim: 438
+      outputDim: 431
       initRange: 0.1
       initSeed: 7
       learningRate: 0.01
