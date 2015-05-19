@@ -131,7 +131,7 @@ def runVisPrior(
 
     # Reindex test set
     testInput = testData[0]
-    testTarget = testData[0]
+    testTarget = testData[1]
     testTargetReshape = testTarget.reshape(testTarget.size)
     testObjId = getObjId(testInput, objDict, questionDict, questionIdict, questionType)
 
@@ -140,8 +140,7 @@ def runVisPrior(
 
     # Reindex valid set
     validInput = validData[0]
-    validTarget = validData[0]
-    print validTarget.shape
+    validTarget = validData[1]
     validTargetReshape = validTarget.reshape(validTarget.size)
     validObjId = getObjId(validInput, objDict, questionDict, questionIdict, questionType)
 
@@ -160,8 +159,6 @@ def runVisPrior(
                                 delta)
         visPriorOutputMax = np.argmax(visPriorOutput, axis=-1)
         visPriorOutputMax = visPriorOutputMax.reshape(visPriorOutputMax.size)
-        print visPriorOutputMax.shape
-        print validTargetReshape.shape
         
         print 'delta=%d Valid Accuracy:' % delta,
         rate = np.sum((visPriorOutputMax == validTargetReshape).astype('int')) / \
