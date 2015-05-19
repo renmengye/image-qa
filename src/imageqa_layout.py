@@ -19,7 +19,7 @@ if __name__ == '__main__':
                     [-k {top K answers}]
                     [-p[icture] {pictureFolder}]
                     [-f[ile] {outputTexFilename}]
-                    [-daquar/-coco]
+                    [-daquar/-cocoqa]
     Parameters:
         -m[odel]
         -d[ata]
@@ -28,13 +28,13 @@ if __name__ == '__main__':
         -p[icture]
         -f[ile]
         -daquar
-        -coco
+        -cocoqa
     Input file format:
     QID1[,Comment1]
     QID2[,Comment2]
     ...
     """
-    dataset = 'coco'
+    dataset = 'cocoqa'
     filename = 'result'
     pictureFolder = 'img'
     K = 1
@@ -62,17 +62,17 @@ if __name__ == '__main__':
             filename = sys.argv[i + 1]
         elif flag == '-daquar':
             dataset = 'daquar'
-        elif flag == '-coco':
-            dataset = 'coco'
+        elif flag == '-cocoqa':
+            dataset = 'cocoqa'
 
     resultsFolder = '../results'
 
     print 'Loading image urls...'
-    if dataset == 'coco':
+    if dataset == 'cocoqa':
         imgidDictFilename = os.path.join(dataFolder, 'imgid_dict.pkl')
         with open(imgidDictFilename, 'rb') as f:
             imgidDict = pkl.load(f)
-        urlDict = readImgDictCoco(imgidDict)
+        urlDict = readImgDictCocoqa(imgidDict)
     elif dataset == 'daquar':
         urlDict = readImgDictDaquar()
 

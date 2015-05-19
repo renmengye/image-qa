@@ -59,9 +59,9 @@ if __name__ == '__main__':
                     -m[odel] {name3:ensembleModelId3,ensembleModelId4,...}
                     -d[ata] {dataFolder}
                     -o[utput] {outputFolder}
-                    -daquar/-coco
+                    -daquar/-cocoqa
     """
-    dataset = 'coco'
+    dataset = 'cocoqa'
     modelNames = []
     modelIds = []
     for i in range(1, len(sys.argv)):
@@ -76,19 +76,19 @@ if __name__ == '__main__':
             outputFolder = sys.argv[i + 1]
         elif sys.argv[i] == '-daquar':
             dataset = 'daquar'
-        elif sys.argv[i] == '-coco':
-            dataset = 'coco'
+        elif sys.argv[i] == '-cocoqa':
+            dataset = 'cocoqa'
 
     resultsFolder = '../results'
     K = 3 # Top-K answers
     modelOutputs = []
 
     print 'Loading image urls...'
-    if dataset == 'coco':
+    if dataset == 'cocoqa':
         imgidDictFilename = os.path.join(dataFolder, 'imgid_dict.pkl')
         with open(imgidDictFilename, 'rb') as f:
             imgidDict = pkl.load(f)
-        urlDict = readImgDictCoco(imgidDict)
+        urlDict = readImgDictCocoqa(imgidDict)
     elif dataset == 'daquar':
         urlDict = readImgDictDaquar()
 

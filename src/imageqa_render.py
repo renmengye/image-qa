@@ -432,7 +432,7 @@ def renderSinglePage(
     htmlList.append('</body></html>')
     return ''.join(htmlList)
 
-def readImgDictCoco(imgidDict):
+def readImgDictCocoqa(imgidDict):
     with open(jsonTrainFilename) as f:
         captiontxt = f.read()
     urlDict = {}
@@ -487,7 +487,7 @@ if __name__ == '__main__':
         imgidDictFilename = os.path.join(dataFolder, 'imgid_dict.pkl')
         with open(imgidDictFilename, 'rb') as f:
             imgidDict = pkl.load(f)
-        urlDict = readImgDictCoco(imgidDict)
+        urlDict = readImgDictCocoqa(imgidDict)
     elif dataset == 'daquar':
         urlDict = readImgDictDaquar()
 

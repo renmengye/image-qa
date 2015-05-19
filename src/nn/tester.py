@@ -1,8 +1,7 @@
 import numpy as np
 
-def test(model, X):
+def test(model, X, numExPerBat=100):
     N = X.shape[0]
-    numExPerBat = 100
     batchStart = 0
     Y = None
     while batchStart < N:

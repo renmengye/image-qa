@@ -52,7 +52,7 @@ if __name__ == '__main__':
                     [-p[icture] {pictureFolder}]
                     [-r[esults] {resultsFolder}]
                     [-f[ile] {outputTexFilename}]
-                    [-daquar/-coco]
+                    [-daquar/-cocoqa]
                     [-html/-latex]
     Parameters:
         -m[odel]: Model name and model ID
@@ -63,7 +63,7 @@ if __name__ == '__main__':
         -p[icture]: Picture folder, only required in LaTeX mode (default "img")
         -r[esults]: Results folder where trained models are stored (default "../results")
         -f[ile]: Output filename, only required in LaTex mode
-        -coco: Use COCO dataset (default)
+        -cocoqa: Use COCO-QA dataset (default)
         -daquar: Use DAQUAR dataset
         -html: Set output format to HTML (default)
         -latex: Set output format to LaTeX.
@@ -88,7 +88,7 @@ if __name__ == '__main__':
                     [-p[icture] {pictureFolder}]\
                     [-r[esults] {resultsFolder}]\
                     [-f[ile] {outputTexFilename}]\
-                    [-daquar/-coco]\
+                    [-daquar/-cocoqa]\
                     [-html/-latex]\
     Parameters:\
         -m[odel]: Model name and model ID\
@@ -99,7 +99,7 @@ if __name__ == '__main__':
         -p[icture]: Picture folder, only required in LaTeX mode (default "img")\
         -r[esults]: Results folder where trained models are stored (default "../results")\
         -f[ile]: Output filename, only required in LaTex mode\
-        -coco: Use COCO dataset (default)\
+        -cocoqa: Use COCO-QA dataset (default)\
         -daquar: Use DAQUAR dataset\
         -html: Set output format to HTML (default)\
         -latex: Set output format to LaTeX\
@@ -108,7 +108,7 @@ if __name__ == '__main__':
         QID1,Question1,GroundTruthAnswer1\
         QID2,Question2,GroundTruthAnswer2\
         ...'
-    dataset = 'coco'
+    dataset = 'cocoqa'
     filename = 'result'
     pictureFolder = 'img'
     K = 1
@@ -137,8 +137,8 @@ if __name__ == '__main__':
             filename = sys.argv[i + 1]
         elif flag == '-daquar':
             dataset = 'daquar'
-        elif flag == '-coco':
-            dataset = 'coco'
+        elif flag == '-cocoqa':
+            dataset = 'cocoqa'
         elif flag == '-latex':
             renderMode = 'latex'
         elif flag == '-html':
@@ -150,11 +150,11 @@ if __name__ == '__main__':
         sys.exit(0)
 
     print 'Loading image urls...'
-    if dataset == 'coco':
+    if dataset == 'cocoqa':
         imgidDictFilename = os.path.join(dataFolder, 'imgid_dict.pkl')
         with open(imgidDictFilename, 'rb') as f:
             imgidDict = pkl.load(f)
-        urlDict = readImgDictCoco(imgidDict)
+        urlDict = readImgDictCocoqa(imgidDict)
     elif dataset == 'daquar':
         urlDict = readImgDictDaquar()
 
@@ -196,9 +196,12 @@ if __name__ == '__main__':
             print 'Running test data on ensemble model %s...' \
                     % modelName
             models = loadEnsemble(modelId.split(','), resultsFolder)
+            classDataFolders = getClassDataFolder(dataset)
             adhocOutputTest = runEnsemble(
                                         adhocInputTestSel, 
-                                        models, 
+                                        models,
+                                        dataFolder,
+                                        classDataFolders,
                                         adhocQuestionTypeTestSel)
         else:
             print 'Running test data on model %s...' \

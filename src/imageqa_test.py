@@ -265,6 +265,9 @@ def writeMetricsToFile(
 def loadEnsemble(
                     taskIds, 
                     resultsFolder):
+    """
+    Load class specific models.
+    """
     models = []
     for taskId in taskIds:
         taskFolder = os.path.join(resultsFolder, taskId)
@@ -275,7 +278,7 @@ def loadEnsemble(
         models.append(model)
     return models
 
-def runEnsemble(
+def __runEnsemble(
                 inputTest,
                 models,
                 ansDict,
@@ -293,12 +296,34 @@ def runEnsemble(
                 allOutput[questionTypeArray[n]][n, i]
     return ensembleOutputTest
 
-def testEnsemble(
-                    ensembleId,
-                    models,
-                    dataFolder,
-                    classDataFolders,
-                    resultsFolder):
+def getClassDataFolders(dataset):
+    """
+    Get different original data folder name for class specific models.
+    """
+    if dataset == 'daquar':
+        classDataFolders = [
+            dataFolder + '-object',
+            dataFolder + '-number',
+            dataFolder + '-color'
+        ]
+    elif dataset == 'cocoqa':
+        classDataFolders = [
+            dataFolder + '-object',
+            dataFolder + '-number',
+            dataFolder + '-color',
+            dataFolder + '-location'
+        ]
+    return classDataFolders
+
+def runEnsemble(
+                inputTest,
+                models, 
+                dataFolder, 
+                classDataFolders,
+                questionTypeArray):
+    """
+    Run a class specific model on any dataset.
+    """
     trainData, \
     testData, \
     qDict, \
@@ -306,8 +331,6 @@ def testEnsemble(
     aDict, \
     aIdict, \
     qTypeArray = loadDataSet(dataFolder)
-    inputTest = testData[0]
-    targetTest = testData[1]
     classAnsIdict = []
     for df in classDataFolders:
         trainData_c \
@@ -319,12 +342,39 @@ def testEnsemble(
         qTypeArray_c = loadDataSet(df)
         classAnsIdict.append(aIdict_c)
 
-    ensembleOutputTest = runEnsemble(
+    ensembleOutputTest = __runEnsemble(
                                         inputTest, 
                                         models,
                                         aDict,
                                         classAnsIdict,
-                                        qTypeArray)
+                                        questionTypeArray)
+    return ensembleOutputTest
+
+def testEnsemble(
+                    ensembleId,
+                    models,
+                    dataFolder,
+                    classDataFolders,
+                    resultsFolder):
+    """
+    Test a class specific model in its original dataset.
+    """
+    trainData, \
+    testData, \
+    qDict, \
+    qIdict, \
+    aDict, \
+    aIdict, \
+    qTypeArray = loadDataSet(dataFolder)
+    inputTest = testData[0]
+    targetTest = testData[1]
+
+    ensembleOutputTest = runEnsemble(
+                                    inputTest,
+                                    models, 
+                                    dataFolder, 
+                                    classDataFolders,
+                                    qTypeArray)
     ensembleAnswerFile = getAnswerFilename(ensembleId, resultsFolder)
     ensembleTruthFile = getTruthFilename(ensembleId, resultsFolder)
 

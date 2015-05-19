@@ -1,7 +1,8 @@
 import sys
+import os
 import nn
 import numpy as np
-from imageqa_test import *
+import imageqa_test as it
 
 if __name__ == '__main__':
     """
@@ -11,11 +12,13 @@ if __name__ == '__main__':
                                -m[odel] {modelId1}
                                -m[odel] {modelId2},...
                                -d[ata] {dataFolder}
+                               -daquar/-cocoqa
                                [-r[esults] {resultsFolder}]
     Results folder by default is '../results'
     """
     resultsFolder = '../results'
     taskIds = []
+    dataset = 'cocoqa'
     for i, flag in enumerate(sys.argv):
         if flag == '-m' or flag == '-model':
             taskIds.append(sys.argv[i + 1])
@@ -23,11 +26,17 @@ if __name__ == '__main__':
             ensembleId = sys.argv[i + 1]
         elif flag == '-d' or flag == '-data':
             dataFolder = sys.argv[i + 1]
-        elif flag == 'r' or flag == 'results':
+        elif flag == '-r' or flag == '-results':
             resultsFolder = sys.argv[i + 1]
-    models = loadEnsemble(taskIds, resultsFolder)
-    testEnsemble(
+        elif flag == '-daquar':
+            dataset = 'daquar'
+        elif flag == '-cocoqa':
+            dataset = 'cocoqa'
+    models = it.loadEnsemble(taskIds, resultsFolder)
+    classDataFolders = it.getClassDataFolders(dataset)
+    it.testEnsemble(
                     ensembleId=ensembleId,
                     models=models, 
                     dataFolder=dataFolder, 
+                    classDataFolders=classDataFolders,
                     resultsFolder=resultsFolder)
