@@ -121,7 +121,7 @@ def getObjId(inputData, objDict, questionDict, questionIdict, questionType):
     elif questionType == 'number':
         for i in range(inputData.shape[0]):
             # objId[i] = locateObjNumber(inputData[i], questionDict)
-            objId[i] = locateObjNumber(inputData[i], questionDict, questionIdict)
+            objId[i] = locateObjNumberNoun(inputData[i], questionDict, questionIdict)
     objId = objId - 1
     obj = questionIdictArray[objId]
     objId2 = np.zeros(objId.shape, dtype='int')
