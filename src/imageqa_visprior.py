@@ -97,7 +97,9 @@ def buildObjDict(trainData, questionIdict,
     objIdict = []
     print questionType
     objIds = extractObjId(trainData[0])
-    objList = questionIdict[objIds - 1]
+    objIds = objIds - 1
+    print objIds
+    objList = questionIdict[objIds]
     for obj in objList:
         if not objDict.has_key(obj):
             objDict[obj] = len(objIdict)
