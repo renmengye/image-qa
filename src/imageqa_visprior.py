@@ -91,7 +91,7 @@ def getObjId(inputData, objDict, questionDict, questionIdict, questionType):
         for i in range(inputData.shape[0]):
             objId[i] = locateObjNumber(inputData[i], questionDict)
     objId = objId - 1
-    obj = questionIdictArray[validObjId]
+    obj = questionIdictArray[objId]
     objId2 = np.zeros(objId.shape, dtype='int')
     for i in range(obj.shape[0]):
         if objDict.has_key(obj[i]):
