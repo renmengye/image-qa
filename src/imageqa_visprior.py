@@ -192,10 +192,10 @@ if __name__ == '__main__':
 
     visOutputMax = np.argmax(visTestOutput, axis=-1)
     visOutputMax = visOutputMax.reshape(visOutputMax.size)
-    testTarget = testTarget.reshape(testTarget.size)
+    testTargetReshape = testTarget.reshape(testTarget.size)
     
     print 'Vis+Prior Accuracy:',
-    print np.sum((visOutputMax == testTarget).astype('int')) / \
+    print np.sum((visOutputMax == testTargetReshape).astype('int')) / \
             float(testTarget.size)
 
     visModelFolder = os.path.join(resultsFolder, visModelId)
@@ -234,5 +234,5 @@ if __name__ == '__main__':
         ensOutputMax = np.argmax(ensTestOutput, axis=-1)
         ensOutputMax = ensOutputMax.reshape(ensOutputMax.size)
         print '0.5 VIS+PRIOR & 0.5 VIS+BLSTM Accuracy:'
-        print np.sum((ensOutputMax == testTarget).astype('int')) / \
+        print np.sum((ensOutputMax == testTargetReshape).astype('int')) / \
             float(testTarget.size)
