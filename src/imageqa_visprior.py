@@ -159,6 +159,8 @@ def runVisPrior(
                                 delta)
         visPriorOutputMax = np.argmax(visPriorOutput, axis=-1)
         visPriorOutputMax = visPriorOutputMax.reshape(visPriorOutputMax.size)
+        print visPriorOutputMax.shape
+        print validTargetReshape.shape
         
         print 'delta=%d Valid Accuracy:' % delta,
         rate = np.sum((visPriorOutputMax == validTargetReshape).astype('int')) / \
