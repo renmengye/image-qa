@@ -238,15 +238,14 @@ if __name__ == '__main__':
     testTarget = testData[1]
     deltas = [0.00001, 0.0001, 0.01, 0.05, 0.1, 0.5, 1.0]
     visModel = imageqa_test.loadModel(visModelId, resultsFolder)
-    visTestOutput = runVisPrior(
-                                trainData,
+    visTestOutput = runVisPrior(trainData,
                                 validData,
-                                testData,
+                                testData, 
                                 visModel,
                                 questionDict,
                                 questionIdict,
-                                questionType,
-                                deltas)
+                                deltas,
+                                questionType)
 
     visModelFolder = os.path.join(resultsFolder, visModelId)
     answerFilename = os.path.join(visModelFolder, visModelId + '_prior.test.o.txt')
