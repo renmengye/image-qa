@@ -95,11 +95,10 @@ def buildObjDict(trainData, questionIdict,
                 questionType='color', questionDict=None):
     objDict = {}
     objIdict = []
-    print questionType
     objIds = extractObjId(trainData[0])
     objIds = objIds - 1
-    print objIds
-    objList = questionIdict[objIds]
+    questionIdictArray = np.array(questionIdict, dtype='object')
+    objList = questionIdictArray[objIds]
     for obj in objList:
         if not objDict.has_key(obj):
             objDict[obj] = len(objIdict)
