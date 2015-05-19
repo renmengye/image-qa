@@ -74,7 +74,7 @@ def runVisPriorOnce(objId, count_wa, count_a, modelOutput, delta):
     P_w_a /= (modelOutput.shape[1] * delta + 1)
 
     # (n, c)
-    P_a_i = validOutput
+    P_a_i = modelOutput
 
     # (n, c)
     P_wai = P_w_a * P_a_i
