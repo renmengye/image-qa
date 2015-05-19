@@ -200,7 +200,7 @@ def loadData(dataFolder):
     ansIdict = vocabDict[3]
     testInput = testData[0]
     testTarget = testData[1]
-    return trainData, testData, questionDict, questionIdict, ansDict, ansIdict
+    return trainData, validData, testData, questionDict, questionIdict, ansDict, ansIdict
 
 if __name__ == '__main__':
     """
@@ -232,7 +232,7 @@ if __name__ == '__main__':
         elif flag == '-number':
             questionType = 'number'
 
-    trainData, testData, questionDict, questionIdict, ansDict, ansIdict = \
+    trainData, validData, testData, questionDict, questionIdict, ansDict, ansIdict = \
         loadData(visDataFolder)
     testInput = testData[0]
     testTarget = testData[1]
