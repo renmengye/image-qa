@@ -29,8 +29,9 @@ def locateObjNumberNoun(data, questionDict, questionIdict):
             data[t + 1, 0] == many:
             for u in range(t + 2, data.shape[0]):
                 word = questionIdict[data[u, 0] - 1]
-                lookupLexname(word).startswith('noun')
-                return data[u, 0]
+                lexname = lookupLexname(word)
+                if (lexname is not None and lexname.startswith('noun')) or (lexname is None):
+                    return data[u, 0]
     print 'not found'
     return data[-1, 0]
 
