@@ -192,6 +192,19 @@ if __name__ == '__main__':
     print np.sum((visOutputMax == testTarget).astype('int')) / \
             float(testTarget.size)
 
+    visModelFolder = os.path.join(resultsFolder, visModelId)
+    answerFilename = os.path.join(visModelFolder, visModelId + '_prior.test.o.txt')
+    truthFilename = os.path.join(visModelFolder, visModelId + '_prior.test.t.txt')
+    imageqa_test.outputTxt(
+                            visTestOutput, 
+                            testTarget, 
+                            ansIdict, 
+                            answerFilename, 
+                            truthFilename, 
+                            topK=1, 
+                            outputProb=False)
+    imageqa_test.runWups(answerFilename, truthFilename)
+
     if mainModelId is not None:
         trainData_m, testData_m, questionDict_m, questionIdict_m, \
             ansDict_m, ansIdict_m = \
