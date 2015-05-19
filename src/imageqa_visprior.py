@@ -119,7 +119,7 @@ def trainCount(trainData, questionIdict, objDict,
     for i in range(objIds.shape[0]):
         objId = objIds[i]
         obj = questionIdict[objId - 1]
-        ansId = trainData[1][n, 0]
+        ansId = trainData[1][i, 0]
         objId2 = objDict[obj]
         count_wa[objId2, ansId] += 1
         count_a[ansId] += 1
