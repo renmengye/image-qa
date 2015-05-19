@@ -268,7 +268,7 @@ if __name__ == '__main__':
                                 -vd[ata] {visDataFolder}
                                 -md[ata] {mainDataFolder}
                                 -r[esults] {resultsFolder}
-                                -color/-number
+                                -qtype {color/number/location}
     """
     questionType = 'color'
     visModelId = None
@@ -286,10 +286,8 @@ if __name__ == '__main__':
             mainDataFolder = sys.argv[i + 1]
         elif flag == '-r' or flag == '-results':
             resultsFolder = sys.argv[i + 1]
-        elif flag == '-color':
-            questionType = 'color'
-        elif flag == '-number':
-            questionType = 'number'
+        elif flag == '-qtype':
+            questionType = sys.argv[i + 1]
 
     trainData, validData, testData, questionDict, questionIdict, ansDict, ansIdict = \
         loadData(visDataFolder)
