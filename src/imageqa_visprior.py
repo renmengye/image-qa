@@ -141,6 +141,7 @@ def runVisPrior(
     # Reindex valid set
     validInput = validData[0]
     validTarget = validData[0]
+    print validTarget.shape
     validTargetReshape = validTarget.reshape(validTarget.size)
     validObjId = getObjId(validInput, objDict, questionDict, questionIdict, questionType)
 
