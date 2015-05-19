@@ -4,6 +4,7 @@ import os
 import numpy as np
 import nn
 import imageqa_test
+from nltk.corpus import wordnet
 
 lexnameDict = {}
 
