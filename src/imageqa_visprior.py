@@ -21,7 +21,28 @@ def lookupLexname(word):
         else:
             return None
 
+def locateObjLocation(data, questionDict, questionIdict):
+    """
+    Locate the object of where questions.
+    Very naive heuristic: take the noun immediately after "where".
+    """
+    where = questionDict['where']
+    for t in range(data.shape[0] - 1):
+        if data[t, 0] == where:
+            for u in range(t + 1, data.shape[0]):
+                word = questionIdict[data[u, 0] - 1]
+                lexname = lookupLexname(word)
+                if (lexname is not None and lexname.startswith('noun')) or \
+                    (lexname is None):
+                    return data[u, 0]
+    print 'not found'
+    return data[-1, 0]
+
 def locateObjNumberNoun(data, questionDict, questionIdict):
+    """
+    Locate the object of how many questions.
+    Very naive heuristic: take the noun immediately after "how many".
+    """
     how = questionDict['how']
     many = questionDict['many']
     for t in range(data.shape[0] - 2):
@@ -30,7 +51,8 @@ def locateObjNumberNoun(data, questionDict, questionIdict):
             for u in range(t + 2, data.shape[0]):
                 word = questionIdict[data[u, 0] - 1]
                 lexname = lookupLexname(word)
-                if (lexname is not None and lexname.startswith('noun')) or (lexname is None):
+                if (lexname is not None and lexname.startswith('noun')) or \
+                    (lexname is None):
                     return data[u, 0]
     print 'not found'
     return data[-1, 0]
@@ -56,18 +78,27 @@ def locateObjColor(data):
         else:
             return tmp
 
+def extractObjId(data):
+    objIds = []
+    for n in range(data.shape[0]):
+        if questionType == 'color':
+            objId = locateObjColor(data[n])
+        elif questionType == 'number':
+            #objId = locateObjNumber(data[n], questionDict)
+            objId = locateObjNumberNoun(data[n], questionDict, questionIdict)
+        elif questionType == 'location':
+            objId = locateObjLocation(data[n], questionDict, questionIdict)
+        objIds.append(objId)
+    return np.array(objIds, dtype='int')
+
 def buildObjDict(trainData, questionIdict, 
                 questionType='color', questionDict=None):
     objDict = {}
     objIdict = []
     print questionType
-    for n in range(trainData[0].shape[0]):
-        if questionType == 'color':
-            objId = locateObjColor(trainData[0][n])
-        elif questionType == 'number':
-            #objId = locateObjNumber(trainData[0][n], questionDict)
-            objId = locateObjNumberNoun(trainData[0][n], questionDict, questionIdict)
-        obj = questionIdict[objId - 1]
+    objIds = extractObjId(trainData[0])
+    objList = questionIdict[objIds - 1]
+    for obj in objList:
         if not objDict.has_key(obj):
             objDict[obj] = len(objIdict)
             objIdict.append(obj)
@@ -83,12 +114,9 @@ def trainCount(trainData, questionIdict, objDict,
     """
     count_wa = np.zeros((len(objIdict), numAns))
     count_a = np.zeros((numAns))
-    for n in range(trainData[0].shape[0]):
-        if questionType == 'color':
-            objId = locateObjColor(trainData[0][n])
-        elif questionType == 'number':
-            #objId = locateObjNumber(trainData[0][n], questionDict)
-            objId = locateObjNumberNoun(trainData[0][n], questionDict, questionIdict)
+    objIds = extractObjId(trainData[0])
+    for i in range(objIds.shape[0]):
+        objId = objIds[i]
         obj = questionIdict[objId - 1]
         ansId = trainData[1][n, 0]
         objId2 = objDict[obj]
@@ -114,23 +142,16 @@ def runVisPriorOnce(objId, count_wa, count_a, modelOutput, delta):
 
 def getObjId(inputData, objDict, questionDict, questionIdict, questionType):
     questionIdictArray = np.array(questionIdict, dtype='object')
-    objId = np.zeros((inputData.shape[0]), dtype='int')
-    if questionType == 'color':
-        for i in range(inputData.shape[0]):
-            objId[i] = locateObjColor(inputData[i])
-    elif questionType == 'number':
-        for i in range(inputData.shape[0]):
-            # objId[i] = locateObjNumber(inputData[i], questionDict)
-            objId[i] = locateObjNumberNoun(inputData[i], questionDict, questionIdict)
-    objId = objId - 1
-    obj = questionIdictArray[objId]
-    objId2 = np.zeros(objId.shape, dtype='int')
+    objIds = extractObjId(inputData)
+    objIds = objIds - 1
+    obj = questionIdictArray[objIds]
+    objIds2 = np.zeros(objIds.shape, dtype='int')
     for i in range(obj.shape[0]):
         if objDict.has_key(obj[i]):
-            objId2[i] = objDict[obj[i]]
+            objIds2[i] = objDict[obj[i]]
         else:
-            objId2[i] = objDict['UNK']
-    return objId2
+            objIds2[i] = objDict['UNK']
+    return objIds2
 
 def calcRate(output, target):
     outputMax = np.argmax(output, axis=-1)
