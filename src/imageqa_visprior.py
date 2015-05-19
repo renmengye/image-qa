@@ -101,7 +101,7 @@ def getObjId(inputData, objDict, questionDict, questionIdict, questionType):
     return objId2
 
 def calcRate(output, target):
-    output = np.argmax(output, axis=-1)
+    outputMax = np.argmax(output, axis=-1)
     outputMax = outputMax.reshape(outputMax.size)
     targetReshape = target.reshape(target.size)
     rate = np.sum((outputMax == targetReshape).astype('int')) / \
