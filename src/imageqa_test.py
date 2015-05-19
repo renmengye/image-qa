@@ -333,7 +333,7 @@ def runEnsemble(
     qTypeArray = loadDataSet(dataFolder)
     classAnsIdict = []
     for df in classDataFolders:
-        trainData_c \
+        trainData_c, \
         testData_c, \
         qDict_c, \
         qIdict_c, \
