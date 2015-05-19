@@ -168,7 +168,7 @@ def runVisPrior(
                                 count_a, 
                                 validOutput, 
                                 delta)        
-        print 'delta=%.4f Valid Accuracy:' % delta,
+        print 'delta=%f Valid Accuracy:' % delta,
         rate = calcRate(visPriorOutput, validTarget)
         print rate
         if rate > bestRate:
@@ -183,7 +183,7 @@ def runVisPrior(
                             count_a, 
                             testOutput, 
                             bestDelta)
-    print 'delta=%.4f Test Accuracy:' % bestDelta,
+    print 'delta=%f Test Accuracy:' % bestDelta,
     rate = calcRate(visPriorOutput, testTarget)
     print rate
     return visPriorOutput
@@ -242,7 +242,7 @@ if __name__ == '__main__':
         loadData(visDataFolder)
     testInput = testData[0]
     testTarget = testData[1]
-    deltas = [0.00001, 0.0001, 0.01, 0.05, 0.1, 0.5, 1.0]
+    deltas = [0.000001, 0.000005, 0.00001, 0.00005, 0.0001, 0.01, 0.05, 0.1, 0.5, 1.0]
     preVisModel = imageqa_test.loadModel(preVisModelId, resultsFolder)
     visModel = imageqa_test.loadModel(visModelId, resultsFolder)
     visTestOutput = runVisPrior(trainData,
