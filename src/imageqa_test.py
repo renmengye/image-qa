@@ -147,22 +147,44 @@ def getTruthFilename(
                     folder,
                     '%s.test.t.txt' % taskId)
 
-def loadTestSet(dataFolder):
+def loadDataSet(dataFolder):
+    trainDataFile = os.path.join(dataFolder, 'train.npy')
     testDataFile = os.path.join(dataFolder, 'test.npy')
     vocabDictFile = os.path.join(dataFolder, 'vocab-dict.npy')
     qtypeFile = os.path.join(dataFolder, 'test-qtype.npy')
-    vocabDict = np.load(vocabDictFile)
+    trainData = np.load(trainDataFile)
     testData = np.load(testDataFile)
+    vocabDict = np.load(vocabDictFile)
     questionTypeArray = np.load(qtypeFile)
     inputTest = testData[0]
     targetTest = testData[1]
-    questionArray = vocabDict[1]
-    answerArray = vocabDict[3]
+    qDict = vocabDict[0]
+    qIdict = vocabDict[1]
+    aDict = vocabDict[2]
+    aIDict = vocabDict[3]
+    return (trainData,
+            testData,
+            qDict,
+            qIdict,
+            aDict,
+            aIdict,
+            qTypeArray)
+
+def loadTestSet(dataFolder):
+    trainData,\
+    testData,\
+    qDict,\
+    qIdict,\
+    aDict,\
+    aIdict,\
+    qTypeArray = loadDataSet(dataFolder)
+    inputTest = testData[0]
+    targetTest = testData[1]
     return (inputTest, 
             targetTest,
-            questionArray, 
-            answerArray, 
-            questionTypeArray)
+            qIdict, 
+            aIdict, 
+            qTypeArray)
 
 def loadModel(
                 taskId,
@@ -256,32 +278,53 @@ def loadEnsemble(
 def runEnsemble(
                 inputTest,
                 models,
+                ansDict,
+                classAnsIdict,
                 questionTypeArray):
     allOutput = []
     for i, model in enumerate(models):
         print 'Running test set on model #%d' % i
         outputTest = nn.test(model, inputTest)
         allOutput.append(outputTest)
-    ensembleOutputTest = np.zeros(allOutput[0].shape)
-    for i in range(allOutput[0].shape[0]):
-        ensembleOutputTest[i] = allOutput[questionTypeArray[i]][i]
+    ensembleOutputTest = np.zeros((inputTest.shape[0], len(ansDict)))
+    for n in range(allOutput[0].shape[0]):
+        for i in range(allOutput[questionTypeArray[n]].shape[1]):
+            ensembleOutputTest[n, ansDict[classAnsIdict[i]]] = \
+                allOutput[questionTypeArray[n]][n, i]
     return ensembleOutputTest
 
 def testEnsemble(
                     ensembleId,
-                    models, 
-                    dataFolder, 
+                    models,
+                    dataFolder,
+                    classDataFolders,
                     resultsFolder):
-    inputTest, \
-    targetTest, \
-    questionArray, \
-    answerArray, \
-    questionTypeArray = loadTestSet(dataFolder)
+    trainData, \
+    testData, \
+    qDict, \
+    qIdict, \
+    aDict, \
+    aIdict, \
+    qTypeArray = loadDataSet(dataFolder)
+    inputTest = testData[0]
+    targetTest = testData[1]
+    classAnsIdict = []
+    for df in classDataFolders:
+        trainData_c \
+        testData_c, \
+        qDict_c, \
+        qIdict_c, \
+        aDict_c, \
+        aIdict_c, \
+        qTypeArray_c = loadDataSet(df)
+        classAnsIdict.append(aIdict_c)
 
     ensembleOutputTest = runEnsemble(
                                         inputTest, 
-                                        models, 
-                                        questionTypeArray)
+                                        models,
+                                        aDict,
+                                        classAnsIdict,
+                                        qTypeArray)
     ensembleAnswerFile = getAnswerFilename(ensembleId, resultsFolder)
     ensembleTruthFile = getTruthFilename(ensembleId, resultsFolder)
 
@@ -291,8 +334,8 @@ def testEnsemble(
                                 inputTest,
                                 ensembleOutputTest,
                                 targetTest,
-                                answerArray,
-                                questionTypeArray,
+                                aIdict,
+                                qTypeArray,
                                 ensembleAnswerFile,
                                 ensembleTruthFile)
     writeMetricsToFile(

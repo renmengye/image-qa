@@ -324,7 +324,6 @@ if __name__ == '__main__':
                     [-number] Number type question only
                     [-color] Color type question only
                     [-location] Location type question only
-                    [-reindex] Reindex the dictionaries of type-specific dataset
                     [-len] Maximum length/timespan
                     [-noreject] No rejection
                     [-o[utput]] Output folder, 
@@ -339,7 +338,6 @@ if __name__ == '__main__':
     buildLocation = True
     maxlen = -1
     outputFolder = None
-    reindex = False
     reject = True
 
     for i in range(len(sys.argv)):
@@ -372,8 +370,6 @@ if __name__ == '__main__':
             buildNumber = False
             buildColor = False
             buildLocation = True
-        elif flag == '-reindex':
-            reindex = True
         elif flag == '-noreject':
             reject = False
         elif flag == '-len':
@@ -640,15 +636,6 @@ if __name__ == '__main__':
     buildDict(validAnswers, 0, pr=True)
     print 'Test answer distribution'
     testAfterWorddict, testAfterIdict, testAfterFreq = \
-        buildDict(testAnswers, 0, pr=True)
-
-    if reindex:
-        worddict, idict, wordfreq = buildDict(trainQuestions, 1, pr=False)
-        print 'Train answer distribution'
-        ansdict, iansdict, _ = buildDict(trainAnswers, 0, pr=True)
-        print 'Valid answer distribution'
-        buildDict(validAnswers, 0, pr=True)
-        print 'Test answer distribution'
         buildDict(testAnswers, 0, pr=True)
 
     print 'GUESS After Rejection on Test'

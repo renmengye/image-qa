@@ -127,33 +127,7 @@ def testVisPrior(
     return P_a_wi
 
 
-if __name__ == '__main__':
-    """
-    Usage:
-    python imageqa_visprior.py
-                                -cid {colorClassifierId}
-                                -id {mainModelId}
-                                -cd[ata] {colorDataFolder}
-                                -d[ata] {mainDataFolder}
-                                -r[esults] {resultsFolder}
-                                -color/-number
-    """
-    questionType = 'color'
-    for i, flag in enumerate(sys.argv):
-        if flag == '-cid':
-            colorClassifierId = sys.argv[i + 1]
-        elif flag == '-cid':
-            modelId = sys.argv[i + 1]
-        elif flag == '-d' or flag == '-data':
-            dataFolder = sys.argv[i + 1]
-        elif flag == '-r' or flag == '-results':
-            resultsFolder = sys.argv[i + 1]
-        elif flag == '-color':
-            questionType = 'color'
-        elif flag == '-number':
-            questionType = 'number'
-
-    delta = 0.01
+def loadData(dataFolder):
     trainDataFile = os.path.join(dataFolder, 'train.npy')
     trainData = np.load(trainDataFile)
     testDataFile = os.path.join(dataFolder, 'test.npy')
@@ -166,25 +140,81 @@ if __name__ == '__main__':
     ansIdict = vocabDict[3]
     testInput = testData[0]
     testTarget = testData[1]
+    return trainData, testData, questionDict, questionIdict, ansDict, ansIdict
 
-    visModel = imageqa_test.loadModel(colorClassifierId, resultsFolder)
-    testOutput = testVisPrior(
+if __name__ == '__main__':
+    """
+    Usage:
+    python imageqa_visprior.py
+                                -vid {visModelId}
+                                -mid {mainModelId}
+                                -vd[ata] {visDataFolder}
+                                -md[ata] {mainDataFolder}
+                                -r[esults] {resultsFolder}
+                                -color/-number
+    """
+    questionType = 'color'
+    visModelId = None
+    mainModelId = None
+    for i, flag in enumerate(sys.argv):
+        if flag == '-vid':
+            visModelId = sys.argv[i + 1]
+        elif flag == '-mid':
+            mainModelId = sys.argv[i + 1]
+        elif flag == '-vd' or flag == '-vdata':
+            visDataFolder = sys.argv[i + 1]
+        elif flag == '-md' or flag == '-mdata':
+            mainDataFolder = sys.argv[i + 1]
+        elif flag == '-r' or flag == '-results':
+            resultsFolder = sys.argv[i + 1]
+        elif flag == '-color':
+            questionType = 'color'
+        elif flag == '-number':
+            questionType = 'number'
+
+    trainData, testData, questionDict, questionIdict, ansDict, ansIdict = \
+        loadData(visDataFolder)
+    testInput = testData[0]
+    testTarget = testData[1]
+    delta = 0.01
+    visModel = imageqa_test.loadModel(visModelId, resultsFolder)
+    visTestOutput = testVisPrior(
                                 testData, 
                                 visModel,
                                 questionDict,
                                 questionIdict,
                                 questionType,
                                 delta)
-    outputMax = np.argmax(testOutput, axis=-1)
-    outputMax = outputMax.reshape(outputMax.size)
+    visOutputMax = np.argmax(visTestOutput, axis=-1)
+    visOutputMax = visOutputMax.reshape(visOutputMax.size)
     testTarget = testTarget.reshape(testTarget.size)
     
-    print 'Accuracy:',
-    print np.sum((outputMax == testTarget).astype('int')) / \
+    print 'Vis+Prior Accuracy:',
+    print np.sum((visOutputMax == testTarget).astype('int')) / \
             float(testTarget.size)
 
-    if modelId is not None:
-        # re-index the test set...
-        otherModel = imageqa_test.loadModel(modelId, resultsFolder)
-        testOutput2 = nn.test(testInput, otherModel)
-        # Need to extract the color output from testOutput2
+    if mainModelId is not None:
+        trainData_m, testData_m, questionDict_m, questionIdict_m, \
+            ansDict_m, ansIdict_m = \
+            loadData(mainDataFolder)
+
+        newTestInput = np.zeros(testInput.shape, dtype='int')
+        for n in range(testInput.shape[0]):
+            for t in range(testInput.shape[1]):
+                newTestInput[n, t, 0] = \
+                    ansDict_m[ansIdict[testInput[n, t, 0] - 1]]
+        mainModel = imageqa_test.loadModel(mainModelId, resultsFolder)
+        mainTestOutput = nn.test(newTestInput, mainModel)
+
+        # Need to extract the class output from mainTestOutput
+        classNewId = []
+        for ans in ansIdict:
+            classNewId.append(ansDict_m[ans])
+        classNewId = np.array(classNewId, dtype='int')
+        mainTestOutput = mainTestOutput[:, classNewId]
+        ensTestOutput = 0.5 * visTestOutput + 0.5 * mainTestOutput
+        ensOutputMax = np.argmax(ensTestOutput, axis=-1)
+        ensOutputMax = ensOutputMax.reshape(ensOutputMax.size)
+        print '0.5 VIS+PRIOR & 0.5 VIS+BLSTM Accuracy:'
+        print np.sum((ensOutputMax == testTarget).astype('int')) / \
+            float(testTarget.size)
