@@ -222,32 +222,18 @@ def validDelta(
 
 def runVisPrior(
                 trainData,
-                validData,
                 testData,
-                preVisModel,
                 visModel,
                 questionDict,
                 questionIdict,
-                deltas,
+                delta,
                 questionType):
-    bestDelta = validDelta(
-                            trainData,
-                            validData,
-                            preVisModel,
-                            questionDict,
-                            questionIdict,
-                            deltas,
-                            questionType)
-
-    trainDataAll = (np.concatenate((trainData[0], validData[0]), axis=0),
-                    np.concatenate((trainData[1], validData[1]), axis=0))
-
-    objDict, objIdict = buildObjDict(trainDataAll, 
+    objDict, objIdict = buildObjDict(trainData, 
                                 questionIdict,
                                 questionType,
                                 questionDict)
 
-    count_wa, count_a = trainCount(trainDataAll, 
+    count_wa, count_a = trainCount(trainData, 
                                 questionIdict,
                                 objDict,
                                 objIdict,
@@ -255,13 +241,6 @@ def runVisPrior(
                                 questionType,
                                 questionDict)
     print count_wa
-
-    # for obj in objIdict:
-    #     objId = objDict[obj]
-    #     print obj,
-    #     for i in range(count_wa.shape[1]):
-    #         print ansIdict[i], count_wa[objId, i],
-    #     print
 
     # Reindex test set
     testInput = testData[0]
@@ -281,8 +260,8 @@ def runVisPrior(
                             count_wa, 
                             count_a, 
                             testOutput, 
-                            bestDelta)
-    print 'delta=%f Test Accuracy:' % bestDelta,
+                            delta)
+    print 'delta=%f Test Accuracy:' % delta,
     rate = calcRate(visPriorOutput, testTarget)
     print rate
     return visPriorOutput
@@ -341,15 +320,26 @@ if __name__ == '__main__':
     testTarget = testData[1]
     deltas = [0.000001, 0.000005, 0.00001, 0.00005, 0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0]
     preVisModel = imageqa_test.loadModel(preVisModelId, resultsFolder)
+
+    bestDelta = validDelta(
+                            trainData,
+                            validData,
+                            preVisModel,
+                            questionDict,
+                            questionIdict,
+                            deltas,
+                            questionType)
+
+    trainDataAll = (np.concatenate((trainData[0], validData[0]), axis=0),
+                    np.concatenate((trainData[1], validData[1]), axis=0))
+
     visModel = imageqa_test.loadModel(visModelId, resultsFolder)
-    visTestOutput = runVisPrior(trainData,
-                                validData,
+    visTestOutput = runVisPrior(trainDataAll,
                                 testData,
-                                preVisModel,
                                 visModel,
                                 questionDict,
                                 questionIdict,
-                                deltas,
+                                bestDelta,
                                 questionType)
 
     visModelFolder = os.path.join(resultsFolder, visModelId)

@@ -33,7 +33,7 @@ if __name__ == '__main__':
         elif flag == '-cocoqa':
             dataset = 'cocoqa'
     models = it.loadEnsemble(taskIds, resultsFolder)
-    classDataFolders = it.getClassDataFolders(dataset)
+    classDataFolders = it.getClassDataFolders(dataset, dataFolder)
     it.testEnsemble(
                     ensembleId=ensembleId,
                     models=models, 

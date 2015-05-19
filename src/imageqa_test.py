@@ -296,7 +296,7 @@ def __runEnsemble(
                 allOutput[questionTypeArray[n]][n, i]
     return ensembleOutputTest
 
-def getClassDataFolders(dataset):
+def getClassDataFolders(dataset, dataFolder):
     """
     Get different original data folder name for class specific models.
     """

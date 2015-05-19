@@ -118,10 +118,13 @@ if __name__ == '__main__':
             print 'Running test data on ensemble model %s...' \
                     % modelName
             models = loadEnsemble(modelId.split(','), resultsFolder)
-            outputTest = runEnsemble(
-                                        inputTest, 
-                                        models, 
-                                        testQuestionTypes)
+            classDataFolders = getClassDataFolder(dataset, dataFolder)
+            adhocOutputTest = runEnsemble(
+                                        adhocInputTestSel, 
+                                        models,
+                                        dataFolder,
+                                        classDataFolders,
+                                        adhocQuestionTypeTestSel)
         else:
             print 'Running test data on model %s...' \
                     % modelName
