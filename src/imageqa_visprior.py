@@ -243,7 +243,7 @@ if __name__ == '__main__':
     testInput = testData[0]
     testTarget = testData[1]
     deltas = [0.00001, 0.0001, 0.01, 0.05, 0.1, 0.5, 1.0]
-    preVisModel = imageqa_test.loadModel(visModelId, resultsFolder)
+    preVisModel = imageqa_test.loadModel(preVisModelId, resultsFolder)
     visModel = imageqa_test.loadModel(visModelId, resultsFolder)
     visTestOutput = runVisPrior(trainData,
                                 validData,
