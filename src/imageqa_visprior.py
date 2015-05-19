@@ -5,6 +5,34 @@ import numpy as np
 import nn
 import imageqa_test
 
+lexnameDict = {}
+
+def lookupLexname(word):
+    if lexnameDict.has_key(word):
+        return lexnameDict[word]
+    else:
+        synsets = wordnet.synsets(word)
+        # Just pick the first definition
+        if len(synsets) > 0:
+            lexname = synsets[0].lexname()
+            lexnameDict[word] = lexname
+            return lexname
+        else:
+            return None
+
+def locateObjNumberNoun(data, questionDict, questionIdict):
+    how = questionDict['how']
+    many = questionDict['many']
+    for t in range(data.shape[0] - 2):
+        if data[t, 0] == how and \
+            data[t + 1, 0] == many:
+            for u in range(t + 2, data.shape[0]):
+                word = questionIdict[data[u, 0] - 1]
+                lookupLexname(word).startswith('noun')
+                return data[u, 0]
+    print 'not found'
+    return data[-1, 0]
+
 def locateObjNumber(data, questionDict):
     """
     Locate the object of how many questions.
@@ -35,9 +63,9 @@ def buildObjDict(trainData, questionIdict,
         if questionType == 'color':
             objId = locateObjColor(trainData[0][n])
         elif questionType == 'number':
-            objId = locateObjNumber(trainData[0][n], questionDict)
+            #objId = locateObjNumber(trainData[0][n], questionDict)
+            objId = locateObjNumberNoun(trainData[0][n], questionDict, questionIdict)
         obj = questionIdict[objId - 1]
-        colorId = trainData[1][n, 0]
         if not objDict.has_key(obj):
             objDict[obj] = len(objIdict)
             objIdict.append(obj)
@@ -57,12 +85,13 @@ def trainCount(trainData, questionIdict, objDict,
         if questionType == 'color':
             objId = locateObjColor(trainData[0][n])
         elif questionType == 'number':
-            objId = locateObjNumber(trainData[0][n], questionDict)
+            #objId = locateObjNumber(trainData[0][n], questionDict)
+            objId = locateObjNumberNoun(trainData[0][n], questionDict, questionIdict)
         obj = questionIdict[objId - 1]
-        colorId = trainData[1][n, 0]
+        ansId = trainData[1][n, 0]
         objId2 = objDict[obj]
-        count_wa[objId2, colorId] += 1
-        count_a[colorId] += 1
+        count_wa[objId2, ansId] += 1
+        count_a[ansId] += 1
     # Add UNK count
     count_a[-1] += 1
     return count_wa, count_a
@@ -89,7 +118,8 @@ def getObjId(inputData, objDict, questionDict, questionIdict, questionType):
             objId[i] = locateObjColor(inputData[i])
     elif questionType == 'number':
         for i in range(inputData.shape[0]):
-            objId[i] = locateObjNumber(inputData[i], questionDict)
+            # objId[i] = locateObjNumber(inputData[i], questionDict)
+            objId[i] = locateObjNumber(inputData[i], questionDict, questionIdict)
     objId = objId - 1
     obj = questionIdictArray[objId]
     objId2 = np.zeros(objId.shape, dtype='int')
