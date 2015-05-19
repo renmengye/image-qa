@@ -19,6 +19,7 @@ def locateObjNumber(data, questionDict):
     print 'not found'
 
 def locateObjColor(data):
+    print data
     return data[-2, 0]
 
 def buildObjDict(trainData, questionIdict, 
