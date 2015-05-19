@@ -15,7 +15,6 @@ def locateObjNumber(data, questionDict):
     for t in range(data.shape[0] - 2):
         if data[t, 0] == how and \
             data[t + 1, 0] == many:
-            #print 'found', data[t + 2, 0]
             return data[t + 2, 0]
     print 'not found'
 
