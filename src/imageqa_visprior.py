@@ -67,13 +67,47 @@ def trainCount(trainData, questionIdict, objDict,
     count_a[-1] += 1
     return count_wa, count_a
 
-def testVisPrior(
+def runVisPriorOnce(objId, count_wa, count_a, modelOutput, delta):
+    P_w_a = count_wa[objId, :]
+    P_w_a /= count_a[:] 
+    P_w_a += delta
+    P_w_a /= (modelOutput.shape[1] * delta + 1)
+
+    # (n, c)
+    P_a_i = validOutput
+
+    # (n, c)
+    P_wai = P_w_a * P_a_i
+    P_a_wi = P_wai / np.sum(P_wai, axis=1).reshape(P_wai.shape[0], 1)
+    return P_a_wi
+
+def getObjId(inputData, objDict, questionDict, questionType):
+    objId = np.zeros((inputData.shape[0]), dtype='int')
+    if questionType == 'color':
+        for i in range(inputData.shape[0]):
+            objId[i] = locateObjColor(inputData[i])
+    elif questionType == 'number':
+        for i in range(inputData.shape[0]):
+            objId[i] = locateObjNumber(inputData[i], questionDict)
+    objId = objId - 1
+    obj = questionIdictArray[validObjId]
+    objId2 = np.zeros(objId.shape, dtype='int')
+    for i in range(obj.shape[0]):
+        if objDict.has_key(obj[i]):
+            objId2[i] = objDict[obj[i]]
+        else:
+            objId2[i] = objDict['UNK']
+    return objId2
+
+def runVisPrior(
+                trainData,
+                validData,
                 testData, 
                 visModel,
-                questionDict, 
+                questionDict,
                 questionIdict,
-                questionType='color',
-                delta=0.01):
+                deltas,
+                questionType='color'):
     objDict, objIdict = buildObjDict(trainData, 
                                 questionIdict,
                                 questionType,
@@ -94,46 +128,68 @@ def testVisPrior(
             print ansIdict[i], count_wa[objId, i],
         print
 
-    testInput = testData[0]
-    testObjId = np.zeros((testInput.shape[0]), dtype='int')
-
-    if questionType == 'color':
-        for i in range(testInput.shape[0]):
-            testObjId[i] = locateObjColor(testInput[i])
-    elif questionType == 'number':
-        for i in range(testInput.shape[0]):
-            testObjId[i] = locateObjNumber(testInput[i], questionDict)
-
     questionIdictArray = np.array(questionIdict, dtype='object')
-    testObjId = testObjId - 1
-    testObj = questionIdictArray[testObjId]
-    testObjId2 = np.zeros(testObjId.shape, dtype='int')
-    for i in range(testObj.shape[0]):
-        if objDict.has_key(testObj[i]):
-            testObjId2[i] = objDict[testObj[i]]
-        else:
-            testObjId2[i] = objDict['UNK']
+
+    # Reindex test set
+    testInput = testData[0]
+    testTarget = testData[0]
+    testTargetReshape = testTarget.reshape(testTarget.size)
+    testObjId = getObjId(testInput, objDict, questionDict, questionType)
+
+    # Run vis model on test set
     testOutput = nn.test(visModel, testInput)
 
-    # (n, c)
-    P_w_a = count_wa[testObjId2, :]
-    P_w_a /= count_a[:] 
-    P_w_a += delta
-    P_w_a /= (len(ansDict) * delta + 1)
+    # Reindex valid set
+    validInput = validData[0]
+    validTarget = validData[0]
+    validTargetReshape = validTarget.reshape(validTarget.size)
+    validObjId = getObjId(validInput, objDict, questionDict, questionType)
 
-    # (n, c)
-    P_a_i = testOutput
+    # Run vis model on valid set
+    validOutput = nn.test(visModel, validInput)
 
-    # (n, c)
-    P_wai = P_w_a * P_a_i
-    P_a_wi = P_wai / np.sum(P_wai, axis=1).reshape(P_wai.shape[0], 1)
-
-    return P_a_wi
-
+    # Determine best delta
+    bestRate = 0.0
+    bestDelta = 0.0
+    for delta in deltas:
+        visPriorOutput = runVisPriorOnce(
+                                validObjId, 
+                                count_wa, 
+                                count_a, 
+                                validOutput, 
+                                delta)
+        visPriorOutputMax = np.argmax(visPriorOutput, axis=-1)
+        visPriorOutputMax = visPriorOutputMax.reshape(visPriorOutputMax.size)
+        
+        print 'delta=%d Valid Accuracy:' % delta,
+        rate = np.sum((visPriorOutputMax == validTargetReshape).astype('int')) / \
+                float(validTarget.size)
+        print rate
+        if rate > bestRate:
+            bestRate = rate
+            bestDelta = delta
+    print 'Best Delta:', bestDelta
+    
+    # Run on test set
+    visPriorOutput = runVisPriorOnce(
+                            testObjId, 
+                            count_wa, 
+                            count_a, 
+                            testOutput, 
+                            bestDelta)
+    visPriorOutputMax = np.argmax(visPriorOutput, axis=-1)
+    visPriorOutputMax = visPriorOutputMax.reshape(visPriorOutputMax.size)
+    print 'delta=%d Test Accuracy:' % bestDelta,
+    rate = np.sum((visPriorOutputMax == testTargetReshape).astype('int')) / \
+            float(validTarget.size)
+    print rate
+    return visPriorOutput
 
 def loadData(dataFolder):
     trainDataFile = os.path.join(dataFolder, 'train.npy')
     trainData = np.load(trainDataFile)
+    validDataFile = os.path.join(dataFolder, 'valid.npy')
+    validData = np.load(validDataFile)
     testDataFile = os.path.join(dataFolder, 'test.npy')
     testData = np.load(testDataFile)
     vocabDictFile = os.path.join(dataFolder, 'vocab-dict.npy')
@@ -180,23 +236,17 @@ if __name__ == '__main__':
         loadData(visDataFolder)
     testInput = testData[0]
     testTarget = testData[1]
-    delta = 0.01
+    deltas = [0.00001, 0.0001, 0.01, 0.05, 0.1, 0.5, 1.0]
     visModel = imageqa_test.loadModel(visModelId, resultsFolder)
-    visTestOutput = testVisPrior(
-                                testData, 
+    visTestOutput = runVisPrior(
+                                trainData,
+                                validData,
+                                testData,
                                 visModel,
                                 questionDict,
                                 questionIdict,
                                 questionType,
-                                delta)
-
-    visOutputMax = np.argmax(visTestOutput, axis=-1)
-    visOutputMax = visOutputMax.reshape(visOutputMax.size)
-    testTargetReshape = testTarget.reshape(testTarget.size)
-    
-    print 'Vis+Prior Accuracy:',
-    print np.sum((visOutputMax == testTargetReshape).astype('int')) / \
-            float(testTarget.size)
+                                deltas)
 
     visModelFolder = os.path.join(resultsFolder, visModelId)
     answerFilename = os.path.join(visModelFolder, visModelId + '_prior.test.o.txt')
