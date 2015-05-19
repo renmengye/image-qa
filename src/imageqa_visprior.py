@@ -111,7 +111,8 @@ def calcRate(output, target):
 def runVisPrior(
                 trainData,
                 validData,
-                testData, 
+                testData,
+                preVisModel,
                 visModel,
                 questionDict,
                 questionIdict,
@@ -153,7 +154,7 @@ def runVisPrior(
     validObjId = getObjId(validInput, objDict, questionDict, questionIdict, questionType)
 
     # Run vis model on valid set
-    validOutput = nn.test(visModel, validInput)
+    validOutput = nn.test(preVisModel, validInput)
     print 'Before Prior Valid Rate:',
     print calcRate(validOutput, validTarget)
 
@@ -208,6 +209,7 @@ if __name__ == '__main__':
     """
     Usage:
     python imageqa_visprior.py
+                                -pvid {preVisModelId}
                                 -vid {visModelId}
                                 -mid {mainModelId}
                                 -vd[ata] {visDataFolder}
@@ -219,7 +221,9 @@ if __name__ == '__main__':
     visModelId = None
     mainModelId = None
     for i, flag in enumerate(sys.argv):
-        if flag == '-vid':
+        if flag == '-pvid':
+            preVisModelId = sys.argv[i + 1]
+        elif flag == '-vid':
             visModelId = sys.argv[i + 1]
         elif flag == '-mid':
             mainModelId = sys.argv[i + 1]
@@ -239,10 +243,12 @@ if __name__ == '__main__':
     testInput = testData[0]
     testTarget = testData[1]
     deltas = [0.00001, 0.0001, 0.01, 0.05, 0.1, 0.5, 1.0]
+    preVisModel = imageqa_test.loadModel(visModelId, resultsFolder)
     visModel = imageqa_test.loadModel(visModelId, resultsFolder)
     visTestOutput = runVisPrior(trainData,
                                 validData,
-                                testData, 
+                                testData,
+                                preVisModel,
                                 visModel,
                                 questionDict,
                                 questionIdict,
