@@ -155,7 +155,7 @@ def loadDataSet(dataFolder):
     trainData = np.load(trainDataFile)
     testData = np.load(testDataFile)
     vocabDict = np.load(vocabDictFile)
-    questionTypeArray = np.load(qtypeFile)
+    qTypeArray = np.load(qtypeFile)
     inputTest = testData[0]
     targetTest = testData[1]
     qDict = vocabDict[0]
