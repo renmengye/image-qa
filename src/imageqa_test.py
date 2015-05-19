@@ -294,7 +294,7 @@ def __runEnsemble(
         qtype = questionTypeArray[n]
         output = allOutput[qtype]
         for i in range(output.shape[1]):
-            ansId = ansDict[classAnsIdict[i]]
+            ansId = ansDict[classAnsIdict[qtype][i]]
             ensembleOutputTest[n, ansId] = output[n, i]
     return ensembleOutputTest
 
