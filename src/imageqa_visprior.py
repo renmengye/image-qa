@@ -72,6 +72,8 @@ def testVisPrior(
                                 questionIdict,
                                 questionType,
                                 questionDict)
+    print objDict
+    print objIdict
 
     count_wa, count_a = trainCount(trainData, 
                                 questionIdict,
@@ -184,6 +186,7 @@ if __name__ == '__main__':
                                 questionIdict,
                                 questionType,
                                 delta)
+
     visOutputMax = np.argmax(visTestOutput, axis=-1)
     visOutputMax = visOutputMax.reshape(visOutputMax.size)
     testTarget = testTarget.reshape(testTarget.size)
