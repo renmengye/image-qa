@@ -25,6 +25,7 @@ def buildObjDict(trainData, questionIdict,
                 questionType='color', questionDict=None):
     objDict = {}
     objIdict = []
+    print questionType
     for n in range(trainData[0].shape[0]):
         if questionType == 'color':
             objId = locateObjColor(trainData[0][n])
@@ -72,9 +73,6 @@ def testVisPrior(
                                 questionIdict,
                                 questionType,
                                 questionDict)
-    print objDict
-    print objIdict
-
     count_wa, count_a = trainCount(trainData, 
                                 questionIdict,
                                 objDict,
