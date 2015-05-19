@@ -291,9 +291,11 @@ def __runEnsemble(
         allOutput.append(outputTest)
     ensembleOutputTest = np.zeros((inputTest.shape[0], len(ansDict)))
     for n in range(allOutput[0].shape[0]):
-        for i in range(allOutput[questionTypeArray[n]].shape[1]):
-            ensembleOutputTest[n, ansDict[classAnsIdict[i]]] = \
-                allOutput[questionTypeArray[n]][n, i]
+        qtype = questionTypeArray[n]
+        output = allOutput[qtype]
+        for i in range(output.shape[1]):
+            ansId = ansDict[classAnsIdict[i]]
+            ensembleOutputTest[n, ansId] = output[n, i]
     return ensembleOutputTest
 
 def getClassDataFolders(dataset, dataFolder):
