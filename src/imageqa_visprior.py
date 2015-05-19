@@ -81,7 +81,8 @@ def runVisPriorOnce(objId, count_wa, count_a, modelOutput, delta):
     P_a_wi = P_wai / np.sum(P_wai, axis=1).reshape(P_wai.shape[0], 1)
     return P_a_wi
 
-def getObjId(inputData, objDict, questionDict, questionType):
+def getObjId(inputData, objDict, questionDict, questionIdict, questionType):
+    questionIdictArray = np.array(questionIdict, dtype='object')
     objId = np.zeros((inputData.shape[0]), dtype='int')
     if questionType == 'color':
         for i in range(inputData.shape[0]):
@@ -128,13 +129,11 @@ def runVisPrior(
             print ansIdict[i], count_wa[objId, i],
         print
 
-    questionIdictArray = np.array(questionIdict, dtype='object')
-
     # Reindex test set
     testInput = testData[0]
     testTarget = testData[0]
     testTargetReshape = testTarget.reshape(testTarget.size)
-    testObjId = getObjId(testInput, objDict, questionDict, questionType)
+    testObjId = getObjId(testInput, objDict, questionDict, questionIdict, questionType)
 
     # Run vis model on test set
     testOutput = nn.test(visModel, testInput)
@@ -143,7 +142,7 @@ def runVisPrior(
     validInput = validData[0]
     validTarget = validData[0]
     validTargetReshape = validTarget.reshape(validTarget.size)
-    validObjId = getObjId(validInput, objDict, questionDict, questionType)
+    validObjId = getObjId(validInput, objDict, questionDict, questionIdict, questionType)
 
     # Run vis model on valid set
     validOutput = nn.test(visModel, validInput)
