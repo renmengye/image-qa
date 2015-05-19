@@ -106,7 +106,7 @@ def calcRate(output, target):
     targetReshape = target.reshape(target.size)
     rate = np.sum((outputMax == targetReshape).astype('int')) / \
             float(target.size)
-    print rate
+    return rate
 
 def runVisPrior(
                 trainData,
@@ -180,7 +180,7 @@ def runVisPrior(
                             count_a, 
                             testOutput, 
                             bestDelta)
-    print 'delta=%d Test Accuracy:' % bestDelta,
+    print 'delta=%.4f Test Accuracy:' % bestDelta,
     rate = calcRate(visPriorOutput, testTarget)
     print rate
     return visPriorOutput
