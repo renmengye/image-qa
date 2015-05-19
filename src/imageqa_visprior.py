@@ -162,16 +162,14 @@ def calcRate(output, target):
             float(target.size)
     return rate
 
-def runVisPrior(
+def validDelta(
                 trainData,
                 validData,
-                testData,
                 preVisModel,
-                visModel,
                 questionDict,
                 questionIdict,
                 deltas,
-                questionType='color'):
+                questionType):
     objDict, objIdict = buildObjDict(trainData, 
                                 questionIdict,
                                 questionType,
@@ -185,21 +183,12 @@ def runVisPrior(
                                 questionDict)
     print count_wa
 
-    for obj in objIdict:
-        objId = objDict[obj]
-        print obj,
-        for i in range(count_wa.shape[1]):
-            print ansIdict[i], count_wa[objId, i],
-        print
-
-    # Reindex test set
-    testInput = testData[0]
-    testTarget = testData[1]
-    testTargetReshape = testTarget.reshape(testTarget.size)
-    testObjId = getObjId(testInput, objDict, questionDict, questionIdict, questionType)
-
-    # Run vis model on test set
-    testOutput = nn.test(visModel, testInput)
+    # for obj in objIdict:
+    #     objId = objDict[obj]
+    #     print obj,
+    #     for i in range(count_wa.shape[1]):
+    #         print ansIdict[i], count_wa[objId, i],
+    #     print
 
     # Reindex valid set
     validInput = validData[0]
@@ -209,7 +198,7 @@ def runVisPrior(
 
     # Run vis model on valid set
     validOutput = nn.test(preVisModel, validInput)
-    print 'Before Prior Valid Rate:',
+    print 'Before Prior Valid Accuracy:',
     print calcRate(validOutput, validTarget)
 
     # Determine best delta
@@ -229,6 +218,62 @@ def runVisPrior(
             bestRate = rate
             bestDelta = delta
     print 'Best Delta:', bestDelta
+    return bestDelta
+
+def runVisPrior(
+                trainData,
+                validData,
+                testData,
+                preVisModel,
+                visModel,
+                questionDict,
+                questionIdict,
+                deltas,
+                questionType):
+    bestDelta = validDelta(
+                            trainData,
+                            validData,
+                            preVisModel,
+                            questionDict,
+                            questionIdict,
+                            deltas,
+                            questionType)
+
+    trainDataAll = (np.concatenate((trainData[0], validData[0]), axis=0),
+                    np.concatenate((trainData[1], validData[1]), axis=0))
+
+    objDict, objIdict = buildObjDict(trainDataAll, 
+                                questionIdict,
+                                questionType,
+                                questionDict)
+
+    count_wa, count_a = trainCount(trainDataAll, 
+                                questionIdict,
+                                objDict,
+                                objIdict,
+                                len(ansIdict),
+                                questionType,
+                                questionDict)
+    print count_wa
+
+    # for obj in objIdict:
+    #     objId = objDict[obj]
+    #     print obj,
+    #     for i in range(count_wa.shape[1]):
+    #         print ansIdict[i], count_wa[objId, i],
+    #     print
+
+    # Reindex test set
+    testInput = testData[0]
+    testTarget = testData[1]
+    testTargetReshape = testTarget.reshape(testTarget.size)
+    testObjId = getObjId(testInput, objDict, questionDict, questionIdict, questionType)
+
+    # Run vis model on test set
+    testOutput = nn.test(visModel, testInput)
+
+    print 'Before Prior Test Accuracy:',
+    print calcRate(testOutput, testTarget)
     
     # Run on test set
     visPriorOutput = runVisPriorOnce(
