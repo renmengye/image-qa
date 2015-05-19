@@ -100,6 +100,14 @@ def getObjId(inputData, objDict, questionDict, questionIdict, questionType):
             objId2[i] = objDict['UNK']
     return objId2
 
+def calcRate(output, target):
+    output = np.argmax(output, axis=-1)
+    outputMax = outputMax.reshape(outputMax.size)
+    targetReshape = target.reshape(target.size)
+    rate = np.sum((outputMax == targetReshape).astype('int')) / \
+            float(target.size)
+    print rate
+
 def runVisPrior(
                 trainData,
                 validData,
@@ -156,13 +164,9 @@ def runVisPrior(
                                 count_wa, 
                                 count_a, 
                                 validOutput, 
-                                delta)
-        visPriorOutputMax = np.argmax(visPriorOutput, axis=-1)
-        visPriorOutputMax = visPriorOutputMax.reshape(visPriorOutputMax.size)
-        
-        print 'delta=%d Valid Accuracy:' % delta,
-        rate = np.sum((visPriorOutputMax == validTargetReshape).astype('int')) / \
-                float(validTarget.size)
+                                delta)        
+        print 'delta=%.4f Valid Accuracy:' % delta,
+        rate = calcRate(visPriorOutput, validTarget)
         print rate
         if rate > bestRate:
             bestRate = rate
@@ -176,11 +180,8 @@ def runVisPrior(
                             count_a, 
                             testOutput, 
                             bestDelta)
-    visPriorOutputMax = np.argmax(visPriorOutput, axis=-1)
-    visPriorOutputMax = visPriorOutputMax.reshape(visPriorOutputMax.size)
     print 'delta=%d Test Accuracy:' % bestDelta,
-    rate = np.sum((visPriorOutputMax == testTargetReshape).astype('int')) / \
-            float(validTarget.size)
+    rate = calcRate(visPriorOutput, testTarget)
     print rate
     return visPriorOutput
 
