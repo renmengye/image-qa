@@ -154,6 +154,8 @@ def runVisPrior(
 
     # Run vis model on valid set
     validOutput = nn.test(visModel, validInput)
+    print 'Before Prior Valid Rate:',
+    print calcRate(validOutput, validTarget)
 
     # Determine best delta
     bestRate = 0.0
