@@ -456,6 +456,111 @@ def readImgDictDaquar():
         urlList.append(daquarImageFolder + 'image%d.jpg' % int(i))
     return urlList
 
+def parseComparativeParams(argv):
+    """
+    Parse parameter list for rendering comparative results
+    Usage:
+        -m[odel] {name1:modelId1}
+        -m[odel] {name2:modelId2}
+        -em[odel] {name3:ensembleModelId3,ensembleModelId4,...}
+        -pem[odel] {name4:ensembleModelId5,ensembleModelId6,...}:
+                
+        ...
+        -d[ata] {dataFolder}
+        -i[nput] {listFile}
+        -o[utput] {outputFolder}
+        [-k {top K answers}]
+        [-p[icture] {pictureFolder}]
+        [-r[esults] {resultsFolder}]
+        [-f[ile] {outputTexFilename}]
+        [-dataset {daquar/cocoqa}]
+
+    Parameters:
+        -m[odel]: Normal models
+        -em[odel]: Class-specific-ensemble models
+        -pem[odel]: Class-specific-ensemble + prior models
+        -d[ata]: Data folder
+        -i[nput]: Task-specific input file
+        -o[utput]: Output folder
+        -k: Top-K answers, default 1
+        -p[icture]: Picture folder name, default "img"
+        -r[esults]: Results folder, default "../results"
+        -f[ile]: Output TeX file name, default "result"
+        -dataset: daquar/cocoqa dataset, default "cocoqa"
+
+    Returns:
+        A dictionary with following keys:
+        models: List of dictionaries, with following keys:
+            modelName: string
+            isEnsemble: boolean
+            runPrior: boolean
+        dataFolder: string
+        inputFile: string
+        outputFolder: string
+        topK: int
+        pictureFolder: string
+        outputTexFilename: string
+        dataset: string
+    """
+    dataset = 'cocoqa'
+    filename = 'result'
+    pictureFolder = 'img'
+    resultsFolder = '../results'
+    K = 1
+    models = []
+    for i, flag in enumerate(argv):
+        if flag == '-m' or flag == '-model':
+            parts = sys.argv[i + 1].split(':')
+            models.append({
+                modelName: parts[0],
+                modelIds: parts[1],
+                isEnsemble: False,
+                runPrior: False
+            })
+        elif flag == '-em' or flag == '-emodel':
+            parts = sys.argv[i + 1].split(':')
+            models.append({
+                modelName: parts[0],
+                modelIds: parts[1],
+                isEnsemble: True,
+                runPrior: False
+            })
+        elif flag == '-pem' or flag == '-pemodel':
+            parts = sys.argv[i + 1].split(':')
+            models.append({
+                modelName: parts[0],
+                modelIds: parts[1],
+                isEnsemble: True,
+                runPrior: True
+            })
+        elif flag == '-d' or flag == '-data':
+            dataFolder = sys.argv[i + 1]
+        elif flag == '-i' or flag == '-input':
+            inputFile = sys.argv[i + 1]
+        elif flag == '-k':
+            K = int(sys.argv[i + 1])
+        elif flag == '-p' or flag == '-picture':
+            pictureFolder = sys.argv[i + 1]
+        elif flag == '-o' or flag == '-output':
+            outputFolder = sys.argv[i + 1]
+        elif flag == '-r' or flag == '-results':
+            resultsFolder = sys.argv[i + 1]
+        elif flag == '-f' or flag == '-file':
+            filename = sys.argv[i + 1]
+        elif flag == '-dataset':
+            dataset = sys.argv[i + 1]
+    return {
+        models: models,
+        dataFolder: dataFolder,
+        inputFile: inputFile,
+        outputFolder: outputFolder,
+        topK: K
+        pictureFolder: pictureFolder,
+        outputTexFilename: filename,
+        dataset: dataset
+    }
+
+
 if __name__ == '__main__':
     """
     Render HTML of a model

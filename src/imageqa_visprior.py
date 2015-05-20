@@ -162,7 +162,7 @@ def trainCount(
     for i in range(objIds.shape[0]):
         objId = objIds[i]
         obj = questionIdict[objId - 1]
-        ansId = trainData[1][i, 0]
+        ansId = data['trainData'][1][i, 0]
         objId2 = objDict[obj]
         count_wa[objId2, ansId] += 1
         count_a[ansId] += 1
@@ -219,13 +219,6 @@ def validDelta(
                                 objIdict,
                                 len(ansIdict))
     print count_wa
-
-    # for obj in objIdict:
-    #     objId = objDict[obj]
-    #     print obj,
-    #     for i in range(count_wa.shape[1]):
-    #         print ansIdict[i], count_wa[objId, i],
-    #     print
 
     # Reindex valid set
     validInput = validData[0]
@@ -319,7 +312,7 @@ def runVisPrior(
 def combineTrainValid(trainData, validData):
     trainDataAll = (np.concatenate((trainData[0], validData[0]), axis=0),
                     np.concatenate((trainData[1], validData[1]), axis=0))
-    return trainDataAll
+    return data['trainData']All
 
 def runEnsemblePrior(
                         inputTest,
@@ -331,16 +324,9 @@ def runEnsemblePrior(
     Similar to "testEnsemble" in imageqa_test.
     Run visprior on number and color questions.
     """
-    trainData, \
-    validData, \
-    testData, \
-    questionDict, \
-    questionIdict, \
-    ansDict, \
-    ansIdict, \
-    qTypeArray = it.loadDataset(dataFolder)
-    inputTest = testData[0]
-    targetTest = testData[1]
+    data = it.loadDataset(dataFolder)
+    inputTest = data['testData'][0]
+    targetTest = data['testData'][1]
     outputTest = np.zeros((targetTest.shape[0], len(ansIdict)))
     count = 0
 
@@ -349,24 +335,17 @@ def runEnsemblePrior(
     classAnsIdict = []
 
     for i, model in enumerate(models):
-        trainData_m, \
-        validData_m, \
-        testData_m, \
-        questionDict_m, \
-        questionIdict_m, \
-        ansDict_m, \
-        ansIdict_m, \
-        qTypeArray_m = it.loadDataset(classDataFolders[i])
+        data_m = it.loadDataset(classDataFolders[i])
         classAnsIdict.append(ansIdict_m)
 
-        tvData_m = combineTrainValid(trainData_m, validData_m)
+        tvData_m = combineTrainValid(data_m['trainData'], data_m['validData'])
         print 'Running test set on model #%d' % i
         if i == 0 or i == 3:
             # Object and location questions
             print 'No prior'
-            outputTest = nn.test(model, testData_m[0])
+            outputTest = nn.test(model, data_m['testData'][0])
             print 'Accuracy:',
-            calcRate(outputTest, testData_m[1])
+            print calcRate(outputTest, data_m['testData'][1])
         elif i == 1 or i == 2:
             # Number and color questions
             print 'Prior'
@@ -379,17 +358,17 @@ def runEnsemblePrior(
                 questionType = "color"
             outputTest = runVisPrior(
                                 tvData_m,
-                                testData_m,
+                                data_m['testData'],
                                 questionType,
                                 model,
-                                questionDict_m,
-                                questionIdict_m,
-                                len(ansIdict_m),
+                                data_m['questionDict'],
+                                data_m['questionIdict'],
+                                len(data_m['ansIdict']),
                                 delta)
         allOutput.append(outputTest)
     counter = [0, 0, 0, 0]
     for n in range(targetTest.shape[0]):
-        qtype = qTypeArray[n]
+        qtype = questionTypeArray[n]
         output = allOutput[qtype]
         for i in range(output.shape[1]):
             ansId = ansDict[classAnsIdict[qtype][i]]
@@ -404,22 +383,15 @@ def testEnsemblePrior(
                     dataFolder,
                     classDataFolders,
                     resultsFolder):
-    trainData, \
-    validData, \
-    testData, \
-    questionDict, \
-    questionIdict, \
-    ansDict, \
-    ansIdict, \
-    qTypeArray = it.loadDataset(dataFolder)
-    inputTest = testData[0]
-    targetTest = testData[1]
+    data = it.loadDataset(dataFolder)
+    inputTest = data['testData'][0]
+    targetTest = data['testData'][1]
     ensembleOutputTest = runEnsemblePrior(
                                     inputTest,
                                     models, 
                                     dataFolder, 
                                     classDataFolders,
-                                    qTypeArray)
+                                    data['questionTypeArray'])
     ensembleAnswerFile = it.getAnswerFilename(ensembleId, resultsFolder)
     ensembleTruthFile = it.getTruthFilename(ensembleId, resultsFolder)
 
@@ -429,8 +401,8 @@ def testEnsemblePrior(
                                 inputTest,
                                 ensembleOutputTest,
                                 targetTest,
-                                ansIdict,
-                                qTypeArray,
+                                data['ansIdict'],
+                                data['questionTypeArray'],
                                 ensembleAnswerFile,
                                 ensembleTruthFile)
     it.writeMetricsToFile(
@@ -473,16 +445,9 @@ if __name__ == '__main__':
         elif flag == '-qtype':
             questionType = sys.argv[i + 1]
 
-    trainData, \
-    validData, \
-    testData, \
-    questionDict, \
-    questionIdict, \
-    ansDict, \
-    ansIdict, \
-    questionTypeArray = it.loadDataset(visDataFolder)
-    testInput = testData[0]
-    testTarget = testData[1]
+    data = it.loadDataset(visDataFolder)
+    testInput = data['testData'][0]
+    testTarget = data['testData'][1]
     deltas = \
         [0.000001, 
         0.000005, 
@@ -501,23 +466,23 @@ if __name__ == '__main__':
     preVisModel = it.loadModel(preVisModelId, resultsFolder)
 
     bestDelta = validDelta(
-                            trainData,
-                            validData,
+                            data['trainData'],
+                            data['validData'],
                             preVisModel,
-                            questionDict,
-                            questionIdict,
+                            data['questionDict'],
+                            data['questionIdict'],
                             deltas,
                             questionType)
 
-    trainDataAll = combineTrainValid(trainData, validData)
+    trainDataAll = combineTrainValid(data['trainData'], data['validData'])
     visModel = it.loadModel(visModelId, resultsFolder)
     visTestOutput = runVisPrior(trainDataAll,
-                                testData,
+                                data['testData'],
                                 questionType,
                                 visModel,
-                                questionDict,
-                                questionIdict,
-                                len(ansIdict),
+                                data['questionDict'],
+                                data['questionIdict'],
+                                len(data['ansIdict']),
                                 bestDelta)
 
     visModelFolder = os.path.join(resultsFolder, visModelId)
@@ -528,7 +493,7 @@ if __name__ == '__main__':
     it.outputTxt(
                     visTestOutput, 
                     testTarget, 
-                    ansIdict, 
+                    data['ansIdict'], 
                     answerFilename, 
                     truthFilename, 
                     topK=1, 
@@ -536,14 +501,9 @@ if __name__ == '__main__':
     it.runWups(answerFilename, truthFilename)
 
     if mainModelId is not None:
-        trainData_m, \
-        validData_m, \
-        testData_m, \
-        questionDict_m, \
-        questionIdict_m, \
-        ansDict_m, \
-        ansIdict_m, \
-        questionTypeArray_m = it.loadDataset(mainDataFolder)
+        data_m = it.loadDataset(mainDataFolder)
+        ansDict_m = data_m['ansDict']
+        ansIdict = data['ansIdict']
 
         newTestInput = np.zeros(testInput.shape, dtype='int')
         for n in range(testInput.shape[0]):

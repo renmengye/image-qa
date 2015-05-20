@@ -2,8 +2,9 @@ import sys
 import os
 import nn
 import numpy as np
-from imageqa_test import *
-from imageqa_render import *
+import imageqa_test as it
+import imageqa_visprior as ip
+import imageqa_render as ir
 
 if __name__ == '__main__':
     """
@@ -11,7 +12,8 @@ if __name__ == '__main__':
     Usage: python imageqa_layout.py 
                     -m[odel] {name1:modelId1}
                     -m[odel] {name2:modelId2}
-                    -m[odel] {name3:ensembleModelId3,ensembleModelId4,...}
+                    -em[odel] {name3:ensembleModelId3,ensembleModelId4,...}
+                    -pem[odel] {name4:ensembleModelId5,ensembleModelId6,...}
                     ...
                     -d[ata] {dataFolder}
                     -i[nput] {listFile}
@@ -34,38 +36,9 @@ if __name__ == '__main__':
     QID2[,Comment2]
     ...
     """
-    dataset = 'cocoqa'
-    filename = 'result'
-    pictureFolder = 'img'
-    K = 1
-    modelNames = []
-    modelIds = []
-    for i, flag in enumerate(sys.argv):
-        if flag == '-m' or flag == '-model':
-            parts = sys.argv[i + 1].split(':')
-            modelNames.append(parts[0])
-            modelIds.append(parts[1])
-        elif flag == '-n' or flag == '-names':
-            namesStr = sys.argv[i + 1]
-            modelNames = namesStr.split(',')
-        elif flag == '-d' or flag == '-data':
-            dataFolder = sys.argv[i + 1]
-        elif flag == '-i' or flag == '-input':
-            inputFile = sys.argv[i + 1]
-        elif flag == '-k':
-            K = int(sys.argv[i + 1])
-        elif flag == '-p' or flag == '-picture':
-            pictureFolder = sys.argv[i + 1]
-        elif flag == '-o' or flag == '-output':
-            outputFolder = sys.argv[i + 1]
-        elif flag == '-f' or flag == '-file':
-            filename = sys.argv[i + 1]
-        elif flag == '-daquar':
-            dataset = 'daquar'
-        elif flag == '-cocoqa':
-            dataset = 'cocoqa'
-
-    resultsFolder = '../results'
+    params = ir.parseComparativeParams(sys.argv)
+    dataset = params['dataset']
+    dataFolder = params['dataFolder']
 
     print 'Loading image urls...'
     if dataset == 'cocoqa':
@@ -77,14 +50,7 @@ if __name__ == '__main__':
         urlDict = readImgDictDaquar()
 
     print 'Loading test data...'
-    vocabDict = np.load(os.path.join(dataFolder, 'vocab-dict.npy'))
-    testDataFile = os.path.join(dataFolder, 'test.npy')
-    testData = np.load(testDataFile)
-    inputTest = testData[0]
-    targetTest = testData[1]
-    questionArray = vocabDict[1]
-    answerArray = vocabDict[3]
-
+    
     selectionIds = []
     selectionComments = []
     caption = ''
@@ -105,21 +71,29 @@ if __name__ == '__main__':
     inputTestSel = inputTest[idx]
     targetTestSel = targetTest[idx]
     
-    for i in range(len(questionArray)):
-        if '_' in questionArray[i]:
-            questionArray[i] = questionArray[i].replace('_', '\\_')
-    for i in range(len(answerArray)):
-        if '_' in answerArray[i]:
-            answerArray[i] = answerArray[i].replace('_', '\\_')
+    for i in range(len(questionIdict)):
+        if '_' in questionIdict[i]:
+            questionIdict[i] = questionIdict[i].replace('_', '\\_')
+    for i in range(len(ansIdict)):
+        if '_' in ansIdict[i]:
+            ansIdict[i] = ansIdict[i].replace('_', '\\_')
 
     modelOutputs = []
-    for modelName, modelId in zip(modelNames, modelIds):
+    for rp, modelName, modelId in zip(runPriors, modelNames, modelIds):
         if ',' in modelId:
             print 'Running test data on ensemble model %s...' \
                     % modelName
-            models = loadEnsemble(modelId.split(','), resultsFolder)
-            classDataFolders = getClassDataFolder(dataset, dataFolder)
-            adhocOutputTest = runEnsemble(
+            models = it.loadEnsemble(modelId.split(','), resultsFolder)
+            classDataFolders = it.getClassDataFolder(dataset, dataFolder)
+            if rp:
+                outputTest = ip.runEnsemblePrior(
+                                        adhocInputTestSel, 
+                                        models,
+                                        dataFolder,
+                                        classDataFolders,
+                                        adhocQuestionTypeTestSel)
+            else:
+                outputTest = it.runEnsemble(
                                         adhocInputTestSel, 
                                         models,
                                         dataFolder,
@@ -128,7 +102,7 @@ if __name__ == '__main__':
         else:
             print 'Running test data on model %s...' \
                     % modelName
-            model = loadModel(modelId, resultsFolder)
+            model = it.loadModel(modelId, resultsFolder)
             outputTest = nn.test(model, inputTest)
         modelOutputs.append(outputTest)
 
@@ -136,11 +110,11 @@ if __name__ == '__main__':
     print('Rendering LaTeX...')
     if not os.path.exists(outputFolder):
         os.makedirs(outputFolder)
-    renderLatex(
+    ir.renderLatex(
                 inputTestSel, 
                 targetTestSel, 
-                questionArray, 
-                answerArray, 
+                questionIdict, 
+                ansIdict, 
                 urlDict, 
                 topK=K,
                 outputFolder=outputFolder,

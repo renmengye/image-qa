@@ -164,31 +164,51 @@ def loadDataset(dataFolder):
     qIdict = vocabDict[1]
     aDict = vocabDict[2]
     aIdict = vocabDict[3]
-    return (trainData,
-            validData,
-            testData,
-            qDict,
-            qIdict,
-            aDict,
-            aIdict,
-            qTypeArray)
+    return {
+            trainData: trainData,
+            validData: validData,
+            testData: testData,
+            questionDict: qDict,
+            questionIdict: qIdict,
+            ansDict: aDict,
+            ansIdict: aIdict,
+            questionTypeArray: qTypeArray}
+
+# def loadDataset(dataFolder):
+#     trainDataFile = os.path.join(dataFolder, 'train.npy')
+#     validDataFile = os.path.join(dataFolder, 'valid.npy')
+#     testDataFile = os.path.join(dataFolder, 'test.npy')
+#     vocabDictFile = os.path.join(dataFolder, 'vocab-dict.npy')
+#     qtypeFile = os.path.join(dataFolder, 'test-qtype.npy')
+#     trainData = np.load(trainDataFile)
+#     validData = np.load(validDataFile)
+#     testData = np.load(testDataFile)
+#     vocabDict = np.load(vocabDictFile)
+#     qTypeArray = np.load(qtypeFile)
+#     inputTest = testData[0]
+#     targetTest = testData[1]
+#     qDict = vocabDict[0]
+#     qIdict = vocabDict[1]
+#     aDict = vocabDict[2]
+#     aIdict = vocabDict[3]
+#     return (trainData,
+#             validData,
+#             testData,
+#             qDict,
+#             qIdict,
+#             aDict,
+#             aIdict,
+#             qTypeArray)
 
 def loadTestSet(dataFolder):
-    trainData, \
-    validData, \
-    testData, \
-    qDict, \
-    qIdict, \
-    aDict, \
-    aIdict, \
-    qTypeArray = loadDataset(dataFolder)
-    inputTest = testData[0]
-    targetTest = testData[1]
+    data = loadDataset(dataFolder)
+    inputTest = data['testData'][0]
+    targetTest = data['testData'][1]
     return (inputTest, 
             targetTest,
-            qIdict, 
-            aIdict, 
-            qTypeArray)
+            data['questionIdict'], 
+            data['ansIdict'], 
+            data['questionTypeArray'])
 
 def loadModel(
                 taskId,
@@ -330,30 +350,16 @@ def runEnsemble(
     """
     Run a class specific model on any dataset.
     """
-    trainData, \
-    validData, \
-    testData, \
-    qDict, \
-    qIdict, \
-    aDict, \
-    aIdict, \
-    qTypeArray = loadDataset(dataFolder)
+    data = loadDataset(dataFolder)
     classAnsIdict = []
     for df in classDataFolders:
-        trainData_c, \
-        validData_c, \
-        testData_c, \
-        qDict_c, \
-        qIdict_c, \
-        aDict_c, \
-        aIdict_c, \
-        qTypeArray_c = loadDataset(df)
-        classAnsIdict.append(aIdict_c)
+        data_c = loadDataset(df)
+        classAnsIdict.append(data_c['ansIdict'])
 
     ensembleOutputTest = __runEnsemble(
                                         inputTest, 
                                         models,
-                                        aDict,
+                                        data['ansDict'],
                                         classAnsIdict,
                                         questionTypeArray)
     return ensembleOutputTest
@@ -367,23 +373,16 @@ def testEnsemble(
     """
     Test a class specific model in its original dataset.
     """
-    trainData, \
-    validData, \
-    testData, \
-    qDict, \
-    qIdict, \
-    aDict, \
-    aIdict, \
-    qTypeArray = loadDataset(dataFolder)
-    inputTest = testData[0]
-    targetTest = testData[1]
+    data = loadDataset(dataFolder)
+    inputTest = data['testData'][0]
+    targetTest = data['testData'][1]
 
     ensembleOutputTest = runEnsemble(
                                     inputTest,
                                     models, 
                                     dataFolder, 
                                     classDataFolders,
-                                    qTypeArray)
+                                    data['questionTypeArray'])
     ensembleAnswerFile = getAnswerFilename(ensembleId, resultsFolder)
     ensembleTruthFile = getTruthFilename(ensembleId, resultsFolder)
 
@@ -393,8 +392,8 @@ def testEnsemble(
                                 inputTest,
                                 ensembleOutputTest,
                                 targetTest,
-                                aIdict,
-                                qTypeArray,
+                                data['ansIdict'],
+                                data['questionTypeArray'],
                                 ensembleAnswerFile,
                                 ensembleTruthFile)
     writeMetricsToFile(
