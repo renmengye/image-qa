@@ -80,7 +80,7 @@ def locateObjColor(data):
         else:
             return tmp
 
-def extractObjId(data):
+def extractObjId(data, questionType):
     objIds = []
     for n in range(data.shape[0]):
         if questionType == 'color':
@@ -99,7 +99,7 @@ def reindexObjId(
                 questionIdict, 
                 questionType):
     questionIdictArray = np.array(questionIdict, dtype='object')
-    objIds = extractObjId(inputData)
+    objIds = extractObjId(inputData, questionType)
     objIds = objIds - 1
     obj = questionIdictArray[objIds]
     objIds2 = np.zeros(objIds.shape, dtype='int')
@@ -117,7 +117,7 @@ def buildObjDict(
                     questionDict=None):
     objDict = {}
     objIdict = []
-    objIds = extractObjId(trainData[0])
+    objIds = extractObjId(trainData[0], questionType)
     objIds = objIds - 1
     questionIdictArray = np.array(questionIdict, dtype='object')
     objList = questionIdictArray[objIds]
@@ -142,7 +142,7 @@ def trainCount(
     """
     count_wa = np.zeros((len(objIdict), numAns))
     count_a = np.zeros((numAns))
-    objIds = extractObjId(trainData[0])
+    objIds = extractObjId(trainData[0], questionType)
     for i in range(objIds.shape[0]):
         objId = objIds[i]
         obj = questionIdict[objId - 1]
@@ -352,8 +352,10 @@ def runEnsemblePrior(
             # Delta is pre-determined
             if i == 1:
                 delta = 1e-6
+                questionType = "number"
             elif i == 2:
                 delta = 5e-4
+                questionType = "color"
             outputTest = runVisPrior(
                                 tvData_m,
                                 testData_m,
@@ -361,7 +363,7 @@ def runEnsemblePrior(
                                 qDict_m,
                                 qIdict_m,
                                 delta,
-                                qTypeArray_m)
+                                questionType)
         allOutput.append(outputTest)
     for n in range(allOutput[0].shape[0]):
         output = allOutput[qtype]
