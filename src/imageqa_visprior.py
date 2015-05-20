@@ -384,8 +384,8 @@ def runEnsemblePrior(
                                 delta)
         allOutput.append(outputTest)
     for n in range(allOutput[0].shape[0]):
-        output = allOutput[qtype]
         qtype = qTypeArray[n]
+        output = allOutput[qtype]
         for i in range(output.shape[1]):
             ansId = ansDict[classAnsIdict[qtype][i]]
             ensembleOutputTest[n, ansId] = output[n, i]
