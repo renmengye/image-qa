@@ -321,7 +321,7 @@ def runEnsemblePrior(
     qIdict, \
     aDict, \
     aIdict, \
-    qTypeArray = loadDataset(dataFolder)
+    qTypeArray = it.loadDataset(dataFolder)
     inputTest = testData[0]
     targetTest = testData[1]
     outputTest = np.zeros(targetTest.shape[0], len(aIdict))
@@ -338,7 +338,7 @@ def runEnsemblePrior(
         qIdict_m, \
         aDict_m, \
         aIdict, \
-        qTypeArray_m = loadDataset(classDataFolders[i])
+        qTypeArray_m = it.loadDataset(classDataFolders[i])
 
         tvData = combineTrainValid(trainData_m, validData_m)
         print 'Running test set on model #%d' % i
@@ -385,7 +385,7 @@ def testEnsemblePrior(
     qIdict, \
     aDict, \
     aIdict, \
-    qTypeArray = loadDataset(dataFolder)
+    qTypeArray = it.loadDataset(dataFolder)
     inputTest = testData[0]
     targetTest = testData[1]
     ensembleOutputTest = runEnsemblePrior(
