@@ -165,14 +165,14 @@ def loadDataset(dataFolder):
     aDict = vocabDict[2]
     aIdict = vocabDict[3]
     return {
-            trainData: trainData,
-            validData: validData,
-            testData: testData,
-            questionDict: qDict,
-            questionIdict: qIdict,
-            ansDict: aDict,
-            ansIdict: aIdict,
-            questionTypeArray: qTypeArray}
+            'trainData': trainData,
+            'validData': validData,
+            'testData': testData,
+            'questionDict': qDict,
+            'questionIdict': qIdict,
+            'ansDict': aDict,
+            'ansIdict': aIdict,
+            'questionTypeArray': qTypeArray}
 
 # def loadDataset(dataFolder):
 #     trainDataFile = os.path.join(dataFolder, 'train.npy')

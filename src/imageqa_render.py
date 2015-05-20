@@ -550,14 +550,14 @@ def parseComparativeParams(argv):
         elif flag == '-dataset':
             dataset = sys.argv[i + 1]
     return {
-        models: models,
-        dataFolder: dataFolder,
-        inputFile: inputFile,
-        outputFolder: outputFolder,
-        topK: K
-        pictureFolder: pictureFolder,
-        outputTexFilename: filename,
-        dataset: dataset
+        'models': models,
+        'dataFolder': dataFolder,
+        'inputFile': inputFile,
+        'outputFolder': outputFolder,
+        'topK': K
+        'pictureFolder': pictureFolder,
+        'outputTexFilename': filename,
+        'dataset': dataset
     }
 
 
