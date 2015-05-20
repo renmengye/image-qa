@@ -328,7 +328,7 @@ def runEnsemblePrior(
     count = 0
 
     allOutput = []
-    ensembleOutputTest = np.zeros((inputTest.shape[0], len(ansDict)))
+    ensembleOutputTest = np.zeros((inputTest.shape[0], len(aIdict)))
 
     for i, model in enumerate(models):
         trainData_m, \
@@ -367,7 +367,7 @@ def runEnsemblePrior(
         output = allOutput[qtype]
         qtype = qTypeArray[n]
         for i in range(output.shape[1]):
-            ansId = ansDict[classAnsIdict[qtype][i]]
+            ansId = aDict[classAnsIdict[qtype][i]]
             ensembleOutputTest[n, ansId] = output[n, i]
 
     return ensembleOutputTest
