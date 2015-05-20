@@ -304,13 +304,6 @@ def combineTrainValid(trainData, validData):
                     np.concatenate((trainData[1], validData[1]), axis=0))
     return trainDataAll
 
-def __runEnsemblePrior(
-                        inputTest,
-                        models,
-                        ansDict,
-                        classAnsIdict,
-                        questionTypeArray):
-
 def runEnsemblePrior(
                         inputTest,
                         models, 
