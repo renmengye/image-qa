@@ -418,8 +418,8 @@ def testEnsemblePrior(
                                     dataFolder, 
                                     classDataFolders,
                                     qTypeArray)
-    ensembleAnswerFile = getAnswerFilename(ensembleId, resultsFolder)
-    ensembleTruthFile = getTruthFilename(ensembleId, resultsFolder)
+    ensembleAnswerFile = it.getAnswerFilename(ensembleId, resultsFolder)
+    ensembleTruthFile = it.getTruthFilename(ensembleId, resultsFolder)
 
     resultsRank, \
     resultsCategory, \
