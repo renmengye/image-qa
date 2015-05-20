@@ -383,12 +383,14 @@ def runEnsemblePrior(
                                 len(ansIdict_m),
                                 delta)
         allOutput.append(outputTest)
-    for n in range(allOutput[0].shape[0]):
+    counter = [0, 0, 0, 0]
+    for n in range(targetTest.shape[0]):
         qtype = qTypeArray[n]
         output = allOutput[qtype]
         for i in range(output.shape[1]):
             ansId = ansDict[classAnsIdict[qtype][i]]
-            ensembleOutputTest[n, ansId] = output[n, i]
+            ensembleOutputTest[n, ansId] = output[counter[qtype], i]
+        counter[qtype] += 1
 
     return ensembleOutputTest
 
