@@ -147,12 +147,14 @@ def getTruthFilename(
                     folder,
                     '%s.test.t.txt' % taskId)
 
-def loadDataSet(dataFolder):
+def loadDataset(dataFolder):
     trainDataFile = os.path.join(dataFolder, 'train.npy')
+    validDataFile = os.path.join(dataFolder, 'valid.npy')
     testDataFile = os.path.join(dataFolder, 'test.npy')
     vocabDictFile = os.path.join(dataFolder, 'vocab-dict.npy')
     qtypeFile = os.path.join(dataFolder, 'test-qtype.npy')
     trainData = np.load(trainDataFile)
+    validData = np.load(validDataFile)
     testData = np.load(testDataFile)
     vocabDict = np.load(vocabDictFile)
     qTypeArray = np.load(qtypeFile)
@@ -171,13 +173,14 @@ def loadDataSet(dataFolder):
             qTypeArray)
 
 def loadTestSet(dataFolder):
-    trainData,\
-    testData,\
-    qDict,\
-    qIdict,\
-    aDict,\
-    aIdict,\
-    qTypeArray = loadDataSet(dataFolder)
+    trainData, \
+    validData, \
+    testData, \
+    qDict, \
+    qIdict, \
+    aDict, \
+    aIdict, \
+    qTypeArray = loadDataset(dataFolder)
     inputTest = testData[0]
     targetTest = testData[1]
     return (inputTest, 
@@ -327,21 +330,23 @@ def runEnsemble(
     Run a class specific model on any dataset.
     """
     trainData, \
+    validData, \
     testData, \
     qDict, \
     qIdict, \
     aDict, \
     aIdict, \
-    qTypeArray = loadDataSet(dataFolder)
+    qTypeArray = loadDataset(dataFolder)
     classAnsIdict = []
     for df in classDataFolders:
         trainData_c, \
+        validData_c, \
         testData_c, \
         qDict_c, \
         qIdict_c, \
         aDict_c, \
         aIdict_c, \
-        qTypeArray_c = loadDataSet(df)
+        qTypeArray_c = loadDataset(df)
         classAnsIdict.append(aIdict_c)
 
     ensembleOutputTest = __runEnsemble(
@@ -362,12 +367,13 @@ def testEnsemble(
     Test a class specific model in its original dataset.
     """
     trainData, \
+    validData, \
     testData, \
     qDict, \
     qIdict, \
     aDict, \
     aIdict, \
-    qTypeArray = loadDataSet(dataFolder)
+    qTypeArray = loadDataset(dataFolder)
     inputTest = testData[0]
     targetTest = testData[1]
 

@@ -3,6 +3,7 @@ import os
 import nn
 import numpy as np
 import imageqa_test as it
+import imageqa_visprior as ip
 
 if __name__ == '__main__':
     """
@@ -14,11 +15,13 @@ if __name__ == '__main__':
                                -d[ata] {dataFolder}
                                -daquar/-cocoqa
                                [-r[esults] {resultsFolder}]
+                               [-prior]
     Results folder by default is '../results'
     """
     resultsFolder = '../results'
     taskIds = []
     dataset = 'cocoqa'
+    runPrior = False
     for i, flag in enumerate(sys.argv):
         if flag == '-m' or flag == '-model':
             taskIds.append(sys.argv[i + 1])
@@ -32,11 +35,21 @@ if __name__ == '__main__':
             dataset = 'daquar'
         elif flag == '-cocoqa':
             dataset = 'cocoqa'
+        elif flag == '-prior':
+            runPrior = True
     models = it.loadEnsemble(taskIds, resultsFolder)
     classDataFolders = it.getClassDataFolders(dataset, dataFolder)
-    it.testEnsemble(
-                    ensembleId=ensembleId,
-                    models=models, 
-                    dataFolder=dataFolder, 
-                    classDataFolders=classDataFolders,
-                    resultsFolder=resultsFolder)
+    if runPrior:
+        ip.testEnsemblePrior(
+                        ensembleId=ensembleId,
+                        models=models, 
+                        dataFolder=dataFolder, 
+                        classDataFolders=classDataFolders,
+                        resultsFolder=resultsFolder)
+    else:
+        it.testEnsemble(
+                        ensembleId=ensembleId,
+                        models=models, 
+                        dataFolder=dataFolder, 
+                        classDataFolders=classDataFolders,
+                        resultsFolder=resultsFolder)

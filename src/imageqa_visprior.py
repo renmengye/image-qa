@@ -3,7 +3,7 @@ import os
 
 import numpy as np
 import nn
-import imageqa_test
+import imageqa_test as it
 from nltk.corpus import wordnet
 
 lexnameDict = {}
@@ -32,7 +32,8 @@ def locateObjLocation(data, questionDict, questionIdict):
             for u in range(t + 1, data.shape[0]):
                 word = questionIdict[data[u, 0] - 1]
                 lexname = lookupLexname(word)
-                if (lexname is not None and lexname.startswith('noun')) or \
+                if (lexname is not None and \
+                    lexname.startswith('noun')) or \
                     (lexname is None):
                     return data[u, 0]
     print 'not found'
@@ -51,7 +52,8 @@ def locateObjNumberNoun(data, questionDict, questionIdict):
             for u in range(t + 2, data.shape[0]):
                 word = questionIdict[data[u, 0] - 1]
                 lexname = lookupLexname(word)
-                if (lexname is not None and lexname.startswith('noun')) or \
+                if (lexname is not None and \
+                    lexname.startswith('noun')) or \
                     (lexname is None):
                     return data[u, 0]
     print 'not found'
@@ -84,15 +86,35 @@ def extractObjId(data):
         if questionType == 'color':
             objId = locateObjColor(data[n])
         elif questionType == 'number':
-            #objId = locateObjNumber(data[n], questionDict)
             objId = locateObjNumberNoun(data[n], questionDict, questionIdict)
         elif questionType == 'location':
             objId = locateObjLocation(data[n], questionDict, questionIdict)
         objIds.append(objId)
     return np.array(objIds, dtype='int')
 
-def buildObjDict(trainData, questionIdict, 
-                questionType='color', questionDict=None):
+def reindexObjId(
+                inputData, 
+                objDict, 
+                questionDict, 
+                questionIdict, 
+                questionType):
+    questionIdictArray = np.array(questionIdict, dtype='object')
+    objIds = extractObjId(inputData)
+    objIds = objIds - 1
+    obj = questionIdictArray[objIds]
+    objIds2 = np.zeros(objIds.shape, dtype='int')
+    for i in range(obj.shape[0]):
+        if objDict.has_key(obj[i]):
+            objIds2[i] = objDict[obj[i]]
+        else:
+            objIds2[i] = objDict['UNK']
+    return objIds2
+
+def buildObjDict(
+                    trainData, 
+                    questionIdict, 
+                    questionType='color', 
+                    questionDict=None):
     objDict = {}
     objIdict = []
     objIds = extractObjId(trainData[0])
@@ -107,9 +129,14 @@ def buildObjDict(trainData, questionIdict,
     objIdict.append('UNK')
     return objDict, objIdict
 
-def trainCount(trainData, questionIdict, objDict, 
-                objIdict, numAns, 
-                questionType='color', questionDict=None):
+def trainCount(
+                trainData, 
+                questionIdict, 
+                objDict, 
+                objIdict, 
+                numAns, 
+                questionType='color', 
+                questionDict=None):
     """
     Calculates count(w, a), count(a)
     """
@@ -127,7 +154,12 @@ def trainCount(trainData, questionIdict, objDict,
     count_a[-1] += 1
     return count_wa, count_a
 
-def runVisPriorOnce(objId, count_wa, count_a, modelOutput, delta):
+def runVisPriorOnce(
+                    objId, 
+                    count_wa, 
+                    count_a, 
+                    modelOutput, 
+                    delta):
     P_w_a = count_wa[objId, :]
     P_w_a /= count_a[:] 
     P_w_a += delta
@@ -141,19 +173,6 @@ def runVisPriorOnce(objId, count_wa, count_a, modelOutput, delta):
     P_a_wi = P_wai / np.sum(P_wai, axis=1).reshape(P_wai.shape[0], 1)
     return P_a_wi
 
-def getObjId(inputData, objDict, questionDict, questionIdict, questionType):
-    questionIdictArray = np.array(questionIdict, dtype='object')
-    objIds = extractObjId(inputData)
-    objIds = objIds - 1
-    obj = questionIdictArray[objIds]
-    objIds2 = np.zeros(objIds.shape, dtype='int')
-    for i in range(obj.shape[0]):
-        if objDict.has_key(obj[i]):
-            objIds2[i] = objDict[obj[i]]
-        else:
-            objIds2[i] = objDict['UNK']
-    return objIds2
-
 def calcRate(output, target):
     outputMax = np.argmax(output, axis=-1)
     outputMax = outputMax.reshape(outputMax.size)
@@ -165,16 +184,18 @@ def calcRate(output, target):
 def validDelta(
                 trainData,
                 validData,
-                preVisModel,
+                preVisModelOutput,
                 questionDict,
                 questionIdict,
                 deltas,
                 questionType):
-    objDict, objIdict = buildObjDict(trainData, 
+    objDict, objIdict = buildObjDict(
+                                trainData, 
                                 questionIdict,
                                 questionType,
                                 questionDict)
-    count_wa, count_a = trainCount(trainData, 
+    count_wa, count_a = trainCount(
+                                trainData, 
                                 questionIdict,
                                 objDict,
                                 objIdict,
@@ -194,7 +215,12 @@ def validDelta(
     validInput = validData[0]
     validTarget = validData[1]
     validTargetReshape = validTarget.reshape(validTarget.size)
-    validObjId = getObjId(validInput, objDict, questionDict, questionIdict, questionType)
+    validObjId = reindexObjId(
+                                validInput, 
+                                objDict, 
+                                questionDict, 
+                                questionIdict, 
+                                questionType)
 
     # Run vis model on valid set
     validOutput = nn.test(preVisModel, validInput)
@@ -228,12 +254,14 @@ def runVisPrior(
                 questionIdict,
                 delta,
                 questionType):
-    objDict, objIdict = buildObjDict(trainData, 
+    objDict, objIdict = buildObjDict(
+                                trainData, 
                                 questionIdict,
                                 questionType,
                                 questionDict)
 
-    count_wa, count_a = trainCount(trainData, 
+    count_wa, count_a = trainCount(
+                                trainData, 
                                 questionIdict,
                                 objDict,
                                 objIdict,
@@ -246,7 +274,12 @@ def runVisPrior(
     testInput = testData[0]
     testTarget = testData[1]
     testTargetReshape = testTarget.reshape(testTarget.size)
-    testObjId = getObjId(testInput, objDict, questionDict, questionIdict, questionType)
+    testObjId = reindexObjId(
+                                testInput, 
+                                objDict, 
+                                questionDict, 
+                                questionIdict, 
+                                questionType)
 
     # Run vis model on test set
     testOutput = nn.test(visModel, testInput)
@@ -256,32 +289,139 @@ def runVisPrior(
     
     # Run on test set
     visPriorOutput = runVisPriorOnce(
-                            testObjId, 
-                            count_wa, 
-                            count_a, 
-                            testOutput, 
-                            delta)
+                                testObjId, 
+                                count_wa, 
+                                count_a, 
+                                testOutput, 
+                                delta)
     print 'delta=%f Test Accuracy:' % delta,
     rate = calcRate(visPriorOutput, testTarget)
     print rate
     return visPriorOutput
 
-def loadData(dataFolder):
-    trainDataFile = os.path.join(dataFolder, 'train.npy')
-    trainData = np.load(trainDataFile)
-    validDataFile = os.path.join(dataFolder, 'valid.npy')
-    validData = np.load(validDataFile)
-    testDataFile = os.path.join(dataFolder, 'test.npy')
-    testData = np.load(testDataFile)
-    vocabDictFile = os.path.join(dataFolder, 'vocab-dict.npy')
-    vocabDict = np.load(vocabDictFile)
-    questionDict = vocabDict[0]
-    questionIdict = vocabDict[1]
-    ansDict = vocabDict[2]
-    ansIdict = vocabDict[3]
-    testInput = testData[0]
-    testTarget = testData[1]
-    return trainData, validData, testData, questionDict, questionIdict, ansDict, ansIdict
+def combineTrainValid(trainData, validData):
+    trainDataAll = (np.concatenate((trainData[0], validData[0]), axis=0),
+                    np.concatenate((trainData[1], validData[1]), axis=0))
+    return trainDataAll
+
+def __runEnsemblePrior(
+                        inputTest,
+                        models,
+                        ansDict,
+                        classAnsIdict,
+                        questionTypeArray):
+
+def runEnsemblePrior(
+                        inputTest,
+                        models, 
+                        dataFolder, 
+                        classDataFolders,
+                        questionTypeArray):
+    """
+    Similar to "testEnsemble" in imageqa_test.
+    Run visprior on number and color questions.
+    """
+    trainData, \
+    validData, \
+    testData, \
+    qDict, \
+    qIdict, \
+    aDict, \
+    aIdict, \
+    qTypeArray = loadDataset(dataFolder)
+    inputTest = testData[0]
+    targetTest = testData[1]
+    outputTest = np.zeros(targetTest.shape[0], len(aIdict))
+    count = 0
+
+    allOutput = []
+    ensembleOutputTest = np.zeros((inputTest.shape[0], len(ansDict)))
+
+    for i, model in enumerate(models):
+        trainData_m, \
+        validData_m, \
+        testData_m, \
+        qDict_m, \
+        qIdict_m, \
+        aDict_m, \
+        aIdict, \
+        qTypeArray_m = loadDataset(classDataFolders[i])
+
+        tvData = combineTrainValid(trainData_m, validData_m)
+        print 'Running test set on model #%d' % i
+        if i == 0 or i == 3:
+            # Object and location questions
+            print 'No prior'
+            outputTest = nn.test(model, inputTest)
+        elif i == 1 or i == 2:
+            # Number and color questions
+            print 'Prior'
+            # Delta is pre-determined
+            if i == 1:
+                delta = 1e-6
+            elif i == 2:
+                delta = 5e-4
+            outputTest = runVisPrior(
+                                tvData_m,
+                                testData_m,
+                                model,
+                                qDict_m,
+                                qIdict_m,
+                                delta,
+                                qTypeArray_m)
+        allOutput.append(outputTest)
+    for n in range(allOutput[0].shape[0]):
+        output = allOutput[qtype]
+        qtype = qTypeArray[n]
+        for i in range(output.shape[1]):
+            ansId = ansDict[classAnsIdict[qtype][i]]
+            ensembleOutputTest[n, ansId] = output[n, i]
+
+    return ensembleOutputTest
+
+def testEnsemblePrior(
+                    ensembleId,
+                    models,
+                    dataFolder,
+                    classDataFolders,
+                    resultsFolder):
+    trainData, \
+    validData, \
+    testData, \
+    qDict, \
+    qIdict, \
+    aDict, \
+    aIdict, \
+    qTypeArray = loadDataset(dataFolder)
+    inputTest = testData[0]
+    targetTest = testData[1]
+    ensembleOutputTest = runEnsemblePrior(
+                                    inputTest,
+                                    models, 
+                                    dataFolder, 
+                                    classDataFolders,
+                                    qTypeArray)
+    ensembleAnswerFile = getAnswerFilename(ensembleId, resultsFolder)
+    ensembleTruthFile = getTruthFilename(ensembleId, resultsFolder)
+
+    resultsRank, \
+    resultsCategory, \
+    resultsWups = runAllMetrics(
+                                inputTest,
+                                ensembleOutputTest,
+                                targetTest,
+                                aIdict,
+                                qTypeArray,
+                                ensembleAnswerFile,
+                                ensembleTruthFile)
+    writeMetricsToFile(
+                        ensembleId,
+                        resultsRank,
+                        resultsCategory,
+                        resultsWups,
+                        resultsFolder)
+
+    return ensembleOutputTest
 
 if __name__ == '__main__':
     """
@@ -314,12 +454,32 @@ if __name__ == '__main__':
         elif flag == '-qtype':
             questionType = sys.argv[i + 1]
 
-    trainData, validData, testData, questionDict, questionIdict, ansDict, ansIdict = \
-        loadData(visDataFolder)
+    trainData, \
+    validData, \
+    testData, \
+    questionDict, \
+    questionIdict, \
+    ansDict, \
+    ansIdict, \
+    questionTypeArray = it.loadDataset(visDataFolder)
     testInput = testData[0]
     testTarget = testData[1]
-    deltas = [0.000001, 0.000005, 0.00001, 0.00005, 0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0]
-    preVisModel = imageqa_test.loadModel(preVisModelId, resultsFolder)
+    deltas = \
+        [0.000001, 
+        0.000005, 
+        0.00001, 
+        0.00005, 
+        0.0001, 
+        0.0005, 
+        0.001, 
+        0.005, 
+        0.01, 
+        0.05, 
+        0.1, 
+        0.5, 
+        1.0]
+
+    preVisModel = it.loadModel(preVisModelId, resultsFolder)
 
     bestDelta = validDelta(
                             trainData,
@@ -330,10 +490,8 @@ if __name__ == '__main__':
                             deltas,
                             questionType)
 
-    trainDataAll = (np.concatenate((trainData[0], validData[0]), axis=0),
-                    np.concatenate((trainData[1], validData[1]), axis=0))
-
-    visModel = imageqa_test.loadModel(visModelId, resultsFolder)
+    trainDataAll = combineTrainValid(trainData, validData)
+    visModel = it.loadModel(visModelId, resultsFolder)
     visTestOutput = runVisPrior(trainDataAll,
                                 testData,
                                 visModel,
@@ -343,29 +501,36 @@ if __name__ == '__main__':
                                 questionType)
 
     visModelFolder = os.path.join(resultsFolder, visModelId)
-    answerFilename = os.path.join(visModelFolder, visModelId + '_prior.test.o.txt')
-    truthFilename = os.path.join(visModelFolder, visModelId + '_prior.test.t.txt')
-    imageqa_test.outputTxt(
-                            visTestOutput, 
-                            testTarget, 
-                            ansIdict, 
-                            answerFilename, 
-                            truthFilename, 
-                            topK=1, 
-                            outputProb=False)
-    imageqa_test.runWups(answerFilename, truthFilename)
+    answerFilename = os.path.join(visModelFolder, 
+                                visModelId + '_prior.test.o.txt')
+    truthFilename = os.path.join(visModelFolder, 
+                                visModelId + '_prior.test.t.txt')
+    it.outputTxt(
+                    visTestOutput, 
+                    testTarget, 
+                    ansIdict, 
+                    answerFilename, 
+                    truthFilename, 
+                    topK=1, 
+                    outputProb=False)
+    it.runWups(answerFilename, truthFilename)
 
     if mainModelId is not None:
-        trainData_m, testData_m, questionDict_m, questionIdict_m, \
-            ansDict_m, ansIdict_m = \
-            loadData(mainDataFolder)
+        trainData_m, \
+        validData_m, \
+        testData_m, \
+        questionDict_m, \
+        questionIdict_m, \
+        ansDict_m, \
+        ansIdict_m, \
+        questionTypeArray_m = it.loadDataset(mainDataFolder)
 
         newTestInput = np.zeros(testInput.shape, dtype='int')
         for n in range(testInput.shape[0]):
             for t in range(testInput.shape[1]):
                 newTestInput[n, t, 0] = \
                     ansDict_m[ansIdict[testInput[n, t, 0] - 1]]
-        mainModel = imageqa_test.loadModel(mainModelId, resultsFolder)
+        mainModel = it.loadModel(mainModelId, resultsFolder)
         mainTestOutput = nn.test(newTestInput, mainModel)
 
         # Need to extract the class output from mainTestOutput
@@ -375,8 +540,5 @@ if __name__ == '__main__':
         classNewId = np.array(classNewId, dtype='int')
         mainTestOutput = mainTestOutput[:, classNewId]
         ensTestOutput = 0.5 * visTestOutput + 0.5 * mainTestOutput
-        ensOutputMax = np.argmax(ensTestOutput, axis=-1)
-        ensOutputMax = ensOutputMax.reshape(ensOutputMax.size)
-        print '0.5 VIS+PRIOR & 0.5 VIS+BLSTM Accuracy:'
-        print np.sum((ensOutputMax == testTargetReshape).astype('int')) / \
-            float(testTarget.size)
+        print '0.5 VIS+PRIOR & 0.5 VIS+BLSTM Accuracy:',
+        print calcRate(ensTestOutput, testTarget)
