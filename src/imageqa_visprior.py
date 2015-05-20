@@ -327,16 +327,17 @@ def runEnsemblePrior(
     data = it.loadDataset(dataFolder)
     inputTest = data['testData'][0]
     targetTest = data['testData'][1]
-    outputTest = np.zeros((targetTest.shape[0], len(ansIdict)))
+    numAns = len(data['ansIdict'])
+    outputTest = np.zeros((targetTest.shape[0], numAns)))
     count = 0
 
     allOutput = []
-    ensembleOutputTest = np.zeros((inputTest.shape[0], len(ansIdict)))
+    ensembleOutputTest = np.zeros((inputTest.shape[0], numAns))
     classAnsIdict = []
 
     for i, model in enumerate(models):
         data_m = it.loadDataset(classDataFolders[i])
-        classAnsIdict.append(ansIdict_m)
+        classAnsIdict.append(data_m['ansIdict'])
 
         tvData_m = combineTrainValid(data_m['trainData'], data_m['validData'])
         print 'Running test set on model #%d' % i
@@ -371,7 +372,7 @@ def runEnsemblePrior(
         qtype = questionTypeArray[n]
         output = allOutput[qtype]
         for i in range(output.shape[1]):
-            ansId = ansDict[classAnsIdict[qtype][i]]
+            ansId = data['ansDict'][classAnsIdict[qtype][i]]
             ensembleOutputTest[n, ansId] = output[counter[qtype], i]
         counter[qtype] += 1
 
