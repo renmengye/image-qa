@@ -165,6 +165,7 @@ def loadDataset(dataFolder):
     aDict = vocabDict[2]
     aIdict = vocabDict[3]
     return (trainData,
+            validData,
             testData,
             qDict,
             qIdict,
