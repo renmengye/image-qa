@@ -296,6 +296,7 @@ class Trainer:
             logger.logTrainStats()
             if trainOpt['needValid']:
                 print 'BT: %.4f' % bestTscore
+            print self.name
             
             # Plot train curves
             if trainOpt['plotFigs']:
