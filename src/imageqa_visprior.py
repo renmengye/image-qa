@@ -265,11 +265,12 @@ def validDelta(
 def runVisPrior(
                 trainData,
                 testData,
+                questionType,
                 visModel,
                 questionDict,
                 questionIdict,
-                delta,
-                questionType):
+                numAns,
+                delta):
     objDict, objIdict = buildObjDict(
                                 trainData, 
                                 questionType,
@@ -283,7 +284,7 @@ def runVisPrior(
                                 questionIdict,
                                 objDict,
                                 objIdict,
-                                len(ansIdict))
+                                numAns)
     print count_wa
 
     # Reindex test set
@@ -333,27 +334,27 @@ def runEnsemblePrior(
     trainData, \
     validData, \
     testData, \
-    qDict, \
-    qIdict, \
-    aDict, \
-    aIdict, \
+    questionDict, \
+    questionIdict, \
+    ansDict, \
+    ansIdict, \
     qTypeArray = it.loadDataset(dataFolder)
     inputTest = testData[0]
     targetTest = testData[1]
-    outputTest = np.zeros((targetTest.shape[0], len(aIdict)))
+    outputTest = np.zeros((targetTest.shape[0], len(ansIdict)))
     count = 0
 
     allOutput = []
-    ensembleOutputTest = np.zeros((inputTest.shape[0], len(aIdict)))
+    ensembleOutputTest = np.zeros((inputTest.shape[0], len(ansIdict)))
 
     for i, model in enumerate(models):
         trainData_m, \
         validData_m, \
         testData_m, \
-        qDict_m, \
-        qIdict_m, \
-        aDict_m, \
-        aIdict, \
+        questionDict_m, \
+        questionIdict_m, \
+        ansDict_m, \
+        ansIdict_m, \
         qTypeArray_m = it.loadDataset(classDataFolders[i])
 
         tvData_m = combineTrainValid(trainData_m, validData_m)
@@ -375,17 +376,18 @@ def runEnsemblePrior(
             outputTest = runVisPrior(
                                 tvData_m,
                                 testData_m,
+                                questionType,
                                 model,
-                                qDict_m,
-                                qIdict_m,
-                                delta,
-                                questionType)
+                                questionDict_m,
+                                questionIdict_m,
+                                len(ansIdict_m),
+                                delta)
         allOutput.append(outputTest)
     for n in range(allOutput[0].shape[0]):
         output = allOutput[qtype]
         qtype = qTypeArray[n]
         for i in range(output.shape[1]):
-            ansId = aDict[classAnsIdict[qtype][i]]
+            ansId = ansDict[classAnsIdict[qtype][i]]
             ensembleOutputTest[n, ansId] = output[n, i]
 
     return ensembleOutputTest
@@ -399,10 +401,10 @@ def testEnsemblePrior(
     trainData, \
     validData, \
     testData, \
-    qDict, \
-    qIdict, \
-    aDict, \
-    aIdict, \
+    questionDict, \
+    questionIdict, \
+    ansDict, \
+    ansIdict, \
     qTypeArray = it.loadDataset(dataFolder)
     inputTest = testData[0]
     targetTest = testData[1]
@@ -421,7 +423,7 @@ def testEnsemblePrior(
                                 inputTest,
                                 ensembleOutputTest,
                                 targetTest,
-                                aIdict,
+                                ansIdict,
                                 qTypeArray,
                                 ensembleAnswerFile,
                                 ensembleTruthFile)
@@ -505,11 +507,12 @@ if __name__ == '__main__':
     visModel = it.loadModel(visModelId, resultsFolder)
     visTestOutput = runVisPrior(trainDataAll,
                                 testData,
+                                questionType,
                                 visModel,
                                 questionDict,
                                 questionIdict,
-                                bestDelta,
-                                questionType)
+                                len(ansIdict),
+                                bestDelta)
 
     visModelFolder = os.path.join(resultsFolder, visModelId)
     answerFilename = os.path.join(visModelFolder, 
