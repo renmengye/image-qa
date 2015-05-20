@@ -388,7 +388,7 @@ def runEnsemblePrior(
         qtype = qTypeArray[n]
         output = allOutput[qtype]
         for i in range(output.shape[1]):
-            ansId = ansDict[classAnsIdict[qtype][i]]
+            ansId = ansDict[ansIdict_m[qtype][i]]
             ensembleOutputTest[n, ansId] = output[counter[qtype], i]
         counter[qtype] += 1
 
