@@ -324,7 +324,7 @@ def runEnsemblePrior(
     qTypeArray = it.loadDataset(dataFolder)
     inputTest = testData[0]
     targetTest = testData[1]
-    outputTest = np.zeros(targetTest.shape[0], len(aIdict))
+    outputTest = np.zeros((targetTest.shape[0], len(aIdict)))
     count = 0
 
     allOutput = []
