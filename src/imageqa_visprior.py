@@ -328,7 +328,7 @@ def runEnsemblePrior(
     inputTest = data['testData'][0]
     targetTest = data['testData'][1]
     numAns = len(data['ansIdict'])
-    outputTest = np.zeros((targetTest.shape[0], numAns)))
+    outputTest = np.zeros((targetTest.shape[0], numAns))
     count = 0
 
     allOutput = []
