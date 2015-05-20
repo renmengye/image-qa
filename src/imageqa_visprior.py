@@ -80,7 +80,11 @@ def locateObjColor(data):
         else:
             return tmp
 
-def extractObjId(data, questionType):
+def extractObjId(
+                    data, 
+                    questionType, 
+                    questionDict, 
+                    questionIdict):
     objIds = []
     for n in range(data.shape[0]):
         if questionType == 'color':
@@ -99,7 +103,11 @@ def reindexObjId(
                 questionIdict, 
                 questionType):
     questionIdictArray = np.array(questionIdict, dtype='object')
-    objIds = extractObjId(inputData, questionType)
+    objIds = extractObjId(
+                            inputData, 
+                            questionType, 
+                            questionDict, 
+                            questionIdict)
     objIds = objIds - 1
     obj = questionIdictArray[objIds]
     objIds2 = np.zeros(objIds.shape, dtype='int')
@@ -111,13 +119,17 @@ def reindexObjId(
     return objIds2
 
 def buildObjDict(
-                    trainData, 
-                    questionIdict, 
-                    questionType='color', 
-                    questionDict=None):
+                    trainData,
+                    questionType,
+                    questionDict,
+                    questionIdict):
     objDict = {}
     objIdict = []
-    objIds = extractObjId(trainData[0], questionType)
+    objIds = extractObjId(
+                        trainData[0], 
+                        questionType, 
+                        questionDict, 
+                        questionIdict)
     objIds = objIds - 1
     questionIdictArray = np.array(questionIdict, dtype='object')
     objList = questionIdictArray[objIds]
@@ -131,18 +143,22 @@ def buildObjDict(
 
 def trainCount(
                 trainData, 
+                questionType,
+                questionDict,
                 questionIdict, 
                 objDict, 
-                objIdict, 
-                numAns, 
-                questionType='color', 
-                questionDict=None):
+                objIdict,
+                numAns):
     """
     Calculates count(w, a), count(a)
     """
     count_wa = np.zeros((len(objIdict), numAns))
     count_a = np.zeros((numAns))
-    objIds = extractObjId(trainData[0], questionType)
+    objIds = extractObjId(
+                            trainData[0], 
+                            questionType, 
+                            questionDict, 
+                            questionIdict)
     for i in range(objIds.shape[0]):
         objId = objIds[i]
         obj = questionIdict[objId - 1]
@@ -190,18 +206,18 @@ def validDelta(
                 deltas,
                 questionType):
     objDict, objIdict = buildObjDict(
-                                trainData, 
-                                questionIdict,
+                                trainData,
                                 questionType,
-                                questionDict)
+                                questionDict,
+                                questionIdict)
     count_wa, count_a = trainCount(
                                 trainData, 
+                                questionType,
+                                questionDict,
                                 questionIdict,
                                 objDict,
                                 objIdict,
-                                len(ansIdict),
-                                questionType,
-                                questionDict)
+                                len(ansIdict))
     print count_wa
 
     # for obj in objIdict:
@@ -256,18 +272,18 @@ def runVisPrior(
                 questionType):
     objDict, objIdict = buildObjDict(
                                 trainData, 
-                                questionIdict,
                                 questionType,
-                                questionDict)
+                                questionDict,
+                                questionIdict)
 
     count_wa, count_a = trainCount(
                                 trainData, 
+                                questionType,
+                                questionDict,
                                 questionIdict,
                                 objDict,
                                 objIdict,
-                                len(ansIdict),
-                                questionType,
-                                questionDict)
+                                len(ansIdict))
     print count_wa
 
     # Reindex test set
