@@ -364,7 +364,9 @@ def runEnsemblePrior(
         if i == 0 or i == 3:
             # Object and location questions
             print 'No prior'
-            outputTest = nn.test(model, inputTest)
+            outputTest = nn.test(model, testData_m[0])
+            print 'Accuracy:',
+            calcRate(outputTest, testData_m[1])
         elif i == 1 or i == 2:
             # Number and color questions
             print 'Prior'
