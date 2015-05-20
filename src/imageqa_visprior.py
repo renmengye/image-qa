@@ -340,7 +340,7 @@ def runEnsemblePrior(
         aIdict, \
         qTypeArray_m = it.loadDataset(classDataFolders[i])
 
-        tvData = combineTrainValid(trainData_m, validData_m)
+        tvData_m = combineTrainValid(trainData_m, validData_m)
         print 'Running test set on model #%d' % i
         if i == 0 or i == 3:
             # Object and location questions
