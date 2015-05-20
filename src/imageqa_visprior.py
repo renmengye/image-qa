@@ -312,7 +312,7 @@ def runVisPrior(
 def combineTrainValid(trainData, validData):
     trainDataAll = (np.concatenate((trainData[0], validData[0]), axis=0),
                     np.concatenate((trainData[1], validData[1]), axis=0))
-    return data['trainData']All
+    return trainDataAll
 
 def runEnsemblePrior(
                         inputTest,
