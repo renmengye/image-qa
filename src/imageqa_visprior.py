@@ -423,7 +423,7 @@ def testEnsemblePrior(
 
     resultsRank, \
     resultsCategory, \
-    resultsWups = runAllMetrics(
+    resultsWups = it.runAllMetrics(
                                 inputTest,
                                 ensembleOutputTest,
                                 targetTest,
@@ -431,7 +431,7 @@ def testEnsemblePrior(
                                 qTypeArray,
                                 ensembleAnswerFile,
                                 ensembleTruthFile)
-    writeMetricsToFile(
+    it.writeMetricsToFile(
                         ensembleId,
                         resultsRank,
                         resultsCategory,
