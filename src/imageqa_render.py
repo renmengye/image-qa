@@ -640,7 +640,7 @@ if __name__ == '__main__':
                 topK=params['topK'], 
                 modelOutputs=modelOutputs,
                 modelNames=getModelNames(singleModel),
-                questionIds=np.arange(inputTest.shape[0]))
+                questionIds=np.arange(data['testData'][0].shape[0]))
 
     for i, page in enumerate(pages):
         with open(os.path.join(params['outputFolder'], 
