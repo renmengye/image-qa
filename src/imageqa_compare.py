@@ -146,7 +146,7 @@ if __name__ == '__main__':
             if not os.path.exists(outputSubFolder):
                 os.makedirs(outputSubFolder)
             htmlHyperLink = '%d.html'
-            pages = renderHtml(
+            pages = ir.renderHtml(
                         inputTestSubset, 
                         targetTestSubset, 
                         data['questionIdict'], 
