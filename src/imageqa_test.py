@@ -270,7 +270,7 @@ def __runEnsemble(
                 questionTypeArray):
     allOutput = []
     for i, model in enumerate(models):
-        print 'Running test set on model #%d' % i
+        print 'Running test data on model #%d...' % i
         outputTest = nn.test(model, inputTest)
         allOutput.append(outputTest)
     ensembleOutputTest = np.zeros((inputTest.shape[0], len(ansDict)))
