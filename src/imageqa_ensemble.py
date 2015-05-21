@@ -237,7 +237,7 @@ def runAllModels(
             models = loadEnsemble(modelSpec['id'].split(','), resultsFolder)
             classDataFolders = getClassDataFolders(dataset, dataFolder)
             if modelSpec['runPrior']:
-                outputTest = ip.runEnsemblePrior(
+                outputTest = runEnsemblePrior(
                                     inputTest, 
                                     models,
                                     dataFolder,
@@ -291,7 +291,7 @@ if __name__ == '__main__':
     models = loadEnsemble(taskIds, resultsFolder)
     classDataFolders = getClassDataFolders(dataset, dataFolder)
     if runPrior:
-        ip.testEnsemblePrior(
+        testEnsemblePrior(
                 ensembleId=ensembleId,
                 models=models, 
                 dataFolder=dataFolder, 
