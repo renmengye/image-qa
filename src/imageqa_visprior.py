@@ -412,8 +412,11 @@ if __name__ == '__main__':
         newTestInput = np.zeros(testInput.shape, dtype='int')
         for n in range(testInput.shape[0]):
             for t in range(1, testInput.shape[1]):
-                word = questionIdict[testInput[n, t, 0] - 1]
-                newTestInput[n, t, 0] = questionDict_m[word]
+                if testInput[n, t, 0] != 0:
+                    word = questionIdict[testInput[n, t, 0] - 1]
+                    newTestInput[n, t, 0] = questionDict_m[word]
+                else:
+                    break
         mainModel = it.loadModel(mainModelId, resultsFolder)
         mainTestOutput = nn.test(mainModel, newTestInput)
 
