@@ -410,8 +410,11 @@ if __name__ == '__main__':
         newTestInput = np.zeros(testInput.shape, dtype='int')
         for n in range(testInput.shape[0]):
             for t in range(testInput.shape[1]):
-                newTestInput[n, t, 0] = \
-                    questionDict_m[questionIdict[testInput[n, t, 0] - 1]]
+                word = questionIdict[testInput[n, t, 0] - 1]
+                if not questionDict_m.has_key(word):
+                    print 'Key not found', word
+                else:
+                    newTestInput[n, t, 0] = questionDict_m[word]
         mainModel = it.loadModel(mainModelId, resultsFolder)
         mainTestOutput = nn.test(newTestInput, mainModel)
 
