@@ -423,6 +423,11 @@ if __name__ == '__main__':
             classNewId.append(ansDict_m[ans])
         classNewId = np.array(classNewId, dtype='int')
         mainTestOutput = mainTestOutput[:, classNewId]
-        ensTestOutput = 0.5 * visTestOutput + 0.5 * mainTestOutput
-        print '0.5 VIS+PRIOR & 0.5 VIS+BLSTM Accuracy:',
-        print calcRate(ensTestOutput, testTarget)
+
+        for i in range(10):
+            mixRatio = i / 10.0
+            ensTestOutput = mixRatio * visTestOutput + \
+                (1 - mixRatio) * mainTestOutput
+            print '.2f VIS+PRIOR & .2f VIS+BLSTM Accuracy:' % \
+                (mixRatio, 1 - mixRatio),
+            print calcRate(ensTestOutput, testTarget)
