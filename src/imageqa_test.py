@@ -6,12 +6,12 @@ import sys
 
 def decodeQuestion(
                     modelInput, 
-                    questionArray):
+                    questionIdict):
     sentence = ''
     for t in range(1, modelInput.shape[0]):
         if modelInput[t, 0] == 0:
             break
-        sentence += questionArray[modelInput[t, 0]- 1] + ' '
+        sentence += questionIdict[modelInput[t, 0]- 1] + ' '
     sentence += '?'
     return sentence
 
@@ -27,12 +27,11 @@ def estimateQuestionType(question):
         typ = 0
     return typ
 
-
 def calcRate(
                 modelInput, 
                 modelOutput, 
                 target, 
-                questionArray=None, 
+                questionIdict=None, 
                 questionTypeArray=None):
     correct = np.zeros(4, dtype=int)
     total = np.zeros(4, dtype=int)
@@ -41,7 +40,7 @@ def calcRate(
         sortIdx = sortIdx[::-1]
         answer = sortIdx[0]
         if questionTypeArray is None:
-            question = decodeQuestion(modelInput[n], questionArray)
+            question = decodeQuestion(modelInput[n], questionIdict)
             typ = estimateQuestionType(question)
         else:
             typ = questionTypeArray[n]

@@ -77,8 +77,8 @@ def renderLatexSingleItem(
 def renderLatexSinglePage(
                             inputData,
                             targetData,
-                            questionArray,
-                            answerArray,
+                            questionIdict,
+                            ansIdict,
                             urlDict,
                             outputFolder,
                             pictureFolder='img',
@@ -104,11 +104,11 @@ def renderLatexSinglePage(
             os.makedirs(imgFolder)
         with open(os.path.join(imgFolder, '%d.jpg' % qid), 'wb') as f:
             f.write(r.content)
-        question = decodeQuestion(inputData[n], questionArray)
-        answer = answerArray[targetData[n, 0]]
+        question = decodeQuestion(inputData[n], questionIdict)
+        answer = ansIdict[targetData[n, 0]]
         topAnswers, topAnswerScores = \
                     pickTopAnswers(
-                            answerArray,
+                            ansIdict,
                             n,
                             topK=topK,
                             modelOutputs=modelOutputs, 
@@ -141,8 +141,8 @@ def renderLatexSinglePage(
 def renderLatex(
                 inputData,
                 targetData,
-                questionArray,
-                answerArray,
+                questionIdict,
+                ansIdict,
                 urlDict,
                 outputFolder,
                 pictureFolder='img',
@@ -161,8 +161,8 @@ def renderLatex(
         latexStr = renderLatexSinglePage(
                         inputData,
                         targetData,
-                        questionArray,
-                        answerArray,
+                        questionIdict,
+                        ansIdict,
                         urlDict,
                         outputFolder,
                         pictureFolder=pictureFolder,
@@ -187,8 +187,8 @@ def renderLatex(
             page = renderLatexSinglePage(
                         inputData[start:end],
                         targetData[start:end],
-                        questionArray,
-                        answerArray,
+                        questionIdict,
+                        ansIdict,
                         urlDict,
                         outputFolder,
                         pictureFolder=pictureFolder,
@@ -207,8 +207,8 @@ def renderLatex(
 def renderHtml(
                 inputData,
                 targetData,
-                questionArray,
-                answerArray,
+                questionIdict,
+                ansIdict,
                 urlDict,
                 topK=10,
                 modelOutputs=None,
@@ -219,8 +219,8 @@ def renderHtml(
         return [renderSinglePage(
                     inputData,
                     targetData,
-                    questionArray,
-                    answerArray,
+                    questionIdict,
+                    ansIdict,
                     urlDict,
                     iPage=0,
                     numPages=1,
@@ -243,8 +243,8 @@ def renderHtml(
             page = renderSinglePage(
                         inputData[start:end],
                         targetData[start:end],
-                        questionArray,
-                        answerArray,
+                        questionIdict,
+                        ansIdict,
                         urlDict, 
                         iPage=i,
                         numPages=numPages,
@@ -347,7 +347,7 @@ def renderSingleItem(
     return ''.join(htmlList)
 
 def pickTopAnswers(
-                    answerArray,
+                    ansIdict,
                     n,
                     topK=10,
                     modelOutputs=None, 
@@ -362,7 +362,7 @@ def pickTopAnswers(
             topAnswers.append([])
             topAnswerScores.append([])
             for i in range(0, topK):
-                topAnswers[-1].append(answerArray[sortIdx[i]])
+                topAnswers[-1].append(ansIdict[sortIdx[i]])
                 topAnswerScores[-1].append(modelOutput[n, sortIdx[i]])
     elif modelOutputs is not None:
         sortIdx = np.argsort(modelOutputs[n], axis=0)
@@ -370,7 +370,7 @@ def pickTopAnswers(
         topAnswers = []
         topAnswerScores = []
         for i in range(0, topK):
-            topAnswers.append(answerArray[sortIdx[i]])
+            topAnswers.append(ansIdict[sortIdx[i]])
             topAnswerScores.append(modelOutputs[n, sortIdx[i]])
         qid = questionIds[n] if questionIds is not None else n
     else:
@@ -381,8 +381,8 @@ def pickTopAnswers(
 def renderSinglePage(
                     inputData, 
                     targetData, 
-                    questionArray, 
-                    answerArray, 
+                    questionIdict, 
+                    ansIdict, 
                     urlDict,
                     iPage=0, 
                     numPages=1,
@@ -402,11 +402,11 @@ def renderSinglePage(
             htmlList.append('<tr>')
         imageId = inputData[n, 0, 0]
         imageFilename = urlDict[imageId - 1]
-        question = decodeQuestion(inputData[n], questionArray)
+        question = decodeQuestion(inputData[n], questionIdict)
 
         qid = questionIds[n] if questionIds is not None else n
         topAnswers, topAnswerScores = pickTopAnswers(
-                                        answerArray, 
+                                        ansIdict, 
                                         n,
                                         topK=topK,
                                         modelOutputs=modelOutputs, 
@@ -416,7 +416,7 @@ def renderSinglePage(
                                         imageFilename, 
                                         qid, 
                                         question, 
-                                        answerArray[targetData[n, 0]], 
+                                        ansIdict[targetData[n, 0]], 
                                         topAnswers=topAnswers, 
                                         topAnswerScores=topAnswerScores, 
                                         modelNames=modelNames))
@@ -631,6 +631,7 @@ if __name__ == '__main__':
     if not os.path.exists(params['outputFolder']):
         os.makedirs(params['outputFolder'])
 
+    print('Url dict:', urlDict)
     pages = renderHtml(
                 data['testData'][0], 
                 data['testData'][1], 
