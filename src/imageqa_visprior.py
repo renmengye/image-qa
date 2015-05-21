@@ -413,7 +413,7 @@ if __name__ == '__main__':
                 word = questionIdict[testInput[n, t, 0] - 1]
                 newTestInput[n, t, 0] = questionDict_m[word]
         mainModel = it.loadModel(mainModelId, resultsFolder)
-        mainTestOutput = nn.test(newTestInput, mainModel)
+        mainTestOutput = nn.test(mainModel, newTestInput)
 
         # Need to extract the class output from mainTestOutput
         classNewId = []
