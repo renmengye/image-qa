@@ -615,7 +615,7 @@ if __name__ == '__main__':
 
     if len(params['models']) > 0:
         print('Running models...')
-        singleModel = [modelSpec]
+        singleModel = [params['models'][0]]
         modelOutputs = ie.runAllModels(
                         data['testData'][0], 
                         data['questionTypeArray'], 
