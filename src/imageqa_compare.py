@@ -118,6 +118,10 @@ if __name__ == '__main__':
         else:
             bins[binNum].append(n)
 
+    for i, bin in enumerate(bins):
+        if bin is None:
+            bins[i] = []
+
     # Render
     print('Rendering webpages...')
     print('Rendering index...')
