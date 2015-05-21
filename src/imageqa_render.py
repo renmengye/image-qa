@@ -462,6 +462,7 @@ def loadImgUrl(dataset, dataFolder):
         urlDict = readImgDictCocoqa(imgidDict)
     elif dataset == 'daquar':
         urlDict = readImgDictDaquar()
+    return urlDict
 
 def escapeLatexIdict(idict):
     for i in range(len(idict)):
@@ -631,7 +632,6 @@ if __name__ == '__main__':
     if not os.path.exists(params['outputFolder']):
         os.makedirs(params['outputFolder'])
 
-    print('Url dict:', urlDict)
     pages = renderHtml(
                 data['testData'][0], 
                 data['testData'][1], 
