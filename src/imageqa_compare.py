@@ -2,8 +2,10 @@ import sys
 import os
 import nn
 import numpy as np
+import imageqa_
 import imageqa_test as it
 import imageqa_render as ir
+import imageqa_ensemble as ie
 
 nameList = ['object', 'number', 'color', 'location']
 
