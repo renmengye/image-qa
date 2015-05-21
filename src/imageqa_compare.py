@@ -23,12 +23,15 @@ def getName(catName, binName):
 def renderIndex(modelNames, numCategories, bins):
     htmlList = []
     htmlList.append('<html><head><style>%s</style><body>' % \
-        'span.good {color:green;} span.bad {color:red;} table{border-spacing:10px;}')
+        'span.good {color:green;} span.bad {color:red;} \
+        table{border-spacing:10px;}')
     numModels = len(modelNames)
     numCorrect = 1 << numModels
     htmlList.append('<h1>Models comparisons</h1>')
-    htmlList.append('Notes:<br/><span class="good">Green means the model gets correct</span><br/>')
-    htmlList.append('<span class="bad">Red means the model gets wrong</span>')
+    htmlList.append('Notes:<br/><span class="good">\
+        Green means the model gets correct</span><br/>')
+    htmlList.append('<span class="bad">\
+        Red means the model gets wrong</span>')
     for i in range(numCategories):
         htmlList.append('<h2>%s</h2>' % getCatName(i))
         htmlList.append('<table>')
@@ -38,9 +41,11 @@ def renderIndex(modelNames, numCategories, bins):
             for k, c in enumerate(getBinName(j)):
                 htmlList.append('<td>')
                 if c == '1':
-                    htmlList.append('<span class="good">%s</span>' % modelNames[k])
+                    htmlList.append(
+                        '<span class="good">%s</span>' % modelNames[k])
                 elif c == '0':
-                    htmlList.append('<span class="bad">%s</span>' % modelNames[k])
+                    htmlList.append(
+                        '<span class="bad">%s</span>' % modelNames[k])
                 htmlList.append('</td>')
             htmlList.append('<td>%d items</td>' % len(bins[binId]))
             htmlList.append('<td><a href="%s/0.html">link</a></td>' % \
@@ -56,55 +61,35 @@ if __name__ == '__main__':
     Usage: python imageqa_compare.py 
                     -m[odel] {name1:modelId1}
                     -m[odel] {name2:modelId2}
-                    -m[odel] {name3:ensembleModelId3,ensembleModelId4,...}
+                    -em[odel] {name3:ensembleModelId3,ensembleModelId4,...}
+                    -pem[odel] {name3:ensembleModelId5,ensembleModelId6,...}
                     -d[ata] {dataFolder}
                     -o[utput] {outputFolder}
-                    -daquar/-cocoqa
+                    [-k {top K answers}]
+                    [-r[esults] {resultsFolder}]
+                    [-dataset {daquar/cocoqa}]
     """
     params = ir.parseComparativeParams(sys.argv)
-    modelOutputs = []
+    
+    print('Loading test data...')
+    urlDict = ir.loadImgUrl(params['dataset'], params['dataFolder'])
+    data = it.loadDataset(params['dataFolder'])
 
-    print 'Loading image urls...'
-    if dataset == 'cocoqa':
-        imgidDictFilename = os.path.join(dataFolder, 'imgid_dict.pkl')
-        with open(imgidDictFilename, 'rb') as f:
-            imgidDict = pkl.load(f)
-        urlDict = readImgDictCocoqa(imgidDict)
-    elif dataset == 'daquar':
-        urlDict = readImgDictDaquar()
-
-    print 'Loading test data...'
-    vocabDict = np.load(os.path.join(dataFolder, 'vocab-dict.npy'))
-    testDataFile = os.path.join(dataFolder, 'test.npy')
-    testData = np.load(testDataFile)
-    inputTest = testData[0]
-    targetTest = testData[1]
-    questionArray = vocabDict[1]
-    answerArray = vocabDict[3]
-    testQuestionTypeFile = os.path.join(dataFolder, 'test-qtype.npy')
-    questionTypeArray = np.load(testQuestionTypeFile)
-
-    for modelName, modelId in zip(modelNames, modelIds):
-        if ',' in modelId:
-            print 'Running test data on ensemble model %s...' \
-                    % modelName
-            models = loadEnsemble(modelId.split(','), resultsFolder)
-            outputTest = runEnsemble(
-                                        inputTest, 
-                                        models, 
-                                        questionTypeArray)
-        else:
-            print 'Running test data on model %s...' \
-                    % modelName
-            model = loadModel(modelId, resultsFolder)
-            outputTest = nn.test(model, inputTest)
-        modelOutputs.append(outputTest)
+    print('Running models...')
+    inputTest = data['testData'][0]
+    targetTest = data['testData'][1]
+    questionTypeArray = data['questionTypeArray']
+    modelOutputs = ie.runAllModels(
+                        inputTest, 
+                        questionTypeArray, 
+                        params['models'], 
+                        params['resultsFolder'])
 
     # Sort questions by question types.
     # Sort questions by correctness differences.
     print('Sorting questions...')
     numCategories = np.max(questionTypeArray) + 1
-    numModels = len(modelNames)
+    numModels = len(params['models'])
     numCorrect = 1 << numModels
     numBins = numCategories * numCorrect
     modelAnswers = np.zeros((numModels, inputTest.shape[0]), dtype='int')
@@ -133,14 +118,16 @@ if __name__ == '__main__':
     # Render
     print('Rendering webpages...')
     print('Rendering index...')
+    outputFolder = params['outputFolder']
+
     if not os.path.exists(outputFolder):
         os.makedirs(outputFolder)
     with open(os.path.join(outputFolder, 'index.html'), 'w') as f:
-        f.write(renderIndex(modelNames, numCategories, bins))
+        f.write(renderIndex(
+            ir.getModelNames(params['models']), numCategories, bins))
 
     for i in range(numBins):
         if bins[i] is not None:
-            # Need a better folder name!
             print 'Rendering %s...' % names[i]
             outputSubFolder = os.path.join(outputFolder, names[i])
             idx = np.array(bins[i], dtype='int')
@@ -155,12 +142,12 @@ if __name__ == '__main__':
             pages = renderHtml(
                         inputTestSubset, 
                         targetTestSubset, 
-                        questionArray, 
-                        answerArray, 
+                        data['questionIdict'], 
+                        data['ansIdict'], 
                         urlDict, 
-                        topK=K,
+                        topK=params['topK'],
                         modelOutputs=modelOutputsSubset,
-                        modelNames=modelNames,
+                        modelNames=ir.getModelNames(params['models']),
                         questionIds=idx)
             for j, page in enumerate(pages):
                 with open(os.path.join(outputSubFolder, 

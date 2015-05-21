@@ -52,7 +52,7 @@ def calcRate(
     print 'object: %.4f' % rate[0]
     print 'number: %.4f' % rate[1]
     print 'color: %.4f' % rate[2]
-    print 'scene: %.4f' % rate[3]
+    print 'location: %.4f' % rate[3]
     return correct, total
 
 def calcPrecision(
@@ -174,42 +174,6 @@ def loadDataset(dataFolder):
             'ansIdict': aIdict,
             'questionTypeArray': qTypeArray}
 
-# def loadDataset(dataFolder):
-#     trainDataFile = os.path.join(dataFolder, 'train.npy')
-#     validDataFile = os.path.join(dataFolder, 'valid.npy')
-#     testDataFile = os.path.join(dataFolder, 'test.npy')
-#     vocabDictFile = os.path.join(dataFolder, 'vocab-dict.npy')
-#     qtypeFile = os.path.join(dataFolder, 'test-qtype.npy')
-#     trainData = np.load(trainDataFile)
-#     validData = np.load(validDataFile)
-#     testData = np.load(testDataFile)
-#     vocabDict = np.load(vocabDictFile)
-#     qTypeArray = np.load(qtypeFile)
-#     inputTest = testData[0]
-#     targetTest = testData[1]
-#     qDict = vocabDict[0]
-#     qIdict = vocabDict[1]
-#     aDict = vocabDict[2]
-#     aIdict = vocabDict[3]
-#     return (trainData,
-#             validData,
-#             testData,
-#             qDict,
-#             qIdict,
-#             aDict,
-#             aIdict,
-#             qTypeArray)
-
-def loadTestSet(dataFolder):
-    data = loadDataset(dataFolder)
-    inputTest = data['testData'][0]
-    targetTest = data['testData'][1]
-    return (inputTest, 
-            targetTest,
-            data['questionIdict'], 
-            data['ansIdict'], 
-            data['questionTypeArray'])
-
 def loadModel(
                 taskId,
                 resultsFolder):
@@ -220,34 +184,30 @@ def loadModel(
     return model
 
 def testAll(
-            taskId, 
+            modelId, 
             model, 
             dataFolder, 
             resultsFolder):
-    testAnswerFile = getAnswerFilename(taskId, resultsFolder)
-    testTruthFile = getTruthFilename(taskId, resultsFolder)
-    inputTest, \
-    targetTest, \
-    questionArray, \
-    answerArray, \
-    questionTypeArray = loadTestSet(dataFolder)
-    outputTest = nn.test(model, inputTest)
+    testAnswerFile = getAnswerFilename(modelId, resultsFolder)
+    testTruthFile = getTruthFilename(modelId, resultsFolder)
+    data = loadDataset(dataFolder)
+    outputTest = nn.test(model, data['testData'][0])
     resultsRank, \
     resultsCategory, \
     resultsWups = runAllMetrics(
-                                inputTest,
-                                outputTest,
-                                targetTest,
-                                answerArray,
-                                questionTypeArray,
-                                testAnswerFile,
-                                testTruthFile)
+                        data['testData'][0],
+                        outputTest,
+                        data['testData'][1],
+                        data['ansIdict'],
+                        data['questionTypeArray'],
+                        testAnswerFile,
+                        testTruthFile)
     writeMetricsToFile(
-                        taskId,
-                        resultsRank,
-                        resultsCategory,
-                        resultsWups,
-                        resultsFolder)
+                modelId,
+                resultsRank,
+                resultsCategory,
+                resultsWups,
+                resultsFolder)
     return outputTest
 
 def runAllMetrics(
@@ -281,7 +241,7 @@ def writeMetricsToFile(
         f.write('object: %.4f\n' % resultsCategory[0])
         f.write('number: %.4f\n' % resultsCategory[1])
         f.write('color: %.4f\n' % resultsCategory[2])
-        f.write('scene: %.4f\n' % resultsCategory[3])
+        f.write('location: %.4f\n' % resultsCategory[3])
         f.write('WUPS 1.0: %.4f\n' % resultsWups[0])
         f.write('WUPS 0.9: %.4f\n' % resultsWups[1])
         f.write('WUPS 0.0: %.4f\n' % resultsWups[2])
@@ -407,19 +367,19 @@ def testEnsemble(
 
 if __name__ == '__main__':
     """
-    Usage python imageqa_test.py -i[d] {taskId} 
+    Usage python imageqa_test.py -m[odel] {Model ID} 
                                  -d[ata] {dataFolder} 
                                  [-r[esults] {resultsFolder}]
     """
     dataFolder = None
     resultsFolder = '../results'
     for i, flag in enumerate(sys.argv):
-        if flag == '-d' or flag == '-data':
-            dataFolder = sys.argv[i + 1]
-        elif flag == '-i' or flag == '-id':
-            taskId = sys.argv[i + 1]
+        if flag == '-m' or flag == '-model':
+            modelId = sys.argv[i + 1]
+        elif flag == '-d' or flag == '-data':
+            dataFolder = sys.argv[i + 1]        
         elif flag == '-r' or flag == '-result':
             resultsFolder = sys.argv[i + 1]
-    print taskId
-    model = loadModel(taskId, resultsFolder)
-    testAll(taskId, model, dataFolder, resultsFolder)
+    print modelId
+    model = loadModel(modelId, resultsFolder)
+    testAll(modelId, model, dataFolder, resultsFolder)

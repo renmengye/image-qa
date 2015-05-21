@@ -2,6 +2,8 @@ import numpy as np
 import re
 import sys
 import os
+
+import prep
 import calculate_wups
 
 def escapeNumber(line):
@@ -102,82 +104,69 @@ def extractQA(lines):
     print 'Total', total
     return (questions, answers, imgIds)
 
-def buildDict(lines, keystart, pr=False):
-    # From word to number.
-    word_dict = {}
-    # From number to word, numbers need to minus one to convert to list indices.
-    word_array = []
-    # Word frequency
-    word_freq = []
-    # if key is 1-based, then 0 is reserved for sentence end.
-    key = keystart
+# def buildDict(lines, keystart, pr=False):
+#     # From word to number.
+#     word_dict = {}
+#     # From number to word, numbers need to minus one to convert to list indices.
+#     word_array = []
+#     # Word frequency
+#     word_freq = []
+#     # if key is 1-based, then 0 is reserved for sentence end.
+#     key = keystart
 
-    for i in range(0, len(lines)):
-        line = lines[i].replace(',', '')
-        words = line.split(' ')
-        for j in range(0, len(words)):
-            if not word_dict.has_key(words[j]):
-                word_dict[words[j]] = key
-                word_array.append(words[j])
-                word_freq.append(1)
-                key += 1
-            else:
-                k = word_dict[words[j]]
-                word_freq[k - keystart] += 1
-    word_dict['UNK'] = key
-    word_array.append('UNK')
+#     for i in range(0, len(lines)):
+#         line = lines[i].replace(',', '')
+#         words = line.split(' ')
+#         for j in range(0, len(words)):
+#             if not word_dict.has_key(words[j]):
+#                 word_dict[words[j]] = key
+#                 word_array.append(words[j])
+#                 word_freq.append(1)
+#                 key += 1
+#             else:
+#                 k = word_dict[words[j]]
+#                 word_freq[k - keystart] += 1
+#     word_dict['UNK'] = key
+#     word_array.append('UNK')
 
-    sorted_x = sorted(range(len(word_freq)), key=lambda k: word_freq[k], reverse=True)
-    if pr:
-        for x in sorted_x:
-            print word_array[x], word_freq[x],
-        #print sorted_x
-        print 'Dictionary length', len(word_dict)
-    return  word_dict, word_array
+#     sorted_x = sorted(range(len(word_freq)), key=lambda k: word_freq[k], reverse=True)
+#     if pr:
+#         for x in sorted_x:
+#             print word_array[x], word_freq[x],
+#         #print sorted_x
+#         print 'Dictionary length', len(word_dict)
+#     return  word_dict, word_array
 
-def lookupAnsID(answers, ansdict):
-    ansids = []
-    for ans in answers:
-        if ansdict.has_key(ans):
-            ansids.append(ansdict[ans])
-        else:
-            ansids.append(ansdict['UNK'])
-    return np.array(ansids, dtype=int).reshape(len(ansids), 1)
+# def lookupAnsID(answers, ansdict):
+#     ansids = []
+#     for ans in answers:
+#         if ansdict.has_key(ans):
+#             ansids.append(ansdict[ans])
+#         else:
+#             ansids.append(ansdict['UNK'])
+#     return np.array(ansids, dtype=int).reshape(len(ansids), 1)
 
-def lookupQID(questions, worddict):
-    wordslist = []
-    maxlen = 27
-    for q in questions:
-        words = q.split(' ')
-        wordslist.append(words)
-        # if len(words) > maxlen:
-        #     maxlen = len(words)
-    result = np.zeros((len(questions), maxlen, 1), dtype=int)
-    for i,words in enumerate(wordslist):
-        for j,w in enumerate(words):
-            if worddict.has_key(w):
-                result[i, j, 0] = worddict[w]
-            else:
-                result[i, j, 0] = worddict['UNK']
-    return result
+# def lookupQID(questions, worddict):
+#     wordslist = []
+#     maxlen = 27
+#     for q in questions:
+#         words = q.split(' ')
+#         wordslist.append(words)
+#         # if len(words) > maxlen:
+#         #     maxlen = len(words)
+#     result = np.zeros((len(questions), maxlen, 1), dtype=int)
+#     for i,words in enumerate(wordslist):
+#         for j,w in enumerate(words):
+#             if worddict.has_key(w):
+#                 result[i, j, 0] = worddict[w]
+#             else:
+#                 result[i, j, 0] = worddict['UNK']
+#     return result
 
-def combine(wordids, imgids):
-    return np.concatenate(\
-        (np.array(imgids).reshape(len(imgids), 1, 1), \
-        wordids), axis=1)
-
-def combineAttention(wordids, imgids):
-    imgid_t = []
-    for n in range(0, wordids.shape[0]):
-        for t in range(0, wordids.shape[1]):
-            if wordids[n, t, 0] == 0:
-                imgid_t.append(0)
-            else:
-                imgid_t.append(imgids[n])
-
-    return np.concatenate(
-            (np.array(imgid_t).reshape(len(imgids), wordids.shape[1], 1),
-            wordids), axis=-1)
+# def combine(wordids, imgids):
+#     return np.concatenate(\
+#         (np.array(imgids).reshape(len(imgids), 1, 1), \
+#         wordids), axis=1)
 
 def getQuestionType(answer):
     if answer == 'one' or answer == 'two' or answer == 'three' or\
@@ -237,6 +226,8 @@ if __name__ == '__main__':
         lines = f.readlines()
 
     (questions, answers, imgids) = extractQA(lines)
+    maxlen = prep.findMaxlen(questions)
+
     split = trainValidSplit(imgids)
     trainQuestions, validQuestions = dataSplit(questions, imgids, split)
     trainAnswers, validAnswers = dataSplit(answers, imgids, split)
@@ -249,13 +240,21 @@ if __name__ == '__main__':
         lines = f.readlines()
 
     (testQuestions, testAnswers, testImgIds) = extractQA(lines)
+    maxlen2 = prep.findMaxlen(testQuestions)
+    maxlen = max(maxlen, maxlen2)
+    print 'Maxlen final:', maxlen
 
     print len(testQuestions)
+
     # Build a dictionary only for training questions.
-    worddict, idict = buildDict(trainQuestions, 1, pr=False)
-    ansdict, iansdict = buildDict(trainAnswers, 0, pr=True)
-    validAnsDict, validIAnsDict = buildDict(validAnswers, 0, pr=True)
-    testAnsDict, testIAnsDict = buildDict(testAnswers, 1, pr=True)
+    worddict, idict, _ = \
+        prep.buildDict(trainQuestions, keystart=1, pr=False)
+    ansdict, iansdict, _ = \
+        prep.buildDict(trainAnswers, keystart=0, pr=True)
+    validAnsDict, validIAnsDict, _ = \
+        prep.buildDict(validAnswers, keystart=0, pr=True)
+    testAnsDict, testIAnsDict, _ = \
+        prep.buildDict(testAnswers, keystart=1, pr=True)
 
     trainQuestionTypes = np.zeros(len(trainQuestions), dtype=int)
     trainCount = np.zeros(3)
@@ -325,22 +324,15 @@ if __name__ == '__main__':
         testImgIds = testImgIds[testQuestionTypes == typ]
         testQuestionTypes = testQuestionTypes[testQuestionTypes == typ]
 
-    trainInput = combine(\
-        lookupQID(trainQuestions, worddict), trainImgIds)
-    trainTarget = lookupAnsID(trainAnswers, ansdict)
-    validInput = combine(\
-        lookupQID(validQuestions, worddict), validImgIds)
-    validTarget = lookupAnsID(validAnswers, ansdict)
-    testInput = combine(\
-        lookupQID(testQuestions, worddict), testImgIds)
-    testTarget = lookupAnsID(testAnswers, ansdict)
-
-    worddict_all, idict_all = buildDict(questions, 1)
-    ansdict_all, iansdict_all = buildDict(answers, 0, pr=True)
-
-    allInput = combine(\
-        lookupQID(questions, worddict), imgids)
-    allTarget = lookupAnsID(answers, ansdict)
+    trainInput = prep.combine(\
+        prep.lookupQID(trainQuestions, worddict, maxlen), trainImgIds)
+    trainTarget = prep.lookupAnsID(trainAnswers, ansdict)
+    validInput = prep.combine(\
+        prep.lookupQID(validQuestions, worddict, maxlen), validImgIds)
+    validTarget = prep.lookupAnsID(validAnswers, ansdict)
+    testInput = prep.combine(\
+        prep.lookupQID(testQuestions, worddict, maxlen), testImgIds)
+    testTarget = prep.lookupAnsID(testAnswers, ansdict)
 
     np.save(\
         os.path.join(outputFolder, 'train.npy'),\
@@ -357,19 +349,10 @@ if __name__ == '__main__':
     np.save(\
         os.path.join(outputFolder, 'test-qtype.npy'),\
         testQuestionTypes)
-
-    np.save(\
-        os.path.join(outputFolder, 'all.npy'),\
-        np.array((allInput, allTarget, 0),\
-            dtype=object))
     np.save(\
         os.path.join(outputFolder, 'vocab-dict.npy'),\
         np.array((worddict, idict, 
             ansdict, iansdict, 0), dtype=object))
-    np.save(\
-        os.path.join(outputFolder, 'vocab-dict-all.npy'),\
-        np.array((worddict_all, idict_all, 
-            ansdict_all, iansdict_all, 0), dtype=object))
 
     with open(os.path.join(outputFolder, 'question_vocabs.txt'), 'w+') as f:
         for word in idict:
@@ -388,47 +371,9 @@ if __name__ == '__main__':
             f.write(str(i) + '\n')
 
     # Build baseline solution
-    colorAnswer = 'white'
-    numberAnswer = 'two'
-    objectAnswer = 'table'
-
-    baseline = []
-    baselineCorrect = np.zeros(3)
-    baselineTotal = np.zeros(3)
-    for n in range(0, len(testQuestions)):
-        if testQuestionTypes[n] == 0:
-            baseline.append(objectAnswer)
-            if testAnswers[n] == objectAnswer:
-                baselineCorrect[0] += 1
-            baselineTotal[0] += 1
-        elif testQuestionTypes[n] == 1:
-            baseline.append(numberAnswer)
-            if testAnswers[n] == numberAnswer:
-                baselineCorrect[1] += 1
-            baselineTotal[1] += 1
-        elif testQuestionTypes[n] == 2:
-            baseline.append(colorAnswer)
-            if testAnswers[n] == colorAnswer:
-                baselineCorrect[2] += 1
-            baselineTotal[2] += 1
-    baselineRate = baselineCorrect / baselineTotal.astype('float')
-    print 'Baseline rate: %.4f' % (np.sum(baselineCorrect) / np.sum(baselineTotal).astype('float'))
-    print 'Baseline object: %.4f' % baselineRate[0]
-    print 'Baseline number: %.4f' % baselineRate[1]
-    print 'Baseline color: %.4f' % baselineRate[2]
-
-    baselineFilename = os.path.join(outputFolder, 'baseline.txt')
-    groundTruthFilename = os.path.join(outputFolder, 'ground_truth.txt')
-    with open(baselineFilename, 'w+') as f:
-        for answer in baseline:
-            f.write(answer + '\n')
-    with open(groundTruthFilename, 'w+') as f:
-        for answer in testAnswers:
-            f.write(answer + '\n')
-
-    wups = np.zeros(3)
-    for i, thresh in enumerate([-1, 0.9, 0.0]):
-        wups[i] = calculate_wups.runAll(groundTruthFilename, baselineFilename, thresh)
-    print 'Baseline WUPS -1: %.4f' % wups[0]
-    print 'Baseline WUPS 0.9: %.4f' % wups[1]
-    print 'Baseline WUPS 0.0: %.4f' % wups[2]
+    prep.guessBaseline(
+                    testQuestions, 
+                    testAnswers, 
+                    testQuestionTypes, 
+                    outputFolder=outputFolder, 
+                    calcWups=True)

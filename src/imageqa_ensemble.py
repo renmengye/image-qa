@@ -47,7 +47,7 @@ if __name__ == '__main__':
                                -m[odel] {modelId1}
                                -m[odel] {modelId2},...
                                -d[ata] {dataFolder}
-                               -daquar/-cocoqa
+                               -dataset {daquar/cocoqa}
                                [-r[esults] {resultsFolder}]
                                [-prior]
     Results folder by default is '../results'
@@ -65,10 +65,8 @@ if __name__ == '__main__':
             dataFolder = sys.argv[i + 1]
         elif flag == '-r' or flag == '-results':
             resultsFolder = sys.argv[i + 1]
-        elif flag == '-daquar':
-            dataset = 'daquar'
-        elif flag == '-cocoqa':
-            dataset = 'cocoqa'
+        elif flag == '-dataset':
+            dataset = sys.argv[i + 1]
         elif flag == '-prior':
             runPrior = True
     models = it.loadEnsemble(taskIds, resultsFolder)

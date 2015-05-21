@@ -7,7 +7,7 @@ import imageqa_visprior as ip
 import imageqa_ensemble as ie
 import imageqa_render as ir
 
-def parseCommentsFile(filename):
+def parseInputFile(filename):
     caption = ''
     selIds = []
     selComments = []
@@ -42,70 +42,41 @@ if __name__ == '__main__':
                     [-p[icture] {pictureFolder}]
                     [-f[ile] {outputTexFilename}]
                     [-daquar/-cocoqa]
-    Parameters:
-        -m[odel]
-        -d[ata]
-        -i[nput]
-        -k
-        -p[icture]
-        -f[ile]
-        -daquar
-        -cocoqa
     Input file format:
     QID1[,Comment1]
     QID2[,Comment2]
     ...
     """
     params = ir.parseComparativeParams(sys.argv)
-    dataset = params['dataset']
-    dataFolder = params['dataFolder']
-    inputFile = params['inputFile']
+
+    print('Loading test data...')
+    urlDict = ir.loadImgUrl(params['dataset'], params['dataFolder'])
     data = it.loadDataset(params['dataFolder'])
 
-    print 'Loading image urls...'
-    if dataset == 'cocoqa':
-        imgidDictFilename = os.path.join(dataFolder, 'imgid_dict.pkl')
-        with open(imgidDictFilename, 'rb') as f:
-            imgidDict = pkl.load(f)
-        urlDict = readImgDictCocoqa(imgidDict)
-    elif dataset == 'daquar':
-        urlDict = readImgDictDaquar()
+    print('Parsing input file...')
+    caption, selIds, selComments = parseInputFile(params['inputFile'])
 
-    print 'Loading test data...'
-
-    caption, selIds, selComments = parseCommentsFile(inputFile)
-
+    print('Running models...')
     idx = np.array(selIds, dtype='int')
     inputTestSel = inputTest[idx]
     targetTestSel = targetTest[idx]
-
     inputTest = data['testData'][0]
     questionTypeArray = data['questionTypeArray']
-    modelSpecs = params['models']
     modelOutputs = ie.runAllModels(
                 inputTestSel, 
                 questionTypeArray[idx], 
-                modelSpecs, 
+                params['models'], 
                 resultsFolder):
 
     # Render
     print('Rendering LaTeX...')
     
     # Replace escape char
-    questionIdict = data['questionIdict']
-    ansIdict = data['ansIdict']
-    for i in range(len(questionIdict)):
-        if '_' in questionIdict[i]:
-            questionIdict[i] = questionIdict[i].replace('_', '\\_')
-    for i in range(len(ansIdict)):
-        if '_' in ansIdict[i]:
-            ansIdict[i] = ansIdict[i].replace('_', '\\_')
+    data['questionIdict'] = ir.escapeLatexIdict(data['questionIdict'])
+    data['ansIdict'] = ir.escapeLatexIdict(data['ansIdict'])
 
     if not os.path.exists(outputFolder):
         os.makedirs(outputFolder)
-    modelNames = []
-    for spec in modelSpecs:
-        modelNames.append(spec['name'])
     ir.renderLatex(
                 inputTestSel, 
                 targetTestSel, 
@@ -118,6 +89,6 @@ if __name__ == '__main__':
                 comments=selComments,
                 caption=caption,
                 modelOutputs=modelOutputs,
-                modelNames=modelNames,
+                modelNames=ir.getModelNames(params['models']),
                 questionIds=idx,
                 filename=filename + '.tex')

@@ -4,8 +4,8 @@ import json
 import cPickle as pkl
 
 from nn.func import *
-from imageqa_test import *
-
+import imageqa_test as it
+import imageqa_ensemble as ie
 import requests
 
 jsonTrainFilename = '../../../data/mscoco/train/captions.json'
@@ -108,23 +108,23 @@ def renderLatexSinglePage(
         answer = answerArray[targetData[n, 0]]
         topAnswers, topAnswerScores = \
                     pickTopAnswers(
-                                    answerArray,
-                                    n,
-                                    topK=topK,
-                                    modelOutputs=modelOutputs, 
-                                    modelNames=modelNames)
+                            answerArray,
+                            n,
+                            topK=topK,
+                            modelOutputs=modelOutputs, 
+                            modelNames=modelNames)
         comment = comments[n] \
                 if comments is not None else None
         result.append(
             renderLatexSingleItem(
-                                    qid,
-                                    question,
-                                    answer,
-                                    pictureFolder=pictureFolder,
-                                    comment=comment,
-                                    topAnswers=topAnswers,
-                                    topAnswerScores=topAnswerScores,
-                                    modelNames=modelNames))
+                            qid,
+                            question,
+                            answer,
+                            pictureFolder=pictureFolder,
+                            comment=comment,
+                            topAnswers=topAnswers,
+                            topAnswerScores=topAnswerScores,
+                            modelNames=modelNames))
         if np.mod(n, imgPerRow) == imgPerRow - 1:
             result.append('\\\\\n')
             if n != inputData.shape[0] - 1:
@@ -159,48 +159,46 @@ def renderLatex(
     imgFolder = os.path.join(outputFolder, 'img')
     if inputData.shape[0] < imgPerPage:
         latexStr = renderLatexSinglePage(
-                                        inputData,
-                                        targetData,
-                                        questionArray,
-                                        answerArray,
-                                        urlDict,
-                                        outputFolder,
-                                        pictureFolder=pictureFolder,
-                                        topK=topK,
-                                        comments=comments,
-                                        caption=caption,
-                                        modelOutputs=modelOutputs,
-                                        modelNames=modelNames,
-                                        questionIds=questionIds)
+                        inputData,
+                        targetData,
+                        questionArray,
+                        answerArray,
+                        urlDict,
+                        outputFolder,
+                        pictureFolder=pictureFolder,
+                        topK=topK,
+                        comments=comments,
+                        caption=caption,
+                        modelOutputs=modelOutputs,
+                        modelNames=modelNames,
+                        questionIds=questionIds)
     else:
         result = []
         numPages = int(np.ceil(inputData.shape[0] / float(imgPerPage)))
         for i in range(numPages):
             start = imgPerPage * i
             end = min(inputData.shape[0], imgPerPage * (i + 1))
-            if modelNames is not None:
+            if modelOutputs is not None:
                 modelOutputSlice = []
                 for j in range(len(modelNames)):
                     modelOutputSlice.append(modelOutputs[j][start:end])
-            elif modelOutputs is not None:
-                modelOutputSlice = modelOutputs[start:end]
             else:
-                modelOutputSlice = modelOutputs
+                modelOutputSlice = None
             page = renderLatexSinglePage(
-                                    inputData[start:end],
-                                    targetData[start:end],
-                                    questionArray,
-                                    answerArray,
-                                    urlDict,
-                                    outputFolder,
-                                    pictureFolder=pictureFolder,
-                                    topK=topK,
-                                    comments=comments[start:end] \
-                                    if comments is not None else None,
-                                    caption=caption,
-                                    modelOutputs=modelOutputSlice,
-                                    modelNames=modelNames, 
-                                    questionIds=questionIds[start:end])
+                        inputData[start:end],
+                        targetData[start:end],
+                        questionArray,
+                        answerArray,
+                        urlDict,
+                        outputFolder,
+                        pictureFolder=pictureFolder,
+                        topK=topK,
+                        comments=comments[start:end] \
+                        if comments is not None else None,
+                        caption=caption,
+                        modelOutputs=modelOutputSlice,
+                        modelNames=modelNames, 
+                        questionIds=questionIds[start:end])
             result.append(page)
         latexStr = ''.join(result)
     with open(os.path.join(outputFolder, filename), 'w') as f:
@@ -219,43 +217,41 @@ def renderHtml(
     imgPerPage = 1000
     if inputData.shape[0] < imgPerPage:
         return [renderSinglePage(
-                                inputData,
-                                targetData,
-                                questionArray,
-                                answerArray,
-                                urlDict,
-                                iPage=0,
-                                numPages=1,
-                                topK=topK,
-                                modelOutputs=modelOutputs,
-                                modelNames=modelNames, 
-                                questionIds=questionIds)]
+                    inputData,
+                    targetData,
+                    questionArray,
+                    answerArray,
+                    urlDict,
+                    iPage=0,
+                    numPages=1,
+                    topK=topK,
+                    modelOutputs=modelOutputs,
+                    modelNames=modelNames, 
+                    questionIds=questionIds)]
     else:
         result = []
         numPages = int(np.ceil(inputData.shape[0] / float(imgPerPage)))
         for i in range(numPages):
             start = imgPerPage * i
             end = min(inputData.shape[0], imgPerPage * (i + 1))
-            if modelNames is not None:
+            if modelOutputs is not None:
                 modelOutputSlice = []
                 for j in range(len(modelNames)):
                     modelOutputSlice.append(modelOutputs[j][start:end])
-            elif modelOutputs is not None:
-                modelOutputSlice = modelOutputs[start:end]
             else:
-                modelOutputSlice = modelOutputs
+                modelOutputSlice = None
             page = renderSinglePage(
-                                    inputData[start:end],
-                                    targetData[start:end],
-                                    questionArray,
-                                    answerArray,
-                                    urlDict, 
-                                    iPage=i,
-                                    numPages=numPages,
-                                    topK=topK,
-                                    modelOutputs=modelOutputSlice,
-                                    modelNames=modelNames,
-                                    questionIds=questionIds[start:end])
+                        inputData[start:end],
+                        targetData[start:end],
+                        questionArray,
+                        answerArray,
+                        urlDict, 
+                        iPage=i,
+                        numPages=numPages,
+                        topK=topK,
+                        modelOutputs=modelOutputSlice,
+                        modelNames=modelNames,
+                        questionIds=questionIds[start:end])
             result.append(page)
         return result
 
@@ -456,9 +452,26 @@ def readImgDictDaquar():
         urlList.append(daquarImageFolder + 'image%d.jpg' % int(i))
     return urlList
 
+def loadImgUrl(dataset, dataFolder):
+    print 'Loading image urls...'
+    if dataset == 'cocoqa':
+        imgidDictFilename = \
+            os.path.join(dataFolder, 'imgid_dict.pkl')
+        with open(imgidDictFilename, 'rb') as f:
+            imgidDict = pkl.load(f)
+        urlDict = readImgDictCocoqa(imgidDict)
+    elif dataset == 'daquar':
+        urlDict = readImgDictDaquar()
+
+def escapeLatexIdict(idict):
+    for i in range(len(idict)):
+        if '_' in idict[i]:
+            idict[i] = idict[i].replace('_', '\\_')
+    return idict
+
 def parseComparativeParams(argv):
     """
-    Parse parameter list for rendering comparative results
+    Parse parameter list for rendering comparative results.
     Usage:
         -m[odel] {name1:modelId1}
         -m[odel] {name2:modelId2}
@@ -474,6 +487,7 @@ def parseComparativeParams(argv):
         [-r[esults] {resultsFolder}]
         [-f[ile] {outputTexFilename}]
         [-dataset {daquar/cocoqa}]
+        [-format {html/latex}]
 
     Parameters:
         -m[odel]: Normal models
@@ -482,11 +496,12 @@ def parseComparativeParams(argv):
         -d[ata]: Data folder
         -i[nput]: Task-specific input file
         -o[utput]: Output folder
-        -k: Top-K answers, default 1
+        -k: Top K answers, default 1
         -p[icture]: Picture folder name, default "img"
         -r[esults]: Results folder, default "../results"
         -f[ile]: Output TeX file name, default "result"
         -dataset: daquar/cocoqa dataset, default "cocoqa"
+        -format: Output format, default "html"
 
     Returns:
         A dictionary with following keys:
@@ -508,6 +523,8 @@ def parseComparativeParams(argv):
     resultsFolder = '../results'
     K = 1
     models = []
+    format = 'html'
+    inputFile = None
     for i, flag in enumerate(argv):
         if flag == '-m' or flag == '-model':
             parts = sys.argv[i + 1].split(':')
@@ -549,97 +566,81 @@ def parseComparativeParams(argv):
             filename = sys.argv[i + 1]
         elif flag == '-dataset':
             dataset = sys.argv[i + 1]
+        elif flag == '-format':
+            format = sys.argv[i + 1]
     return {
         'models': models,
         'dataFolder': dataFolder,
         'inputFile': inputFile,
         'outputFolder': outputFolder,
-        'topK': K
+        'resultsFolder': resultsFolder,
+        'topK': K,
         'pictureFolder': pictureFolder,
         'outputTexFilename': filename,
-        'dataset': dataset
+        'dataset': dataset,
+        'format': format
     }
 
+def getModelNames(modelSpecs):
+    modelNames = []
+    for spec in modelSpecs:
+        modelNames.append(spec['name'])
+    return modelNames
 
 if __name__ == '__main__':
     """
-    Render HTML of a model
+    Render HTML of a single model.
     Usage: python imageqa_render.py 
-                            -id {id}
-                            -d[ata] {dataFolder}
-                            -o[utput] {outputFolder}
-                            -daquar/-coco
+                        -m[odel] {name:modelId}
+                        -em[odel] {name:ensembleModelId1,ensembleModelId2,...}
+                        -pem[odel] {name:ensembleModelId3,ensembleModelId4,...}
+                        -d[ata] {dataFolder}
+                        -o[utput] {outputFolder}
+                        [-k {Top K answers}]
+                        [-dataset {daquar/cocoqa}]
+    Parameters:
+        -m[odel]: Model ID
+        -em[odel]: Ensemble model ID
+        -pem[odel]: Ensemble model ID with prior
+        -d[ata]: Data folder
+        -o[utput]: Output folder
+        -k: Top K answers
+        -dataset: DAQUAR/COCOQA dataset
     """
-    dataset = 'coco'
-    resultsFolder = '../results'
-    taskId = None
-    for i in range(1, len(sys.argv)):
-        if sys.argv[i] == '-d' or sys.argv[i] == '-data':
-            dataFolder = sys.argv[i + 1]
-        elif sys.argv[i] == '-o' or sys.argv[i] == '-output':
-            outputFolder = sys.argv[i + 1]
-        elif sys.argv[i] == '-id':
-            taskId = sys.argv[i + 1]
-        elif sys.argv[i] == '-daquar':
-            dataset = 'daquar'
-        elif sys.argv[i] == '-coco':
-            dataset = 'coco'
-    print taskId
+    params = parseComparativeParams(sys.argv)
 
-    vocabDict = np.load(os.path.join(dataFolder, 'vocab-dict.npy'))
+    print('Loading test data...')
+    urlDict = loadImgUrl(params['dataset'], params['dataFolder'])
+    data = it.loadDataset(params['dataFolder'])
 
-    if dataset == 'coco':
-        imgidDictFilename = os.path.join(dataFolder, 'imgid_dict.pkl')
-        with open(imgidDictFilename, 'rb') as f:
-            imgidDict = pkl.load(f)
-        urlDict = readImgDictCocoqa(imgidDict)
-    elif dataset == 'daquar':
-        urlDict = readImgDictDaquar()
-
-    print 'Loading test data...'
-    inputTest, \
-    targetTest, \
-    questionArray, \
-    answerArray, \
-    questionTypeArray = loadTestSet(dataFolder)
-
-    if taskId is not None:
-        htmlOutputFolder = os.path.join(taskFolder, outputFolder)
-        if ',' in taskId:
-            print 'Loading ensemble model...'
-            taskIds = taskId.split(',')
-            models = loadEnsemble(taskIds, resultsFolder)
-            outputTest = runEnsemble(inputTest, models, questionTypeArray)
-            taskFolder = os.path.join(resultsFolder, 
-                'ensemble-' + taskId.replace(',', '_'))
-            print 'Writing HTML to %s' % taskFolder
-        else:
-            taskFolder = os.path.join(resultsFolder, taskId)
-            print 'Loading model...'
-            model = loadModel(taskId, resultsFolder)
-
-            print 'Running model on test data...'
-            outputTest = nn.test(model, inputTest)
+    if len(params['models']) > 0:
+        print('Running models...')
+        singleModel = [modelSpec]
+        modelOutputs = ie.runAllModels(
+                        data['testData'][0], 
+                        data['questionTypeArray'], 
+                        modelSpecs, 
+                        params['resultsFolder'])
     else:
-        htmlOutputFolder = outputFolder
-        outputTest = None
+        modelOutputs = None
 
     # Render
-    if not os.path.exists(htmlOutputFolder):
-        os.makedirs(htmlOutputFolder)
+    print('Rendering HTML to %s' % params['outputFolder'])
+    if not os.path.exists(params['outputFolder']):
+        os.makedirs(params['outputFolder'])
 
     pages = renderHtml(
-                        inputTest, 
-                        targetTest, 
-                        questionArray, 
-                        answerArray, 
-                        urlDict, 
-                        topK=10, 
-                        modelOutputs=outputTest,
-                        modelNames=None,
-                        questionIds=np.arange(inputTest.shape[0]))
+                data['testData'][0], 
+                data['testData'][1], 
+                data['questionIdict'], 
+                data['ansIdict'], 
+                urlDict, 
+                topK=params['topK'], 
+                modelOutputs=modelOutputs,
+                modelNames=getModelNames(modelSpecs),
+                questionIds=np.arange(inputTest.shape[0]))
 
     for i, page in enumerate(pages):
-        with open(os.path.join(htmlOutputFolder, 
+        with open(os.path.join(params['outputFolder'], 
                 htmlHyperLink % i), 'w') as f:
             f.write(page)

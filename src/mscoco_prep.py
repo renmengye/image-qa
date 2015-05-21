@@ -6,9 +6,10 @@ import h5py
 import sys
 from scipy import sparse
 import calculate_wups
+import hist
+import prep
 import matplotlib
 matplotlib.use('Agg')
-import hist
 import matplotlib.pyplot as plt
 
 imgidTrainFilename = '../../../data/mscoco/train/image_list.txt'
@@ -17,38 +18,6 @@ qaTrainFilename = '../../../data/mscoco/train/qa.pkl'
 qaValidFilename = '../../../data/mscoco/valid/qa.pkl'
 imgHidFeatTrainFilename = '/ais/gobi3/u/mren/data/mscoco/hidden_oxford_train.h5'
 imgHidFeatValidFilename = '/ais/gobi3/u/mren/data/mscoco/hidden_oxford_valid.h5'
-
-def buildDict(lines, keystart, pr=False):
-    # From word to number.
-    word_dict = {}
-    # From number to word, numbers need to minus one to convert to list indices.
-    word_array = []
-    # Word frequency
-    word_freq = []
-    # if key is 1-based, then 0 is reserved for sentence end.
-    key = keystart
-
-    for i in range(0, len(lines)):
-        line = lines[i].replace(',', '')
-        words = line.split(' ')
-        for j in range(0, len(words)):
-            if not word_dict.has_key(words[j]):
-                word_dict[words[j]] = key
-                word_array.append(words[j])
-                word_freq.append(1)
-                key += 1
-            else:
-                k = word_dict[words[j]]
-                word_freq[k - keystart] += 1
-    word_dict['UNK'] = key
-    word_array.append('UNK')
-    sorted_x = sorted(range(len(word_freq)), key=lambda k: word_freq[k], reverse=True)
-    if pr:
-        for x in sorted_x:
-            print word_array[x], word_freq[x],
-        #print sorted_x
-        print 'Dictionary length', len(word_dict)
-    return  word_dict, word_array, word_freq
 
 def removeQuestions(
                     answers, 
@@ -73,7 +42,7 @@ def removeQuestions(
                 without lower bound constraints.
 
     """
-    answerdict, answeridict, answerfreq = buildDict(answers, 0)
+    answerdict, answeridict, answerfreq = prep.buildDict(answers, 0)
     random = np.random.RandomState(2)
     # Ongoing frequency count
     answerfreq2 = []
@@ -97,124 +66,6 @@ def removeQuestions(
                     survivor.append(i)
                     answerfreq2[answerdict[ans]] += 1
     return survivor
-
-def lookupAnsID(answers, ansdict):
-    ansids = []
-    for ans in answers:
-        if ansdict.has_key(ans):
-            ansids.append(ansdict[ans])
-        else:
-            ansids.append(ansdict['UNK'])
-    return np.array(ansids, dtype=int).reshape(len(ansids), 1)
-
-def findMaxlen(questions):
-    maxlen = 0
-    for q in questions:
-        words = q.split(' ')
-        if len(words) > maxlen:
-            maxlen = len(words)
-    print 'Maxlen: ', maxlen
-    return maxlen
-
-def lookupQID(questions, worddict, maxlen):
-    wordslist = []
-    for q in questions:
-        words = q.split(' ')
-        wordslist.append(words)
-        if len(words) > maxlen:
-            maxlen = len(words)
-    result = np.zeros((len(questions), maxlen, 1), dtype=int)
-    for i,words in enumerate(wordslist):
-        for j,w in enumerate(words):
-            if worddict.has_key(w):
-                result[i, j, 0] = worddict[w]
-            else:
-                result[i, j, 0] = worddict['UNK']
-    return result
-
-def combine(wordids, imgids):
-    return np.concatenate(\
-        (np.array(imgids).reshape(len(imgids), 1, 1), \
-        wordids), axis=1)
-
-def combineAttention(wordids, imgids):
-    imgid_t = []
-    for n in range(0, wordids.shape[0]):
-        for t in range(0, wordids.shape[1]):
-            if wordids[n, t, 0] == 0:
-                imgid_t.append(0)
-            else:
-                imgid_t.append(imgids[n])
-
-    return np.concatenate(
-            (np.array(imgid_t).reshape(len(imgids), wordids.shape[1], 1),
-            wordids), axis=-1)
-
-def guessBaseline(
-                    questions, 
-                    answers, 
-                    questionTypes, 
-                    outputFolder=None, 
-                    calcWups=False):
-    """
-    Run mode-guessing baseline on a dataset.
-    If need to calculate WUPS score, outputFolder must be provided (for now).
-    """
-    baseline = []
-    typedAnswerFreq = []
-    for i in range(4):
-        typedAnswerFreq.append({})
-    for q, a, typ in zip(questions, answers, questionTypes):
-        if typedAnswerFreq[typ].has_key(a):
-            typedAnswerFreq[typ][a] += 1
-        else:
-            typedAnswerFreq[typ][a] = 1
-    modeAnswers = []
-    for typ in range(4):
-        tempAnswer = None
-        tempFreq = 0
-        for k in typedAnswerFreq[typ].iterkeys():
-            if typedAnswerFreq[typ][k] > tempFreq:
-                tempAnswer = k
-                tempFreq = typedAnswerFreq[typ][k]
-        modeAnswers.append(tempAnswer)
-    for i, ans in enumerate(modeAnswers):
-        print 'Baseline answers %d: %s' % (i, ans)
-
-    # Print baseline performance
-    baselineCorrect = np.zeros(4)
-    baselineTotal = np.zeros(4)
-    for n in range(0, len(questions)):
-        i = questionTypes[n]
-        baseline.append(modeAnswers[i])
-        if answers[n] == modeAnswers[i]:
-            baselineCorrect[i] += 1
-        baselineTotal[i] += 1
-    baselineRate = baselineCorrect / baselineTotal.astype('float')
-    print 'Baseline rate: %.4f' % \
-        (np.sum(baselineCorrect) / np.sum(baselineTotal).astype('float'))
-    print 'Baseline object: %.4f' % baselineRate[0]
-    print 'Baseline number: %.4f' % baselineRate[1]
-    print 'Baseline color: %.4f' % baselineRate[2]
-    print 'Baseline location: %.4f' % baselineRate[3]
-
-    if calcWups:
-        baselineFilename = os.path.join(outputFolder, 'baseline.txt')
-        groundTruthFilename = os.path.join(outputFolder, 'ground_truth.txt')
-        with open(baselineFilename, 'w+') as f:
-            for answer in baseline:
-                f.write(answer + '\n')
-        with open(groundTruthFilename, 'w+') as f:
-            for answer in answers:
-                f.write(answer + '\n')
-        wups = np.zeros(3)
-        for i, thresh in enumerate([-1, 0.9, 0.0]):
-            wups[i] = calculate_wups.runAll(groundTruthFilename, baselineFilename, thresh)
-        print 'Baseline WUPS -1: %.4f' % wups[0]
-        print 'Baseline WUPS 0.9: %.4f' % wups[1]
-        print 'Baseline WUPS 0.0: %.4f' % wups[2]
-
-    return baseline
 
 def synonymDetect(iansdict, output=None):
     """
@@ -496,10 +347,10 @@ if __name__ == '__main__':
 
     print 'Distribution Before Rejection'
     beforeWorddict, beforeIdict, beforeFreq = \
-        buildDict(allAnswers, 0, pr=True)
+        prep.buildDict(allAnswers, 0, pr=True)
 
     print 'GUESS Before Rejection'
-    guessBaseline(allQuestions, allAnswers, allQuestionTypes)        
+    prep.guessBaseline(allQuestions, allAnswers, allQuestionTypes)        
 
     # Shuffle the questions.
     r = np.random.RandomState(1)
@@ -535,10 +386,10 @@ if __name__ == '__main__':
 
     print 'Distribution After Rejection'
     afterWorddict, afterIdict, afterFreq = \
-        buildDict(allAnswers, 0, pr=True)
+        prep.buildDict(allAnswers, 0, pr=True)
 
     print 'GUESS After Rejection on All Data'
-    guessBaseline(allQuestions, allAnswers, allQuestionTypes)
+    prep.guessBaseline(allQuestions, allAnswers, allQuestionTypes)
 
     # Filter question types
     if not (buildObject and buildNumber and buildColor and buildLocation):
@@ -629,17 +480,17 @@ if __name__ == '__main__':
     print 'Test Question Dist: ', testCount / float(len(testQuestions))
     
     # Build dictionary based on training questions/answers.
-    worddict, idict, wordfreq = buildDict(trainQuestions, 1, pr=False)
+    worddict, idict, wordfreq = prep.buildDict(trainQuestions, 1, pr=False)
     print 'Train answer distribution'
-    ansdict, iansdict, _ = buildDict(trainAnswers, 0, pr=True)
+    ansdict, iansdict, _ = prep.buildDict(trainAnswers, 0, pr=True)
     print 'Valid answer distribution'
-    buildDict(validAnswers, 0, pr=True)
+    prep.buildDict(validAnswers, 0, pr=True)
     print 'Test answer distribution'
     testAfterWorddict, testAfterIdict, testAfterFreq = \
-        buildDict(testAnswers, 0, pr=True)
+        prep.buildDict(testAnswers, 0, pr=True)
 
     print 'GUESS After Rejection on Test'
-    baseline = guessBaseline(
+    baseline = prep.guessBaseline(
                     testQuestions, 
                     testAnswers, 
                     testQuestionTypes,
@@ -648,18 +499,18 @@ if __name__ == '__main__':
 
     # Find max length
     if maxlen == -1:
-        maxlen = findMaxlen(allQuestions)
+        maxlen = prep.findMaxlen(allQuestions)
 
     # Build output
-    trainInput = combine(\
-        lookupQID(trainQuestions, worddict, maxlen), trainImgIds)
-    trainTarget = lookupAnsID(trainAnswers, ansdict)
-    validInput = combine(\
-        lookupQID(validQuestions, worddict, maxlen), validImgIds)
-    validTarget = lookupAnsID(validAnswers, ansdict)
-    testInput = combine(\
-        lookupQID(testQuestions, worddict, maxlen), testImgIds)
-    testTarget = lookupAnsID(testAnswers, ansdict)
+    trainInput = prep.combine(\
+        prep.lookupQID(trainQuestions, worddict, maxlen), trainImgIds)
+    trainTarget = prep.lookupAnsID(trainAnswers, ansdict)
+    validInput = prep.combine(\
+        prep.lookupQID(validQuestions, worddict, maxlen), validImgIds)
+    validTarget = prep.lookupAnsID(validAnswers, ansdict)
+    testInput = prep.combine(\
+        prep.lookupQID(testQuestions, worddict, maxlen), testImgIds)
+    testTarget = prep.lookupAnsID(testAnswers, ansdict)
 
     # Dataset files
     np.save(\
