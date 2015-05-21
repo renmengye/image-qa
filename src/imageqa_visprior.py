@@ -404,6 +404,8 @@ if __name__ == '__main__':
 
     if mainModelId is not None:
         data_m = it.loadDataset(mainDataFolder)
+        ansDict_m = data_m['ansDict']
+        ansIdict = data['ansIdict']
         questionDict_m = data_m['questionDict']
         questionIdict = data['questionIdict']
 
