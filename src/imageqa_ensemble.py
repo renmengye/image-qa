@@ -149,7 +149,7 @@ def runEnsemblePrior(
         data_m = it.loadDataset(classDataFolders[i])
         classAnsIdict.append(data_m['ansIdict'])
         tvData_m = ip.combineTrainValid(data_m['trainData'], data_m['validData'])
-        print 'Running test set on model #%d' % i
+        print 'Running test data on model #%d...' % i
         if i == 0 or i == 3:
             # Object and location questions
             print 'No prior'

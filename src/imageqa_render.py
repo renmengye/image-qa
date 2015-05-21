@@ -328,7 +328,7 @@ def renderSingleItem(
                     (questionIndex, question))
     htmlList.append('Correct answer: <span class="good">\
                     %s</span><br/>' % correctAnswer)
-    if modelNames is not None and len(modelNames) > 1:
+    if topAnswers is not None:
         for modelAnswer, modelAnswerScore, modelName in \
             zip(topAnswers, topAnswerScores, modelNames):
             htmlList.append('%s:<br/>' % modelName)
@@ -337,12 +337,6 @@ def renderSingleItem(
                                  correctAnswer,
                                  modelAnswer,
                                  modelAnswerScore))
-    elif topAnswers is not None:
-        htmlList.append(
-            renderAnswerList(
-                             correctAnswer,
-                             topAnswers, 
-                             topAnswerScores))
     htmlList.append('</div></td>')
     return ''.join(htmlList)
 
