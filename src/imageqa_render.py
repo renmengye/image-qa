@@ -104,7 +104,7 @@ def renderLatexSinglePage(
             os.makedirs(imgFolder)
         with open(os.path.join(imgFolder, '%d.jpg' % qid), 'wb') as f:
             f.write(r.content)
-        question = decodeQuestion(inputData[n], questionIdict)
+        question = it.decodeQuestion(inputData[n], questionIdict)
         answer = ansIdict[targetData[n, 0]]
         topAnswers, topAnswerScores = \
                     pickTopAnswers(
@@ -402,7 +402,7 @@ def renderSinglePage(
             htmlList.append('<tr>')
         imageId = inputData[n, 0, 0]
         imageFilename = urlDict[imageId - 1]
-        question = decodeQuestion(inputData[n], questionIdict)
+        question = it.decodeQuestion(inputData[n], questionIdict)
 
         qid = questionIds[n] if questionIds is not None else n
         topAnswers, topAnswerScores = pickTopAnswers(

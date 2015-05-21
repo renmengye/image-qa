@@ -1,8 +1,10 @@
-import numpy as np
-import calculate_wups
-import os
-import nn
 import sys
+import os
+
+import numpy as np
+
+import calculate_wups
+import nn
 
 def decodeQuestion(
                     modelInput, 
@@ -244,125 +246,6 @@ def writeMetricsToFile(
         f.write('WUPS 1.0: %.4f\n' % resultsWups[0])
         f.write('WUPS 0.9: %.4f\n' % resultsWups[1])
         f.write('WUPS 0.0: %.4f\n' % resultsWups[2])
-
-def loadEnsemble(
-                    taskIds, 
-                    resultsFolder):
-    """
-    Load class specific models.
-    """
-    models = []
-    for taskId in taskIds:
-        taskFolder = os.path.join(resultsFolder, taskId)
-        modelSpec = os.path.join(taskFolder, '%s.model.yml' % taskId)
-        modelWeights = os.path.join(taskFolder, '%s.w.npy' % taskId)
-        model = nn.load(modelSpec)
-        model.loadWeights(np.load(modelWeights))
-        models.append(model)
-    return models
-
-def __runEnsemble(
-                inputTest,
-                models,
-                ansDict,
-                classAnsIdict,
-                questionTypeArray):
-    allOutput = []
-    for i, model in enumerate(models):
-        print 'Running test data on model #%d...' % i
-        outputTest = nn.test(model, inputTest)
-        allOutput.append(outputTest)
-    ensembleOutputTest = np.zeros((inputTest.shape[0], len(ansDict)))
-    for n in range(allOutput[0].shape[0]):
-        qtype = questionTypeArray[n]
-        output = allOutput[qtype]
-        for i in range(output.shape[1]):
-            ansId = ansDict[classAnsIdict[qtype][i]]
-            ensembleOutputTest[n, ansId] = output[n, i]
-    return ensembleOutputTest
-
-def getClassDataFolders(dataset, dataFolder):
-    """
-    Get different original data folder name for class specific models.
-    """
-    if dataset == 'daquar':
-        classDataFolders = [
-            dataFolder + '-object',
-            dataFolder + '-number',
-            dataFolder + '-color'
-        ]
-    elif dataset == 'cocoqa':
-        classDataFolders = [
-            dataFolder + '-object',
-            dataFolder + '-number',
-            dataFolder + '-color',
-            dataFolder + '-location'
-        ]
-    return classDataFolders
-
-def runEnsemble(
-                inputTest,
-                models, 
-                dataFolder, 
-                classDataFolders,
-                questionTypeArray):
-    """
-    Run a class specific model on any dataset.
-    """
-    data = loadDataset(dataFolder)
-    classAnsIdict = []
-    for df in classDataFolders:
-        data_c = loadDataset(df)
-        classAnsIdict.append(data_c['ansIdict'])
-
-    ensembleOutputTest = __runEnsemble(
-                                        inputTest, 
-                                        models,
-                                        data['ansDict'],
-                                        classAnsIdict,
-                                        questionTypeArray)
-    return ensembleOutputTest
-
-def testEnsemble(
-                    ensembleId,
-                    models,
-                    dataFolder,
-                    classDataFolders,
-                    resultsFolder):
-    """
-    Test a class specific model in its original dataset.
-    """
-    data = loadDataset(dataFolder)
-    inputTest = data['testData'][0]
-    targetTest = data['testData'][1]
-
-    ensembleOutputTest = runEnsemble(
-                                    inputTest,
-                                    models, 
-                                    dataFolder, 
-                                    classDataFolders,
-                                    data['questionTypeArray'])
-    ensembleAnswerFile = getAnswerFilename(ensembleId, resultsFolder)
-    ensembleTruthFile = getTruthFilename(ensembleId, resultsFolder)
-
-    resultsRank, \
-    resultsCategory, \
-    resultsWups = runAllMetrics(
-                                inputTest,
-                                ensembleOutputTest,
-                                targetTest,
-                                data['ansIdict'],
-                                data['questionTypeArray'],
-                                ensembleAnswerFile,
-                                ensembleTruthFile)
-    writeMetricsToFile(
-                        ensembleId,
-                        resultsRank,
-                        resultsCategory,
-                        resultsWups,
-                        resultsFolder)
-
-    return ensembleOutputTest
 
 if __name__ == '__main__':
     """

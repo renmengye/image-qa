@@ -5,6 +5,125 @@ import numpy as np
 import imageqa_test as it
 import imageqa_visprior as ip
 
+def loadEnsemble(
+                    taskIds, 
+                    resultsFolder):
+    """
+    Load class specific models.
+    """
+    models = []
+    for taskId in taskIds:
+        taskFolder = os.path.join(resultsFolder, taskId)
+        modelSpec = os.path.join(taskFolder, '%s.model.yml' % taskId)
+        modelWeights = os.path.join(taskFolder, '%s.w.npy' % taskId)
+        model = nn.load(modelSpec)
+        model.loadWeights(np.load(modelWeights))
+        models.append(model)
+    return models
+
+def __runEnsemble(
+                inputTest,
+                models,
+                ansDict,
+                classAnsIdict,
+                questionTypeArray):
+    allOutput = []
+    for i, model in enumerate(models):
+        print 'Running test data on model #%d...' % i
+        outputTest = nn.test(model, inputTest)
+        allOutput.append(outputTest)
+    ensembleOutputTest = np.zeros((inputTest.shape[0], len(ansDict)))
+    for n in range(allOutput[0].shape[0]):
+        qtype = questionTypeArray[n]
+        output = allOutput[qtype]
+        for i in range(output.shape[1]):
+            ansId = ansDict[classAnsIdict[qtype][i]]
+            ensembleOutputTest[n, ansId] = output[n, i]
+    return ensembleOutputTest
+
+def getClassDataFolders(dataset, dataFolder):
+    """
+    Get different original data folder name for class specific models.
+    """
+    if dataset == 'daquar':
+        classDataFolders = [
+            dataFolder + '-object',
+            dataFolder + '-number',
+            dataFolder + '-color'
+        ]
+    elif dataset == 'cocoqa':
+        classDataFolders = [
+            dataFolder + '-object',
+            dataFolder + '-number',
+            dataFolder + '-color',
+            dataFolder + '-location'
+        ]
+    return classDataFolders
+
+def runEnsemble(
+                inputTest,
+                models, 
+                dataFolder, 
+                classDataFolders,
+                questionTypeArray):
+    """
+    Run a class specific model on any dataset.
+    """
+    data = loadDataset(dataFolder)
+    classAnsIdict = []
+    for df in classDataFolders:
+        data_c = loadDataset(df)
+        classAnsIdict.append(data_c['ansIdict'])
+
+    ensembleOutputTest = __runEnsemble(
+                                        inputTest, 
+                                        models,
+                                        data['ansDict'],
+                                        classAnsIdict,
+                                        questionTypeArray)
+    return ensembleOutputTest
+
+def testEnsemble(
+                    ensembleId,
+                    models,
+                    dataFolder,
+                    classDataFolders,
+                    resultsFolder):
+    """
+    Test a class specific model in its original dataset.
+    """
+    data = loadDataset(dataFolder)
+    inputTest = data['testData'][0]
+    targetTest = data['testData'][1]
+
+    ensembleOutputTest = runEnsemble(
+                                    inputTest,
+                                    models, 
+                                    dataFolder, 
+                                    classDataFolders,
+                                    data['questionTypeArray'])
+    ensembleAnswerFile = getAnswerFilename(ensembleId, resultsFolder)
+    ensembleTruthFile = getTruthFilename(ensembleId, resultsFolder)
+
+    resultsRank, \
+    resultsCategory, \
+    resultsWups = runAllMetrics(
+                                inputTest,
+                                ensembleOutputTest,
+                                targetTest,
+                                data['ansIdict'],
+                                data['questionTypeArray'],
+                                ensembleAnswerFile,
+                                ensembleTruthFile)
+    writeMetricsToFile(
+                        ensembleId,
+                        resultsRank,
+                        resultsCategory,
+                        resultsWups,
+                        resultsFolder)
+
+    return ensembleOutputTest
+
 def runAllModels(
                 inputTest, 
                 questionTypeArray, 
@@ -17,22 +136,22 @@ def runAllModels(
         if modelSpec['isEnsemble']:
             print 'Running test data on ensemble model %s...' \
                     % modelSpec['name']
-            models = it.loadEnsemble(modelSpec['id'].split(','), resultsFolder)
-            classDataFolders = it.getClassDataFolders(dataset, dataFolder)
+            models = loadEnsemble(modelSpec['id'].split(','), resultsFolder)
+            classDataFolders = getClassDataFolders(dataset, dataFolder)
             if modelSpec['runPrior']:
                 outputTest = ip.runEnsemblePrior(
-                                        inputTest, 
-                                        models,
-                                        dataFolder,
-                                        classDataFolders,
-                                        questionTypeArray)
+                                    inputTest, 
+                                    models,
+                                    dataFolder,
+                                    classDataFolders,
+                                    questionTypeArray)
             else:
-                outputTest = it.runEnsemble(
-                                        inputTest, 
-                                        models,
-                                        dataFolder,
-                                        classDataFolders,
-                                        questionTypeArray)
+                outputTest = runEnsemble(
+                                    inputTest, 
+                                    models,
+                                    dataFolder,
+                                    classDataFolders,
+                                    questionTypeArray)
         else:
             print 'Running test data on model %s...' \
                     % modelSpec['name']
@@ -71,19 +190,19 @@ if __name__ == '__main__':
             dataset = sys.argv[i + 1]
         elif flag == '-prior':
             runPrior = True
-    models = it.loadEnsemble(taskIds, resultsFolder)
-    classDataFolders = it.getClassDataFolders(dataset, dataFolder)
+    models = loadEnsemble(taskIds, resultsFolder)
+    classDataFolders = getClassDataFolders(dataset, dataFolder)
     if runPrior:
         ip.testEnsemblePrior(
-                        ensembleId=ensembleId,
-                        models=models, 
-                        dataFolder=dataFolder, 
-                        classDataFolders=classDataFolders,
-                        resultsFolder=resultsFolder)
+                ensembleId=ensembleId,
+                models=models, 
+                dataFolder=dataFolder, 
+                classDataFolders=classDataFolders,
+                resultsFolder=resultsFolder)
     else:
-        it.testEnsemble(
-                        ensembleId=ensembleId,
-                        models=models, 
-                        dataFolder=dataFolder, 
-                        classDataFolders=classDataFolders,
-                        resultsFolder=resultsFolder)
+        testEnsemble(
+                ensembleId=ensembleId,
+                models=models, 
+                dataFolder=dataFolder, 
+                classDataFolders=classDataFolders,
+                resultsFolder=resultsFolder)

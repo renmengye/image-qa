@@ -388,24 +388,24 @@ def testEnsemblePrior(
     inputTest = data['testData'][0]
     targetTest = data['testData'][1]
     ensembleOutputTest = runEnsemblePrior(
-                                    inputTest,
-                                    models, 
-                                    dataFolder, 
-                                    classDataFolders,
-                                    data['questionTypeArray'])
+                                inputTest,
+                                models, 
+                                dataFolder, 
+                                classDataFolders,
+                                data['questionTypeArray'])
     ensembleAnswerFile = it.getAnswerFilename(ensembleId, resultsFolder)
     ensembleTruthFile = it.getTruthFilename(ensembleId, resultsFolder)
 
     resultsRank, \
     resultsCategory, \
     resultsWups = it.runAllMetrics(
-                                inputTest,
-                                ensembleOutputTest,
-                                targetTest,
-                                data['ansIdict'],
-                                data['questionTypeArray'],
-                                ensembleAnswerFile,
-                                ensembleTruthFile)
+                        inputTest,
+                        ensembleOutputTest,
+                        targetTest,
+                        data['ansIdict'],
+                        data['questionTypeArray'],
+                        ensembleAnswerFile,
+                        ensembleTruthFile)
     it.writeMetricsToFile(
                         ensembleId,
                         resultsRank,
