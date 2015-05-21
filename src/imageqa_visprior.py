@@ -428,6 +428,6 @@ if __name__ == '__main__':
             mixRatio = i / 10.0
             ensTestOutput = mixRatio * visTestOutput + \
                 (1 - mixRatio) * mainTestOutput
-            print '.2f VIS+PRIOR & .2f VIS+BLSTM Accuracy:' % \
+            print '%.2f VIS+PRIOR & %.2f VIS+BLSTM Accuracy:' % \
                 (mixRatio, 1 - mixRatio),
             print calcRate(ensTestOutput, testTarget)
