@@ -253,7 +253,7 @@ def runAllModels(
         else:
             print 'Running test data on model %s...' \
                     % modelSpec['name']
-            model = it.loadModel(modelId, resultsFolder)
+            model = it.loadModel(modelSpec['id'], resultsFolder)
             outputTest = nn.test(model, inputTest)
         allOutputs.append(outputTest)
     return allOutputs
