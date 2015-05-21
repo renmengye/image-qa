@@ -619,7 +619,7 @@ if __name__ == '__main__':
         modelOutputs = ie.runAllModels(
                         data['testData'][0], 
                         data['questionTypeArray'], 
-                        modelSpecs, 
+                        singleModel, 
                         params['resultsFolder'])
     else:
         modelOutputs = None
@@ -637,7 +637,7 @@ if __name__ == '__main__':
                 urlDict, 
                 topK=params['topK'], 
                 modelOutputs=modelOutputs,
-                modelNames=getModelNames(modelSpecs),
+                modelNames=getModelNames(singleModel),
                 questionIds=np.arange(inputTest.shape[0]))
 
     for i, page in enumerate(pages):
