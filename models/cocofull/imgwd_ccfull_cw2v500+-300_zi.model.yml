@@ -6,7 +6,6 @@ stages:
     - 'txtUnfold'
     - 'txtDict'
     - 'txtFold'
-    - 'concat'
     - 'dropout'
     - 'lstm'
     - 'softmax'
