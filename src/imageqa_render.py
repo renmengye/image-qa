@@ -512,26 +512,26 @@ def parseComparativeParams(argv):
         if flag == '-m' or flag == '-model':
             parts = sys.argv[i + 1].split(':')
             models.append({
-                modelName: parts[0],
-                modelIds: parts[1],
-                isEnsemble: False,
-                runPrior: False
+                'name': parts[0],
+                'id': parts[1],
+                'isEnsemble': False,
+                'runPrior': False
             })
         elif flag == '-em' or flag == '-emodel':
             parts = sys.argv[i + 1].split(':')
             models.append({
-                modelName: parts[0],
-                modelIds: parts[1],
-                isEnsemble: True,
-                runPrior: False
+                'name': parts[0],
+                'id': parts[1],
+                'isEnsemble': True,
+                'runPrior': False
             })
         elif flag == '-pem' or flag == '-pemodel':
             parts = sys.argv[i + 1].split(':')
             models.append({
-                modelName: parts[0],
-                modelIds: parts[1],
-                isEnsemble: True,
-                runPrior: True
+                'name': parts[0],
+                'id': parts[1],
+                'isEnsemble': True,
+                'runPrior': True
             })
         elif flag == '-d' or flag == '-data':
             dataFolder = sys.argv[i + 1]

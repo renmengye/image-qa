@@ -2,8 +2,8 @@ import sys
 import os
 import nn
 import numpy as np
-from imageqa_test import *
-from imageqa_render import *
+import imageqa_test as it
+import imageqa_render as ir
 
 nameList = ['object', 'number', 'color', 'location']
 
@@ -61,26 +61,7 @@ if __name__ == '__main__':
                     -o[utput] {outputFolder}
                     -daquar/-cocoqa
     """
-    dataset = 'cocoqa'
-    modelNames = []
-    modelIds = []
-    for i in range(1, len(sys.argv)):
-        if sys.argv[i] == '-m' or sys.argv[i] == '-model' or \
-           sys.argv[i] == '-e' or sys.argv[i] == '-ensemble':
-            parts = sys.argv[i + 1].split(':')
-            modelNames.append(parts[0])
-            modelIds.append(parts[1])
-        elif sys.argv[i] == '-d' or sys.argv[i] == '-data':
-            dataFolder = sys.argv[i + 1]
-        elif sys.argv[i] == '-o' or sys.argv[i] == '-output':
-            outputFolder = sys.argv[i + 1]
-        elif sys.argv[i] == '-daquar':
-            dataset = 'daquar'
-        elif sys.argv[i] == '-cocoqa':
-            dataset = 'cocoqa'
-
-    resultsFolder = '../results'
-    K = 3 # Top-K answers
+    params = ir.parseComparativeParams(sys.argv)
     modelOutputs = []
 
     print 'Loading image urls...'

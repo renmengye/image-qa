@@ -5,6 +5,40 @@ import numpy as np
 import imageqa_test as it
 import imageqa_visprior as ip
 
+def runAllModels(
+                inputTest, 
+                questionTypeArray, 
+                modelSpecs, 
+                resultsFolder):
+    allOutputs = []
+    for modelSpec in modelSpecs:
+        if modelSpec['isEnsemble']:
+            print 'Running test data on ensemble model %s...' \
+                    % modelSpec['name']
+            models = it.loadEnsemble(modelSpec['id'].split(','), resultsFolder)
+            classDataFolders = it.getClassDataFolder(dataset, dataFolder)
+            if modelSpec['runPrior']:
+                outputTest = ip.runEnsemblePrior(
+                                        inputTest, 
+                                        models,
+                                        dataFolder,
+                                        classDataFolders,
+                                        questionTypeArray)
+            else:
+                outputTest = it.runEnsemble(
+                                        inputTest, 
+                                        models,
+                                        dataFolder,
+                                        classDataFolders,
+                                        questionTypeArray)
+        else:
+            print 'Running test data on model %s...' \
+                    % modelSpec['name']
+            model = it.loadModel(modelId, resultsFolder)
+            outputTest = nn.test(model, inputTest)
+        allOutputs.append(outputTest)
+    return allOutputs
+
 if __name__ == '__main__':
     """
     Test a type-specific ensemble model
