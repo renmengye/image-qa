@@ -69,10 +69,10 @@ def runEnsemble(
     """
     Run a class specific model on any dataset.
     """
-    data = loadDataset(dataFolder)
+    data = it.loadDataset(dataFolder)
     classAnsIdict = []
     for df in classDataFolders:
-        data_c = loadDataset(df)
+        data_c = it.loadDataset(df)
         classAnsIdict.append(data_c['ansIdict'])
 
     ensembleOutputTest = __runEnsemble(
@@ -92,7 +92,7 @@ def testEnsemble(
     """
     Test a class specific model in its original dataset.
     """
-    data = loadDataset(dataFolder)
+    data = it.loadDataset(dataFolder)
     inputTest = data['testData'][0]
     targetTest = data['testData'][1]
 
