@@ -82,7 +82,9 @@ if __name__ == '__main__':
                         adhocInputTestSel, 
                         adhocQuestionTypeArray, 
                         params['models'],
-                        params['resultsFolder'])
+                        params['resultsFolder'],
+                        params['dataset'],
+                        params['dataFolder'])
 
     # Render
     if not os.path.exists(params['outputFolder']):

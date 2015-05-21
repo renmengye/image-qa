@@ -83,7 +83,9 @@ if __name__ == '__main__':
                         inputTest, 
                         questionTypeArray, 
                         params['models'], 
-                        params['resultsFolder'])
+                        params['resultsFolder'],
+                        params['dataset'],
+                        params['dataFolder'])
 
     # Sort questions by question types.
     # Sort questions by correctness differences.

@@ -8,15 +8,17 @@ import imageqa_visprior as ip
 def runAllModels(
                 inputTest, 
                 questionTypeArray, 
-                modelSpecs, 
-                resultsFolder):
+                modelSpecs,
+                resultsFolder,
+                dataset,
+                dataFolder):
     allOutputs = []
     for modelSpec in modelSpecs:
         if modelSpec['isEnsemble']:
             print 'Running test data on ensemble model %s...' \
                     % modelSpec['name']
             models = it.loadEnsemble(modelSpec['id'].split(','), resultsFolder)
-            classDataFolders = it.getClassDataFolder(dataset, dataFolder)
+            classDataFolders = it.getClassDataFolders(dataset, dataFolder)
             if modelSpec['runPrior']:
                 outputTest = ip.runEnsemblePrior(
                                         inputTest, 

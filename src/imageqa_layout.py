@@ -66,7 +66,9 @@ if __name__ == '__main__':
                 inputTestSel, 
                 questionTypeArray[idx], 
                 params['models'], 
-                resultsFolder):
+                params['resultsFolder'],
+                params['dataset'],
+                params['dataFolder']):
 
     # Render
     print('Rendering LaTeX...')

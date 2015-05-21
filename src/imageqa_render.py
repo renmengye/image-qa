@@ -620,7 +620,9 @@ if __name__ == '__main__':
                         data['testData'][0], 
                         data['questionTypeArray'], 
                         singleModel, 
-                        params['resultsFolder'])
+                        params['resultsFolder'],
+                        params['dataset'],
+                        params['dataFolder'])
     else:
         modelOutputs = None
 
