@@ -353,7 +353,7 @@ def pickTopAnswers(
                     modelOutputs=None, 
                     modelNames=None,
                     questionIds=None):
-    if modelNames is not None and len(modelNames) > 1:
+    if modelOutputs is not None:
         topAnswers = []
         topAnswerScores = []
         for j, modelOutput in enumerate(modelOutputs):
@@ -364,15 +364,6 @@ def pickTopAnswers(
             for i in range(0, topK):
                 topAnswers[-1].append(ansIdict[sortIdx[i]])
                 topAnswerScores[-1].append(modelOutput[n, sortIdx[i]])
-    elif modelOutputs is not None:
-        sortIdx = np.argsort(modelOutputs[n], axis=0)
-        sortIdx = sortIdx[::-1]
-        topAnswers = []
-        topAnswerScores = []
-        for i in range(0, topK):
-            topAnswers.append(ansIdict[sortIdx[i]])
-            topAnswerScores.append(modelOutputs[n, sortIdx[i]])
-        qid = questionIds[n] if questionIds is not None else n
     else:
         topAnswers = None
         topAnswerScores = None
