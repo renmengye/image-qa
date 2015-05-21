@@ -203,6 +203,7 @@ def validDelta(
                 preVisModelOutput,
                 questionDict,
                 questionIdict,
+                numAns,
                 deltas,
                 questionType):
     objDict, objIdict = buildObjDict(
@@ -217,7 +218,7 @@ def validDelta(
                                 questionIdict,
                                 objDict,
                                 objIdict,
-                                len(ansIdict))
+                                numAns)
     print count_wa
 
     # Reindex valid set
@@ -308,7 +309,7 @@ def runVisPrior(
     rate = calcRate(visPriorOutput, testTarget)
     print rate
     return visPriorOutput
-
+ 
 def combineTrainValid(trainData, validData):
     trainDataAll = (np.concatenate((trainData[0], validData[0]), axis=0),
                     np.concatenate((trainData[1], validData[1]), axis=0))
@@ -371,6 +372,7 @@ if __name__ == '__main__':
                             preVisModel,
                             data['questionDict'],
                             data['questionIdict'],
+                            len(data['ansIdict']),
                             deltas,
                             questionType)
 

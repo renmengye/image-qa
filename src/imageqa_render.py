@@ -391,20 +391,20 @@ def renderSinglePage(
 
         qid = questionIds[n] if questionIds is not None else n
         topAnswers, topAnswerScores = pickTopAnswers(
-                                        ansIdict, 
-                                        n,
-                                        topK=topK,
-                                        modelOutputs=modelOutputs, 
-                                        modelNames=modelNames,
-                                        questionIds=questionIds)
+                                ansIdict, 
+                                n,
+                                topK=topK,
+                                modelOutputs=modelOutputs, 
+                                modelNames=modelNames,
+                                questionIds=questionIds)
         htmlList.append(renderSingleItem(
-                                        imageFilename, 
-                                        qid, 
-                                        question, 
-                                        ansIdict[targetData[n, 0]], 
-                                        topAnswers=topAnswers, 
-                                        topAnswerScores=topAnswerScores, 
-                                        modelNames=modelNames))
+                                imageFilename, 
+                                qid, 
+                                question, 
+                                ansIdict[targetData[n, 0]], 
+                                topAnswers=topAnswers, 
+                                topAnswerScores=topAnswerScores, 
+                                modelNames=modelNames))
 
         if np.mod(n, imgPerRow) == imgPerRow - 1:
             htmlList.append('</tr>')
