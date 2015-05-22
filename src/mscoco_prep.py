@@ -141,7 +141,7 @@ def buildImageFeature(
             imgOutFile[name + '_data'] = hidFeatSparse.data
             imgOutFile[name + '_indices'] = hidFeatSparse.indices
             imgOutFile[name + '_indptr'] = hidFeatSparse.indptr
-            print name, hidFeat._shape
+            print name, hidFeatSparse._shape
         else:
             if numTrain == 0 or numValid == 0:
                 hidFeatTrain = imgHidFeatTrain[name][:]
