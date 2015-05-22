@@ -52,5 +52,5 @@ class SumProduct(Stage):
             dEdX.append(self.X[2].reshape(self.X[2].shape[0], 1, 1) * dEdY2 * self.X[0])
             dEdX.append(np.sum(dEdY * self.Z, axis=-1).reshape(self.X[2].shape[0], 1))
         for item in dEdX:
-            print 'backward:', np.mean(dEdX)
+            print 'backward:', np.mean(item)
         return dEdX
