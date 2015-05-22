@@ -98,6 +98,8 @@ def buildImageFeature(
                     numTest=0, 
                     sparse=True):
     """
+    Build image features
+
     Parameters:
     trainFilename: H5 file produced by the CNN on the COCO training set.
     validFilename: H5 file produced by the CNN on the COOC validation set.
@@ -107,12 +109,12 @@ def buildImageFeature(
     numTest: Number of testing images. If 0, then build entire test set.
     sparse: Whether output a sparse matrix.
     """
-    # Build image features.
+    layers = ['hidden7', 'hidden6', 'hidden5_maxpool', 'hidden5_4_conv']
     print 'Building image features'
     imgHidFeatTrain = h5py.File(trainFilename)
     imgHidFeatValid = h5py.File(validFilename)
     imgOutFile = h5py.File(outFilename, 'w')
-    for name in ['hidden7', 'hidden6', 'hidden5_maxpool']:
+    for name in layers:
         hidFeat = np.concatenate((hidFeatTrain, hidFeatValid), axis=0)
         imgOutFile[name] = hidFeat
     hidden7Train = imgOutFile['hidden7'][0 : numTrain]
@@ -124,12 +126,11 @@ def buildImageFeature(
     imgOutFile['hidden7_ms'] = hidden7Ms.astype('float32')
     imgOutFile['hidden7_mean'] = mean
     imgOutFile['hidden7_std'] = std
-
-    print 'Building image features'
+    
     imgHidFeatTrain = h5py.File(imgHidFeatTrainFilename)
     imgHidFeatValid = h5py.File(imgHidFeatValidFilename)
     imgOutFile = h5py.File(imgHidFeatOutFilename, 'w')
-    for name in ['hidden7', 'hidden6', 'hidden5_maxpool']:
+    for name in layers:
         if numTrain == 0 or numValid == 0:
             hidFeatTrain = imgHidFeatTrain[name][:]
         else:
