@@ -109,27 +109,11 @@ def buildImageFeature(
     numTest: Number of testing images. If 0, then build entire test set.
     sparse: Whether output a sparse matrix.
     """
-    layers = ['hidden7', 'hidden6', 'hidden5_maxpool', 'hidden5_4_conv']
     print 'Building image features'
-    imgHidFeatTrain = h5py.File(trainFilename)
-    imgHidFeatValid = h5py.File(validFilename)
-    imgOutFile = h5py.File(outFilename, 'w')
-    for name in layers:
-        hidFeat = np.concatenate((hidFeatTrain, hidFeatValid), axis=0)
-        imgOutFile[name] = hidFeat
-    hidden7Train = imgOutFile['hidden7'][0 : numTrain]
-    mean = np.mean(hidden7Train, axis=0)
-    std = np.std(hidden7Train, axis=0)
-    for i in range(std.shape[0]):
-        if std[i] == 0.0: std[i] = 1.0
-    hidden7Ms = (imgOutFile['hidden7'][:] - mean) / std
-    imgOutFile['hidden7_ms'] = hidden7Ms.astype('float32')
-    imgOutFile['hidden7_mean'] = mean
-    imgOutFile['hidden7_std'] = std
-    
     imgHidFeatTrain = h5py.File(imgHidFeatTrainFilename)
     imgHidFeatValid = h5py.File(imgHidFeatValidFilename)
     imgOutFile = h5py.File(imgHidFeatOutFilename, 'w')
+    layers = ['hidden7', 'hidden6', 'hidden5_maxpool', 'hidden5_4_conv']
     for name in layers:
         if numTrain == 0 or numValid == 0:
             hidFeatTrain = imgHidFeatTrain[name][:]
@@ -261,7 +245,7 @@ if __name__ == '__main__':
         if outputFolder is None:
             outputFolder = '../data/cocoqa-full/'
         imgHidFeatOutFilename = \
-            os.path.join(outputFolder, 'hidden_oxford.h5')
+            '/ais/gobi3/u/mren/data/cocoqa-full/hidden_oxford.h5'
         LB = 25
         UB = 350
         UUB = 700
