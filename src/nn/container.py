@@ -125,7 +125,7 @@ class Container(Stage):
     def backward(self, dEdY):
         self.stages[-1].sendError(dEdY)
         for s in reversed(range(1, len(self.stages) - 1)):
-            print self.stages[s].name
+            print 'container', self.stages[s].name
             if self.stages[s].used and self.stages[s].receivedError:
                 self.stages[s].graphBackward()
 
