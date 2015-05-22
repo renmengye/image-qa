@@ -78,7 +78,7 @@ specs:
       activeFn: 'tanh'
       initRange: 0.005
       initSeed: 6
-      learningRate: 0.1
+      learningRate: 0.8
       momentum: 0.9
       gradientClip: 0.1
       weightClip: 50
@@ -90,7 +90,7 @@ specs:
       activeFn: 'softmax'
       initRange: 0.005
       initSeed: 7
-      learningRate: 0.1
+      learningRate: 0.8
       momentum: 0.9
       gradientClip: 0.1
       weightClip: 50
@@ -112,7 +112,7 @@ specs:
       activeFn: 'softmax'
       initRange: 0.1
       initSeed: 6
-      learningRate: 0.01
+      learningRate: 0.8
       momentum: 0.9
       gradientClip: 0.1
       weightClip: 10
