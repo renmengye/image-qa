@@ -37,7 +37,7 @@ specs:
       format: 'h5'
       h5key: 'hidden5_4_conv'
       sparse: true
-      learningRate: 0.0
+      learningRate: 0.1
       outputdEdX: false
     - name: 'imgReshape'
       type: 'reshape'
@@ -49,11 +49,11 @@ specs:
       inputs: 'objSel'
       inputDim: 1254
       outputDim: 300
-      initRange: 0.1
+      initRange: 1.0
       initSeed: 3
-      learningRate: 0.8
+      learningRate: 0.1
       momentum: 0.9
-      gradientClip: 0.1
+      gradientClip: 10.0
       weightClip: 200.0
       outputdEdX: false
     - name: 'avgAtt'
@@ -78,9 +78,9 @@ specs:
       activeFn: 'tanh'
       initRange: 0.005
       initSeed: 6
-      learningRate: 0.8
+      learningRate: 0.1
       momentum: 0.9
-      gradientClip: 0.1
+      gradientClip: 10.0
       weightClip: 50
       weightRegConst: 0.00005
     - name: 'attOut'
@@ -90,10 +90,10 @@ specs:
       activeFn: 'softmax'
       initRange: 0.005
       initSeed: 7
-      learningRate: 0.8
+      learningRate: 0.01
       momentum: 0.9
-      gradientClip: 0.1
-      weightClip: 50
+      gradientClip: 10.0
+      weightClip: 50.0
       weightRegConst: 0.00005
     - name: 'attReshape'
       type: 'reshape'
@@ -112,8 +112,8 @@ specs:
       activeFn: 'softmax'
       initRange: 0.1
       initSeed: 6
-      learningRate: 0.8
+      learningRate: 0.01
       momentum: 0.9
-      gradientClip: 0.1
-      weightClip: 10
+      gradientClip: 10.0
+      weightClip: 10.0
       weightRegConst: 0.00005
