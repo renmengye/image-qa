@@ -53,6 +53,7 @@ specs:
       outputdEdX: false
     - name: 'avgAtt'
       type: 'constValue'
+      inputs: 'txtDict'
       outputDim: 196
       value: 0.00510204082
     - name: 'avgAttReshape'
