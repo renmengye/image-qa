@@ -37,7 +37,7 @@ specs:
       format: 'h5'
       h5key: 'hidden5_4_conv'
       sparse: true
-      learningRate: 0.1
+      learningRate: 0.0
       outputdEdX: false
     - name: 'imgReshape'
       type: 'reshape'
