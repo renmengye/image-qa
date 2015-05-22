@@ -136,8 +136,8 @@ class Stage:
         """
         Backward propagates.
         """
-        if hasattr(self.dEdY, 'shape'):
-           print 'backward', self.name, self.dEdY.shape, np.mean(self.dEdY)
+        #if hasattr(self.dEdY, 'shape'):
+        #   print 'backward', self.name, self.dEdY.shape, np.mean(self.dEdY)
         dEdX = self.backward(self.dEdY)
         if self.outputdEdX:
             self.sendError(dEdX)
