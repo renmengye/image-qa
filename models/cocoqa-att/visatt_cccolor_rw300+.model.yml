@@ -54,7 +54,7 @@ specs:
       learningRate: 0.8
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 200.0
+      weightClip: 500.0
       outputdEdX: false
     - name: 'avgAtt'
       type: 'constValue'

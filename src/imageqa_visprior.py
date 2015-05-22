@@ -428,7 +428,7 @@ if __name__ == '__main__':
         classNewId = np.array(classNewId, dtype='int')
         mainTestOutput = mainTestOutput[:, classNewId]
 
-        for i in range(11):
+        for i in range(len(ansIdict)):
             mixRatio = i / 10.0
             ensTestOutput = mixRatio * visTestOutput + \
                 (1 - mixRatio) * mainTestOutput

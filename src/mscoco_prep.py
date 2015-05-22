@@ -162,7 +162,7 @@ def buildImageFeature(
     mean = np.mean(hidden7Train, axis=0)
     std = np.std(hidden7Train, axis=0)
     for i in range(0, std.shape[0]):
-        if std[i] == 0:
+        if std[i] == 0.0:
             std[i] = 1.0
     if not sparse:
         hidden7Ms = (imgOutFile['hidden7'][:] - mean) / std
@@ -250,10 +250,6 @@ if __name__ == '__main__':
             outputFolder = '../data/cocoqa-toy'
         if imgHidFeatOutputFolder is None:
             imgHidFeatOutputFolder = '/ais/gobi3/u/mren/data/cocoqa-toy'
-        if not os.path.exists(imgHidFeatOutputFolder):
-            os.makedirs(imgHidFeatOutputFolder)
-        imgHidFeatOutFilename = \
-            os.path.join(imgHidFeatOutputFolder, 'hidden_oxford.h5')
         numTrain = 6000
         numValid = 1200
         numTest = 6000
@@ -279,8 +275,6 @@ if __name__ == '__main__':
             outputFolder = '../data/cocoqa-full/'
         if imgHidFeatOutputFolder is None:
             imgHidFeatOutputFolder = '/ais/gobi3/u/mren/data/cocoqa-full'
-        if not os.path.exists(imgHidFeatOutputFolder):
-            os.makedirs(imgHidFeatOutputFolder)
         imgHidFeatOutFilename = \
             os.path.join(imgHidFeatOutputFolder, 'hidden_oxford.h5')
         LB = 25
@@ -303,6 +297,10 @@ if __name__ == '__main__':
 
     if buildImage:
         # Build image features.
+        if not os.path.exists(imgHidFeatOutputFolder):
+            os.makedirs(imgHidFeatOutputFolder)
+        imgHidFeatOutFilename = \
+            os.path.join(imgHidFeatOutputFolder, 'hidden_oxford.h5')
         buildImageFeature(
             imgHidFeatTrainFilename,
             imgHidFeatValidFilename,
