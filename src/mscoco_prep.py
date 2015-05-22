@@ -158,9 +158,12 @@ def buildImageFeature(
     if numTrain == 0:
         hidden7Train = imgHidFeatTrain['hidden7'][:]
     else:
-        hidden7Train = imgOutFile['hidden7'][0 : numTrain]
+        hidden7Train = imgHidFeatTrain['hidden7'][0 : numTrain]
     mean = np.mean(hidden7Train, axis=0)
     std = np.std(hidden7Train, axis=0)
+    for i in range(0, std.shape[0]):
+        if std[i] == 0:
+            std[i] = 1.0
     if not sparse:
         hidden7Ms = (imgOutFile['hidden7'][:] - mean) / std
         imgOutFile['hidden7_ms'] = hidden7Ms.astype('float32')
