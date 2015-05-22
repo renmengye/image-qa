@@ -4,7 +4,7 @@ import cPickle as pkl
 import numpy as np
 import h5py
 import sys
-from scipy import sparse
+import scipy.sparse
 import calculate_wups
 import hist
 import prep
@@ -126,7 +126,7 @@ def buildImageFeature(
         hidFeat = np.concatenate((hidFeatTrain, hidFeatValid), axis=0)
 
         if sparse:
-            hidFeatSparse = sparse.csr_matrix(hidFeat)
+            hidFeatSparse = scipy.sparse.csr_matrix(hidFeat)
             imgOutFile[name + '_shape'] = hidFeatSparse._shape
             imgOutFile[name + '_data'] = hidFeatSparse.data
             imgOutFile[name + '_indices'] = hidFeatSparse.indices
@@ -160,9 +160,9 @@ if __name__ == '__main__':
                     [-number] Number type question only
                     [-color] Color type question only
                     [-location] Location type question only
-                    [-len] Maximum length/timespan
+                    [-len {length}] Maximum length/timespan
                     [-noreject] No rejection
-                    [-o[utput]] Output folder, 
+                    [-o[utput] {outputFolder}] Output folder, 
                                 default '../data/cocoqa-toy' or 
                                         '../data/cocoqa-full'
     """
