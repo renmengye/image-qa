@@ -76,7 +76,7 @@ specs:
       inputs: 'txtDict, avgCtx'
       outputDim: 300
       activeFn: 'tanh'
-      initRange: 0.005
+      initRange: 0.05
       initSeed: 6
       learningRate: 0.1
       momentum: 0.9
@@ -88,7 +88,7 @@ specs:
       inputs: 'attHid1'
       outputDim: 196
       activeFn: 'softmax'
-      initRange: 0.005
+      initRange: 0.1
       initSeed: 7
       learningRate: 0.01
       momentum: 0.9
