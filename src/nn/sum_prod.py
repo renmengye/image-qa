@@ -74,7 +74,7 @@ class SumProduct(Stage):
                 dEdY2 = gpu.as_garray(dEdY2)
                 dEdX1 = self.X[2] * gpu.sum(dEdY2 * self.X[1], axis=2)
                 dEdX2 = self.X[2].reshape(self.X[2].shape[0], 1, 1) * dEdY2 * self.X[0]
-                dEdX3 = gpu.sum(dEdY * self.Z, axis=-1).reshape(self.X[2].shape[0], 1))
+                dEdX3 = gpu.sum(dEdY * self.Z, axis=-1).reshape(self.X[2].shape[0], 1)
                 dEdX.append(dEdX1.as_numpy_array(dtype='float32'))
                 dEdX.append(dEdX2.as_numpy_array(dtype='float32'))
                 dEdX.append(dEdX3.as_numpy_array(dtype='float32'))
