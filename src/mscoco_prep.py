@@ -132,9 +132,9 @@ def buildImageFeature(
         gc.collect()
         if sparse:
             hidFeatTrainSparse = compressFeatAllIter(
-                        imgHidFeatTrain, num=numTrain+numValid)
+                        imgHidFeatTrain[name], num=numTrain+numValid)
             hidFeatValidSparse = compressFeatAllIter(
-                        imgHidFeatValid, num=numTest)
+                        imgHidFeatValid[name], num=numTest)
             hidFeat = scipy.sparse.vstack(
                     (hidFeatTrainSparse, hidFeatValidSparse), format='csr')
             imgOutFile[name + '_shape'] = hidFeatSparse._shape
