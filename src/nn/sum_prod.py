@@ -31,10 +31,12 @@ class SumProduct(Stage):
     def forward(self, X):
         self.X = X
         if len(X) == 2:
-            return self.beta * np.sum(X[0] * X[1], axis=self.sumAxis)
+            Y = self.beta * np.sum(X[0] * X[1], axis=self.sumAxis)
         elif len(X) == 3:
             self.Z = np.sum(X[0] * X[1], axis=self.sumAxis)
-            return self.X[2] * self.Z
+            Y = self.X[2] * self.Z
+        print 'forward:', np.mean(Y)
+        return Y
 
     def backward(self, dEdY):
         # Need to generalize, but now, let's assume it's the attention model.
@@ -49,5 +51,6 @@ class SumProduct(Stage):
             dEdX.append(self.X[2] * np.sum(dEdY2 * self.X[1], axis=2))
             dEdX.append(self.X[2].reshape(self.X[2].shape[0], 1, 1) * dEdY2 * self.X[0])
             dEdX.append(np.sum(dEdY * self.Z, axis=-1).reshape(self.X[2].shape[0], 1))
-
+        for item in dEdX:
+            print 'backward:', np.mean(dEdX)
         return dEdX

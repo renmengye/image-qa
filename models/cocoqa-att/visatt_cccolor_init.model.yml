@@ -101,7 +101,6 @@ specs:
       type: 'sumProd'
       inputs: 'attReshape, imgReshape'
       sumAxis: 1
-      beta: 100.0
       outputDim: 512
     - name: 'answer'
       type: 'map'
