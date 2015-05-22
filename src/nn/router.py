@@ -5,6 +5,7 @@ from inner_prod import *
 from dropout import *
 from sequential import *
 from const_weights import *
+from const_value import *
 from cos_sim import *
 from lstm import *
 from sum_prod import *
@@ -283,6 +284,13 @@ def addStage(stageDict):
             gradientClip=gradientClip,
             weightClip=weightClip,
             weightRegConst=weightRegConst
+        )
+    elif stageDict['type'] == 'constValue':
+        stage = ConstValue(
+            name=stageDict['name'],
+            inputNames=inputList,
+            outputDim=stageDict['outputDim'],
+            value=stageDict['value']
         )
     elif stageDict['type'] == 'cosSimilarity':
         stage = CosSimilarity(
