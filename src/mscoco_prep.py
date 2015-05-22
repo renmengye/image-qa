@@ -1,5 +1,6 @@
 import re
 import os
+import gc
 import cPickle as pkl
 import numpy as np
 import h5py
@@ -125,6 +126,7 @@ def buildImageFeature(
             hidFeatValid = imgHidFeatValid[name][0 : numTest]
         hidFeat = np.concatenate((hidFeatTrain, hidFeatValid), axis=0)
 
+        gc.collect()
         if sparse:
             hidFeatSparse = scipy.sparse.csr_matrix(hidFeat)
             imgOutFile[name + '_shape'] = hidFeatSparse._shape
