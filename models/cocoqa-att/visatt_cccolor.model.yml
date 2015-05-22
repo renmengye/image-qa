@@ -55,7 +55,7 @@ specs:
       outputdEdX: false
     - name: 'avgAtt'
       type: 'constValue'
-      inputs: 'txtDict'
+      inputs: 'imgReshape'
       outputDim: 196
       value: 0.00510204082
     - name: 'avgAttReshape'
@@ -65,7 +65,7 @@ specs:
       outputDim: 196
     - name: 'avgCtx'
       type: 'sumProd'
-      inputs: 'attReshape, imgReshape'
+      inputs: 'avgAttReshape, imgReshape'
       sumAxis: 1
       outputDim: 512
     - name: 'attHid1'
