@@ -90,6 +90,19 @@ def synonymDetect(iansdict, output=None):
             for i in range(len(sorted_keys)):
                 f.write('%s %.4f\n' % (sorted_keys[i], wups_dict[sorted_keys[i]]))
 
+def compressFeatAllIter(feat, num=0, bat=10000):
+    if num == 0:
+        num = feat.shape[0]
+    numBat = int(np.ceil(num / float(bat)))
+    featSparse = []
+    for i in range(numBat):
+        start = bat * i
+        end = min(bat * (i + 1), num)
+        featCopy = feat[start : end]
+        featSparseTmp = scipy.sparse.csr_matrix(featCopy)
+        featSparse.append(featSparseTmp)
+    return scipy.sparse.vstack(featSparse, format='csr')
+
 def buildImageFeature(
                     trainFilename, 
                     validFilename,
@@ -116,26 +129,31 @@ def buildImageFeature(
     imgOutFile = h5py.File(imgHidFeatOutFilename, 'w')
     layers = ['hidden7', 'hidden6', 'hidden5_maxpool', 'hidden5_4_conv']
     for name in layers:
-        if numTrain == 0 or numValid == 0:
-            hidFeatTrain = imgHidFeatTrain[name][:]
-        else:
-            hidFeatTrain = imgHidFeatTrain[name][0 : numTrain + numValid]
-        if numTest == 0:
-            hidFeatValid = imgHidFeatValid[name][:]
-        else:
-            hidFeatValid = imgHidFeatValid[name][0 : numTest]
-        hidFeat = np.concatenate((hidFeatTrain, hidFeatValid), axis=0)
-
         gc.collect()
         if sparse:
-            hidFeatSparse = scipy.sparse.csr_matrix(hidFeat)
+            hidFeatTrainSparse = compressFeatAllIter(
+                        imgHidFeatTrain, num=numTrain+numValid)
+            hidFeatValidSparse = compressFeatAllIter(
+                        imgHidFeatValid, num=numTest)
+            hidFeat = scipy.sparse.vstack(
+                    (hidFeatTrainSparse, hidFeatValidSparse), format='csr')
             imgOutFile[name + '_shape'] = hidFeatSparse._shape
             imgOutFile[name + '_data'] = hidFeatSparse.data
             imgOutFile[name + '_indices'] = hidFeatSparse.indices
             imgOutFile[name + '_indptr'] = hidFeatSparse.indptr
+            print name, hidFeat._shape
         else:
+            if numTrain == 0 or numValid == 0:
+                hidFeatTrain = imgHidFeatTrain[name][:]
+            else:
+                hidFeatTrain = imgHidFeatTrain[name][0 : numTrain + numValid]
+            if numTest == 0:
+                hidFeatValid = imgHidFeatValid[name][:]
+            else:
+                hidFeatValid = imgHidFeatValid[name][0 : numTest]
+            hidFeat = np.concatenate((hidFeatTrain, hidFeatValid), axis=0)
             imgOutFile[name] = hidFeat
-        print name, hidFeat.shape
+            print name, hidFeat.shape
 
     if numTrain == 0:
         hidden7Train = imgHidFeatTrain['hidden7'][:]
@@ -167,6 +185,9 @@ if __name__ == '__main__':
                     [-o[utput] {outputFolder}] Output folder, 
                                 default '../data/cocoqa-toy' or 
                                         '../data/cocoqa-full'
+                    [-imgo[utput] {imageFeatOutputFolder}]
+                                Image feature output folder,
+                                default '/ais/gobi3/u/mren/data/cocoqa-full'
     """
     buildToy = False
     buildImage = False
@@ -176,6 +197,7 @@ if __name__ == '__main__':
     buildLocation = True
     maxlen = -1
     outputFolder = None
+    imgHidFeatOutputFolder = None
     reject = True
 
     for i in range(len(sys.argv)):
@@ -214,6 +236,8 @@ if __name__ == '__main__':
             maxlen = int(sys.argv[i + 1])
         elif flag == '-o' or flag == '-output':
             outputFolder = sys.argv[i + 1]
+        elif flag == '-imgo' or flag == '-imgoutput':
+            imgHidFeatOutputFolder = sys.argv[i + 1]
     buildType = [buildObject, buildNumber, buildColor, buildLocation]
 
     if buildToy:
@@ -221,8 +245,12 @@ if __name__ == '__main__':
         print 'Building toy dataset'
         if outputFolder is None:
             outputFolder = '../data/cocoqa-toy'
+        if imgHidFeatOutputFolder is None:
+            imgHidFeatOutputFolder = '/ais/gobi3/u/mren/data/cocoqa-toy'
+        if not os.path.exists(imgHidFeatOutputFolder):
+            os.makedirs(imgHidFeatOutputFolder)
         imgHidFeatOutFilename = \
-            '/ais/gobi3/u/mren/data/cocoqa-toy/hidden_oxford.h5'
+            os.path.join(imgHidFeatOutputFolder, 'hidden_oxford.h5')
         numTrain = 6000
         numValid = 1200
         numTest = 6000
@@ -246,8 +274,12 @@ if __name__ == '__main__':
         print 'Building full dataset'
         if outputFolder is None:
             outputFolder = '../data/cocoqa-full/'
+        if imgHidFeatOutputFolder is None:
+            imgHidFeatOutputFolder = '/ais/gobi3/u/mren/data/cocoqa-full'
+        if not os.path.exists(imgHidFeatOutputFolder):
+            os.makedirs(imgHidFeatOutputFolder)
         imgHidFeatOutFilename = \
-            '/ais/gobi3/u/mren/data/cocoqa-full/hidden_oxford.h5'
+            os.path.join(imgHidFeatOutputFolder, 'hidden_oxford.h5')
         LB = 25
         UB = 350
         UUB = 700
