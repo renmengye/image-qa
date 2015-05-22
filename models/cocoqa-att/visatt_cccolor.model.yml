@@ -21,11 +21,13 @@ specs:
       inputs: 'input'
       start: 0
       end: 1
+      axis: 1
     - name: 'objSel'
       type: 'selector'
       inputs: 'input'
       start: 7
       end: 8
+      axis: 1
     - name: 'imgFeat'
       type: 'lut'
       inputs: 'imgSel'
