@@ -24,9 +24,12 @@ class SumProduct(Stage):
 
     def sendError(self, dEdX):
         self.inputs[0].dEdY += dEdX[0]
+        self.inputs[0].receivedError = True
         self.inputs[1].dEdY += dEdX[1]
+        self.inputs[1].receivedError = True
         if len(self.inputs) == 3:
             self.inputs[2].dEdY += dEdX[2]
+            self.inputs[2].receivedError = True
 
     def forward(self, X):
         self.X = X
