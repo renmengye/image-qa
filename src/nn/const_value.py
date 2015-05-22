@@ -9,6 +9,7 @@ class ConstValue(Stage):
         Stage.__init__(self,
                  name=name,
                  outputDim=outputDim,
+                 inputNames=inputNames,
                  outputdEdX=False)
         self.dEdW = 0
         
