@@ -51,9 +51,9 @@ specs:
       outputDim: 300
       initRange: 1.0
       initSeed: 3
-      learningRate: 0.1
+      learningRate: 0.8
       momentum: 0.9
-      gradientClip: 10.0
+      gradientClip: 0.1
       weightClip: 200.0
       outputdEdX: false
     - name: 'avgAtt'
@@ -80,9 +80,9 @@ specs:
       initSeed: 6
       learningRate: 0.1
       momentum: 0.9
-      gradientClip: 10.0
+      gradientClip: 0.1
       weightClip: 50
-      weightRegConst: 0.00005
+      weightRegConst: 0.000005
     - name: 'attOut'
       type: 'map'
       inputs: 'attHid1'
@@ -90,11 +90,11 @@ specs:
       activeFn: 'softmax'
       initRange: 0.1
       initSeed: 7
-      learningRate: 0.01
+      learningRate: 0.1
       momentum: 0.9
-      gradientClip: 10.0
+      gradientClip: 0.1
       weightClip: 50.0
-      weightRegConst: 0.00005
+      weightRegConst: 0.000005
     - name: 'attReshape'
       type: 'reshape'
       inputs: 'attOut'
@@ -114,6 +114,6 @@ specs:
       initSeed: 6
       learningRate: 0.01
       momentum: 0.9
-      gradientClip: 10.0
+      gradientClip: 0.1
       weightClip: 10.0
-      weightRegConst: 0.00005
+      weightRegConst: 0.000005
