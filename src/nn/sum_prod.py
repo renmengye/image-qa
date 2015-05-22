@@ -48,7 +48,7 @@ class SumProduct(Stage):
                 self.X.append(gpu.as_garray(X[2].astype('float32')))
                 self.Z = gpu.sum(self.X[0] * self.X[1], axis=self.sumAxis)
                 Y = self.X[2] * self.Z
-                Y = Y.as_numpy_array(dtype='float32')
+            Y = Y.as_numpy_array(dtype='float32')
         else:
             self.X = X
             if len(self.X) == 2:
