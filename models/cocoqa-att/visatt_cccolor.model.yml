@@ -79,7 +79,7 @@ specs:
       learningRate: 0.1
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 5.0
+      weightClip: 1000.0
       weightRegConst: 0.00005
     - name: 'attHid1'
       type: 'map'
