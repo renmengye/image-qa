@@ -135,7 +135,7 @@ def buildImageFeature(
                         imgHidFeatTrain[name], num=numTrain+numValid)
             hidFeatValidSparse = compressFeatAllIter(
                         imgHidFeatValid[name], num=numTest)
-            hidFeat = scipy.sparse.vstack(
+            hidFeatSparse = scipy.sparse.vstack(
                     (hidFeatTrainSparse, hidFeatValidSparse), format='csr')
             imgOutFile[name + '_shape'] = hidFeatSparse._shape
             imgOutFile[name + '_data'] = hidFeatSparse.data
