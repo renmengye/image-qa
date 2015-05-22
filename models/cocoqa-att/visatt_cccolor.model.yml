@@ -9,6 +9,7 @@ stages:
     - 'avgAtt'
     - 'avgAttReshape'
     - 'avgCtx'
+    - 'attBeta'
     - 'attHid1'
     - 'attOut'
     - 'attReshape'
@@ -68,6 +69,18 @@ specs:
       inputs: 'avgAttReshape, imgReshape'
       sumAxis: 1
       outputDim: 512
+    - name: 'attBeta'
+      type: 'map'
+      inputs: 'txtDict, avgCtx'
+      outputDim: 1
+      activeFn: 'identity'
+      initRange: 1.0
+      initSeed: 8
+      learningRate: 0.1
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 5.0
+      weightRegConst: 0.00005
     - name: 'attHid1'
       type: 'map'
       inputs: 'txtDict, avgCtx'
@@ -78,7 +91,7 @@ specs:
       learningRate: 0.1
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 50
+      weightClip: 50.0
       weightRegConst: 0.00005
     - name: 'attOut'
       type: 'map'
@@ -90,7 +103,7 @@ specs:
       learningRate: 0.1
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 50
+      weightClip: 50.0
       weightRegConst: 0.00005
     - name: 'attReshape'
       type: 'reshape'
@@ -99,7 +112,7 @@ specs:
       outputDim: 196
     - name: 'attCtx'
       type: 'sumProd'
-      inputs: 'attReshape, imgReshape'
+      inputs: 'attReshape, imgReshape, attBeta'
       sumAxis: 1
       outputDim: 512
     - name: 'answer'
@@ -112,5 +125,5 @@ specs:
       learningRate: 0.01
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 10
+      weightClip: 10.0
       weightRegConst: 0.00005
