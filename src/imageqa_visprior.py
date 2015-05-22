@@ -366,6 +366,7 @@ if __name__ == '__main__':
 
     preVisModel = it.loadModel(preVisModelId, resultsFolder)
 
+    print 'Num answer', len(data['ansIdict'])
     bestDelta = validDelta(
                             data['trainData'],
                             data['validData'],
