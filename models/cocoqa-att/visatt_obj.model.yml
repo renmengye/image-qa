@@ -1,4 +1,4 @@
-costFn: 'meanSqErr'
+costFn: 'mse'
 decisionFn: 'argmax'
 stages:
     - 'imgSel'
