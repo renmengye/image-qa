@@ -92,8 +92,8 @@ def polyFill(img, width, height, segmentation):
         print 'SegY:', seg[1:N:2]
         print 'SegX:', seg[0:N:2]
         poly = np.concatenate(
-            (np.array(seg[1:N:2]).reshape(N/2, 1), 
-             np.array(seg[0:N:2]).reshape(N/2, 1)), axis=-1).astype(int)
+            (np.array(seg[0:N:2]).reshape(N/2, 1), 
+             np.array(seg[1:N:2]).reshape(N/2, 1)), axis=-1).astype(int)
         print 'Poly', poly, poly.shape
         polys.append(poly)
     cv2.fillPoly(img=img, pts=np.array(polys), color=(1, 1, 1))
@@ -155,11 +155,11 @@ if __name__ == '__main__':
         imgMat = cv2.imread(imgPathDict[str(img['id'])])
         polyFill(imgMat, width, height, seg)
         cv2.imwrite('../%s_%s.jpg' % \
-            (L, catDict[catId]['name']), 
+            (i, catDict[catId]['name']), 
             imgMat)
         att = distributeAtt(14, 14, imgMat)
         print att
-        
+
         att = att.reshape(196)
 
         # Assemble train data
