@@ -173,11 +173,8 @@ def gatherAttention(trainJsonFilename, validJsonFilename):
         height = int(img['height'])
 
         if type(seg) is not list:
+            print i
             continue
-        # if i > 288000:
-        #     debug = True
-        # else:
-        #     debug = False
 
         #imgMat = cv2.imread(imgPathDict[imgid])
         #print imgMat.dtype
