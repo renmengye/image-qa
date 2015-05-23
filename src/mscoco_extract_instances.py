@@ -86,7 +86,7 @@ def buildCatDict(catList):
 def polyFill(img, width, height, segmentation):
     polys = []
     for seg in segmentation:
-        N = len(s)
+        N = len(seg)
         poly = np.concatenate(
             (np.array(seg[1:N:2]), np.array(seg[0:N:2])), axis=-1)
         polys.append(poly)
