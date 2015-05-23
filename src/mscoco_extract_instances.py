@@ -160,7 +160,7 @@ if __name__ == '__main__':
         att = distributeAtt(14, 14, imgMat)
         print att
 
-        att2 = att.reshape(14, 14, 1).tile((1, 1, 3)) * 255
+        att2 = np.tile(att.reshape(14, 14, 1), (1, 1, 3)) * 255
         print att2.shape
         attUpsample = np.zeros((height, width, 3))
         cv2.resize(att2, attUpsample)
