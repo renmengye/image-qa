@@ -156,10 +156,11 @@ def gatherAttention(trainJsonFilename, validJsonFilename):
     validTarget = []
     testInput = []
     testTarget = []
+    debug = True
 
     L = len(instances['annotations'])
     print 'Total instances:', L
-    for i in range(L):
+    for i in range(288000, L):
         if i % 1000 == 0: print i
         ann = instances['annotations'][i]
         seg = ann['segmentation']
@@ -169,10 +170,10 @@ def gatherAttention(trainJsonFilename, validJsonFilename):
         width = int(img['width'])
         height = int(img['height'])
 
-        if i > 288000:
-            debug = True
-        else:
-            debug = False
+        # if i > 288000:
+        #     debug = True
+        # else:
+        #     debug = False
 
         #imgMat = cv2.imread(imgPathDict[imgid])
         #print imgMat.dtype
