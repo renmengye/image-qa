@@ -160,10 +160,10 @@ if __name__ == '__main__':
         att = distributeAtt(14, 14, imgMat)
         print att
 
-        att2 = np.tile(att.reshape(14, 14, 1), (1, 1, 3)) * 255
-        print att2.shape
-        attUpsample = np.zeros((height, width, 3))
-        cv2.resize(att2, attUpsample)
+        #att2 = np.tile(att.reshape(14, 14, 1), (1, 1, 3)) * 255
+        #print att2.shape
+        att2 = (att * 255).astype('int')
+        attUpsample = cv2.resize(att2, (height, width))
         cv2.imwrite('../%s_%s_att.jpg' % \
             (i, catDict[catId]['name']),
             attUpsample)
