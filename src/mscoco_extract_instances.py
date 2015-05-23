@@ -165,8 +165,8 @@ def gatherAttention(trainJsonFilename, validJsonFilename):
         height = int(img['height'])
 
         # imgMat = cv2.imread(imgPathDict[imgid])
-        zeroMat = np.zeros((height, width, 3))
-        # polyFill(imgMat, width, height, seg)
+        zeroMat = np.zeros((height, width, 3), dtype='int')
+        # polyFill(imgMat, seg)
         polyFill(zeroMat, seg)
         # cv2.imwrite('../%s_%s.jpg' % \
         #     (i, catDict[catId]['name']), 
