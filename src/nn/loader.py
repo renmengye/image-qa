@@ -22,7 +22,11 @@ def load(modelSpecFilename):
     for s in modelDict['stages']:
         modelStages.append(router.routeStage(s))
     costFn=router.routeFn(modelDict['costFn'])
-    decisionFn=router.routeFn(modelDict['decisionFn'])
+
+    if modelDict.has_key('decisionFn'):
+        decisionFn = router.routeFn(modelDict['decisionFn'])
+    else:
+        decisionFn = None
     outputList = modelDict['outputs'].split(',')
     for i in range(len(outputList)):
         outputList[i] = outputList[i].strip()
