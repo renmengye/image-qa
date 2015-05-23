@@ -32,7 +32,6 @@ class Logger:
     def __init__(self, trainer, csv=True, filename=None):
         self.trainer = trainer
         self.startTime = time.time()
-        self.epoch = 0
         self.saveCsv = csv
         if filename is None:
             self.outFilename = os.path.join(
@@ -46,45 +45,44 @@ class Logger:
     def logTrainStats(self):
         timeElapsed = time.time() - self.startTime
         stats = 'N: %3d T: %5d  TE: %8.4f  TR: %8.4f  VE: %8.4f  VR: %8.4f' % \
-                (self.epoch,
+                (self.trainer.epoch,
                  timeElapsed,
-                 self.trainer.loss[self.epoch],
-                 self.trainer.rate[self.epoch],
-                 self.trainer.validLoss[self.epoch],
-                 self.trainer.validRate[self.epoch])
+                 self.trainer.loss[self.trainer.epoch],
+                 self.trainer.rate[self.trainer.epoch],
+                 self.trainer.validLoss[self.trainer.epoch],
+                 self.trainer.validRate[self.trainer.epoch])
         print stats
 
         if self.saveCsv:
             statsCsv = '%d,%.4f,%.4f,%.4f,%.4f' % \
-                    (self.epoch,
-                     self.trainer.loss[self.epoch],
-                     self.trainer.rate[self.epoch],
-                     self.trainer.validLoss[self.epoch],
-                     self.trainer.validRate[self.epoch])
+                    (self.trainer.epoch,
+                     self.trainer.loss[self.trainer.epoch],
+                     self.trainer.rate[self.trainer.epoch],
+                     self.trainer.validLoss[self.trainer.epoch],
+                     self.trainer.validRate[self.trainer.epoch])
             with open(self.outFilename, 'a+') as f:
                 f.write('%s\n' % statsCsv)
-        self.epoch += 1
     pass
 
 class Plotter:
     def __init__(self, trainer):
         self.trainer = trainer
         self.startTime = time.time()
-        self.epoch = 0
+        self.trainer.epoch = 0
         self.lossFigFilename = \
             os.path.join(trainer.outputFolder, trainer.name + '_loss.png')
         self.errFigFilename = \
             os.path.join(trainer.outputFolder, trainer.name + '_err.png')
-        self.epoch = 0
+        self.trainer.epoch = 0
 
     def plot(self):
         plt.figure(1)
         plt.clf()
-        plt.plot(np.arange(self.epoch + 1),
-                 self.trainer.loss[0 : self.epoch + 1], 'b-x')
+        plt.plot(np.arange(self.trainer.epoch + 1),
+                 self.trainer.loss[0 : self.trainer.epoch + 1], 'b-x')
         if self.trainer.trainOpt['needValid']:
-            plt.plot(np.arange(self.epoch + 1),
-                     self.trainer.validLoss[0 : self.epoch + 1], 'g-o')
+            plt.plot(np.arange(self.trainer.epoch + 1),
+                     self.trainer.validLoss[0 : self.trainer.epoch + 1], 'g-o')
             plt.legend(['Train', 'Valid'])
             plt.title('Train/Valid Loss Curve')
         else:
@@ -99,12 +97,12 @@ class Plotter:
         if self.trainer.trainOpt['calcError']:
             plt.figure(2)
             plt.clf()
-            plt.plot(np.arange(self.epoch + 1),
-                     1 - self.trainer.rate[0 : self.epoch + 1], 
+            plt.plot(np.arange(self.trainer.epoch + 1),
+                     1 - self.trainer.rate[0 : self.trainer.epoch + 1], 
                      'b-x')
             if self.trainer.trainOpt['needValid']:
-                plt.plot(np.arange(self.epoch + 1),
-                         1 - self.trainer.validRate[0 : self.epoch + 1], 
+                plt.plot(np.arange(self.trainer.epoch + 1),
+                         1 - self.trainer.validRate[0 : self.trainer.epoch + 1], 
                          'g-o')
                 plt.legend(['Train', 'Valid'])
                 plt.title('Train/Valid Error Curve')
@@ -116,7 +114,6 @@ class Plotter:
             plt.ylabel('Prediction Error')
             plt.draw()
             plt.savefig(self.errFigFilename)
-        self.epoch += 1
 
 class Trainer:
     def __init__(self,
@@ -140,6 +137,7 @@ class Trainer:
         self.rate = np.zeros(numEpoch)
         self.validRate = np.zeros(numEpoch)
         self.stoppedEpoch = 0
+        self.epoch =  0
 
     def initFolder(self):
         if not os.path.exists(self.outputFolder):
@@ -191,6 +189,7 @@ class Trainer:
             E = 0
             correct = 0
             total = 0
+            self.epoch = epoch
 
             if trainOpt['shuffle']:
                 X, T = vt.shuffleData(X, T, self.random)
@@ -229,6 +228,7 @@ class Trainer:
                 batchStart += numExPerBat
                 if trainOpt.has_key('logNumBat') and \
                     np.mod(batchStart / numExPerBat, trainOpt['logNumBat']) == 0:
+                    self.loss[epoch] = E / float(batchStart) * float(N)
                     logger.logTrainStats()
 
             # Store train statistics
