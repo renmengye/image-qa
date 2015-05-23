@@ -8,16 +8,10 @@ import re
 import cv2
 import numpy as np
 
-if len(sys.argv) < 2:
-    dataset = 'train'
-elif sys.argv[1] == '-valid':
-    dataset = 'valid'
-folder = '../../../data/mscoco/%s' % dataset
-jsonFilename = '%s/instances.json' % (folder)
 imgidTrainFilename = '../../../data/mscoco/train/image_list.txt'
 imgidValidFilename = '../../../data/mscoco/valid/image_list.txt'
 
-def buildImgIdDict():
+def buildImgIdDict(imgidTrainFilename, imgidValidFilename):
     with open(imgidTrainFilename) as f:
         lines = f.readlines()
     trainStart = 0
@@ -130,28 +124,44 @@ def distributeAtt(numX, numY, filledPolyImg):
     count /= totalCount
     return count
 
-# To retrive image ID and url, get caption['images'][i]['id'] and caption['images'][i]['url']
-if __name__ == '__main__':
-    with open(jsonFilename) as f:
+def gatherAttention(trainJsonFilename, validJsonFilename):
+    with open(trainJsonFilename) as f:
         insttxt = f.read()
     instances = json.loads(insttxt)
-    #L = len(instances['annotations'])
-    L = 10
-    splitDict, imgidDict, imgidIdict, imgPathDict = buildImgIdDict()
+    annotations = instances['annotations']
+    images = instances['images']
+    categories = instances['categories']
+    with open(validJsonFilename) as f:
+        insttxt = f.read()
+    instances = json.loads(insttxt)
+    annotations.extend(instances['annotations'])
+    images.extend(instances['images'])
+    categories.extend(instances['categories'])
+    L = len(instances['annotations'])
+    
+    splitDict, imgidDict, imgidIdict, imgPathDict = \
+        buildImgIdDict(imgidTrainFilename, imgidValidFilename)
     catDict = buildCatDict(instances['categories'])
     imgDict = buildImgDict(instances['images'], imgidDict)
-    inputData = []
-    targetData = []
+
+    trainInput = []
+    trainTarget = []
+    validInput = []
+    validTarget = []
+    testInput = []
+    testTarget = []
 
     for i in range(L):
+        if i % 1000 == 0: print i
         ann = instances['annotations'][i]
         seg = ann['segmentation']
         catId = ann['category_id']
         img = imgDict[ann['image_id']]
+        imgid = str(img['id'])
         width = int(img['width'])
         height = int(img['height'])
 
-        imgMat = cv2.imread(imgPathDict[str(img['id'])])
+        imgMat = cv2.imread(imgPathDict[imgid])
         zeroMat = np.zeros((height, width, 3))
         polyFill(imgMat, width, height, seg)
         polyFill(zeroMat, width, height, seg)
@@ -159,28 +169,53 @@ if __name__ == '__main__':
             (i, catDict[catId]['name']), 
             imgMat)
         att = distributeAtt(14, 14, zeroMat)
-        print att
+        # print att
 
-        #att2 = np.tile(att.reshape(14, 14, 1), (1, 1, 3)) * 255
-        #print att2.shape
-        M = np.zeros((14, 14)) + 255
-        att2 = (att * 5000).astype('int')
-        att2 = np.minimum(att2, M)
-        print att2
+        # M = np.zeros((14, 14)) + 255
+        # att2 = (att * 5000).astype('int')
+        # att2 = np.minimum(att2, M)
+        # print att2
 
-        attUpsample = cv2.resize(att2, (height, width))
-        cv2.imwrite('../%s_%s_att.jpg' % \
-            (i, catDict[catId]['name']),
-            attUpsample)
+        # attUpsample = cv2.resize(att2, (height, width))
+        # cv2.imwrite('../%s_%s_att.jpg' % \
+        #     (i, catDict[catId]['name']),
+        #     attUpsample)
 
-        att = att.reshape(196)
 
-        # Assemble train data
+        # Assemble input data
         # imgId, catId
-        # Need to check if the new id is consistaent with our previous indexing.
-        # Notice category ID is 1-90 but only 80 in total.
-        inputData.append([img['new_id'], catId])
-        
+        inputData = [img['new_id'], catId]
+
         # Assemble target data
         # attention, flattened
-        targetData.append(att)
+        att = att.reshape(196)
+        targetData = att
+
+        s = splitDict[imgid]
+        if s == 0:
+            trainInput.append(inputData)
+            trainTarget.append(targetData)
+        elif s == 1:
+            validInput.append(inputData)
+            validTarget.append(targetData)
+        elif s == 2:
+            testInput.append(inputData)
+            testTarget.append(targetData)
+    trainData = np.array((trainInput, trainTarget, 0), dtype='object')
+    validData = np.array((validInput, validTarget, 0), dtype='object')
+    testData = np.array((testInput, testTarget, 0), dtype='object')
+
+    return trainData, validData, testData
+
+# To retrive image ID and url, get caption['images'][i]['id'] and caption['images'][i]['url']
+if __name__ == '__main__':
+    outputFolder = '../data/cocoqa-att'
+    for i, flag in enumerate(sys.argv):
+        if flag == '-o' or flag == '-output':
+            outputFolder = sys.argv[i + 1]
+    trainJsonFilename = \
+        '../../../data/mscoco/%s/instances.json' % 'train'
+    validtrainJsonFilename = \
+        '../../../data/mscoco/%s/instances.json' % 'valid'
+    trainData, validData, testData = \
+        gatherAttention(trainJsonFilename, validtrainJsonFilename)
