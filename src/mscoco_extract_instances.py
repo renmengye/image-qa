@@ -160,6 +160,12 @@ if __name__ == '__main__':
         att = distributeAtt(14, 14, imgMat)
         print att
 
+        attUpsample = np.zeros((height, width))
+        cv2.resize(att, attUpsample)
+        cv2.imwrite('../%s_%s_att.jpg' % \
+            (i, catDict[catId]['name']),
+            attUpsample)
+
         att = att.reshape(196)
 
         # Assemble train data
