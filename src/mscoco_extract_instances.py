@@ -89,6 +89,8 @@ def polyFill(img, segmentation, debug=False):
         # print 'SegX:', seg[0:N:2]
         if debug:
             print N
+            if N == 6:
+                print seg
             # print range(0:N:2)
             # print range(1:N:2)
             # print N/2
