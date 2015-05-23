@@ -190,6 +190,13 @@ def gatherAttention(trainJsonFilename, validJsonFilename):
             testInput.append(inputData)
             testTarget.append(targetData)
 
+    trainInput = np.array(trainInput, dtype='int')
+    trainTarget = np.array(trainTarget, dtype='float32')
+    validInput = np.array(validInput, dtype='int')
+    validTarget = np.array(validTarget, dtype='float32')
+    testInput = np.array(testInput, dtype='int')
+    testTarget = np.array(testTarget, dtype='float32')
+    
     trainData = np.array((trainInput, trainTarget, 0), dtype='object')
     validData = np.array((validInput, validTarget, 0), dtype='object')
     testData = np.array((testInput, testTarget, 0), dtype='object')
