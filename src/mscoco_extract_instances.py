@@ -210,10 +210,12 @@ def gatherAttention(trainJsonFilename, validJsonFilename):
 
 # To retrive image ID and url, get caption['images'][i]['id'] and caption['images'][i]['url']
 if __name__ == '__main__':
-    outputFolder = '../data/cocoqa-att'
+    outputFolder = '../data/coco-att'
     for i, flag in enumerate(sys.argv):
         if flag == '-o' or flag == '-output':
             outputFolder = sys.argv[i + 1]
+    if not os.path.exists(outputFolder):
+        os.makedirs(outputFolder)
     trainJsonFilename = \
         '../../../data/mscoco/%s/instances.json' % 'train'
     validtrainJsonFilename = \
