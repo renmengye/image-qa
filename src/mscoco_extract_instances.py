@@ -123,17 +123,18 @@ def distributeAtt(numX, numY, filledPolyImg):
 
 def gatherAttention(trainJsonFilename, validJsonFilename):
     with open(trainJsonFilename) as f:
-        insttxt = f.read()
-    instances = json.loads(insttxt)
-    annotations = instances['annotations']
-    images = instances['images']
-    categories = instances['categories']
+        insttxtTrain = f.read()
+    instancesTrain = json.loads(insttxtTrain)
+    annotations = instancesTrain['annotations']
+    images = instancesTrain['images']
+    categories = instancesTrain['categories']
+
     with open(validJsonFilename) as f:
-        insttxt = f.read()
-    instances = json.loads(insttxt)
-    annotations.extend(instances['annotations'])
-    images.extend(instances['images'])
-    categories.extend(instances['categories'])
+        insttxtVal = f.read()
+    instancesVal = json.loads(insttxtVal)
+    annotations.extend(instancesVal['annotations'])
+    images.extend(instancesVal['images'])
+    categories.extend(instancesVal['categories'])
     
     splitDict, imgidDict, imgidIdict, imgPathDict = \
         buildImgIdDict(imgidTrainFilename, imgidValidFilename)
@@ -149,51 +150,52 @@ def gatherAttention(trainJsonFilename, validJsonFilename):
 
     L = len(instances['annotations'])
     print 'Total instances:', L
+    invalidCount = 0
 
-    # weird things happen after 288415...
-    # for i in range(288415):
-    #     if i % 1000 == 0: print i
-    #     ann = instances['annotations'][i]
-    #     seg = ann['segmentation']
-    #     catId = ann['category_id']
-    #     img = imgDict[ann['image_id']]
-    #     imgid = str(img['id'])
-    #     width = int(img['width'])
-    #     height = int(img['height'])
+    for i in range(L):
+        if i % 1000 == 0: print 'Num', i, 'Invalid', invalidCount
+        ann = instances['annotations'][i]
+        seg = ann['segmentation']
+        catId = ann['category_id']
+        img = imgDict[ann['image_id']]
+        imgid = str(img['id'])
+        width = int(img['width'])
+        height = int(img['height'])
 
-    #     zeroMat = np.zeros((height, width, 3), dtype='uint8')
-    #     polyFill(zeroMat, seg)
-    #     att = distributeAtt(14, 14, zeroMat)
+        if type(seg) is not list:
+            invalidCount += 1
+            continue
 
-    #     # Assemble input data
-    #     # imgId, catId
-    #     inputData = [img['new_id'], catId]
+        zeroMat = np.zeros((height, width, 3), dtype='uint8')
+        polyFill(zeroMat, seg)
+        att = distributeAtt(14, 14, zeroMat)
 
-    #     # Assemble target data
-    #     # attention, flattened
-    #     att = att.reshape(196)
-    #     targetData = att
+        # Assemble input data
+        # imgId, catId
+        inputData = [img['new_id'], catId]
 
-    #     s = splitDict[imgid]
-    #     if s == 0:
-    #         trainInput.append(inputData)
-    #         trainTarget.append(targetData)
-    #     elif s == 1:
-    #         validInput.append(inputData)
-    #         validTarget.append(targetData)
-    #     elif s == 2:
-    #         testInput.append(inputData)
-    #         testTarget.append(targetData)
-    # trainData = np.array((trainInput, trainTarget, 0), dtype='object')
-    # validData = np.array((validInput, validTarget, 0), dtype='object')
-    # testData = np.array((testInput, testTarget, 0), dtype='object')
-    trainData = None
-    validData = None
-    testData = None
+        # Assemble target data
+        # attention, flattened
+        att = att.reshape(196)
+        targetData = att
+
+        s = splitDict[imgid]
+        if s == 0:
+            trainInput.append(inputData)
+            trainTarget.append(targetData)
+        elif s == 1:
+            validInput.append(inputData)
+            validTarget.append(targetData)
+        elif s == 2:
+            testInput.append(inputData)
+            testTarget.append(targetData)
+
+    trainData = np.array((trainInput, trainTarget, 0), dtype='object')
+    validData = np.array((validInput, validTarget, 0), dtype='object')
+    testData = np.array((testInput, testTarget, 0), dtype='object')
 
     return trainData, validData, testData, catDict
 
-# To retrive image ID and url, get caption['images'][i]['id'] and caption['images'][i]['url']
 if __name__ == '__main__':
     outputFolder = '../data/coco-att'
     for i, flag in enumerate(sys.argv):
@@ -207,10 +209,14 @@ if __name__ == '__main__':
         '../../../data/mscoco/%s/instances.json' % 'valid'
     trainData, validData, testData, catDict = \
         gatherAttention(trainJsonFilename, validtrainJsonFilename)
-    # np.save(os.path.join(outputFolder, 'train.npy'), trainData)
-    # np.save(os.path.join(outputFolder, 'valid.npy'), validData)
-    # np.save(os.path.join(outputFolder, 'test.npy'), testData)
+    np.save(os.path.join(outputFolder, 'train.npy'), trainData)
+    np.save(os.path.join(outputFolder, 'valid.npy'), validData)
+    np.save(os.path.join(outputFolder, 'test.npy'), testData)
 
     with open(os.path.join(outputFolder, 'question_vocabs.txt'), 'w') as f:
+        for k in catDict.iterkeys():
+            f.write('%s\n' % catDict[k]['name'].replace(' ', '_'))
+
+    with open(os.path.join(outputFolder, 'answer_vocabs.txt'), 'w') as f:
         for k in catDict.iterkeys():
             f.write('%s\n' % catDict[k]['name'].replace(' ', '_'))
