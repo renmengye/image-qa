@@ -162,7 +162,7 @@ if __name__ == '__main__':
 
         #att2 = np.tile(att.reshape(14, 14, 1), (1, 1, 3)) * 255
         #print att2.shape
-        M = np.zeros((height, width)) + 
+        M = np.zeros((height, width)) + 255
         att2 = (att * 5000).astype('int')
         att2 = np.minimum(att2, M)
         print att2
