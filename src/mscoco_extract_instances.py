@@ -172,6 +172,7 @@ def gatherAttention(trainJsonFilename, validJsonFilename):
         width = int(img['width'])
         height = int(img['height'])
 
+        print i
         # if i > 288000:
         #     debug = True
         # else:
