@@ -82,6 +82,8 @@ def polyFill(img, segmentation):
     polys = []
     for seg in segmentation:
         N = len(seg)
+        if N % 2 == 1:
+            N = N - 1
         # print 'Seg:', seg
         # print 'SegY:', seg[1:N:2]
         # print 'SegX:', seg[0:N:2]
