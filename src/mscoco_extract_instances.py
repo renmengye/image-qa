@@ -87,9 +87,9 @@ def polyFill(img, segmentation):
         # print 'SegX:', seg[0:N:2]
         poly = np.concatenate(
             (np.array(seg[0:N:2]).reshape(N/2, 1), 
-             np.array(seg[1:N:2]).reshape(N/2, 1)), axis=-1).astype('int')
+             np.array(seg[1:N:2]).reshape(N/2, 1)), axis=-1).astype('uint8')
         polys.append(poly)
-    pts = np.array(polys, dtype='int')
+    pts = np.array(polys, dtype='uint8')
     cv2.fillPoly(img=img, pts=pts, color=(1, 1, 1))
 
 def countPts(img):
@@ -162,12 +162,12 @@ def gatherAttention(trainJsonFilename, validJsonFilename):
         width = int(img['width'])
         height = int(img['height'])
 
-        imgMat = cv2.imread(imgPathDict[imgid])
-        print imgMat.dtype
-        print imgMat.shape
-        print (height, width)
-        zeroMat = np.zeros((height, width, 3), dtype='int')
-        polyFill(imgMat, seg)
+        #imgMat = cv2.imread(imgPathDict[imgid])
+        #print imgMat.dtype
+        #print imgMat.shape
+        #print (height, width)
+        zeroMat = np.zeros((height, width, 3), dtype='uint8')
+        #polyFill(imgMat, seg)
         polyFill(zeroMat, seg)
         # cv2.imwrite('../%s_%s.jpg' % \
         #     (i, catDict[catId]['name']), 
