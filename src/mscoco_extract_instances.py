@@ -78,22 +78,10 @@ def buildCatDict(catList):
             catDict[cat['id']] = cat
     return catDict
 
-def polyFill(img, segmentation, debug=False):
+def polyFill(img, segmentation):
     polys = []
     for seg in segmentation:
         N = len(seg)
-        if N % 2 == 1:
-            N = N - 1
-        # print 'Seg:', seg
-        # print 'SegY:', seg[1:N:2]
-        # print 'SegX:', seg[0:N:2]
-        if debug:
-            print N
-            if N == 6:
-                print seg
-            # print range(0:N:2)
-            # print range(1:N:2)
-            # print N/2
         poly = np.concatenate(
             (np.array(seg[0:N:2]).reshape(N/2, 1), 
              np.array(seg[1:N:2]).reshape(N/2, 1)), axis=-1).astype('int')
@@ -158,13 +146,12 @@ def gatherAttention(trainJsonFilename, validJsonFilename):
     validTarget = []
     testInput = []
     testTarget = []
-    debug = True
 
     L = len(instances['annotations'])
     print 'Total instances:', L
 
-    # weird things happen after 288414...
-    for i in range(288414):
+    # weird things happen after 288415...
+    for i in range(288415):
         if i % 1000 == 0: print i
         ann = instances['annotations'][i]
         seg = ann['segmentation']
@@ -180,7 +167,7 @@ def gatherAttention(trainJsonFilename, validJsonFilename):
         #print (height, width)
         zeroMat = np.zeros((height, width, 3), dtype='uint8')
         #polyFill(imgMat, seg)
-        polyFill(zeroMat, seg, debug=debug)
+        polyFill(zeroMat, seg)
         # cv2.imwrite('../%s_%s.jpg' % \
         #     (i, catDict[catId]['name']), 
         #     imgMat)
