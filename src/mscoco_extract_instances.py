@@ -148,8 +148,8 @@ if __name__ == '__main__':
         seg = ann['segmentation']
         catId = ann['category_id']
         img = imgDict[ann['image_id']]
-        width = img['width']
-        height = img['height']
+        width = int(img['width'])
+        height = int(img['height'])
 
         #img = np.zeros((height, width, 3))
         imgMat = cv2.imread(imgPathDict[str(img['id'])])
@@ -162,8 +162,11 @@ if __name__ == '__main__':
 
         #att2 = np.tile(att.reshape(14, 14, 1), (1, 1, 3)) * 255
         #print att2.shape
-        att2 = (att * 255).astype('int')
+        M = np.zeros((height, width)) + 
+        att2 = (att * 5000).astype('int')
+        att2 = np.minimum(att2, M)
         print att2
+
         attUpsample = cv2.resize(att2, (height, width))
         cv2.imwrite('../%s_%s_att.jpg' % \
             (i, catDict[catId]['name']),
