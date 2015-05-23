@@ -78,7 +78,7 @@ def buildCatDict(catList):
             catDict[cat['id']] = cat
     return catDict
 
-def polyFill(img, width, height, segmentation):
+def polyFill(img, segmentation):
     polys = []
     for seg in segmentation:
         N = len(seg)
@@ -87,10 +87,10 @@ def polyFill(img, width, height, segmentation):
         # print 'SegX:', seg[0:N:2]
         poly = np.concatenate(
             (np.array(seg[0:N:2]).reshape(N/2, 1), 
-             np.array(seg[1:N:2]).reshape(N/2, 1)), axis=-1).astype(int)
+             np.array(seg[1:N:2]).reshape(N/2, 1)), axis=-1).astype('int')
         # print 'Poly', poly, poly.shape
         polys.append(poly)
-    cv2.fillPoly(img=img, pts=np.array(polys), color=(1, 1, 1))
+    cv2.fillPoly(img=img, pts=np.array(polys, dtype='int'), color=(1, 1, 1))
 
 def countPts(img):
     if len(img.shape) == 3:
@@ -165,7 +165,7 @@ def gatherAttention(trainJsonFilename, validJsonFilename):
         # imgMat = cv2.imread(imgPathDict[imgid])
         zeroMat = np.zeros((height, width, 3))
         # polyFill(imgMat, width, height, seg)
-        polyFill(zeroMat, width, height, seg)
+        polyFill(zeroMat, seg)
         # cv2.imwrite('../%s_%s.jpg' % \
         #     (i, catDict[catId]['name']), 
         #     imgMat)
