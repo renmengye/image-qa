@@ -89,9 +89,9 @@ def polyFill(img, segmentation, debug=False):
         # print 'SegX:', seg[0:N:2]
         if debug:
             print N
-            print 0:N:2
-            print 1:N:2
-            print N/2
+            # print range(0:N:2)
+            # print range(1:N:2)
+            # print N/2
         poly = np.concatenate(
             (np.array(seg[0:N:2]).reshape(N/2, 1), 
              np.array(seg[1:N:2]).reshape(N/2, 1)), axis=-1).astype('int')
