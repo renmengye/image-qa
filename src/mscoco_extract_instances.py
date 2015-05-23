@@ -138,8 +138,8 @@ def gatherAttention(trainJsonFilename, validJsonFilename):
     
     splitDict, imgidDict, imgidIdict, imgPathDict = \
         buildImgIdDict(imgidTrainFilename, imgidValidFilename)
-    catDict = buildCatDict(instances['categories'])
-    imgDict = buildImgDict(instances['images'], imgidDict)
+    catDict = buildCatDict(categories)
+    imgDict = buildImgDict(images, imgidDict)
 
     trainInput = []
     trainTarget = []
