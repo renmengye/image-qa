@@ -88,8 +88,12 @@ def polyFill(img, width, height, segmentation):
     for seg in segmentation:
         N = len(seg)
         print 'Seg:', seg
+        print 'SegY:', seg[1:N:2]
+        print 'SegX:', seg[0:N:2]
         poly = np.concatenate(
-            (np.array(seg[1:N:2]), np.array(seg[0:N:2])), axis=-1)
+            (np.array(seg[1:N:2]), 
+             np.array(seg[0:N:2])), axis=-1)
+        print 'Poly', poly, poly.shape
         polys.append(poly)
     cv2.fillPoly(img=img, pts=np.array(polys), color=(1, 1, 1))
 
