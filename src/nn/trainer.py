@@ -211,7 +211,7 @@ class Trainer:
 
                 # Loss
                 Etmp, dEdY = self.model.getCost(Y_bat, T_bat)
-                E += Etmp * numExThisBat / float(N) * 100
+                E += Etmp * numExThisBat / float(N) * 10000
 
                 # Backward
                 self.model.backward(dEdY)
