@@ -151,64 +151,47 @@ def gatherAttention(trainJsonFilename, validJsonFilename):
     print 'Total instances:', L
 
     # weird things happen after 288415...
-    for i in range(288415):
-        if i % 1000 == 0: print i
-        ann = instances['annotations'][i]
-        seg = ann['segmentation']
-        catId = ann['category_id']
-        img = imgDict[ann['image_id']]
-        imgid = str(img['id'])
-        width = int(img['width'])
-        height = int(img['height'])
+    # for i in range(288415):
+    #     if i % 1000 == 0: print i
+    #     ann = instances['annotations'][i]
+    #     seg = ann['segmentation']
+    #     catId = ann['category_id']
+    #     img = imgDict[ann['image_id']]
+    #     imgid = str(img['id'])
+    #     width = int(img['width'])
+    #     height = int(img['height'])
 
-        #imgMat = cv2.imread(imgPathDict[imgid])
-        #print imgMat.dtype
-        #print imgMat.shape
-        #print (height, width)
-        zeroMat = np.zeros((height, width, 3), dtype='uint8')
-        #polyFill(imgMat, seg)
-        polyFill(zeroMat, seg)
-        # cv2.imwrite('../%s_%s.jpg' % \
-        #     (i, catDict[catId]['name']), 
-        #     imgMat)
-        att = distributeAtt(14, 14, zeroMat)
-        # print att
+    #     zeroMat = np.zeros((height, width, 3), dtype='uint8')
+    #     polyFill(zeroMat, seg)
+    #     att = distributeAtt(14, 14, zeroMat)
 
-        # M = np.zeros((14, 14)) + 255
-        # att2 = (att * 5000).astype('int')
-        # att2 = np.minimum(att2, M)
-        # print att2
+    #     # Assemble input data
+    #     # imgId, catId
+    #     inputData = [img['new_id'], catId]
 
-        # attUpsample = cv2.resize(att2, (height, width))
-        # cv2.imwrite('../%s_%s_att.jpg' % \
-        #     (i, catDict[catId]['name']),
-        #     attUpsample)
+    #     # Assemble target data
+    #     # attention, flattened
+    #     att = att.reshape(196)
+    #     targetData = att
 
+    #     s = splitDict[imgid]
+    #     if s == 0:
+    #         trainInput.append(inputData)
+    #         trainTarget.append(targetData)
+    #     elif s == 1:
+    #         validInput.append(inputData)
+    #         validTarget.append(targetData)
+    #     elif s == 2:
+    #         testInput.append(inputData)
+    #         testTarget.append(targetData)
+    # trainData = np.array((trainInput, trainTarget, 0), dtype='object')
+    # validData = np.array((validInput, validTarget, 0), dtype='object')
+    # testData = np.array((testInput, testTarget, 0), dtype='object')
+    trainData = None
+    validData = None
+    testData = None
 
-        # Assemble input data
-        # imgId, catId
-        inputData = [img['new_id'], catId]
-
-        # Assemble target data
-        # attention, flattened
-        att = att.reshape(196)
-        targetData = att
-
-        s = splitDict[imgid]
-        if s == 0:
-            trainInput.append(inputData)
-            trainTarget.append(targetData)
-        elif s == 1:
-            validInput.append(inputData)
-            validTarget.append(targetData)
-        elif s == 2:
-            testInput.append(inputData)
-            testTarget.append(targetData)
-    trainData = np.array((trainInput, trainTarget, 0), dtype='object')
-    validData = np.array((validInput, validTarget, 0), dtype='object')
-    testData = np.array((testInput, testTarget, 0), dtype='object')
-
-    return trainData, validData, testData
+    return trainData, validData, testData, catDict
 
 # To retrive image ID and url, get caption['images'][i]['id'] and caption['images'][i]['url']
 if __name__ == '__main__':
@@ -222,8 +205,12 @@ if __name__ == '__main__':
         '../../../data/mscoco/%s/instances.json' % 'train'
     validtrainJsonFilename = \
         '../../../data/mscoco/%s/instances.json' % 'valid'
-    trainData, validData, testData = \
+    trainData, validData, testData, catDict = \
         gatherAttention(trainJsonFilename, validtrainJsonFilename)
-    np.save(os.path.join(outputFolder, 'train.npy'), trainData)
-    np.save(os.path.join(outputFolder, 'valid.npy'), validData)
-    np.save(os.path.join(outputFolder, 'test.npy'), testData)
+    # np.save(os.path.join(outputFolder, 'train.npy'), trainData)
+    # np.save(os.path.join(outputFolder, 'valid.npy'), validData)
+    # np.save(os.path.join(outputFolder, 'test.npy'), testData)
+
+    with open(os.path.join(outputFolder, 'question_vocabs.txt'), 'w') as f:
+        for k in catDict.iterkeys():
+            f.write('%s\n' % catDict[k]['name'].replace(' ', '_'))
