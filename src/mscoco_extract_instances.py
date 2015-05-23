@@ -90,7 +90,9 @@ def polyFill(img, segmentation):
              np.array(seg[1:N:2]).reshape(N/2, 1)), axis=-1).astype('int')
         print 'Poly', poly, poly.shape
         polys.append(poly)
-    cv2.fillPoly(img=img, pts=np.array(polys, dtype='int'), color=(1, 1, 1))
+    pts = np.array(polys, dtype='int')
+    print pts, pts.shape
+    cv2.fillPoly(img=img, pts=pts, color=(1, 1, 1))
 
 def countPts(img):
     if len(img.shape) == 3:
