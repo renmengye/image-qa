@@ -2,6 +2,7 @@ import json
 import os
 import cPickle as pkl
 import sys
+import re
 
 # [u'info', u'licenses', u'images', u'type', u'annotations', u'categories']
 import cv2
