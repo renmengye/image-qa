@@ -227,6 +227,9 @@ class Trainer:
                     total += total_
 
                 batchStart += numExPerBat
+                if trainOpt.has_key('logNumBat') and \
+                    np.mod(batchStart / numExPerBat, trainOpt['logNumBat']) == 0:
+                    logger.logTrainStats()
 
             # Store train statistics
             if calcError:

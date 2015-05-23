@@ -11,5 +11,6 @@ calcError: false
 stopCost: 0.01
 progress: true
 patience: 10
+logNumBat: 100
 criterion: loss
 sendEmail: true
