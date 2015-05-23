@@ -46,7 +46,8 @@ specs:
       inputs: 'objSel'
       inputDim: 90
       outputDim: 300
-      initWeights: '../data/cocoqa-color-all/word-embed-q.npy'
+      initRange: 1.0
+      initSeed: 2
       learningRate: 0.8
       momentum: 0.9
       gradientClip: 0.1
