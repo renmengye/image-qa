@@ -72,7 +72,7 @@ def buildImgDict(imgList, imgidDict):
     count = 1
     for img in imgList:
         if not imgDict.has_key(img['id']):
-            img['new_id'] = imgidDict[img['id']]
+            img['new_id'] = imgidDict[str(img['id'])]
             imgDict[img['id']] = img
             count += 1
     return imgDict
@@ -132,7 +132,6 @@ if __name__ == '__main__':
     #L = len(instances['annotations'])
     L = 10
     splitDict, imgidDict, imgidIdict, imgPathDict = buildImgIdDict()
-    print imgidDict
     catDict = buildCatDict(instances['categories'])
     imgDict = buildImgDict(instances['images'], imgidDict)
     inputData = []
