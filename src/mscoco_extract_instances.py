@@ -82,6 +82,7 @@ def buildCatDict(catList):
     for cat in catList:
         if not catDict.has_key(cat['id']):
             catDict[cat['id']] = cat
+    return catDict
 
 def polyFill(img, width, height, segmentation):
     polys = []
