@@ -151,13 +151,14 @@ if __name__ == '__main__':
         width = int(img['width'])
         height = int(img['height'])
 
-        #img = np.zeros((height, width, 3))
         imgMat = cv2.imread(imgPathDict[str(img['id'])])
+        zeroMat = np.zeros((height, width, 3))
         polyFill(imgMat, width, height, seg)
+        polyFill(zeroMat, width, height, seg)
         cv2.imwrite('../%s_%s.jpg' % \
             (i, catDict[catId]['name']), 
             imgMat)
-        att = distributeAtt(14, 14, imgMat)
+        att = distributeAtt(14, 14, zeroMat)
         print att
 
         #att2 = np.tile(att.reshape(14, 14, 1), (1, 1, 3)) * 255
