@@ -13,7 +13,6 @@ if len(sys.argv) < 2:
 elif sys.argv[1] == '-valid':
     dataset = 'valid'
 folder = '../../../data/mscoco/%s' % dataset
-imgFolder = '/ais/gobi3/datasets/mscoco/images/%s2014/COCO_%s2014_%s.jpg'
 jsonFilename = '%s/instances.json' % (folder)
 imgidTrainFilename = '../../../data/mscoco/train/image_list.txt'
 imgidValidFilename = '../../../data/mscoco/valid/image_list.txt'
@@ -133,6 +132,7 @@ if __name__ == '__main__':
     #L = len(instances['annotations'])
     L = 10
     splitDict, imgidDict, imgidIdict, imgPathDict = buildImgIdDict()
+    print imgidDict
     catDict = buildCatDict(instances['categories'])
     imgDict = buildImgDict(instances['images'], imgidDict)
     inputData = []
