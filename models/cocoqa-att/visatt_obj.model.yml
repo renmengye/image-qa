@@ -46,7 +46,9 @@ specs:
       inputs: 'objSel'
       inputDim: 90
       outputDim: 300
-      initWeights: '../data/coco-att/word-embed-q.npy'
+      # initWeights: '../data/coco-att/word-embed-q.npy'
+      initRange: 1.0
+      initSeed: 2
       learningRate: 0.0
       outputdEdX: false
     - name: 'avgAtt'
