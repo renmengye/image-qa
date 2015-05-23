@@ -153,11 +153,13 @@ if __name__ == '__main__':
 
         #img = np.zeros((height, width, 3))
         imgMat = cv2.imread(imgPathDict[str(img['id'])])
-        filledPolyImg = polyFill(imgMat, width, height, seg)
+        polyFill(imgMat, width, height, seg)
         cv2.imwrite('../%s_%s.jpg' % \
             (L, catDict[catId]['name']), 
             imgMat)
-        att = distributeAtt(14, 14, filledPolyImg)
+        att = distributeAtt(14, 14, imgMat)
+        print att
+        
         att = att.reshape(196)
 
         # Assemble train data
