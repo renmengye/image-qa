@@ -137,7 +137,6 @@ def gatherAttention(trainJsonFilename, validJsonFilename):
     annotations.extend(instances['annotations'])
     images.extend(instances['images'])
     categories.extend(instances['categories'])
-    L = len(instances['annotations'])
     
     splitDict, imgidDict, imgidIdict, imgPathDict = \
         buildImgIdDict(imgidTrainFilename, imgidValidFilename)
@@ -151,6 +150,8 @@ def gatherAttention(trainJsonFilename, validJsonFilename):
     testInput = []
     testTarget = []
 
+    L = len(instances['annotations'])
+    print 'Total instances:', L
     for i in range(L):
         if i % 1000 == 0: print i
         ann = instances['annotations'][i]
@@ -219,3 +220,6 @@ if __name__ == '__main__':
         '../../../data/mscoco/%s/instances.json' % 'valid'
     trainData, validData, testData = \
         gatherAttention(trainJsonFilename, validtrainJsonFilename)
+    np.save(os.path.join(outputFolder, 'train.npy'), trainData)
+    np.save(os.path.join(outputFolder, 'valid.npy'), validData)
+    np.save(os.path.join(outputFolder, 'test.npy'), testData)
