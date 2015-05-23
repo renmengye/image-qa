@@ -148,13 +148,13 @@ def gatherAttention(trainJsonFilename, validJsonFilename):
     testInput = []
     testTarget = []
 
-    L = len(instances['annotations'])
+    L = len(annotations)
     print 'Total instances:', L
     invalidCount = 0
 
     for i in range(L):
         if i % 1000 == 0: print 'Num', i, 'Invalid', invalidCount
-        ann = instances['annotations'][i]
+        ann = annotations[i]
         seg = ann['segmentation']
         catId = ann['category_id']
         img = imgDict[ann['image_id']]
