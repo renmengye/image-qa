@@ -146,9 +146,11 @@ if __name__ == '__main__':
         height = img['height']
 
         #img = np.zeros((height, width, 3))
-        img = cv2.imread(imgPathDict[imgid])
-        filledPolyImg = polyFill(img, width, height, seg)
-        cv2.imwrite('../%s.jpg' % L, img)
+        imgMat = cv2.imread(imgPathDict[str(img['id'])])
+        filledPolyImg = polyFill(imgMat, width, height, seg)
+        cv2.imwrite('../%s_%s.jpg' % \
+            (L, catDict[catId]['name']), 
+            imgMat)
         att = distributeAtt(14, 14, filledPolyImg)
         att = att.reshape(196)
 
