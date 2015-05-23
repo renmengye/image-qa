@@ -172,9 +172,8 @@ def gatherAttention(trainJsonFilename, validJsonFilename):
         width = int(img['width'])
         height = int(img['height'])
 
-        print i
-        if i == 288415:
-            print seg
+        if type(seg) is not list:
+            continue
         # if i > 288000:
         #     debug = True
         # else:
