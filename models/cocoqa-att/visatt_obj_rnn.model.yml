@@ -47,9 +47,10 @@ specs:
       inputs: 'imgFeat'
       timespan: 1
     - name: 'txtFold'
-      type: 'timeFold'
+      type: 'reshape'
       inputs: 'txtDict'
-      timespan: 5
+      reshapeFn: '(x[0], x[1]/300, 300)'
+      outputDim: 300
     - name: 'imgSel2'
       type: 'selector'
       inputs: 'input($0)'
