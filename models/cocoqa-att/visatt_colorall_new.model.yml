@@ -124,7 +124,7 @@ specs:
           - 'attOut'
       outputs: 'attCtx'
       inputDim: 1
-      outputDim: 196
+      outputDim: 512
       timespan: 5
       multiInput: false
       multiOutput: false
