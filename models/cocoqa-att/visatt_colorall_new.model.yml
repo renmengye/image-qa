@@ -8,8 +8,9 @@ stages:
 outputs: 'answer'
 specs:
     - name: 'unfold'
-      type: 'timeUnfold'
+      type: 'reshape'
       inputs: 'input'
+      reshapeFn: '(x[0], x[1])'
       outputDim: 9
     - name: 'imgSel'
       type: 'selector'
