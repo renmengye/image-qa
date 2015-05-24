@@ -101,7 +101,7 @@ specs:
       recurrent: true
     - name: 'attModel'
       type: 'recurrent'
-      inputs: 'imgFold, txtFold'
+      inputs: 'input'
       stages:
           - 'imgSel'
           - 'imgFeat'
