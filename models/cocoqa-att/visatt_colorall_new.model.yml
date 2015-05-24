@@ -41,7 +41,7 @@ specs:
     - name: 'txtDict'
       type: 'lut'
       inputs: 'txtSel'
-      inputDim: 90
+      inputDim: 2394
       outputDim: 300
       initRange: 1.0
       initSeed: 2
