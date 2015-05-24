@@ -135,6 +135,7 @@ class RecurrentAdapter(Stage, RecurrentStage):
 
     def syncGradient(self):
         # Sum error through time
+        print self.name
         W = self.stages[0].getWeights()
         if self.stages[0].gpu:
             tmp = gpu.zeros((self.timespan, W.shape[0], W.shape[1]))
