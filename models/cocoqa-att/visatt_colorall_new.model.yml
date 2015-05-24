@@ -34,7 +34,7 @@ specs:
       recurrent: true
     - name: 'txtDict'
       type: 'lut'
-      inputs: 'txtUnfold'
+      inputs: 'txtSel'
       inputDim: 90
       outputDim: 300
       initRange: 1.0
