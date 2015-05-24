@@ -82,7 +82,7 @@ specs:
       recurrent: true
     - name: 'ilstm'
       type: 'lstm'
-      inputs: 'attCtx txtSel2'
+      inputs: 'attCtx, txtSel2'
       inputDim: 812
       outputDim: 150
       timespan: 27
