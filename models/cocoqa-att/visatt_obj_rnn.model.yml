@@ -31,7 +31,7 @@ specs:
       recurrent: true
     - name: 'txtDict'
       type: 'lut'
-      inputs: 'txtUnfold'
+      inputs: 'txtSel'
       inputDim: 90
       outputDim: 300
       initRange: 1.0
@@ -59,7 +59,7 @@ specs:
       recurrent: true
     - name: 'lstm'
       type: 'lstm'
-      inputs: 'attCtx, txtSel'
+      inputs: 'attCtx, txtDict'
       inputDim: 812
       outputDim: 150
       timespan: 5
@@ -76,7 +76,7 @@ specs:
       outputdEdX: true
     - name: 'attHid1'
       type: 'map'
-      inputs: 'txtSel2, ilstm'
+      inputs: 'txtSel, lstm'
       outputDim: 196
       activeFn: 'tanh'
       initRange: 0.1
