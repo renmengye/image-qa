@@ -2,6 +2,7 @@ import numpy as np
 import copy
 import os
 use_gpu = os.environ.get('GNUMPY_USE_GPU', 'yes') == 'yes'
+verbose = os.environ.get('VERBOSE', 'yes') == 'yes'
 if use_gpu:
     import gnumpy as gpu
 
@@ -119,7 +120,7 @@ class Stage:
         Forward propagates.
         """
         self.X = self.getInput()
-        if hasattr(self.X, 'shape'):
+        if verbose and hasattr(self.X, 'shape'):
             print 'forward', self.name, self.X.shape
         self.Y = self.forward(self.X)
 
@@ -136,8 +137,8 @@ class Stage:
         """
         Backward propagates.
         """
-        #if hasattr(self.dEdY, 'shape'):
-        #   print 'backward', self.name, self.dEdY.shape, np.mean(self.dEdY)
+        if verbose and hasattr(self.dEdY, 'shape'):
+          print 'backward', self.name, self.dEdY.shape, np.mean(self.dEdY)
         dEdX = self.backward(self.dEdY)
         if self.outputdEdX:
             self.sendError(dEdX)

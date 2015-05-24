@@ -43,9 +43,10 @@ specs:
       learningRate: 0.0
       outputdEdX: false
     - name: 'imgFold'
-      type: 'timeFold'
+      type: 'reshape'
       inputs: 'imgFeat'
-      timespan: 1
+      reshapeFn: '(x[0], x[1]/1, 100352)'
+      outputDim: 300
     - name: 'txtFold'
       type: 'reshape'
       inputs: 'txtDict'
