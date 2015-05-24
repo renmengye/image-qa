@@ -45,12 +45,12 @@ specs:
     - name: 'imgFold'
       type: 'reshape'
       inputs: 'imgFeat'
-      reshapeFn: '(x[0], x[1]/1, 100352)'
+      reshapeFn: '(x[0], x[0]/1, 100352)'
       outputDim: 300
     - name: 'txtFold'
       type: 'reshape'
       inputs: 'txtDict'
-      reshapeFn: '(x[0], x[1]/5, 300)'
+      reshapeFn: '(x[0], x[0]/5, 300)'
       outputDim: 300
     - name: 'imgSel2'
       type: 'selector'
