@@ -79,7 +79,7 @@ specs:
       outputdEdX: true
     - name: 'attHid1'
       type: 'map'
-      inputs: 'txtSel2, ilstm'
+      inputs: 'txtDict, lstm'
       outputDim: 196
       activeFn: 'tanh'
       initRange: 0.1
