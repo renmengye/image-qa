@@ -1,11 +1,16 @@
 costFn: 'crossEntIdx'
 decisionFn: 'argmax'
 stages:
+    - 'unfold'
     - 'attModel'
     - 'hidFC1'
     - 'answer'
 outputs: 'answer'
 specs:
+    - name: 'unfold'
+      type: 'timeUnfold'
+      inputs: 'input'
+      outputDim: 9
     - name: 'imgSel'
       type: 'selector'
       inputs: 'input($0)'
@@ -16,8 +21,8 @@ specs:
     - name: 'txtSel'
       type: 'selector'
       inputs: 'input($0)'
-      start: 1
-      end: 2
+      start: 7
+      end: 8
       axis: 1
       recurrent: true
     - name: 'imgFeat'
@@ -104,7 +109,7 @@ specs:
       recurrent: true
     - name: 'attModel'
       type: 'recurrent'
-      inputs: 'input'
+      inputs: 'unfold'
       stages:
           - 'imgSel'
           - 'imgFeat'
@@ -117,7 +122,7 @@ specs:
           - 'attHid1'
           - 'attOut'
       outputs: 'attCtx'
-      inputDim: 2
+      inputDim: 1
       outputDim: 196
       timespan: 5
       multiInput: false
