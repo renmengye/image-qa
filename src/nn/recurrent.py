@@ -195,11 +195,15 @@ class RecurrentContainer(Container, RecurrentStage):
                  outputDim,
                  timespan,
                  defaultValue=0,
+                 multiInput=True,
                  multiOutput=True,
+                 cutOffZeroEnd=True,
                  name=None,
                  inputNames=None,
                  outputdEdX=True):
+        self.multiInput = multiInput
         self.multiOutput = multiOutput
+        self.cutOffZeroEnd = cutOffZeroEnd
         self.timespan = timespan
         self.Xend = 0
         self.XendAll = 0
@@ -329,7 +333,7 @@ class RecurrentContainer(Container, RecurrentStage):
             self.syncWeights()
 
         N = X.shape[0]
-        self.Xend = np.zeros(N, dtype=int) + X.shape[1]
+        self.Xend = np.zeros(N, dtype=int) + self.timespan
         reachedEnd = np.sum(X, axis=-1) == 0.0
         if self.multiOutput:
             Y = np.zeros((N, self.timespan, self.outputDim))
@@ -337,19 +341,27 @@ class RecurrentContainer(Container, RecurrentStage):
             Y = np.zeros((N, self.outputDim))
 
         # Scan for the end of the sequence.
-        for n in range(N):
-            for t in range(X.shape[1]):
-                if reachedEnd[n, t]:
-                    self.Xend[n] = t
-                    break
+        if self.cutOffZeroEnd:
+            for n in range(N):
+                for t in range(X.shape[1]):
+                    if reachedEnd[n, t]:
+                        self.Xend[n] = t
+                        break
         self.XendAll = np.max(self.Xend)
+
         # Set value for constant stages.
         for s in self.constStages:
             s.Y = np.tile(s.value, (X.shape[0], 1))
 
         # Propagating through time.
         for t in range(self.XendAll):
-            self.stages[0].getStage(time=t).Y = X[:, t, :]
+            if self.multiInput:
+                self.stages[0].getStage(time=t).Y = X[:, t, :]
+            else:
+                if t == 0:
+                    self.stages[0].getStage(time=t).Y = X
+                else:
+                    self.stages[0].getStage(time=t).Y = np.zeros(X.shape)
             for s in range(1, len(self.stages)):
                 if self.stages[s].getStage(time=t).used:
                     if hasattr(self.stages[s], 'dropout'):
@@ -432,8 +444,11 @@ class RecurrentContainer(Container, RecurrentStage):
 
         # Collect input error
         if self.outputdEdX:
-            for t in range(self.XendAll):
-                dEdX[:, t, :] = self.stages[0].getStage(time=t).dEdY
+            if self.multiInput:
+                for t in range(self.XendAll):
+                    dEdX[:, t, :] = self.stages[0].getStage(time=t).dEdY
+            else:
+                dEdX = self.stages[0].getStage(time=0).dEdY
         
         self.syncGradient()
         return dEdX if self.outputdEdX else None

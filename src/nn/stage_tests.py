@@ -1,4 +1,5 @@
 from lstm_old import *
+from lstm import *
 from map import *
 from lut import *
 from inner_prod import *
@@ -32,15 +33,18 @@ class StageTests(unittest.TestCase):
             for i in range(0, W.shape[0]):
                 for j in range(0, W.shape[1]):
                     W[i,j] += eps
+                    self.stage.loadWeights(W)
                     Y = self.model.forward(X)
                     Etmp1, d1 = self.costFn(Y, T)
 
                     W[i,j] -= 2 * eps
+                    self.stage.loadWeights(W)
                     Y = self.model.forward(X)
                     Etmp2, d2 = self.costFn(Y, T)
 
                     dEdWTmp[i,j] = (Etmp1 - Etmp2) / 2.0 / eps
                     W[i,j] += eps
+                    self.stage.loadWeights(W)
         else:
             dEdW = 0
             dEdWTmp = 0
@@ -99,7 +103,7 @@ class StageTests(unittest.TestCase):
                 (dE[i] == 0 and dETmp[i] == 0) or
                 (np.abs(dE[i] / dETmp[i] - 1) < tolerance))
 
-class LSTM_MultiErr_Tests(StageTests):
+class LSTM_MIMO_Tests(StageTests):
     """LSTM_Old multi error tests"""
     def setUp(self):
         self.stage = LSTM_Old(
@@ -120,7 +124,7 @@ class LSTM_MultiErr_Tests(StageTests):
         self.chkgrd(dEdW, dEdWTmp)
         self.chkgrd(dEdX, dEdXTmp)
 
-class LSTM_MultiErrCutZero_Tests(StageTests):
+class LSTM_MIMOZ_Tests(StageTests):
     """LSTM_Old single error tests"""
     def setUp(self):
         self.stage = LSTM_Old(
@@ -145,7 +149,7 @@ class LSTM_MultiErrCutZero_Tests(StageTests):
         self.chkgrd(dEdW, dEdWTmp)
         self.chkgrd(dEdX[:,0:4], dEdXTmp[:,0:4])
 
-class LSTM_SingleErr_Tests(StageTests):
+class LSTM_MISO_Tests(StageTests):
     """LSTM_Old single error tests"""
     def setUp(self):
         self.stage = LSTM_Old(
@@ -166,7 +170,7 @@ class LSTM_SingleErr_Tests(StageTests):
         self.chkgrd(dEdW, dEdWTmp)
         self.chkgrd(dEdX, dEdXTmp)
 
-class LSTM_SingleErrCutZero_Tests(StageTests):
+class LSTM_MISOZ_Tests(StageTests):
     """LSTM_Old single error tests"""
     def setUp(self):
         self.stage = LSTM_Old(
@@ -188,6 +192,34 @@ class LSTM_SingleErrCutZero_Tests(StageTests):
         dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
         self.chkgrd(dEdW, dEdWTmp)
         self.chkgrd(dEdX[:,0:4], dEdXTmp[:,0:4])
+
+
+class LSTM_SISO_Tests(StageTests):
+    """LSTM_Old single error tests"""
+    def setUp(self):
+        self.stage = LSTM(
+            name='lstm',
+            inputNames=None,
+            inputDim=5,
+            outputDim=3,
+            initRange=0.1,
+            learningRate=0.1,
+            timespan=5,
+            initSeed=1,
+            multiInput=False,
+            multiOutput=False,
+            cutOffZeroEnd=False)
+        self.model = self.stage
+        self.testInputErr = True
+        self.costFn = meanSqErr
+    def test_grad(self):
+        random = np.random.RandomState(2)
+        numEx = 1
+        X = random.uniform(-0.1, 0.1, (numEx, 5))
+        T = random.uniform(-0.1, 0.1, (numEx, 3))
+        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
+        self.chkgrd(dEdW, dEdWTmp)
+        self.chkgrd(dEdX, dEdXTmp)
 
 class MapIdentity_Tests(StageTests):
     """Linear map tests"""
@@ -678,13 +710,15 @@ class Normalize_Tests(StageTests):
 if __name__ == '__main__':
     suite = unittest.TestSuite()
     suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(LSTM_MultiErr_Tests))
+        unittest.TestLoader().loadTestsFromTestCase(LSTM_SISO_Tests))
     suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(LSTM_MultiErrCutZero_Tests))
+        unittest.TestLoader().loadTestsFromTestCase(LSTM_MIMO_Tests))
     suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(LSTM_SingleErr_Tests))
+        unittest.TestLoader().loadTestsFromTestCase(LSTM_MIMOZ_Tests))
     suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(LSTM_SingleErrCutZero_Tests))
+        unittest.TestLoader().loadTestsFromTestCase(LSTM_MISO_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(LSTM_MISOZ_Tests))
     suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(MapIdentity_Tests))
     suite.addTests(

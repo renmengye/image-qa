@@ -2,8 +2,8 @@ import numpy as np
 
 def meanSqErr(Y, T):
     diff =  Y - T.reshape(Y.shape)
-    E = 0.5 * np.sum(np.power(diff, 2)) / float(Y.size)
-    dEdY = diff / float(Y.size)
+    E = 0.5 * np.sum(np.power(diff, 2)) / float(Y.shape[0])
+    dEdY = diff / float(Y.shape[0])
     return E, dEdY
 
 def hardLimit(Y):

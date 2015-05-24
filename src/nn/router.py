@@ -148,7 +148,9 @@ def addStage(stageDict):
             initRange=initRange,
             initWeights=initWeights,
             needInit=needInit,
+            multiInput=stageDict['multiInput'] if stageDict.has_key('multiInput') else True,
             multiOutput=stageDict['multiErr'] if stageDict.has_key('multiErr') else stageDict['multiOutput'],
+            cutOffZeroEnd=stageDict['cutOffZeroEnd'] if stageDict.has_key('cutOffZeroEnd') else True
             learningRate=learningRate,
             learningRateAnnealConst=learningRateAnnealConst,
             momentum=momentum,
@@ -366,7 +368,9 @@ def addStage(stageDict):
             inputNames=inputList,
             timespan=stageDict['timespan'],
             stages=realStages,
+            multiInput=stageDict['multiInput'] if stageDict.has_key('multiInput') else True,
             multiOutput=stageDict['multiOutput'],
+            cutOffZeroEnd=stageDict['cutOffZeroEnd'] if stageDict.has_key('cutOffZeroEnd') else True,
             outputStageNames=outputList,
             outputdEdX=outputdEdX
         )

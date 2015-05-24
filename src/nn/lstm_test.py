@@ -53,6 +53,7 @@ class LSTM_Recurrent_Real_Tests(unittest.TestCase):
                 outputDim=D2,
                 inputNames=None,
                 multiOutput=multiOutput,
+                cutOffZeroEnd=True,
                 learningRate=0.8,
                 momentum=0.9,
                 outputdEdX=True)

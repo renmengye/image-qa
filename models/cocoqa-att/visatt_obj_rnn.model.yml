@@ -1,30 +1,25 @@
-costFn: 'crossEntIdx'
-decisionFn: 'argmax'
+costFn: 'mse'
 stages:
-    - 'imgSel1'
-    - 'imgFeat'
-    - 'imgFold'
-    - 'txtSel1'
-    - 'txtDict'
-    - 'txtFold'
     - 'attModel'
 outputs: 'attModel'
 specs:
-    - name: 'imgSel1'
+    - name: 'imgSel'
       type: 'selector'
-      inputs: 'input'
+      inputs: 'input($0)'
       start: 0
       end: 1
       axis: 1
-    - name: 'txtSel1'
+      recurrent: true
+    - name: 'txtSel'
       type: 'selector'
-      inputs: 'input'
+      inputs: 'input($0)'
       start: 1
-      end: 6
+      end: 2
       axis: 1
+      recurrent: true
     - name: 'imgFeat'
       type: 'lut'
-      inputs: 'imgSel1'
+      inputs: 'imgSel($0)'
       inputDim: 123287
       outputDim: 100352
       initWeights: '/ais/gobi3/u/mren/data/cocoqa-full/hidden_oxford.h5'
@@ -33,40 +28,20 @@ specs:
       sparse: true
       learningRate: 0.0
       outputdEdX: false
+      recurrent: true
     - name: 'txtDict'
       type: 'lut'
-      inputs: 'txtSel1'
+      inputs: 'txtUnfold'
       inputDim: 90
       outputDim: 300
       initRange: 1.0
       initSeed: 2
       learningRate: 0.0
       outputdEdX: false
-    - name: 'imgFold'
-      type: 'reshape'
-      inputs: 'imgFeat'
-      reshapeFn: '(x[0], x[0]/1, 100352)'
-      outputDim: 300
-    - name: 'txtFold'
-      type: 'reshape'
-      inputs: 'txtDict'
-      reshapeFn: '(x[0], x[0]/5, 300)'
-      outputDim: 300
-    - name: 'imgSel2'
-      type: 'selector'
-      inputs: 'input($0)'
-      start: 0
-      end: 100352
-      recurrent: true
-    - name: 'txtSel2'
-      type: 'selector'
-      inputs: 'input'
-      start: 1
-      end: 100652
       recurrent: true
     - name: 'imgReshape'
       type: 'reshape'
-      inputs: 'imgSel2($0)'
+      inputs: 'imgFeat($0)'
       reshapeFn: '(x[0], 196, x[1]/196)'
       outputDim: 512
       recurrent: true
@@ -82,12 +57,12 @@ specs:
       sumAxis: 1
       outputDim: 512
       recurrent: true
-    - name: 'ilstm'
+    - name: 'lstm'
       type: 'lstm'
-      inputs: 'attCtx, txtSel2'
+      inputs: 'attCtx, txtSel'
       inputDim: 812
       outputDim: 150
-      timespan: 27
+      timespan: 5
       initRange: 0.1
       initSeed: 4
       cutOffZeroEnd: true
@@ -109,7 +84,7 @@ specs:
       learningRate: 0.1
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 50
+      weightClip: 50.0
       recurrent: true
     - name: 'attOut'
       type: 'map'
@@ -122,22 +97,26 @@ specs:
       learningRate: 0.1
       momentum: 0.9
       gradientClip: 0.1
-      weightClip: 50
+      weightClip: 50.0
       recurrent: true
     - name: 'attModel'
       type: 'recurrent'
       inputs: 'imgFold, txtFold'
       stages:
-          - 'imgSel2'
-          - 'txtSel2'
+          - 'imgSel'
+          - 'imgFeat'
+          - 'txtSel'
+          - 'txtDict'
           - 'imgReshape'
           - 'attReshape'
           - 'attCtx'
-          - 'ilstm'
+          - 'lstm'
           - 'attHid1'
           - 'attOut'
       outputs: 'attOut'
-      inputDim: 100652
+      inputDim: 2
       outputDim: 196
-      timespan: 6
+      timespan: 5
+      multiInput: false
       multiOutput: false
+      cutOffZeroEnd: false

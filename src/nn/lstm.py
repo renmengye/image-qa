@@ -14,7 +14,9 @@ class LSTM(RecurrentContainer):
                  initSeed=2,
                  needInit=True,
                  initWeights=0,
+                 multiInput=True,
                  multiOutput=False,
+                 cutOffZeroEnd=True,
                  learningRate=0.0,
                  learningRateAnnealConst=0.0,
                  momentum=0.0,
@@ -132,7 +134,9 @@ class LSTM(RecurrentContainer):
                            outputStageNames=[name + '.H'],
                            inputDim=inputDim,
                            outputDim=outputDim,
+                           multiInput=multiInput,
                            multiOutput=multiOutput,
+                           cutOffZeroEnd=cutOffZeroEnd,
                            name=name,
                            outputdEdX=outputdEdX)
 
@@ -148,7 +152,7 @@ class LSTM(RecurrentContainer):
                                self.F.getWeights(),
                                self.Z.getWeights(),
                                self.O.getWeights()), axis=0)
-
+            
     def getGradient(self):
         if self.I.stages[0].gpu:
             return np.concatenate((
