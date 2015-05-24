@@ -150,7 +150,7 @@ def addStage(stageDict):
             needInit=needInit,
             multiInput=stageDict['multiInput'] if stageDict.has_key('multiInput') else True,
             multiOutput=stageDict['multiErr'] if stageDict.has_key('multiErr') else stageDict['multiOutput'],
-            cutOffZeroEnd=stageDict['cutOffZeroEnd'] if stageDict.has_key('cutOffZeroEnd') else True
+            cutOffZeroEnd=stageDict['cutOffZeroEnd'] if stageDict.has_key('cutOffZeroEnd') else True,
             learningRate=learningRate,
             learningRateAnnealConst=learningRateAnnealConst,
             momentum=momentum,
