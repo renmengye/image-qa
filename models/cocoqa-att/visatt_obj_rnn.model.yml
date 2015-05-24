@@ -49,7 +49,7 @@ specs:
     - name: 'txtFold'
       type: 'reshape'
       inputs: 'txtDict'
-      reshapeFn: '(x[0], x[1]/300, 300)'
+      reshapeFn: '(x[0], x[1]/5, 300)'
       outputDim: 300
     - name: 'imgSel2'
       type: 'selector'
