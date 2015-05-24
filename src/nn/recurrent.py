@@ -137,7 +137,7 @@ class RecurrentAdapter(Stage, RecurrentStage):
         # Sum error through time
         print self.name
         W = self.stages[0].getWeights()
-        if self.stages[0].gpu:
+        if self.stages[0].gpu and self.stages[0].learningRate > 0.0:
             tmp = gpu.zeros((self.timespan, W.shape[0], W.shape[1]))
             for t in range(self.timespan):
                 tmp[t] = self.stages[t].getGradient()
