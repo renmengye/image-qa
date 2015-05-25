@@ -103,6 +103,8 @@ if __name__ == '__main__':
     np.save(os.path.join(outputFolder, 'test.npy'),
         np.array(
             (inputDataRV[2], targetDataRV[2], 0), dtype='object'))
+    np.save(os.path.join(outputFolder, 'test-qtype.npy'),
+        np.zeros(inputDataRV[0].shape[0], dtype='int') + 1)
 
     shutil.copyfile(
         os.path.join(numDataFolder, 'vocab-dict.npy'),
