@@ -59,7 +59,10 @@ def plotAttention(
                     imgPathDict, 
                     questionIdict):
     for n in range(X.shape[0]):
-        img = loadImage(imgPathDict[X[n, 0, 0]])
+        if len(X.shape) == 3:
+            img = loadImage(imgPathDict[X[n, 0, 0]])
+        elif len(X.shape) == 2:
+            img = loadImage(imgPathDict[X[n, 0]])
         plt.clf()
         w = np.round(np.sqrt(Xend[n] + 1))
         h = np.ceil((Xend[n] + 1) / float(w))
@@ -67,7 +70,12 @@ def plotAttention(
         plt.imshow(img)
         plt.axis('off')
         for t in range(Xend[n]):
-            word = questionIdict[X[n, t, 1] - 1]
+            if len(X.shape) == 3:
+                word = questionIdict[X[n, t, 1] - 1]
+            elif len(X.shape) == 2 and t == 0:
+                word = questionIdict[X[n, 1]]
+            else:
+                word = ''
             plt.subplot(w, h, t + 2)
             plt.imshow(img)
             alpha = A[n, t].reshape(14, 14)
@@ -130,7 +138,7 @@ if __name__ == '__main__':
     A = layers['attModel:attOut']
 
     print A, A.shape
-    Xend = scan(X[0:N])
+    Xend = np.zeros(X.shape[0]) + A.shape[1]
     prefix = ''
     plotAttention(
                     X[0:N], 
