@@ -104,7 +104,7 @@ if __name__ == '__main__':
     resultsFolder = '../results'
     dataset = "cocoqa"
     N = 10
-    for i, flag in enumerate(sys.argv)
+    for i, flag in enumerate(sys.argv):
         if flag == '-m' or flag == '-model':
             modelId = sys.argv[i + 1]
         elif flag == '-d' or flag == '-data:
