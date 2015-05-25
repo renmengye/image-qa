@@ -179,7 +179,7 @@ class RecurrentAdapter(Stage, RecurrentStage):
                     self.stages[0].Y.shape[1]))
         for t, stage in enumerate(self.stages):
             Y[:, t] = stage.getValue()
-        return y
+        return Y
 
 class Constant(Stage):
     def __init__(self,
