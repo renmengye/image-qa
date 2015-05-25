@@ -42,6 +42,9 @@ def crossEntOne(Y, T):
 def argmax(Y):
     return np.argmax(Y, axis=-1)
 
+def roundInt(Y):
+    return np.round(Y, axis=-1).astype('int')
+
 def rankingLoss(Y, T):
     alpha = 0.1
     dEdY = np.zeros(Y.shape)
