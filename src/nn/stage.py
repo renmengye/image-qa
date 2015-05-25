@@ -144,8 +144,8 @@ class Stage:
         dEdX = self.backward(self.dEdY)
         if self.outputdEdX:
             self.sendError(dEdX)
-        if verbose and hasattr(self.dEdX, 'shape'):
-            print 'backward out', self.name, self.dEdX.shape, np.mean(self.dEdX)
+        if verbose and hasattr(dEdX, 'shape'):
+            print 'backward out', self.name, dEdX.shape, np.mean(dEdX)
 
     def backward(self, dEdY):
         """
