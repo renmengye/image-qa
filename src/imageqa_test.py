@@ -149,6 +149,7 @@ def getTruthFilename(
                     '%s.test.t.txt' % taskId)
 
 def loadDataset(dataFolder):
+    print 'Loading dataset...'
     trainDataFile = os.path.join(dataFolder, 'train.npy')
     validDataFile = os.path.join(dataFolder, 'valid.npy')
     testDataFile = os.path.join(dataFolder, 'test.npy')
@@ -178,6 +179,7 @@ def loadDataset(dataFolder):
 def loadModel(
                 taskId,
                 resultsFolder):
+    print 'Loading model...'
     modelSpecFile = '%s/%s/%s.model.yml' % (resultsFolder, taskId, taskId)
     modelWeightsFile = '%s/%s/%s.w.npy' % (resultsFolder, taskId, taskId)
     model = nn.load(modelSpecFile)

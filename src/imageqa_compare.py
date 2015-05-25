@@ -72,7 +72,6 @@ if __name__ == '__main__':
     """
     params = ir.parseComparativeParams(sys.argv)
     
-    print('Loading test data...')
     urlDict = ir.loadImgUrl(params['dataset'], params['dataFolder'])
     data = it.loadDataset(params['dataFolder'])
 

@@ -1,6 +1,7 @@
 import sys
 import os
 import json
+import re
 import cPickle as pkl
 
 from nn.func import *
@@ -434,7 +435,7 @@ def readImgDictCocoqa(imgidDict):
 def readImgDictDaquar():
     urlList = []
     for i in range(1, 1450):
-        urlList.append(daquarImageFolder + 'image%d.jpg' % int(i))
+        urlList.append(daquarImageFolder + 'image%d.jpg' % i)
     return urlList
 
 def loadImgUrl(dataset, dataFolder):
@@ -448,6 +449,26 @@ def loadImgUrl(dataset, dataFolder):
     elif dataset == 'daquar':
         urlDict = readImgDictDaquar()
     return urlDict
+
+def loadImgPath(dataset):
+    print 'Loading image paths...'
+    cocoImgIdRegex = 'COCO_((train)|(val))2014_0*(?P<imgid>[1-9][0-9]*)'
+    if dataset == 'cocoqa':
+        pathDict = {}
+        with open('/u/mren/data/mscoco/train/image_list.txt') as f:
+            imageList = f.readlines()
+        with open('/u/mren/data/mscoco/valid/image_list.txt') as f:
+            imageList.extend(f.readlines())
+        for imgPath in imageList:
+            match = re.search(cocoImgIdRegex, imgPath)
+            imgid = match.group('imgid')
+            pathDict[imgid] = imgPath[:-1]
+        return pathDict
+    elif dataset == 'daquar':
+        pathList = []
+        for i in range(1, 1450):
+            pathList.append('/u/mren/data/nyu-depth/jpg/image%d.jpg' % i)
+        return pathList
 
 def escapeLatexIdict(idict):
     for i in range(len(idict)):
@@ -591,7 +612,7 @@ if __name__ == '__main__':
         -d[ata]: Data folder
         -o[utput]: Output folder
         -k: Top K answers
-        -dataset: DAQUAR/COCOQA dataset
+        -dataset: DAQUAR/COCO-QA dataset
     """
     params = parseComparativeParams(sys.argv)
 

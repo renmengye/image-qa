@@ -61,7 +61,6 @@ if __name__ == '__main__':
     """
     params = ir.parseComparativeParams(sys.argv)
 
-    print('Loading test data...')
     urlDict = ir.loadImgUrl(params['dataset'], params['dataFolder'])
     data = it.loadDataset(params['dataFolder'])
     maxlen = data['testData'][0].shape[1]
