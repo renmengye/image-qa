@@ -68,7 +68,7 @@ specs:
       recurrent: true
     - name: 'lstm'
       type: 'lstm'
-      inputs: 'attCtx, txtSel'
+      inputs: 'attCtx, txtDict'
       inputDim: 812
       outputDim: 150
       timespan: 5
@@ -85,7 +85,7 @@ specs:
       outputdEdX: true
     - name: 'attHid1'
       type: 'map'
-      inputs: 'txtDict, lstm'
+      inputs: 'lstm'
       outputDim: 196
       activeFn: 'tanh'
       initRange: 0.1
