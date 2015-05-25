@@ -139,6 +139,9 @@ if __name__ == '__main__':
         print q
     Y, layers = nn.test(model, X[0:N], layerNames=['attModel:attOut'])
     A = layers['attModel:attOut']
+    A = np.concatenate((
+            np.zeros(A.shape) + 1 / 196.0,
+            A[:, :-1]), axis=1)
 
     print A, A.shape
     Xend = np.zeros(X.shape[0], dtype='int') + A.shape[1] + 1
