@@ -1,5 +1,5 @@
 costFn: 'mse'
-decisionFn: 'round'
+decisionFn: 'argmax'
 stages:
     - 'imgSel'
     - 'imgUnfold'
