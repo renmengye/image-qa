@@ -44,6 +44,8 @@ def routeFn(name):
         return ReluActiveFn
     elif name == 'mse':
         return meanSqErr
+    elif name == 'mseEye':
+        return meanSqErrEye
     elif name == 'round':
         return roundInt
     else:

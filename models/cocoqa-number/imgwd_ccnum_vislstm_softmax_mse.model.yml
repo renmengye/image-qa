@@ -1,4 +1,4 @@
-costFn: 'mse'
+costFn: 'mseEye'
 decisionFn: 'argmax'
 stages:
     - 'imgSel'

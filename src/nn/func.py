@@ -42,6 +42,14 @@ def crossEntOne(Y, T):
 def argmax(Y):
     return np.argmax(Y, axis=-1)
 
+def meanSqErrEye(Y, T):
+    eye = np.eye(Y.shape[-1])
+    T2 = T.reshape(T.size)
+    Y2 = Y.reshape(Y.size)
+    T3 = eye[T2]
+    T3 = T3.reshape(T3.size)
+    return meanSqErr(Y2, T3)
+
 def roundInt(Y):
     return np.round(Y).astype('int')
 
