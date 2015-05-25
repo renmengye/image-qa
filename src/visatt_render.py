@@ -76,9 +76,9 @@ def plotAttention(
                 word = questionIdict[X[n, 1] - 1]
             else:
                 word = ''
-            plt.subplot(w, h, t + 2)
+            plt.subplot(w, h, t + 1)
             plt.imshow(img)
-            alpha = A[n, t].reshape(14, 14)
+            alpha = A[n, t - 1].reshape(14, 14)
             alphaImage = skimage.transform.resize(
                 alpha, [img.shape[0], img.shape[1]])
             plt.imshow(alphaImage, alpha=0.8)
