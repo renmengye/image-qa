@@ -177,8 +177,8 @@ class RecurrentAdapter(Stage, RecurrentStage):
         Y = np.zeros((self.stages[0].Y.shape[0],
                     self.timespan,
                     self.stages[0].Y.shape[1]))
-        for i, stage in enumerate(self.stages):
-            Y[i] = stage.getValue()
+        for t, stage in enumerate(self.stages):
+            Y[:, t] = stage.getValue()
         return y
 
 class Constant(Stage):
