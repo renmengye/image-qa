@@ -43,7 +43,7 @@ def argmax(Y):
     return np.argmax(Y, axis=-1)
 
 def roundInt(Y):
-    return np.round(Y, axis=-1).astype('int')
+    return np.round(Y).astype('int')
 
 def rankingLoss(Y, T):
     alpha = 0.1
