@@ -18,7 +18,10 @@ def test(model, X, numExPerBat=100, layerNames=None):
             Y = np.zeros(Yshape)
         if layerNames is not None:
             for layerName in layerNames:
-                layers[layerName].append(model.stageDict[layerName].getValue())
+                stage = model
+                for stageName in layerName.split(':'):
+                    stage = stage.stageDict[stageName]
+                layers[layerName].append(stage.getValue())
         Y[batchStart:batchEnd] = Ytmp
         batchStart += numExPerBat
     if layerNames is not None:

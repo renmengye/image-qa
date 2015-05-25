@@ -127,7 +127,7 @@ if __name__ == '__main__':
     X = data['testData'][0]
     T = data['testData'][1]
     Y, layers = nn.test(model, data['testData'][0], layerNames=['attOut'])
-    A = layers['attOut']
+    A = layers['attModel:attOut']
 
     print A, A.shape
     Xend = scan(X[0:N])
