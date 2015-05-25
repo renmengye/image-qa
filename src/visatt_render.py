@@ -69,10 +69,10 @@ def plotAttention(
         plt.subplot(w, h, 1)
         plt.imshow(img)
         plt.axis('off')
-        for t in range(Xend[n]):
+        for t in range(1, Xend[n]):
             if len(X.shape) == 3:
-                word = questionIdict[X[n, t, 1] - 1]
-            elif len(X.shape) == 2 and t == 0:
+                word = questionIdict[X[n, t] - 1]
+            elif len(X.shape) == 2 and t == 1:
                 word = questionIdict[X[n, 1]]
             else:
                 word = ''
@@ -141,8 +141,8 @@ if __name__ == '__main__':
     Xend = np.zeros(X.shape[0], dtype='int') + A.shape[1]
     prefix = ''
     plotAttention(
-                    X=X[0:N], 
-                    A=A[0:N], 
+                    X=X[0:N, [0, 7], 0],
+                    A=A[0:N],
                     Xend=Xend, 
                     prefix='test', 
                     resultsFolder=resultsFolder, 
