@@ -450,10 +450,15 @@ def loadImgUrl(dataset, dataFolder):
         urlDict = readImgDictDaquar()
     return urlDict
 
-def loadImgPath(dataset):
+def loadImgPath(dataset, dataFolder):
     print 'Loading image paths...'
     cocoImgIdRegex = 'COCO_((train)|(val))2014_0*(?P<imgid>[1-9][0-9]*)'
     if dataset == 'cocoqa':
+        imgidDictFilename = \
+            os.path.join(dataFolder, 'imgid_dict.pkl')
+        with open(imgidDictFilename, 'rb') as f:
+            imgidDict = pkl.load(f)
+        pathList = [None] * len(imgidDict)
         pathDict = {}
         with open('/u/mren/data/mscoco/train/image_list.txt') as f:
             imageList = f.readlines()
@@ -463,7 +468,9 @@ def loadImgPath(dataset):
             match = re.search(cocoImgIdRegex, imgPath)
             imgid = match.group('imgid')
             pathDict[imgid] = imgPath[:-1]
-        return pathDict
+        for i, key in enumerate(imgidDict):
+            pathList[i] = pathDict[key]
+        return pathList
     elif dataset == 'daquar':
         pathList = []
         for i in range(1, 1450):
