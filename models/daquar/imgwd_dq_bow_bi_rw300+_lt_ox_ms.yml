@@ -11,6 +11,7 @@ stages:
     - 'txtDict'
     - 'txtFold'
     - 'bow'
+    - 'sum'
     - 'softmax'
 outputs: 'softmax'
 specs:
