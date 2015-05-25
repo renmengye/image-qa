@@ -87,7 +87,7 @@ def plotAttention(
             plt.axis('off')
         plt.savefig(
             os.path.join(outputFolder, 
-                '%s-%d-%d.png' % (prefix, n, t)))
+                '%s-%d.png' % (prefix, n)))
 
 if __name__ == '__main__':
     """
@@ -138,14 +138,14 @@ if __name__ == '__main__':
     A = layers['attModel:attOut']
 
     print A, A.shape
-    Xend = np.zeros(X.shape[0]) + A.shape[1]
+    Xend = np.zeros(X.shape[0], dtype='int') + A.shape[1]
     prefix = ''
     plotAttention(
-                    X[0:N], 
-                    A[0:N], 
-                    Xend, 
-                    prefix, 
-                    resultsFolder, 
-                    outputFolder,
-                    imgPathDict, 
-                    data['questionIdict'])
+                    X=X[0:N], 
+                    A=A[0:N], 
+                    Xend=Xend, 
+                    prefix='test', 
+                    resultsFolder=resultsFolder, 
+                    outputFolder=outputFolder,
+                    imgPathDict=imgPathDict, 
+                    questionIdict=data['questionIdict'])
