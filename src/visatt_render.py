@@ -64,8 +64,8 @@ def plotAttention(
         elif len(X.shape) == 2:
             img = loadImage(imgPathDict[X[n, 0]])
         plt.clf()
-        w = np.round(np.sqrt(Xend[n] + 1))
-        h = np.ceil((Xend[n] + 1) / float(w))
+        w = np.round(np.sqrt(Xend[n]))
+        h = np.ceil((Xend[n]) / float(w))
         plt.subplot(w, h, 1)
         plt.imshow(img)
         plt.axis('off')
@@ -134,17 +134,20 @@ if __name__ == '__main__':
 
     X = data['testData'][0]
     T = data['testData'][1]
+    for n in range(N):
+        q = it.decodeQuestion(X[n], data['questionIdict'])
+        print q
     Y, layers = nn.test(model, X[0:N], layerNames=['attModel:attOut'])
     A = layers['attModel:attOut']
 
     print A, A.shape
     Xend = np.zeros(X.shape[0], dtype='int') + A.shape[1] + 1
     plotAttention(
-                    X=X[0:N, [0, 7], 0],
-                    A=A[0:N],
-                    Xend=Xend, 
-                    prefix='test', 
-                    resultsFolder=resultsFolder, 
-                    outputFolder=outputFolder,
-                    imgPathDict=imgPathDict, 
-                    questionIdict=data['questionIdict'])
+                X=X[0:N, [0, 7], 0],
+                A=A[0:N],
+                Xend=Xend, 
+                prefix='test', 
+                resultsFolder=resultsFolder, 
+                outputFolder=outputFolder,
+                imgPathDict=imgPathDict, 
+                questionIdict=data['questionIdict'])
