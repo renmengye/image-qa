@@ -121,7 +121,7 @@ if __name__ == '__main__':
 
     model = it.loadModel(modelId, resultsFolder)
     data = it.loadDataset(dataFolder)
-    imgPathDict = ir.loadPathDict(dataset)
+    imgPathDict = ir.loadImgPath(dataset)
 
     X = data['testData'][0]
     T = data['testData'][1]
