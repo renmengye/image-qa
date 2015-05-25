@@ -60,9 +60,9 @@ def plotAttention(
                     questionIdict):
     for n in range(X.shape[0]):
         if len(X.shape) == 3:
-            img = loadImage(imgPathDict[X[n, 0, 0]])
+            img = loadImage(imgPathDict[X[n, 0, 0] - 1])
         elif len(X.shape) == 2:
-            img = loadImage(imgPathDict[X[n, 0]])
+            img = loadImage(imgPathDict[X[n, 0] - 1])
         plt.clf()
         w = np.round(np.sqrt(Xend[n]))
         h = np.ceil((Xend[n]) / float(w))
