@@ -116,6 +116,8 @@ if __name__ == '__main__':
         elif flag == '-n' or flag == '-number'
             N = int(sys.argv[i + 1])
     print modelId
+    if os.path.exists(outputFolder):
+        os.makedirs(outputFolder)
 
     model = it.loadModel(modelId, resultsFolder)
     data = it.loadDataset(dataFolder)
