@@ -14,8 +14,8 @@ stages:
     - 'concat'
     - 'dropout'
     - 'lstm'
-    - 'softmax'
-outputs: 'softmax'
+    - 'answer'
+outputs: 'answer'
 specs:
     - name: 'imgSel'
       type: 'selector'
