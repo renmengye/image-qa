@@ -4,15 +4,11 @@ decisionFn: 'argmax'
 stages:
     - 'imgSel'
     - 'imgFeat'
-    - 'imgFeatNorm'
-    - 'imgMap'
     - 'txtSel'
     - 'txtUnfold'
     - 'txtDict'
     - 'txtFold'
     - 'bow'
-    - 'dropout'
-    - 'hidden'
     - 'softmax'
 outputs: 'softmax'
 specs:
@@ -39,32 +35,6 @@ specs:
       h5key: 'hidden7'
       learningRate: 0.0
       outputdEdX: false
-    - name: 'imgFeatNorm'
-      type: 'normalize'
-      inputs: 'imgFeat'
-      mean: '/ais/gobi3/u/mren/data/cocoqa-full/hidden_oxford.h5'
-      meanKey: 'hidden7_mean'
-      std: '/ais/gobi3/u/mren/data/cocoqa-full/hidden_oxford.h5'
-      stdKey: 'hidden7_std'
-      format: 'h5'
-      outputDim: 4096
-    - name: 'imgMap'
-      type: 'map'
-      inputs: 'imgFeatNorm'
-      activeFn: 'identity'
-      outputDim: 500
-      bias: false
-      initRange: 0.05
-      initSeed: 1
-      learningRate: 0.8
-      momentum: 0.9
-      gradientClip: 0.1
-      weightClip: 100.0
-      outputdEdX: false
-    - name: 'imgFold'
-      type: 'timeFold'
-      inputs: 'imgMap'
-      timespan: 1
     - name: 'txtUnfold'
       type: 'timeUnfold'
       inputs: 'txtSel'
@@ -90,26 +60,9 @@ specs:
       inputs: 'txtFold'
       numComponents: 52
       outputDim: 500
-    - name: 'dropout'
-      inputs: 'bow, imgMap'
-      type: 'dropout'
-      dropoutRate: 0.5
-      initSeed: 3
-      outputDim: 1000
-    - name: 'hidden'
-      inputs: 'dropout'
-      type: 'map'
-      activeFn: 'tanh'
-      initRange: 0.01
-      initSeed: 2
-      outputDim: 500
-      learningRate: 0.01
-      momentum: 0.9
-      weightClip: 100.0
-      weightRegConst: 0.00005
     - name: 'softmax'
       type: 'map'
-      inputs: 'hidden'
+      inputs: 'bow, imgFeat'
       activeFn: 'softmax'
       outputDim: 431
       initRange: 0.01
