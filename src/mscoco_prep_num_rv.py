@@ -36,21 +36,25 @@ realValueIdict = [
 ]
 
 if __name__ == '__main__':
+    identity = False
     for i, flag in enumerate(sys.argv):
         if flag == '-d' or flag == '-data':
             numDataFolder = sys.argv[i + 1]
         elif flag == '-o' or flag == '-output':
             outputFolder = sys.argv[i + 1]
+        elif flag == '-i' or flag == '-identity':
+            identity = True
     if not os.path.exists(outputFolder):
         os.makedirs(outputFolder)
     data = it.loadDataset(numDataFolder)
     targetDataRV = []
     inputDataRV = []
+    ansIdict = data['ansIdict']
+    eye = np.eye(len(ansIdict))
 
     for sepData in ['trainData', 'validData', 'testData']:
         inputData = data[sepData][0]
         targetData = data[sepData][1]
-        ansIdict = data['ansIdict']
         targetDataRVSep = []
         inputDataRVSep = []
 
@@ -59,15 +63,25 @@ if __name__ == '__main__':
             ans = ansIdict[targetData[n, 0]]
             print ans
             if realValueDict.has_key(ans):
-                targetDataRVSep.append(
-                    realValueDict[ansIdict[targetData[n, 0]]])
+                value = realValueDict[ansIdict[targetData[n, 0]]]
+                if identity:
+                    targetDataRVSep.append(eye[value])
+                else:
+                    targetDataRVSep.append(value)
+                        
                 inputDataRVSep.append(inputData[n, :, 0])
 
         targetDataRVSep = np.array(targetDataRVSep)
         inputDataRVSep = np.array(inputDataRVSep)
 
-        targetDataRVSep = targetDataRVSep.reshape(targetDataRVSep.shape[0], 1)
-        inputDataRVSep = inputDataRVSep.reshape(inputDataRVSep.shape[0], inputDataRVSep.shape[1], 1)
+        if identity:
+            targetDataRVSep = \
+                targetDataRVSep.reshape(targetDataRVSep.shape[0], len(ansIdict))
+        else:
+            targetDataRVSep = \
+                targetDataRVSep.reshape(targetDataRVSep.shape[0], 1)
+        inputDataRVSep = \
+            inputDataRVSep.reshape(inputDataRVSep.shape[0], inputDataRVSep.shape[1], 1)
         print targetDataRVSep.shape, inputDataRVSep.shape
 
         targetDataRV.append(targetDataRVSep)
