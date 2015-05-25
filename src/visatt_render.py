@@ -107,7 +107,7 @@ if __name__ == '__main__':
     for i, flag in enumerate(sys.argv):
         if flag == '-m' or flag == '-model':
             modelId = sys.argv[i + 1]
-        elif flag == '-d' or flag == '-data:
+        elif flag == '-d' or flag == '-data':
             dataFolder = sys.argv[i + 1]
         elif flag == '-o' or flag == '-output':
             outputFolder = sys.argv[i + 1]
