@@ -73,7 +73,7 @@ def plotAttention(
             if len(X.shape) == 3:
                 word = questionIdict[X[n, t] - 1]
             elif len(X.shape) == 2 and t == 1:
-                word = questionIdict[X[n, 1]]
+                word = questionIdict[X[n, 1] - 1]
             else:
                 word = ''
             plt.subplot(w, h, t + 2)
@@ -138,7 +138,7 @@ if __name__ == '__main__':
     A = layers['attModel:attOut']
 
     print A, A.shape
-    Xend = np.zeros(X.shape[0], dtype='int') + A.shape[1]
+    Xend = np.zeros(X.shape[0], dtype='int') + A.shape[1] + 1
     plotAttention(
                     X=X[0:N, [0, 7], 0],
                     A=A[0:N],
