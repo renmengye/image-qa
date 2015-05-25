@@ -71,7 +71,7 @@ specs:
       inputs: 'dropout'
       inputDim: 500
       outputDim: 300
-      timespan: 56
+      timespan: 55
       initRange: 0.1
       initSeed: 4
       cutOffZeroEnd: true
