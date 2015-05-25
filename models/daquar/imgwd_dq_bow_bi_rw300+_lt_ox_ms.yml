@@ -82,6 +82,7 @@ specs:
       outputDim: 300
     - name: 'sum'
       type: 'sum'
+      numComponents: 2
       inputs: 'bow, imgMap'
       outputDim: 300
     - name: 'softmax'
