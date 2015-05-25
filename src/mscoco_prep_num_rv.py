@@ -1,5 +1,6 @@
 import sys
 import os
+import shutil
 import imageqa_test as it
 import numpy as np
 
@@ -102,3 +103,7 @@ if __name__ == '__main__':
     np.save(os.path.join(outputFolder, 'test.npy'),
         np.array(
             (inputDataRV[2], targetDataRV[2], 0), dtype='object'))
+
+    shutil.copyfile(
+        os.path.join(numDataFolder, 'vocab-dict.npy')
+        os.path.join(outputFolder, 'vocab-dict.npy'))
