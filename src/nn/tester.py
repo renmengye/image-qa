@@ -1,9 +1,13 @@
 import numpy as np
 
-def test(model, X, numExPerBat=100):
+def test(model, X, numExPerBat=100, layerNames=None):
     N = X.shape[0]
     batchStart = 0
     Y = None
+    layers = {}
+    if layerNames is not None:
+        for layerName in layerNames:
+            layers[layerName] = []
     while batchStart < N:
         # Batch info
         batchEnd = min(N, batchStart + numExPerBat)
@@ -12,9 +16,17 @@ def test(model, X, numExPerBat=100):
             Yshape = np.copy(Ytmp.shape)
             Yshape[0] = N
             Y = np.zeros(Yshape)
+        if layerNames is not None:
+            for layerName in layerNames:
+                layers[layerName].append(model.stages[layerName].getValue())
         Y[batchStart:batchEnd] = Ytmp
         batchStart += numExPerBat
-    return Y
+    if layerNames is not None:
+        for layerName in layerNames:
+            layers[layerName] = np.concatenate(layers[layerName], axis=0)
+        return Y, layers
+    else:
+        return Y
 
 def calcRate(model, Y, T):
     Yfinal = model.predict(Y)

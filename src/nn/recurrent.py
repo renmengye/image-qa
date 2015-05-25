@@ -173,6 +173,14 @@ class RecurrentAdapter(Stage, RecurrentStage):
     def getGradient(self):
         return self.stages[0].getGradient()
 
+    def getValue(self):
+        Y = np.zeros((self.stages[0].Y.shape[0],
+                    self.timespan,
+                    self.stages[0].Y.shape[1]))
+        for i, stage in enumerate(self.stages):
+            Y[i] = stage.getValue()
+        return y
+
 class Constant(Stage):
     def __init__(self,
         name,

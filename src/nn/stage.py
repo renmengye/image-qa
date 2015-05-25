@@ -121,8 +121,10 @@ class Stage:
         """
         self.X = self.getInput()
         if verbose and hasattr(self.X, 'shape'):
-            print 'forward', self.name, self.X.shape
+            print 'forward in', self.name, self.X.shape
         self.Y = self.forward(self.X)
+        if verbose and hasattr(self.Y, 'shape'):
+            print 'forward out', self.name, self.Y.shape
 
     def forward(self, X):
         """
@@ -138,10 +140,12 @@ class Stage:
         Backward propagates.
         """
         if verbose and hasattr(self.dEdY, 'shape'):
-          print 'backward', self.name, self.dEdY.shape, np.mean(self.dEdY)
+            print 'backward in', self.name, self.dEdY.shape, np.mean(self.dEdY)
         dEdX = self.backward(self.dEdY)
         if self.outputdEdX:
             self.sendError(dEdX)
+        if verbose and hasattr(self.dEdX, 'shape'):
+            print 'backward out', self.name, self.dEdX.shape, np.mean(self.dEdX)
 
     def backward(self, dEdY):
         """
