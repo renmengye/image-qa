@@ -138,5 +138,6 @@ if __name__ == '__main__':
                     Xend, 
                     prefix, 
                     resultsFolder, 
+                    outputFolder,
                     imgPathDict, 
                     data['questionIdict'])
