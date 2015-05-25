@@ -13,6 +13,7 @@ import skimage.transform
 import skimage.io
 
 from nn.func import *
+import nn
 import imageqa_test as it
 import imageqa_render as ir
 
