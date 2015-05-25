@@ -167,7 +167,7 @@ specs:
       inputs: 'lstmF, lstmB'
       outputDim: 431
       activeFn: 'softmax'
-      initRange: 0.1
+      initRange: 0.01
       initSeed: 6
       learningRate: 0.01
       momentum: 0.9
