@@ -113,7 +113,7 @@ if __name__ == '__main__':
             outputFolder = sys.argv[i + 1]
         elif flag == '-dataset':
             dataset = sys.argv[i + 1]
-        elif flag == '-n' or flag == '-number'
+        elif flag == '-n' or flag == '-number':
             N = int(sys.argv[i + 1])
     print modelId
     if os.path.exists(outputFolder):
