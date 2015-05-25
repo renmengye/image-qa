@@ -125,7 +125,7 @@ if __name__ == '__main__':
         elif flag == '-n' or flag == '-number':
             N = int(sys.argv[i + 1])
     print modelId
-    if os.path.exists(outputFolder):
+    if not os.path.exists(outputFolder):
         os.makedirs(outputFolder)
 
     model = it.loadModel(modelId, resultsFolder)
@@ -139,7 +139,6 @@ if __name__ == '__main__':
 
     print A, A.shape
     Xend = np.zeros(X.shape[0], dtype='int') + A.shape[1]
-    prefix = ''
     plotAttention(
                     X=X[0:N, [0, 7], 0],
                     A=A[0:N],
