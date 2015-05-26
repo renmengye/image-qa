@@ -193,9 +193,10 @@ def calcRate(output, target):
     outputMax = np.argmax(output, axis=-1)
     outputMax = outputMax.reshape(outputMax.size)
     targetReshape = target.reshape(target.size)
-    rate = np.sum((outputMax == targetReshape).astype('int')) / \
+    equals = (outputMax == targetReshape).astype('int')
+    rate = np.sum(equals) / \
             float(target.size)
-    return rate
+    return rate, outputMax, equals
 
 def validDelta(
                 trainData,
@@ -235,7 +236,8 @@ def validDelta(
     # Run vis model on valid set
     validOutput = nn.test(preVisModel, validInput)
     print 'Before Prior Valid Accuracy:',
-    print calcRate(validOutput, validTarget)
+    rate, _, __ = calcRate(validOutput, validTarget)
+    print rate
 
     # Determine best delta
     bestRate = 0.0
@@ -248,7 +250,7 @@ def validDelta(
                                 validOutput, 
                                 delta)        
         print 'delta=%f Valid Accuracy:' % delta,
-        rate = calcRate(visPriorOutput, validTarget)
+        rate, _, __ = calcRate(visPriorOutput, validTarget)
         print rate
         if rate > bestRate:
             bestRate = rate
@@ -296,7 +298,8 @@ def runVisPrior(
     testOutput = nn.test(visModel, testInput)
 
     print 'Before Prior Test Accuracy:',
-    print calcRate(testOutput, testTarget)
+    rate, _, __ = calcRate(testOutput, testTarget)
+    print rate
     
     # Run on test set
     visPriorOutput = runVisPriorOnce(
@@ -306,7 +309,7 @@ def runVisPrior(
                                 testOutput, 
                                 delta)
     print 'delta=%f Test Accuracy:' % delta,
-    rate = calcRate(visPriorOutput, testTarget)
+    rate, _, __ = calcRate(visPriorOutput, testTarget)
     print rate
     return visPriorOutput
  
@@ -314,6 +317,24 @@ def combineTrainValid(trainData, validData):
     trainDataAll = (np.concatenate((trainData[0], validData[0]), axis=0),
                     np.concatenate((trainData[1], validData[1]), axis=0))
     return trainDataAll
+
+def calcAdaBoostAlpha(testOutput, testTarget):
+    print 'Calculating alpha for boosting...'
+    rate, _, __ = calcRate(output, target)
+    alpha = .5 * np.log(rate / (1 - rate))
+    print 'alpha:', alpha
+    return alpha
+
+def calcAdaBoostWeights(trainOutput, trainTarget, alpha):
+    print 'Calculating weights for boosting...'
+    rate, _, correct = calcRate(output, target)
+    print 'Train set rate:', rate
+    correct2 = (correct - 0.5) * 2
+    weights = np.exp(correct * alpha)
+    weights /= np.sum(weights)
+    weights *= weights.shape[0]
+    print 'weights:', weights
+    return weights
 
 if __name__ == '__main__':
     """
@@ -439,18 +460,22 @@ if __name__ == '__main__':
                 (1 - mixRatio) * mainTestOutput
             print '%.2f VIS+PRIOR & %.2f VIS+BLSTM Accuracy:' % \
                 (mixRatio, 1 - mixRatio),
-            print calcRate(ensTestOutput, testTarget)
+            rate, _, __ calcRate(ensTestOutput, testTarget)
+            print rate
     if outputWeightsFolder is not None:
         if not os.path.exists(outputWeightsFolder):
             os.makedirs(outputWeightsFolder)
-        
-    outputMax = np.argmax(output, axis=-1)
-    outputMax = outputMax.reshape(outputMax.size)
-    targetReshape = target.reshape(target.size)
-    rate = np.sum((outputMax == targetReshape).astype('int')) / \
-            float(target.size)
-        rate = calcRate(visTestOutput, data['testData'][1])
-        alpha = .5 * np.log(rate / (1 - rate))
-        print 'Exporting weights for boosting...'
-        print 'alpha:', alpha
-
+        alpha = calcAdaBoostAlpha(visTestOutput, data['testData'][1])
+        visTrainOutput = runVisPrior(trainDataAll,
+                                trainDataAll,
+                                questionType,
+                                visModel,
+                                data['questionDict'],
+                                data['questionIdict'],
+                                len(data['ansIdict']),
+                                bestDelta)
+        weights = calcAdaBoostWeights(visTrainOutput, trainDataAll[1], alpha)
+        trainWeights = weights[:data['trainData'][1].shape[0]]
+        validWeights = weights[trainWeights.shape[0]:]
+        np.save(os.path.join(outputWeightsFolder, 'adb-weights-train.npy'), trainWeights)
+        np.save(os.path.join(outputWeightsFolder, 'adb-weights-valid.npy'), validWeights)
