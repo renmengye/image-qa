@@ -79,6 +79,7 @@ class AttentionPenalty(RecurrentStage):
             self.X = np.zeros((X.shape[0], self.timespan, X.shape[1]))
             self.dEdX = 0.0
         self.X[:, time, :] = X
+        self.receivedError = True
 
     def timeBackward(self, time):
         if type(self.dEdX) != np.ndarray:

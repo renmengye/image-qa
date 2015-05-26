@@ -57,7 +57,9 @@ def plotAttention(
                     resultsFolder,
                     outputFolder,
                     imgPathDict, 
-                    questionIdict):
+                    questionIdict,
+                    Y=None,
+                    T=None):
     for n in range(X.shape[0]):
         if len(X.shape) == 3:
             img = loadImage(imgPathDict[X[n, 0, 0] - 1])
@@ -85,6 +87,8 @@ def plotAttention(
             plt.set_cmap(cm.Greys_r)
             plt.title(word)
             plt.axis('off')
+        if Y is not None:
+            plt.
         plt.savefig(
             os.path.join(outputFolder, 
                 '%s-%d.png' % (prefix, n)))
@@ -140,7 +144,7 @@ if __name__ == '__main__':
     Y, layers = nn.test(model, X[0:N], layerNames=['attModel:attOut'])
     A = layers['attModel:attOut']
     A = np.concatenate((
-            np.zeros(A.shape) + 1 / 196.0,
+            np.zeros((A.shape[0], 1)) + 1 / 196.0,
             A[:, :-1]), axis=1)
 
     print A, A.shape

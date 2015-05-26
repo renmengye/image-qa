@@ -1,0 +1,160 @@
+costFn: 'crossEntIdx'
+decisionFn: 'argmax'
+stages:
+    - 'unfold'
+    - 'attModel'
+    - 'hidFC1'
+    - 'answer'
+outputs: 'answer'
+specs:
+    - name: 'unfold'
+      type: 'reshape'
+      inputs: 'input'
+      reshapeFn: '(x[0], x[1])'
+      outputDim: 9
+    - name: 'imgSel'
+      type: 'selector'
+      inputs: 'input($0)'
+      start: 0
+      end: 1
+      axis: 1
+      recurrent: true
+    - name: 'txtSel'
+      type: 'selector'
+      inputs: 'input($0)'
+      start: 7
+      end: 8
+      axis: 1
+      recurrent: true
+    - name: 'imgFeat'
+      type: 'lut'
+      inputs: 'imgSel($0)'
+      inputDim: 123287
+      outputDim: 100352
+      initWeights: '/ais/gobi3/u/mren/data/cocoqa-full/hidden_oxford.h5'
+      format: 'h5'
+      h5key: 'hidden5_4_conv'
+      sparse: true
+      learningRate: 0.0
+      outputdEdX: false
+      recurrent: true
+    - name: 'txtDict'
+      type: 'lut'
+      inputs: 'txtSel'
+      inputDim: 2394
+      outputDim: 300
+      initRange: 1.0
+      initSeed: 2
+      learningRate: 0.0
+      outputdEdX: false
+      recurrent: true
+    - name: 'imgReshape'
+      type: 'reshape'
+      inputs: 'imgFeat($0)'
+      reshapeFn: '(x[0], 196, x[1]/196)'
+      outputDim: 512
+      recurrent: true
+    - name: 'attReshape'
+      type: 'reshape'
+      inputs: 'attOut(-1)'
+      reshapeFn: '(x[0], x[1], 1)'
+      outputDim: 196
+      recurrent: true
+    - name: 'attCtx'
+      type: 'sumProd'
+      inputs: 'attReshape, imgReshape($0)'
+      sumAxis: 1
+      outputDim: 512
+      recurrent: true
+    - name: 'lstm'
+      type: 'lstm'
+      inputs: 'attCtx, txtDict'
+      inputDim: 812
+      outputDim: 150
+      timespan: 5
+      initRange: 0.1
+      initSeed: 4
+      cutOffZeroEnd: true
+      multiErr: true
+      learningRate: 0.8
+      learningRateAnnealConst: 0.0
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 100.0
+      weightRegConst: 0.00005
+      outputdEdX: true
+    - name: 'attHid1'
+      type: 'map'
+      inputs: 'lstm'
+      outputDim: 196
+      activeFn: 'tanh'
+      initRange: 0.1
+      initSeed: 6
+      learningRate: 0.1
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 50.0
+      recurrent: true
+    - name: 'attOut'
+      type: 'map'
+      inputs: 'attHid1'
+      outputDim: 196
+      activeFn: 'softmax'
+      defaultValue: 0.00510204081632653
+      initRange: 0.1
+      initSeed: 7
+      learningRate: 0.1
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 50.0
+      recurrent: true
+    - name: 'attPenalty'
+      type: 'attentionPenalty'
+      inputs: 'attOut'
+      errorConst: 0.05
+    - name: 'attModel'
+      type: 'recurrent'
+      inputs: 'unfold'
+      stages:
+          - 'imgSel'
+          - 'imgFeat'
+          - 'txtSel'
+          - 'txtDict'
+          - 'imgReshape'
+          - 'attReshape'
+          - 'attCtx'
+          - 'lstm'
+          - 'attHid1'
+          - 'attOut'
+          - 'attPenalty'
+      outputs: 'attCtx'
+      inputDim: 1
+      outputDim: 512
+      timespan: 5
+      multiInput: false
+      multiOutput: false
+      cutOffZeroEnd: false
+    - name: 'hidFC1'
+      type: 'map'
+      inputs: 'attModel'
+      activeFn: 'relu'
+      outputDim: 300
+      initRange: 0.1
+      initSeed: 9
+      learningRate: 0.01
+      momentum: 0.9
+      weightClip: 100.0
+      gradientClip: 0.1
+      weightRegConst: 0.00005
+    - name: 'answer'
+      type: 'map'
+      inputs: 'hidFC1'
+      activeFn: 'softmax'
+      outputDim: 12
+      initRange: 0.1
+      initSeed: 10
+      learningRate: 0.01
+      momentum: 0.9
+      weightClip: 100.0
+      gradientClip: 0.1
+      weightRegConst: 0.00005
