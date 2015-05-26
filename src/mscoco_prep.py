@@ -200,6 +200,7 @@ if __name__ == '__main__':
     buildLocation = True
     maxlen = -1
     outputFolder = None
+    outputFolderSV = None
     imgHidFeatOutputFolder = None
     reject = True
 
@@ -239,6 +240,7 @@ if __name__ == '__main__':
             maxlen = int(sys.argv[i + 1])
         elif flag == '-o' or flag == '-output':
             outputFolder = sys.argv[i + 1]
+            outputFolderSV = outputFolder + '-sv'
         elif flag == '-imgo' or flag == '-imgoutput':
             imgHidFeatOutputFolder = sys.argv[i + 1]
     buildType = [buildObject, buildNumber, buildColor, buildLocation]
@@ -248,6 +250,7 @@ if __name__ == '__main__':
         print 'Building toy dataset'
         if outputFolder is None:
             outputFolder = '../data/cocoqa-toy'
+            outputFolderSV = '../data/cocoqa-toy-sv'
         if imgHidFeatOutputFolder is None:
             imgHidFeatOutputFolder = '/ais/gobi3/u/mren/data/cocoqa-toy'
         numTrain = 6000
@@ -272,7 +275,8 @@ if __name__ == '__main__':
         # Build full dataset
         print 'Building full dataset'
         if outputFolder is None:
-            outputFolder = '../data/cocoqa-full/'
+            outputFolder = '../data/cocoqa-full'
+            outputFolderSV = '../data/cocoqa-full-sv'
         if imgHidFeatOutputFolder is None:
             imgHidFeatOutputFolder = '/ais/gobi3/u/mren/data/cocoqa-full'
         imgHidFeatOutFilename = \
@@ -313,8 +317,12 @@ if __name__ == '__main__':
         print 'Not building image features'
 
     print 'Will build to', outputFolder
+    print 'Will build to', outputFolderSV
+
     if not os.path.exists(outputFolder):
         os.makedirs(outputFolder)
+    if not os.path.exists(outputFolderSV):
+        os.makedirs(outputFolderSV)
 
     # Mark for train/valid/test.
     imgidDict = {} 
@@ -521,7 +529,6 @@ if __name__ == '__main__':
     if maxlen == -1:
         maxlen = prep.findMaxlen(allQuestions)
 
-    # Build output
     trainInput = prep.combine(\
         prep.lookupQID(trainQuestions, worddict, maxlen), trainImgIds)
     trainTarget = prep.lookupAnsID(trainAnswers, ansdict)
@@ -530,6 +537,27 @@ if __name__ == '__main__':
     validTarget = prep.lookupAnsID(validAnswers, ansdict)
     testInput = prep.combine(\
         prep.lookupQID(testQuestions, worddict, maxlen), testImgIds)
+    testTarget = prep.lookupAnsID(testAnswers, ansdict)
+
+    # Build output
+    trainInput = prep.combine(\
+        prep.lookupQID(trainQuestions, worddict, maxlen), trainImgIds)
+    trainInputSV = prep.combineSV(\
+        range(len(trainQuestions)), 
+        trainImgIds)
+    trainTarget = prep.lookupAnsID(trainAnswers, ansdict)
+    validInput = prep.combine(\
+        prep.lookupQID(validQuestions, worddict, maxlen), validImgIds)
+    validInputSV = prep.combineSV(\
+        range(len(trainQuestions), len(trainQuestions) + len(validQuestions)),
+        validImgIds)
+    validTarget = prep.lookupAnsID(validAnswers, ansdict)
+    testInput = prep.combine(\
+        prep.lookupQID(testQuestions, worddict, maxlen), testImgIds)
+    testInputSV = prep.combineSV(\
+        range(len(trainQuestions) + len(validQuestions),
+            len(trainQuestions) + len(validQuestions) + len(testQuestions)),
+        testImgIds)
     testTarget = prep.lookupAnsID(testAnswers, ansdict)
 
     # Dataset files
@@ -550,6 +578,26 @@ if __name__ == '__main__':
         testQuestionTypes)
     np.save(\
         os.path.join(outputFolder, 'vocab-dict.npy'),\
+        np.array((worddict, idict, 
+            ansdict, iansdict, 0), dtype=object))
+
+    np.save(\
+        os.path.join(outputFolderSV, 'train.npy'),\
+        np.array((trainInputSV, trainTarget, 0),\
+            dtype=object))
+    np.save(\
+        os.path.join(outputFolderSV, 'valid.npy'),\
+        np.array((validInputSV, validTarget, 0),\
+            dtype=object))
+    np.save(\
+        os.path.join(outputFolderSV, 'test.npy'),\
+        np.array((testInputSV, testTarget, 0),\
+            dtype=object))
+    np.save(\
+        os.path.join(outputFolderSV, 'test-qtype.npy'),\
+        testQuestionTypes)
+    np.save(\
+        os.path.join(outputFolderSV, 'vocab-dict.npy'),\
         np.array((worddict, idict, 
             ansdict, iansdict, 0), dtype=object))
 

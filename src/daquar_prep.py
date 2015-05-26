@@ -126,6 +126,7 @@ if __name__ == '__main__':
     trainQAFilename = '../../../data/mpi-qa/qa.37.raw.train.txt'
     testQAFilename = '../../../data/mpi-qa/qa.37.raw.test.txt'
     outputFolder = '../data/daquar-37'
+    outputFolderSV = '../data/daquar-37-sv'
     buildObject = True
     buildNumber = True
     buildColor = True
@@ -137,6 +138,7 @@ if __name__ == '__main__':
             testQAFilename = sys.argv[i + 1]
         elif sys.argv[i] == '-o' or sys.argv[i] == '-output':
             outputFolder = sys.argv[i + 1]
+            outputFolderSV = outputFolder + '-sv'
         elif sys.argv[i] == '-object':
             buildObject = True
             buildNumber = False
@@ -152,6 +154,8 @@ if __name__ == '__main__':
 
     if not os.path.exists(outputFolder):
         os.makedirs(outputFolder)
+    if not os.path.exists(outputFolderSV):
+        os.makedirs(outputFolderSV)
 
     # Read train file.
     with open(trainQAFilename) as f:
@@ -258,12 +262,22 @@ if __name__ == '__main__':
 
     trainInput = prep.combine(\
         prep.lookupQID(trainQuestions, worddict, maxlen), trainImgIds)
+    trainInputSV = prep.combineSV(\
+        range(len(trainQuestions)), 
+        trainImgIds)
     trainTarget = prep.lookupAnsID(trainAnswers, ansdict)
     validInput = prep.combine(\
         prep.lookupQID(validQuestions, worddict, maxlen), validImgIds)
+    validInputSV = prep.combineSV(\
+        range(len(trainQuestions), len(trainQuestions) + len(validQuestions)),
+        validImgIds)
     validTarget = prep.lookupAnsID(validAnswers, ansdict)
     testInput = prep.combine(\
         prep.lookupQID(testQuestions, worddict, maxlen), testImgIds)
+    testInputSV = prep.combineSV(\
+        range(len(trainQuestions) + len(validQuestions),
+            len(trainQuestions) + len(validQuestions) + len(testQuestions)),
+        testImgIds)
     testTarget = prep.lookupAnsID(testAnswers, ansdict)
 
     np.save(\
@@ -286,6 +300,26 @@ if __name__ == '__main__':
         np.array((worddict, idict, 
             ansdict, iansdict, 0), dtype=object))
 
+    np.save(\
+        os.path.join(outputFolderSV, 'train.npy'),\
+        np.array((trainInputSV, trainTarget, 0),\
+            dtype=object))
+    np.save(\
+        os.path.join(outputFolderSV, 'valid.npy'),\
+        np.array((validInputSV, validTarget, 0),\
+            dtype=object))
+    np.save(\
+        os.path.join(outputFolderSV, 'test.npy'),\
+        np.array((testInputSV, testTarget, 0),\
+            dtype=object))
+    np.save(\
+        os.path.join(outputFolderSV, 'test-qtype.npy'),\
+        testQuestionTypes)
+    np.save(\
+        os.path.join(outputFolderSV, 'vocab-dict.npy'),\
+        np.array((worddict, idict, 
+            ansdict, iansdict, 0), dtype=object))
+
     with open(os.path.join(outputFolder, 'question_vocabs.txt'), 'w+') as f:
         for word in idict:
             f.write(word + '\n')
@@ -299,6 +333,9 @@ if __name__ == '__main__':
         if split.has_key(i) and split[i] == 1:
             trainImgIds.append(i)
     with open(os.path.join(outputFolder, 'train_imgids.txt'), 'w+') as f:
+        for i in trainImgIds:
+            f.write(str(i) + '\n')
+    with open(os.path.join(outputFolderSV, 'train_imgids.txt'), 'w+') as f:
         for i in trainImgIds:
             f.write(str(i) + '\n')
 
