@@ -320,8 +320,8 @@ def combineTrainValid(trainData, validData):
 
 def calcAdaBoostAlpha(testOutput, testTarget):
     print 'Calculating alpha for boosting...'
-    rate, _, __ = calcRate(testOutput, testTarget)
-    alpha = .5 * np.log(rate / (1 - rate))
+    rate, _, correct = calcRate(testOutput, testTarget)
+    alpha = np.log(rate / (1 - rate)) + log(testOutput.shape[1] - 1)
     print 'alpha:', alpha
     return alpha
 
