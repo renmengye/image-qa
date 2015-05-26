@@ -88,14 +88,14 @@ def plotAttention(
                 alpha, [img.shape[0], img.shape[1]])
             plt.imshow(alphaImage, alpha=0.8)
             plt.set_cmap(cm.Greys_r)
-            plt.title(word)
             plt.axis('off')
         if Y is not None:
             ans = ansIdict[T[n]]
             out = np.argmax(Y[n])
             prob = Y[n, out]
-            ax.text(h * 200 + 2,  2, 'GT: %s' % ans)
-            ax.text(h * 200 + 2, 2, '%s (%.4f)' % (out, prob))
+            plt.title('Q: %s GT: %s A: %s (%.4f)' % (word, ans, out, prob))
+        else: 
+            plt.title(word)
         plt.savefig(
             os.path.join(outputFolder, 
                 '%s-%d.png' % (prefix, n)))
