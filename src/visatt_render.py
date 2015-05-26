@@ -59,7 +59,8 @@ def plotAttention(
                     imgPathDict, 
                     questionIdict,
                     Y=None,
-                    T=None):
+                    T=None,
+                    ansIdict=None):
     for n in range(X.shape[0]):
         if len(X.shape) == 3:
             img = loadImage(imgPathDict[X[n, 0, 0] - 1])
@@ -68,6 +69,8 @@ def plotAttention(
         plt.clf()
         w = np.round(np.sqrt(Xend[n]))
         h = np.ceil((Xend[n]) / float(w))
+
+        fig, ax = plt.subplots()
         plt.subplot(w, h, 1)
         plt.imshow(img)
         plt.axis('off')
@@ -88,7 +91,12 @@ def plotAttention(
             plt.title(word)
             plt.axis('off')
         if Y is not None:
-            plt.
+            ans = ansIdict[T[n]]
+            out = argmax(Y[n], axis=1)
+            prob = Y[out]
+            ax.text(h * 200 + 2,  2, 'GT: %s' % ans)
+            ax.text(h * 200 + 2, 2, '%s (%.4f)' % (out, prob))
+        bbox={'facecolor':'red', 'alpha':0.5, 'pad':10})
         plt.savefig(
             os.path.join(outputFolder, 
                 '%s-%d.png' % (prefix, n)))
@@ -157,4 +165,7 @@ if __name__ == '__main__':
                 resultsFolder=resultsFolder, 
                 outputFolder=outputFolder,
                 imgPathDict=imgPathDict, 
-                questionIdict=data['questionIdict'])
+                questionIdict=data['questionIdict'],
+                Y=Y,
+                T=T,
+                ansIdict=data['dataIdict'])
