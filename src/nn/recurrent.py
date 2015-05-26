@@ -87,6 +87,7 @@ class AttentionPenalty(RecurrentStage):
             one = np.ones((self.X.shape[0], self.X.shape[2])) * self.timespan / float(self.X.shape[2])
             self.dEdX = self.errorConst * (s - one)
         self.inputs[time].dEdY += self.dEdX
+        print self.name, self.dEdX.shape, np.mean(self.dEdX)
         
     def getStage(self, time):
         return self
