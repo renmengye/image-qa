@@ -27,7 +27,6 @@ class LUT(Stage):
                  gradientClip=0.0,
                  weightRegConst=0.0,
                  outputdEdX=False,
-                 gpu=use_gpu,
                  name=None):
         Stage.__init__(self,
                  name=name,
@@ -40,7 +39,7 @@ class LUT(Stage):
                  weightClip=weightClip,
                  gradientClip=gradientClip,
                  weightRegConst=weightRegConst,
-                 gpu=gpu,
+                 gpu=False,
                  outputdEdX=outputdEdX)
         self.outputDim = outputDim
         self.inputDim = inputDim
@@ -55,7 +54,7 @@ class LUT(Stage):
             self.W = None
         else:
             self.W = initWeights
-            if self.gpu:
+            if use_gpu:
                 self.W = self.W.astype('float32')
         self.X = 0
         self.Y = 0
@@ -66,7 +65,7 @@ class LUT(Stage):
         self.W = self.random.uniform(
             -self.initRange/2.0, self.initRange/2.0,
             (self.inputDim, self.outputDim))
-        if self.gpu:
+        if use_gpu:
             self.W = self.W.astype('float32')
 
     def forward(self, X):
