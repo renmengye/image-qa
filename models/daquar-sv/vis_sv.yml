@@ -36,8 +36,7 @@ specs:
       intConversion: true
       inputDim: 7109
       outputDim: 300
-      initRange: 0.1
-      initSeed: 2
+      initWeights: '/ais/gobi3/u/mren/data/daquar-37/skip_sent_vec.npy'
       learningRate: 0.0
       outputdEdX: false
     - name: 'softmax'
