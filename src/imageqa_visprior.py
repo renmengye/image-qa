@@ -460,7 +460,7 @@ if __name__ == '__main__':
                 (1 - mixRatio) * mainTestOutput
             print '%.2f VIS+PRIOR & %.2f VIS+BLSTM Accuracy:' % \
                 (mixRatio, 1 - mixRatio),
-            rate, _, __ calcRate(ensTestOutput, testTarget)
+            rate, _, __ = calcRate(ensTestOutput, testTarget)
             print rate
     if outputWeightsFolder is not None:
         if not os.path.exists(outputWeightsFolder):
