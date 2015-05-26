@@ -35,7 +35,7 @@ specs:
       inputs: 'txtSel'
       intConversion: true
       inputDim: 7109
-      outputDim: 300
+      outputDim: 3400
       initWeights: '/ais/gobi3/u/mren/data/daquar-37/skip_sent_vec.npy'
       learningRate: 0.0
       outputdEdX: false
@@ -49,5 +49,5 @@ specs:
       learningRate: 0.01
       momentum: 0.9
       gradientClip: 0.01
-      weightClip: 15.0
+      weightClip: 100.0
       weightRegConst: 0.00005
