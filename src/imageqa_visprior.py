@@ -470,7 +470,7 @@ if __name__ == '__main__':
             rate, _, __ = calcRate(ensTestOutput, testTarget)
             print rate
 
-    if boostDataFolder is not None:
+    if boostModelId is not None:
         pass
 
     if outputWeightsFolder is not None:
