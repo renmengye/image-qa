@@ -320,16 +320,16 @@ def combineTrainValid(trainData, validData):
 
 def calcAdaBoostAlpha(testOutput, testTarget):
     print 'Calculating alpha for boosting...'
-    rate, _, __ = calcRate(output, target)
+    rate, _, __ = calcRate(testOutput, testTarget)
     alpha = .5 * np.log(rate / (1 - rate))
     print 'alpha:', alpha
     return alpha
 
 def calcAdaBoostWeights(trainOutput, trainTarget, alpha):
     print 'Calculating weights for boosting...'
-    rate, _, correct = calcRate(output, target)
+    rate, _, correct = calcRate(trainOutput, trainTarget)
     print 'Train set rate:', rate
-    correct2 = (correct - 0.5) * 2
+    correct2 = -(correct - 0.5) * 2
     weights = np.exp(correct * alpha)
     weights /= np.sum(weights)
     weights *= weights.shape[0]
@@ -471,12 +471,18 @@ if __name__ == '__main__':
             print rate
 
     if boostModelId is not None:
+        boostModel = it.loadModel(boostModelId, resultsFolder)
+        boostTestOutput = nn.test(boostModel, testInput)
+        alpha = calcAdaBoostAlpha(visTestOutput, testTarget)
+        alphaBoost = calcAdaBoostAlpha(boostTestOutput, testTarget)
+        finalTestOutput = alpha * vis
+
         pass
 
     if outputWeightsFolder is not None:
         if not os.path.exists(outputWeightsFolder):
             os.makedirs(outputWeightsFolder)
-        alpha = calcAdaBoostAlpha(visTestOutput, data['testData'][1])
+        alpha = calcAdaBoostAlpha(visTestOutput, testTarget)
         visTrainOutput = runVisPrior(trainDataAll,
                                 trainDataAll,
                                 questionType,
