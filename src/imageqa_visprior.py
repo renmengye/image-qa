@@ -375,7 +375,7 @@ if __name__ == '__main__':
             resultsFolder = sys.argv[i + 1]
         elif flag == '-qtype':
             questionType = sys.argv[i + 1]
-        elif flag == '-o' or flag == '-outputweights':
+        elif flag == '-o' or flag == '-outweights':
             outputWeightsFolder = sys.argv[i + 1]
 
     data = it.loadDataset(visDataFolder)
@@ -472,7 +472,7 @@ if __name__ == '__main__':
 
     if boostDataFolder is not None:
         pass
-        
+
     if outputWeightsFolder is not None:
         if not os.path.exists(outputWeightsFolder):
             os.makedirs(outputWeightsFolder)
