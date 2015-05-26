@@ -51,10 +51,6 @@ def trainValidSplit(imgids):
     for i in split.keys():
         if random.uniform(0, 1, (1)) < 0.1:
             split[i] = 0
-        # if count < len(split) / 10:
-        #     split[i] = 0
-        # else:
-        #     break
         count += 1
     print split
     return split
@@ -103,70 +99,6 @@ def extractQA(lines):
     print 'Preserved', preserved
     print 'Total', total
     return (questions, answers, imgIds)
-
-# def buildDict(lines, keystart, pr=False):
-#     # From word to number.
-#     word_dict = {}
-#     # From number to word, numbers need to minus one to convert to list indices.
-#     word_array = []
-#     # Word frequency
-#     word_freq = []
-#     # if key is 1-based, then 0 is reserved for sentence end.
-#     key = keystart
-
-#     for i in range(0, len(lines)):
-#         line = lines[i].replace(',', '')
-#         words = line.split(' ')
-#         for j in range(0, len(words)):
-#             if not word_dict.has_key(words[j]):
-#                 word_dict[words[j]] = key
-#                 word_array.append(words[j])
-#                 word_freq.append(1)
-#                 key += 1
-#             else:
-#                 k = word_dict[words[j]]
-#                 word_freq[k - keystart] += 1
-#     word_dict['UNK'] = key
-#     word_array.append('UNK')
-
-#     sorted_x = sorted(range(len(word_freq)), key=lambda k: word_freq[k], reverse=True)
-#     if pr:
-#         for x in sorted_x:
-#             print word_array[x], word_freq[x],
-#         #print sorted_x
-#         print 'Dictionary length', len(word_dict)
-#     return  word_dict, word_array
-
-# def lookupAnsID(answers, ansdict):
-#     ansids = []
-#     for ans in answers:
-#         if ansdict.has_key(ans):
-#             ansids.append(ansdict[ans])
-#         else:
-#             ansids.append(ansdict['UNK'])
-#     return np.array(ansids, dtype=int).reshape(len(ansids), 1)
-
-# def lookupQID(questions, worddict):
-#     wordslist = []
-#     maxlen = 27
-#     for q in questions:
-#         words = q.split(' ')
-#         wordslist.append(words)
-#         # if len(words) > maxlen:
-#         #     maxlen = len(words)
-#     result = np.zeros((len(questions), maxlen, 1), dtype=int)
-#     for i,words in enumerate(wordslist):
-#         for j,w in enumerate(words):
-#             if worddict.has_key(w):
-#                 result[i, j, 0] = worddict[w]
-#             else:
-#                 result[i, j, 0] = worddict['UNK']
-#     return result
-
-# def combine(wordids, imgids):
-#     return np.concatenate(\
-#         (np.array(imgids).reshape(len(imgids), 1, 1), \
-#         wordids), axis=1)
 
 def getQuestionType(answer):
     if answer == 'one' or answer == 'two' or answer == 'three' or\
@@ -369,6 +301,14 @@ if __name__ == '__main__':
     with open(os.path.join(outputFolder, 'train_imgids.txt'), 'w+') as f:
         for i in trainImgIds:
             f.write(str(i) + '\n')
+
+    with open(os.path.join(outputFolder, 'questions.txt'), 'w+') as f:
+        for q in trainQuestions:
+            f.write(q + '\n')
+        for q in validQuestions:
+            f.write(q + '\n')
+        for q in testQuestions:
+            f.write(q + '\n')
 
     # Build baseline solution
     prep.guessBaseline(
