@@ -543,20 +543,20 @@ if __name__ == '__main__':
     trainInput = prep.combine(\
         prep.lookupQID(trainQuestions, worddict, maxlen), trainImgIds)
     trainInputSV = prep.combineSV(\
-        range(len(trainQuestions)), 
+        range(len(1, trainQuestions) + 1), 
         trainImgIds)
     trainTarget = prep.lookupAnsID(trainAnswers, ansdict)
     validInput = prep.combine(\
         prep.lookupQID(validQuestions, worddict, maxlen), validImgIds)
     validInputSV = prep.combineSV(\
-        range(len(trainQuestions), len(trainQuestions) + len(validQuestions)),
+        range(len(trainQuestions) + 1, len(trainQuestions) + len(validQuestions) + 1),
         validImgIds)
     validTarget = prep.lookupAnsID(validAnswers, ansdict)
     testInput = prep.combine(\
         prep.lookupQID(testQuestions, worddict, maxlen), testImgIds)
     testInputSV = prep.combineSV(\
-        range(len(trainQuestions) + len(validQuestions),
-            len(trainQuestions) + len(validQuestions) + len(testQuestions)),
+        range(len(trainQuestions) + len(validQuestions) + 1,
+            len(trainQuestions) + len(validQuestions) + len(testQuestions) + 1),
         testImgIds)
     testTarget = prep.lookupAnsID(testAnswers, ansdict)
 
