@@ -67,6 +67,8 @@ def calcPrecision(
         sortIdx = np.argsort(modelOutput[n], axis=0)
         sortIdx = sortIdx[::-1]
         for i in range(0, 10):
+            if modelOutput.shape[1] < 10 and i > 0:
+                break
             if len(target.shape) == 2:
                 ans = target[n, 0]
             else:
