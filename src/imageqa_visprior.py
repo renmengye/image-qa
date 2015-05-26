@@ -328,8 +328,9 @@ def calcAdaBoostAlpha(testOutput, testTarget):
 def calcAdaBoostWeights(trainOutput, trainTarget, alpha):
     print 'Calculating weights for boosting...'
     rate, _, correct = calcRate(trainOutput, trainTarget)
+    print correct
     print 'Train set rate:', rate
-    correct2 = -(correct - 0.5) * 2
+    correct2 = -(correct.astype('float32') - 0.5) * 2
     weights = np.exp(correct * alpha)
     weights /= np.sum(weights)
     weights *= weights.shape[0]
