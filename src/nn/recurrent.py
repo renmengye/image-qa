@@ -44,6 +44,7 @@ class AttentionPenalty(RecurrentStage):
         self.X = 0.0
         self.dEdX = 0.0
         self.timespan = 0
+        self.gpu = False
         
     def initTime(self, timespan):
         self.timespan = timespan
