@@ -269,7 +269,7 @@ if __name__ == '__main__':
     validInput = prep.combine(\
         prep.lookupQID(validQuestions, worddict, maxlen), validImgIds)
     validInputSV = prep.combineSV(\
-        range(len(trainQuestions) + 1, len(trainQuestions) + len(validQuestions)) + 1,
+        range(len(trainQuestions) + 1, len(trainQuestions) + len(validQuestions) + 1),
         validImgIds)
     validTarget = prep.lookupAnsID(validAnswers, ansdict)
     testInput = prep.combine(\
