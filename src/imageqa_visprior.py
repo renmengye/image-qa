@@ -354,6 +354,7 @@ if __name__ == '__main__':
     questionType = 'color'
     visModelId = None
     mainModelId = None
+    boostModelId = None
     outputWeightsFolder = None
     for i, flag in enumerate(sys.argv):
         if flag == '-pvid':
@@ -362,14 +363,20 @@ if __name__ == '__main__':
             visModelId = sys.argv[i + 1]
         elif flag == '-mid':
             mainModelId = sys.argv[i + 1]
+        elif flag == '-bid':
+            boostModelId = sys.argv[i + 1]
         elif flag == '-vd' or flag == '-vdata':
             visDataFolder = sys.argv[i + 1]
         elif flag == '-md' or flag == '-mdata':
             mainDataFolder = sys.argv[i + 1]
+        elif flag == '-bd' or flag == '-bdata':
+            boostDataFolder = sys.argv[i + 1]
         elif flag == '-r' or flag == '-results':
             resultsFolder = sys.argv[i + 1]
         elif flag == '-qtype':
             questionType = sys.argv[i + 1]
+        elif flag == '-o' or flag == '-outputweights':
+            outputWeightsFolder = sys.argv[i + 1]
 
     data = it.loadDataset(visDataFolder)
     testInput = data['testData'][0]
@@ -462,6 +469,10 @@ if __name__ == '__main__':
                 (mixRatio, 1 - mixRatio),
             rate, _, __ = calcRate(ensTestOutput, testTarget)
             print rate
+
+    if boostDataFolder is not None:
+        pass
+        
     if outputWeightsFolder is not None:
         if not os.path.exists(outputWeightsFolder):
             os.makedirs(outputWeightsFolder)
