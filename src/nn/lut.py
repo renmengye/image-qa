@@ -54,7 +54,7 @@ class LUT(Stage):
             self.W = None
         else:
             self.W = initWeights
-            if use_gpu:
+            if use_gpu and self.W.dtype != np.float32:
                 self.W = self.W.astype('float32')
         self.X = 0
         self.Y = 0
@@ -65,7 +65,7 @@ class LUT(Stage):
         self.W = self.random.uniform(
             -self.initRange/2.0, self.initRange/2.0,
             (self.inputDim, self.outputDim))
-        if use_gpu:
+        if use_gpu and self.W.dtype != np.float32:
             self.W = self.W.astype('float32')
 
     def forward(self, X):
