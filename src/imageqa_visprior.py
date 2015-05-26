@@ -475,7 +475,9 @@ if __name__ == '__main__':
         boostTestOutput = nn.test(boostModel, testInput)
         alpha = calcAdaBoostAlpha(visTestOutput, testTarget)
         alphaBoost = calcAdaBoostAlpha(boostTestOutput, testTarget)
-        finalTestOutput = alpha * visTestOutput + alphaBoost * boostTestOutput
+        finalTestOutput = (alpha * visTestOutput + \
+                        alphaBoost * boostTestOutput) / \
+                        (alpha + alphaBoost)
         rate, _, __ = calcRate(finalTestOutput, testTarget)
         answerFilename = os.path.join(visModelFolder, 
                                     visModelId + '_boost.test.o.txt')

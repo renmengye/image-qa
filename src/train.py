@@ -58,6 +58,7 @@ def readFlags():
         elif flag == '-w' or flag == '-weights':
             weightsPath = sys.argv[i + 1]
             params['trainInputWeightsFilename'] = os.path.join(dataFolder, weightsPath + '-train.npy')
+            params['validInputWeightsFilename'] = os.path.join(dataFolder, weightsPath + '-valid.npy')
             params['testInputWeightsFilename'] = os.path.join(dataFolder, weightsPath + '-test.npy')
         elif flag == '-m' or flag == '-model':
             params['modelFilename'] = sys.argv[i + 1]
