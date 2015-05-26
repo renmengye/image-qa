@@ -74,6 +74,7 @@ def plotAttention(
         plt.subplot(w, h, 1)
         plt.imshow(img)
         plt.axis('off')
+        words = []
         for t in range(1, Xend[n]):
             if len(X.shape) == 3:
                 word = questionIdict[X[n, t] - 1]
@@ -81,6 +82,7 @@ def plotAttention(
                 word = questionIdict[X[n, 1] - 1]
             else:
                 word = ''
+            words.append(word)
             plt.subplot(w, h, t + 1)
             plt.imshow(img)
             alpha = A[n, t - 1].reshape(14, 14)
@@ -95,7 +97,7 @@ def plotAttention(
             outidx = np.argmax(Y[n])
             out = ansIdict[outidx]
             prob = Y[n, outidx]
-            plt.title('Q: %s GT: %s A: %s (%.4f)' % (word, ans, out, prob))
+            plt.title('Q: %s GT: %s A: %s (%.4f)' % (words[0], ans, out, prob))
         else: 
             plt.title(word)
         plt.savefig(
