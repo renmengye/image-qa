@@ -475,9 +475,21 @@ if __name__ == '__main__':
         boostTestOutput = nn.test(boostModel, testInput)
         alpha = calcAdaBoostAlpha(visTestOutput, testTarget)
         alphaBoost = calcAdaBoostAlpha(boostTestOutput, testTarget)
-        finalTestOutput = alpha * vis
-
-        pass
+        finalTestOutput = alpha * visTestOutput + alphaBoost * boostTestOutput
+        rate, _, __ = calcRate(finalTestOutput, testTarget)
+        answerFilename = os.path.join(visModelFolder, 
+                                    visModelId + '_boost.test.o.txt')
+        truthFilename = os.path.join(visModelFolder, 
+                                    visModelId + '_boost.test.t.txt')
+        it.outputTxt(
+                        finalTestOutput, 
+                        testTarget, 
+                        data['ansIdict'], 
+                        answerFilename, 
+                        truthFilename, 
+                        topK=1, 
+                        outputProb=False)
+        it.runWups(answerFilename, truthFilename)
 
     if outputWeightsFolder is not None:
         if not os.path.exists(outputWeightsFolder):
