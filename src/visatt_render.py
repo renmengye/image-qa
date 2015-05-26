@@ -92,7 +92,7 @@ def plotAttention(
             plt.axis('off')
         if Y is not None:
             ans = ansIdict[T[n]]
-            out = argmax(Y[n], axis=1)
+            out = np.argmax(Y[n])
             prob = Y[out]
             ax.text(h * 200 + 2,  2, 'GT: %s' % ans)
             ax.text(h * 200 + 2, 2, '%s (%.4f)' % (out, prob))
