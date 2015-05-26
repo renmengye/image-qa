@@ -158,7 +158,14 @@ class Trainer:
                             self.trainOpt['xvalidNo'])
         return X, T, VX, VT
 
-    def train(self, trainInput, trainTarget, validInput=None, validTarget=None):
+    def train(
+                self, 
+                trainInput, 
+                trainTarget, 
+                trainInputWeights=None,
+                validInput=None, 
+                validTarget=None,
+                validInputWeights=None):
         self.initFolder()
         trainOpt = self.trainOpt
         if validInput is None and validTarget is None:
@@ -209,7 +216,8 @@ class Trainer:
                 T_bat = T[batchStart:batchEnd]
 
                 # Loss
-                Etmp, dEdY = self.model.getCost(Y_bat, T_bat)
+                Etmp, dEdY = self.model.getCost(
+                                    Y_bat, T_bat, weights=trainInputWeights)
                 E += Etmp * numExThisBat / float(N)
 
                 # Backward
@@ -251,7 +259,7 @@ class Trainer:
             # Run validation
             if trainOpt['needValid']:
                 VY = tester.test(self.model, VX)
-                VE, dVE = self.model.getCost(VY, VT)
+                VE, dVE = self.model.getCost(VY, VT, weights=validInputWeights)
                 self.validLoss[epoch] = VE
                 if calcError:
                     Vrate, correct, total = tester.calcRate(self.model, VY, VT)

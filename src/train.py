@@ -6,14 +6,27 @@ import yaml
 import experiment_email as email
 import imageqa_test
 
-'''
-Usage: python train.py {name} -d {train/valid/test folder}
-                              -m {model spec} 
-                              -c {config} 
-                              -o {output folder}
-                              -b {board id}
-                              [-imageqa]
-'''
+"""
+Train a neural network
+Usage: python train.py
+                    -n[ame] {name} 
+                    -d[ata] {train/valid/test folder}
+                    -m[odel] {model spec} 
+                    -c[onfig] {config filename}
+                    -w[eights] {input weights}
+                    -o[utput] {output folder}
+                    -b[oard] {board id}
+                    [-imageqa]
+Prameters: 
+    -n[ame] Name of the model 
+    -d[ata] Data folder that contains 'train.npy', 'valid.npy', and 'test.npy'
+    -m[odel] Model specification file name
+    -c[onfig] Train config file name
+    -w[eights] Weighted input (for boosting), filename before '-train' or '-test'
+    -o[utput] Training results output folder
+    -b[oard] GPU board ID
+    [-imageqa] Run Image-QA test scripts
+"""
 
 def readFlags():
     params = {}
@@ -26,12 +39,14 @@ def readFlags():
     params['allDataFilename'] = None
     params['modelFilename'] = None
     params['imageqa'] = True
-    for i in range(1, len(sys.argv)):
-        if sys.argv[i] == '-n' or sys.argv[i] == '-name':
+    params['trainInputWeightsFilename'] = None
+    params['validInputWeightsFilename'] = None
+    for i, flag in enumerate(sys.argv):
+        if flag == '-n' or flag == '-name':
             params['name'] = sys.argv[i + 1]
-        elif sys.argv[i] == '-o' or sys.argv[i] == '-out':
+        elif flag == '-o' or flag == '-out':
             params['outputFolder'] = sys.argv[i + 1]
-        elif sys.argv[i] == '-d' or sys.argv[i] == '-data':
+        elif flag == '-d' or flag == '-data':
             dataFolder = sys.argv[i + 1]
             trainPath = os.path.join(dataFolder, 'train.npy')
             params['trainDataFilename'] = trainPath if os.path.isfile(trainPath) else None
@@ -40,17 +55,19 @@ def readFlags():
             testPath = os.path.join(dataFolder, 'test.npy')
             params['testDataFilename'] = testPath if os.path.isfile(testPath) else None
             params['dataFolder'] = dataFolder
-        elif sys.argv[i] == '-a' or sys.argv[i] == '-alldata':
-            params['allDataFilename'] = sys.argv[i + 1]
-        elif sys.argv[i] == '-m' or sys.argv[i] == '-model':
+        elif flag == '-w' or flag == '-weights':
+            weightsPath = sys.argv[i + 1]
+            params['trainInputWeightsFilename'] = os.path.join(dataFolder, weightsPath + '-train.npy')
+            params['testInputWeightsFilename'] = os.path.join(dataFolder, weightsPath + '-test.npy')
+        elif flag == '-m' or flag == '-model':
             params['modelFilename'] = sys.argv[i + 1]
-        elif sys.argv[i] == '-c' or sys.argv[i] == '-config':
+        elif flag == '-c' or flag == '-config':
             params['configFilename'] = sys.argv[i + 1]
-        elif sys.argv[i] == '-b' or sys.argv[i] == '-board':
+        elif flag == '-b' or flag == '-board':
             os.environ['GNUMPY_BOARD_ID'] = sys.argv[i + 1]
-        elif sys.argv[i] == '-imageqa':
+        elif flag == '-imageqa':
             params['imageqa'] = True
-        elif sys.argv[i] == '-noimageqa':
+        elif flag == '-noimageqa':
             params['imageqa'] = False
 
     # Check required parameters.
@@ -82,7 +99,14 @@ if __name__ == '__main__':
     else:
         validInput = None
         validTarget = None
-    
+
+    if params['trainInputWeightsFilename'] is not None:
+        trainInputWeights = np.load(params['trainInputWeightsFilename'])
+        validInputWeights = np.load(params['validInputWeightsFilename'])
+    else:
+        trainInputWeights = None
+        validInputWeights = None  
+
     model = nn.load(params['modelFilename'])
     trainer = nn.Trainer(
         name=params['name']+\
@@ -92,7 +116,13 @@ if __name__ == '__main__':
         outputFolder=params['outputFolder']
     )
 
-    trainer.train(trainInput, trainTarget, validInput, validTarget)
+    trainer.train(
+                trainInput=trainInput, 
+                trainTarget=trainTarget,
+                trainInputWeights=trainInputWeights,
+                validInput=validInput, 
+                validTarget=validTarget,
+                validInputWeights=validInputWeights)
     
     if params['testDataFilename'] is not None:
         if params['imageqa']:
@@ -128,15 +158,17 @@ if __name__ == '__main__':
             outputFolder=params['outputFolder']
         )
 
-        if params['allDataFilename'] is not None:
-            allData = np.load(params['allDataFilename'])
-            allInput = allData[0]
-            allTarget = allData[1]
-            trainer.train(allInput, allTarget)
+        allInput = np.concatenate((trainInput, validInput), axis=0)
+        allTarget = np.concatenate((trainTarget, validTarget), axis=0)
+        if trainInputWeights is not None:
+            allInputWeights = np.concatenate(
+                (trainInputWeights, validInputWeights), axis=0)
         else:
-            allInput = np.concatenate((trainInput, validInput), axis=0)
-            allTarget = np.concatenate((trainTarget, validTarget), axis=0)
-            trainer.train(allInput, allTarget)
+            allInputWeights = None
+        trainer.train(
+                trainInput=allInput, 
+                trainTarget=allTarget,
+                trainInputWeights=allInputWeights)
 
         model = nn.load(params['modelFilename'])
         model.loadWeights(np.load(trainer.modelFilename))

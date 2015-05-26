@@ -322,14 +322,18 @@ if __name__ == '__main__':
                                 -pvid {preVisModelId}
                                 -vid {visModelId}
                                 -mid {mainModelId}
+                                -bid {boostModelId}
                                 -vd[ata] {visDataFolder}
                                 -md[ata] {mainDataFolder}
+                                -bd[ata] {boostDataFolder}
                                 -r[esults] {resultsFolder}
                                 -qtype {color/number/location}
+                                -o[utweights] {outputFolder}
     """
     questionType = 'color'
     visModelId = None
     mainModelId = None
+    outputWeightsFolder = None
     for i, flag in enumerate(sys.argv):
         if flag == '-pvid':
             preVisModelId = sys.argv[i + 1]
@@ -436,3 +440,17 @@ if __name__ == '__main__':
             print '%.2f VIS+PRIOR & %.2f VIS+BLSTM Accuracy:' % \
                 (mixRatio, 1 - mixRatio),
             print calcRate(ensTestOutput, testTarget)
+    if outputWeightsFolder is not None:
+        if not os.path.exists(outputWeightsFolder):
+            os.makedirs(outputWeightsFolder)
+        
+    outputMax = np.argmax(output, axis=-1)
+    outputMax = outputMax.reshape(outputMax.size)
+    targetReshape = target.reshape(target.size)
+    rate = np.sum((outputMax == targetReshape).astype('int')) / \
+            float(target.size)
+        rate = calcRate(visTestOutput, data['testData'][1])
+        alpha = .5 * np.log(rate / (1 - rate))
+        print 'Exporting weights for boosting...'
+        print 'alpha:', alpha
+

@@ -20,10 +20,10 @@ import unittest
 import numpy as np
 
 class StageTests(unittest.TestCase):
-    def calcgrd(self, X, T, eps=1e-3):
+    def calcgrd(self, X, T, eps=1e-3, weights=None):
         Y = self.model.forward(X)
         W = self.stage.getWeights()
-        E, dEdY = self.costFn(Y, T)
+        E, dEdY = self.costFn(Y, T, weights)
         dEdX = self.model.backward(dEdY)
         dEdW = self.stage.getGradient()
         dEdXTmp = np.zeros(X.shape)
@@ -35,12 +35,12 @@ class StageTests(unittest.TestCase):
                     W[i,j] += eps
                     self.stage.loadWeights(W)
                     Y = self.model.forward(X)
-                    Etmp1, d1 = self.costFn(Y, T)
+                    Etmp1, d1 = self.costFn(Y, T, weights)
 
                     W[i,j] -= 2 * eps
                     self.stage.loadWeights(W)
                     Y = self.model.forward(X)
-                    Etmp2, d2 = self.costFn(Y, T)
+                    Etmp2, d2 = self.costFn(Y, T, weights)
 
                     dEdWTmp[i,j] = (Etmp1 - Etmp2) / 2.0 / eps
                     W[i,j] += eps
@@ -55,11 +55,11 @@ class StageTests(unittest.TestCase):
                         for j in range(0, X.shape[2]):
                             X[n, t, j] += eps
                             Y = self.model.forward(X)
-                            Etmp1, d1 = self.costFn(Y, T)
+                            Etmp1, d1 = self.costFn(Y, T, weights)
 
                             X[n, t, j] -= 2 * eps
                             Y = self.model.forward(X)
-                            Etmp2, d2 = self.costFn(Y, T)
+                            Etmp2, d2 = self.costFn(Y, T, weights)
 
                             dEdXTmp[n, t, j] = (Etmp1 - Etmp2) / 2.0 / eps
                             X[n, t, j] += eps
@@ -69,11 +69,11 @@ class StageTests(unittest.TestCase):
                     for j in range(0, X.shape[1]):
                         X[n, j] += eps
                         Y = self.model.forward(X)
-                        Etmp1, d1 = self.costFn(Y, T)
+                        Etmp1, d1 = self.costFn(Y, T, weights)
 
                         X[n, j] -= 2 * eps
                         Y = self.model.forward(X)
-                        Etmp2, d2 = self.costFn(Y, T)
+                        Etmp2, d2 = self.costFn(Y, T, weights)
 
                         dEdXTmp[n, j] = (Etmp1 - Etmp2) / 2.0 / eps
                         X[n, j] += eps
@@ -82,11 +82,11 @@ class StageTests(unittest.TestCase):
                 for j in range(0, X.shape[0]):
                     X[j] += eps
                     Y = self.model.forward(X)
-                    Etmp1, d1 = self.costFn(Y, T)
+                    Etmp1, d1 = self.costFn(Y, T, weights)
 
                     X[j] -= 2 * eps
                     Y = self.model.forward(X)
-                    Etmp2, d2 = self.costFn(Y, T)
+                    Etmp2, d2 = self.costFn(Y, T, weights)
 
                     dEdXTmp[j] = (Etmp1 - Etmp2) / 2.0 / eps
                     X[j] += eps
@@ -240,6 +240,25 @@ class MapIdentity_Tests(StageTests):
         self.chkgrd(dEdW, dEdWTmp)
         self.chkgrd(dEdX, dEdXTmp)
 
+class MapIdentityWeighted_Tests(StageTests):
+    """Linear map tests"""
+    def setUp(self):
+        self.stage = Map(
+            outputDim=3,
+            initRange=0.1,
+            initSeed=1,
+            activeFn=IdentityActiveFn)
+        self.model = self.stage
+        self.testInputErr = True
+        self.costFn = meanSqErr
+    def test_grad(self):
+        random = np.random.RandomState(2)
+        X = random.uniform(-0.1, 0.1, (6,5))
+        T = random.uniform(-0.1, 0.1, (6,3))
+        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T, weights=random.uniform(-5, 5, (6)))
+        self.chkgrd(dEdW, dEdWTmp)
+        self.chkgrd(dEdX, dEdXTmp)
+
 class MapSigmoid_Tests(StageTests):
     """Sigmoid map tests"""
     def setUp(self):
@@ -334,6 +353,27 @@ class MapSoftmax_CrossEnt_Tests(StageTests):
         X = random.uniform(-0.1, 0.1, (6,5))
         T = random.uniform(0, 2, (6)).astype(int)
         dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T, eps=1e-1)
+        #print dEdW/dEdWTmp
+        self.chkgrd(dEdW, dEdWTmp, tolerance=5e-1)
+        self.chkgrd(dEdX, dEdXTmp, tolerance=5e-1)
+
+class MapSoftmaxWeighted_CrossEnt_Tests(StageTests):
+    """Linear map tests"""
+    def setUp(self):
+        self.stage = Map(
+            outputDim=3,
+            initRange=0.1,
+            initSeed=1,
+            activeFn=SoftmaxActiveFn)
+        self.model = self.stage
+        self.testInputErr = True
+        self.costFn = crossEntIdx
+    def test_grad(self):
+        random = np.random.RandomState(2)
+        X = random.uniform(-0.1, 0.1, (6,5))
+        T = random.uniform(0, 2, (6)).astype(int)
+        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(
+            X, T, eps=1e-1, weights=random.uniform(-5, 5, (6)))
         #print dEdW/dEdWTmp
         self.chkgrd(dEdW, dEdWTmp, tolerance=5e-1)
         self.chkgrd(dEdX, dEdXTmp, tolerance=5e-1)
@@ -722,6 +762,8 @@ if __name__ == '__main__':
     suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(MapIdentity_Tests))
     suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(MapIdentityWeighted_Tests))
+    suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(MapSigmoid_Tests))
     suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(MapSigmoid_CrossEnt_Tests))
@@ -731,6 +773,8 @@ if __name__ == '__main__':
         unittest.TestLoader().loadTestsFromTestCase(MapRelu_Tests))
     suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(MapSoftmax_CrossEnt_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(MapSoftmaxWeighted_CrossEnt_Tests))
     suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(LUT_Tests))
     suite.addTests(
