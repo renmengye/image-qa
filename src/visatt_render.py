@@ -90,9 +90,11 @@ def plotAttention(
             plt.set_cmap(cm.Greys_r)
             plt.axis('off')
         if Y is not None:
+            plt.subplot(w, h, 1)
             ans = ansIdict[T[n]]
-            out = np.argmax(Y[n])
-            prob = Y[n, out]
+            outidx = np.argmax(Y[n])
+            out = ansIdict[outidx]
+            prob = Y[n, outidx]
             plt.title('Q: %s GT: %s A: %s (%.4f)' % (word, ans, out, prob))
         else: 
             plt.title(word)
