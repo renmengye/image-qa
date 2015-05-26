@@ -75,8 +75,8 @@ def combine(wordids, imgids):
 
 def combineSV(qids, imgids):
     return np.concatenate(
-        (np.array(qids, dtype='int'),
-        np.array(imgids, dtype='int')), axis=1)
+        (np.array(imgids, dtype='int'),
+        np.array(qids, dtype='int')), axis=1)
 
 def guessBaseline(
                     questions, 
