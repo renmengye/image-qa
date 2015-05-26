@@ -167,4 +167,4 @@ if __name__ == '__main__':
                 questionIdict=data['questionIdict'],
                 Y=Y,
                 T=T,
-                ansIdict=data['dataIdict'])
+                ansIdict=data['ansIdict'])
