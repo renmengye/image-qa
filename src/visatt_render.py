@@ -96,7 +96,6 @@ def plotAttention(
             prob = Y[out]
             ax.text(h * 200 + 2,  2, 'GT: %s' % ans)
             ax.text(h * 200 + 2, 2, '%s (%.4f)' % (out, prob))
-        bbox={'facecolor':'red', 'alpha':0.5, 'pad':10})
         plt.savefig(
             os.path.join(outputFolder, 
                 '%s-%d.png' % (prefix, n)))
