@@ -28,6 +28,7 @@ specs:
       initWeights: '/ais/gobi3/u/mren/data/cocoqa-full/hidden_oxford.h5'
       format: 'h5'
       h5key: 'hidden7'
+      sparse: true
       learningRate: 0.0
       outputdEdX: false
     - name: 'sentVec'
