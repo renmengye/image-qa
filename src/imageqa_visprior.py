@@ -347,7 +347,6 @@ if __name__ == '__main__':
                                 -bid {boostModelId}
                                 -vd[ata] {visDataFolder}
                                 -md[ata] {mainDataFolder}
-                                -bd[ata] {boostDataFolder}
                                 -r[esults] {resultsFolder}
                                 -qtype {color/number/location}
                                 -o[utweights] {outputFolder}
@@ -370,8 +369,6 @@ if __name__ == '__main__':
             visDataFolder = sys.argv[i + 1]
         elif flag == '-md' or flag == '-mdata':
             mainDataFolder = sys.argv[i + 1]
-        elif flag == '-bd' or flag == '-bdata':
-            boostDataFolder = sys.argv[i + 1]
         elif flag == '-r' or flag == '-results':
             resultsFolder = sys.argv[i + 1]
         elif flag == '-qtype':
