@@ -324,4 +324,8 @@ class Trainer:
     def save(self, filename=None):
         if filename is None:
             filename = self.modelFilename
-        np.save(filename, self.model.getWeights())
+        try:
+            np.save(filename, self.model.getWeights())
+        except Exception:
+            print 'Exception occurred. Cannot save weights'
+

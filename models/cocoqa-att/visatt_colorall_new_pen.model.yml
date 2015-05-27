@@ -111,7 +111,7 @@ specs:
     - name: 'attPenalty'
       type: 'attentionPenalty'
       inputs: 'attOut'
-      errorConst: 0.05
+      errorConst: 0.0005
     - name: 'attModel'
       type: 'recurrent'
       inputs: 'unfold'
