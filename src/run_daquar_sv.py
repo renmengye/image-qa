@@ -33,9 +33,9 @@ if __name__ == '__main__':
     bestC = 0.0
     bestRate = 0.0
 
-    for c in range(6):
-        # From 1 to 1e-6
-        C = np.power(10, -c)
+    for c in range(-9, 10):
+        # From 2^9 to 2^-9
+        C = np.power(2.0, -c)
         lr = sklearn.linear_model.LogisticRegression(
                 C=C
             )
