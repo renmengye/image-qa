@@ -168,6 +168,12 @@ def gatherCount(trainJsonFilename, validJsonFilename):
                 countDict[img][catId] = 1
         else:
             countDict[img] = {catId: 1}
+    count = [0] * 10
+    for i in countDict.iterkeys():
+        for j in countDict[i].iterkeys():
+            if countDict[i][j] < 10:
+                count[countDict[i][j]] += 1
+    print count
     return countDict
 
 
