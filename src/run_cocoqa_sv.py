@@ -43,14 +43,8 @@ if __name__ == '__main__':
         C = np.power(10, -c)
         lr = sklearn.linear_model.LogisticRegression(
                 penalty='l2',
-                dual=False,
                 tol=0.0001,
                 C=C,
-                fit_intercept=True, 
-                intercept_scaling=1, 
-                class_weight=None, 
-                random_state=None, 
-                solver='liblinear', 
                 max_iter=100,
                 multi_class='multinomial'
             )
@@ -63,17 +57,10 @@ if __name__ == '__main__':
 
     lr = sklearn.linear_model.LogisticRegression(
                 penalty='l2',
-                dual=False,
                 tol=0.0001,
                 C=bestC,
-                fit_intercept=True, 
-                intercept_scaling=1, 
-                class_weight=None, 
-                random_state=None, 
-                solver='liblinear', 
                 max_iter=100,
-                multi_class='multinomial', 
-                verbose=0
+                multi_class='multinomial'
             )
     print 'bestC:', bestC
     allInput = np.concatenate((trainInput, validInput), axis=0)
