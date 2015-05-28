@@ -159,6 +159,7 @@ def gatherCount(trainJsonFilename, validJsonFilename):
     print 'Total instances:', L
     for i in range(L):
         if i % 1000 == 0: print i
+        ann = annotations[i]
         img = imgDict[ann['image_id']]
         catId = ann['category_id']
         if countDict.has_key(img):
