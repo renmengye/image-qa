@@ -14,7 +14,7 @@ def packData(inputs, imgFeats, sentVecs):
     sentIds = inputs[:, 1] - 1
     imgSel = imgFeats[imgIds, :]
     sentVecSel = sentVecs[sentIds, :]
-    return np.concatnate((sentVecSel, imgSel), axis=1)
+    return np.concatenate((sentVecSel, imgSel), axis=1)
 
 if __name__ == '__main__':
     trainData = np.load(trainDataFile)
@@ -37,18 +37,7 @@ if __name__ == '__main__':
         # From 1 to 1e-6
         C = np.power(10, -c)
         lr = sklearn.linear_model.LogisticRegression(
-                penalty='l2',
-                dual=False,
-                tol=0.0001,
-                C=C,
-                fit_intercept=True, 
-                intercept_scaling=1, 
-                class_weight=None, 
-                random_state=None, 
-                solver='liblinear', 
-                max_iter=100,
-                multi_class='multinomial', 
-                verbose=0
+                C=C
             )
         lr.fit(trainInput, trainTarget)
         rate = lr.score(validInput, validTarget)
@@ -58,18 +47,7 @@ if __name__ == '__main__':
             bestRate = rate
 
     lr = sklearn.linear_model.LogisticRegression(
-                penalty='l2',
-                dual=False,
-                tol=0.0001,
-                C=bestC,
-                fit_intercept=True, 
-                intercept_scaling=1, 
-                class_weight=None, 
-                random_state=None, 
-                solver='liblinear', 
-                max_iter=100,
-                multi_class='multinomial', 
-                verbose=0
+                C=bestC
             )
     print 'bestC:', bestC
     allInput = np.concatenate((trainInput, validInput), axis=0)
