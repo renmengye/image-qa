@@ -35,6 +35,8 @@ if __name__ == '__main__':
     validTarget = validData[1]
     testInput = packData(testData[0], imgFeats, sentVecs)
     testTarget = testData[1]
+    print trainInput.shape
+    print trainTarget.shape
     bestC = 0.0
     bestRate = 0.0
 
