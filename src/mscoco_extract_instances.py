@@ -252,7 +252,7 @@ if __name__ == '__main__':
     for i, flag in enumerate(sys.argv):
         if flag == '-o' or flag == '-output':
             outputFolder = sys.argv[i + 1]
-        elif flag == '-t' or flag == '-type:
+        elif flag == '-t' or flag == '-type':
             outputType = sys.argv[i + 1]
 
     if outputType == 'attention':
