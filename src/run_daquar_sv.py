@@ -25,11 +25,11 @@ if __name__ == '__main__':
     imgFeats = imgFeatsH5[key][:]
     sentVecs = np.load(sentVecFile)
     trainInput = packData(trainData[0], imgFeats, sentVecs)
-    trainTarget = trainData[1]
+    trainTarget = trainData[1].reshape(trainData[1].size)
     validInput = packData(validData[0], imgFeats, sentVecs)
-    validTarget = validData[1]
+    validTarget = validData[1].reshape(validData[1].size)
     testInput = packData(testData[0], imgFeats, sentVecs)
-    testTarget = testData[1]
+    testTarget = testData[1].reshape(testData[1].size)
     bestC = 0.0
     bestRate = 0.0
 
