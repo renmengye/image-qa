@@ -1,5 +1,6 @@
 import sklearn
 import h5py
+import scipy
 import numpy as np
 
 imgFeatFile = '/ais/gobi3/u/mren/data/cocoqa-full/hidden_oxford.h5'
@@ -25,7 +26,7 @@ if __name__ == '__main__':
     iwData = imgFeatsH5[key + '_data'][:]
     iwInd = imgFeatsH5[key + '_indices'][:]
     iwPtr = imgFeatsH5[key + '_indptr'][:]
-    imgFeats = sparse.csr_matrix(
+    imgFeats = scipy.sparse.csr_matrix(
         (iwData, iwInd, iwPtr), shape=iwShape)
     sentVecs = np.load(sentVecFile)
     trainInput = packData(trainData[0], imgFeats, sentVecs)
