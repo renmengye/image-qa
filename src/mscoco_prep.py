@@ -529,27 +529,19 @@ if __name__ == '__main__':
     if maxlen == -1:
         maxlen = prep.findMaxlen(allQuestions)
 
-    trainInput = prep.combine(\
-        prep.lookupQID(trainQuestions, worddict, maxlen), trainImgIds)
-    trainTarget = prep.lookupAnsID(trainAnswers, ansdict)
-    validInput = prep.combine(\
-        prep.lookupQID(validQuestions, worddict, maxlen), validImgIds)
-    validTarget = prep.lookupAnsID(validAnswers, ansdict)
-    testInput = prep.combine(\
-        prep.lookupQID(testQuestions, worddict, maxlen), testImgIds)
-    testTarget = prep.lookupAnsID(testAnswers, ansdict)
-
     # Build output
     trainInput = prep.combine(\
         prep.lookupQID(trainQuestions, worddict, maxlen), trainImgIds)
     trainInputSV = prep.combineSV(\
-        range(1, len(trainQuestions) + 1), 
+        range(1, 
+            len(trainQuestions) + 1), 
         trainImgIds)
     trainTarget = prep.lookupAnsID(trainAnswers, ansdict)
     validInput = prep.combine(\
         prep.lookupQID(validQuestions, worddict, maxlen), validImgIds)
     validInputSV = prep.combineSV(\
-        range(len(trainQuestions) + 1, len(trainQuestions) + len(validQuestions) + 1),
+        range(len(trainQuestions) + 1, 
+            len(trainQuestions) + len(validQuestions) + 1),
         validImgIds)
     validTarget = prep.lookupAnsID(validAnswers, ansdict)
     testInput = prep.combine(\

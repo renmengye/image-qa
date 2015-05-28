@@ -4,16 +4,24 @@ import cPickle as pkl
 import sys
 
 if len(sys.argv) < 2:
-    folder = '../../../data/mscoco/train'
+    folder = 'train'
 else:
     folder = sys.argv[1]
 
-jsonFilename = '%s/captions.json' % (folder)
-captionOut = '%s/captions.txt' % (folder)
-imgidOut = '%s/imgids.txt' % (folder)
+if folder == 'train':
+    filename = 'train'
+elif folder == 'valid':
+    filename = 'val'
+    
+jsonFilename = '/ais/gobi3/datasets/mscoco/annotations/captions_%s2014.json' % filename
+outputFolder = '/ais/gobi3/u/mren/data/mscoco/%s' % folder
+captionOut = os.path.join(outputFolder, 'captions.txt')
+imgidOut = os.path.join(outputFolder, 'imgids.txt')
 
 # To retrive image ID and url, get caption['images'][i]['id'] and caption['images'][i]['url']
 if __name__ == '__main__':
+    if not os.path.exists(outputFolder):
+        os.makedirs(outputFolder)
     with open(jsonFilename) as f:
         captiontxt = f.read()
     caption = json.loads(captiontxt)

@@ -10,6 +10,10 @@ import numpy as np
 
 imgidTrainFilename = '../../../data/mscoco/train/image_list.txt'
 imgidValidFilename = '../../../data/mscoco/valid/image_list.txt'
+trainJsonFilename = \
+    '/ais/gobi3/datasets/mscoco/annotations/instances_train2014.json'
+validtrainJsonFilename = \
+    '/ais/gobi3/datasets/mscoco/annotations/instances_val2014.json'
 
 def buildImgIdDict(imgidTrainFilename, imgidValidFilename):
     with open(imgidTrainFilename) as f:
@@ -121,7 +125,7 @@ def distributeAtt(numX, numY, filledPolyImg):
     count /= totalCount
     return count
 
-def gatherAttention(trainJsonFilename, validJsonFilename):
+def parse(trainJsonFilename, validJsonFilename):
     with open(trainJsonFilename) as f:
         insttxtTrain = f.read()
     instancesTrain = json.loads(insttxtTrain)
@@ -135,7 +139,32 @@ def gatherAttention(trainJsonFilename, validJsonFilename):
     annotations.extend(instancesVal['annotations'])
     images.extend(instancesVal['images'])
     categories.extend(instancesVal['categories'])
-    
+    return annotations, images, categories
+
+def gatherCount(trainJsonFilename, validJsonFilename):
+    annotations, images, categories = \
+        parse(trainJsonFilename, validtrainJsonFilename)
+    splitDict, imgidDict, imgidIdict, imgPathDict = \
+        buildImgIdDict(imgidTrainFilename, imgidValidFilename)
+    catDict = buildCatDict(categories)
+    imgDict = buildImgDict(images, imgidDict)
+
+    inputData = []
+    targetData = []
+    countDict = {}
+
+    # Each annotation is only responsible for one object.
+    # Multiple object of same category => multiple annotations.
+    L = len(annotations)
+    print 'Total instances:', L
+    for i in range(L):
+        if i % 1000 == 0: print i
+
+
+
+def gatherAttention(trainJsonFilename, validJsonFilename):
+    annotations, images, categories = \
+        parse(trainJsonFilename, validtrainJsonFilename)
     splitDict, imgidDict, imgidIdict, imgPathDict = \
         buildImgIdDict(imgidTrainFilename, imgidValidFilename)
     catDict = buildCatDict(categories)
@@ -210,10 +239,6 @@ if __name__ == '__main__':
             outputFolder = sys.argv[i + 1]
     if not os.path.exists(outputFolder):
         os.makedirs(outputFolder)
-    trainJsonFilename = \
-        '../../../data/mscoco/%s/instances.json' % 'train'
-    validtrainJsonFilename = \
-        '../../../data/mscoco/%s/instances.json' % 'valid'
     trainData, validData, testData, catDict = \
         gatherAttention(trainJsonFilename, validtrainJsonFilename)
     np.save(os.path.join(outputFolder, 'train.npy'), trainData)

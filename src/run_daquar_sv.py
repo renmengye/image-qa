@@ -36,9 +36,11 @@ if __name__ == '__main__':
     for c in range(-9, 10):
         # From 2^9 to 2^-9
         C = np.power(2.0, -c)
-        lr = sklearn.linear_model.LogisticRegression(
-                C=C
-            )
+        # lr = sklearn.linear_model.LogisticRegression(
+        #         C=C
+        #     )
+        lr = sklearn.linear_model.SGDClassifier(
+            loss='log', penalty='l2', alpha=C, n_jobs=30)
         lr.fit(trainInput, trainTarget)
         rate = lr.score(validInput, validTarget)
         print '%.f, %.4f' % (C, rate)
@@ -46,9 +48,11 @@ if __name__ == '__main__':
             bestC = C
             bestRate = rate
 
-    lr = sklearn.linear_model.LogisticRegression(
-                C=bestC
-            )
+    # lr = sklearn.linear_model.LogisticRegression(
+    #             C=bestC
+    #         )
+    lr = sklearn.linear_model.SGDClassifier(
+        loss='log', penalty='l2', alpha=bestC, n_jobs=30)
     print 'bestC:', bestC
     allInput = np.concatenate((trainInput, validInput), axis=0)
     allTarget = np.concatenate((trainTarget, validTarget), axis=0)
