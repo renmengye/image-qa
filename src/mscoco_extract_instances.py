@@ -260,6 +260,7 @@ if __name__ == '__main__':
             outputFolder = sys.argv[i + 1]
         elif flag == '-t' or flag == '-type':
             outputType = sys.argv[i + 1]
+    print outputType
 
     if outputType == 'attention':
         if outputFolder is None: outputFolder = '../data/coco-att'
@@ -282,6 +283,6 @@ if __name__ == '__main__':
         if outputFolder is None: outputFolder = '../data/coco-count'    
         if not os.path.exists(outputFolder):
             os.makedirs(outputFolder)
-        countDict = gatherAttention(trainJsonFilename, validtrainJsonFilename)
+        countDict = gatherCount(trainJsonFilename, validtrainJsonFilename)
         with open(os.path.join(outputFolder, 'count.pkl'), 'wb') as f:
             pkl.dump(countDict, f)
