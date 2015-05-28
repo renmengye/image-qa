@@ -280,7 +280,7 @@ if __name__ == '__main__':
                 f.write('%s\n' % catDict[k]['name'].replace(' ', '_'))
     elif outputType == 'count':
         if outputFolder is None: outputFolder = '../data/coco-count'    
-        f not os.path.exists(outputFolder):
+        if not os.path.exists(outputFolder):
             os.makedirs(outputFolder)
         countDict = gatherAttention(trainJsonFilename, validtrainJsonFilename)
         with open(os.path.join(outputFolder, 'count.pkl'), 'wb') as f:
