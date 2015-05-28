@@ -14,7 +14,7 @@ def packData(inputs, imgFeats, sentVecs):
     sentIds = inputs[:, 1] - 1
     imgSel = imgFeats[imgIds, :].todense()
     sentVecSel = sentVecs[sentIds, :]
-    return np.concatnate((sentVecSel, imgSel), axis=1)
+    return np.concatenate((sentVecSel, imgSel), axis=1)
 
 if __name__ == '__main__':
     trainData = np.load(trainDataFile)
