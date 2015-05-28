@@ -12,7 +12,7 @@ testDataFile = '../data/daquar-37-sv/test.npy'
 def packData(inputs, imgFeats, sentVecs):
     imgIds = inputs[:, 0] - 1
     sentIds = inputs[:, 1] - 1
-    imgSel = imgFeats[imgIds, :].todense()
+    imgSel = imgFeats[imgIds, :]
     sentVecSel = sentVecs[sentIds, :]
     return np.concatnate((sentVecSel, imgSel), axis=1)
 
