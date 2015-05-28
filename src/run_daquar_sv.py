@@ -1,4 +1,4 @@
-import sklearn
+import sklearn.linear_model
 import h5py
 import scipy
 import numpy as np
