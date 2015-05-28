@@ -52,8 +52,7 @@ if __name__ == '__main__':
                 random_state=None, 
                 solver='liblinear', 
                 max_iter=100,
-                multi_class='multinomial', 
-                verbose=0
+                multi_class='multinomial'
             )
         lr.fit(trainInput, trainTarget)
         rate = lr.score(validInput, validTarget)
