@@ -2,8 +2,8 @@ import sklearn
 import h5py
 import numpy as np
 
-imgFeatFile = '/ais/gobi3/u/mren/hidden_oxford.h5'
-sentVecFile = '/ais/gobi3/u/mren/cocoqa-full/skip_sent_vec.npy'
+imgFeatFile = '/ais/gobi3/u/mren/data/cocoqa-full/hidden_oxford.h5'
+sentVecFile = '/ais/gobi3/u/mren/data/cocoqa-full/skip_sent_vec.npy'
 trainDataFile = '../data/cocoqa-sv/train.npy'
 validDataFile = '../data/cocoqa-sv/valid.npy'
 testDataFile = '../data/cocoqa-sv/test.npy'
