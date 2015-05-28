@@ -161,14 +161,15 @@ def gatherCount(trainJsonFilename, validJsonFilename):
         if i % 1000 == 0: print i
         ann = annotations[i]
         img = imgDict[ann['image_id']]
+        imgid = str(img['id'])
         catId = ann['category_id']
-        if countDict.has_key(img):
-            if countDict[img].has_key(catId):
-                countDict[img][catId] += 1
+        if countDict.has_key(imgid):
+            if countDict[imgid].has_key(catId):
+                countDict[imgid][catId] += 1
             else:
-                countDict[img][catId] = 1
+                countDict[imgid][catId] = 1
         else:
-            countDict[img] = {catId: 1}
+            countDict[imgid] = {catId: 1}
     count = [0] * 10
     for i in countDict.iterkeys():
         for j in countDict[i].iterkeys():
