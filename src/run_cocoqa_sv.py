@@ -21,10 +21,10 @@ if __name__ == '__main__':
     testData = np.load(testDataFile)
     imgFeatsH5 = h5py.File(imgFeatFile)
     key = 'hidden7'
-    iwShape = initWeightsFile[key + '_shape'][:]
-    iwData = initWeightsFile[key + '_data'][:]
-    iwInd = initWeightsFile[key + '_indices'][:]
-    iwPtr = initWeightsFile[key + '_indptr'][:]
+    iwShape = imgFeatsH5[key + '_shape'][:]
+    iwData = imgFeatsH5[key + '_data'][:]
+    iwInd = imgFeatsH5[key + '_indices'][:]
+    iwPtr = imgFeatsH5[key + '_indptr'][:]
     imgFeats = sparse.csr_matrix(
         (iwData, iwInd, iwPtr), shape=iwShape)
     sentVecs = np.load(sentVecFile)
