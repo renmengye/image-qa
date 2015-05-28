@@ -40,7 +40,7 @@ if __name__ == '__main__':
         #         C=C
         #     )
         lr = sklearn.linear_model.SGDClassifier(
-            loss='log', penalty='l2', alpha=C, n_jobs=30)
+            loss='log', penalty='l2', alpha=C, n_jobs=5)
         lr.fit(trainInput, trainTarget)
         rate = lr.score(validInput, validTarget)
         print '%.f, %.4f' % (C, rate)
@@ -52,7 +52,7 @@ if __name__ == '__main__':
     #             C=bestC
     #         )
     lr = sklearn.linear_model.SGDClassifier(
-        loss='log', penalty='l2', alpha=bestC, n_jobs=30)
+        loss='log', penalty='l2', alpha=bestC, n_jobs=5)
     print 'bestC:', bestC
     allInput = np.concatenate((trainInput, validInput), axis=0)
     allTarget = np.concatenate((trainTarget, validTarget), axis=0)
