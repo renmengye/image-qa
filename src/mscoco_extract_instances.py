@@ -159,7 +159,16 @@ def gatherCount(trainJsonFilename, validJsonFilename):
     print 'Total instances:', L
     for i in range(L):
         if i % 1000 == 0: print i
-
+        img = imgDict[ann['image_id']]
+        catId = ann['category_id']
+        if countDict.has_key(img):
+            if countDict[img].has_key(catId):
+                countDict[img][catId] += 1
+            else:
+                countDict[img][catId] = 1
+        else:
+            countDict[img] = {catId: 1}
+    return countDict
 
 
 def gatherAttention(trainJsonFilename, validJsonFilename):
@@ -233,22 +242,40 @@ def gatherAttention(trainJsonFilename, validJsonFilename):
     return trainData, validData, testData, catDict
 
 if __name__ == '__main__':
-    outputFolder = '../data/coco-att'
+    """
+    Usage:
+    python mscoco_extract_instances.py 
+                        -t[ype] {attention/count}
+                        [-o[utput] {outputFolder}]
+    """
+    outputFolder = None
     for i, flag in enumerate(sys.argv):
         if flag == '-o' or flag == '-output':
             outputFolder = sys.argv[i + 1]
-    if not os.path.exists(outputFolder):
-        os.makedirs(outputFolder)
-    trainData, validData, testData, catDict = \
-        gatherAttention(trainJsonFilename, validtrainJsonFilename)
-    np.save(os.path.join(outputFolder, 'train.npy'), trainData)
-    np.save(os.path.join(outputFolder, 'valid.npy'), validData)
-    np.save(os.path.join(outputFolder, 'test.npy'), testData)
+        elif flag == '-t' or flag == '-type:
+            outputType = sys.argv[i + 1]
 
-    with open(os.path.join(outputFolder, 'question_vocabs.txt'), 'w') as f:
-        for k in catDict.iterkeys():
-            f.write('%s\n' % catDict[k]['name'].replace(' ', '_'))
+    if outputType == 'attention':
+        if outputFolder is None: outputFolder = '../data/coco-att'
+        if not os.path.exists(outputFolder):
+            os.makedirs(outputFolder)
+        trainData, validData, testData, catDict = \
+            gatherAttention(trainJsonFilename, validtrainJsonFilename)
+        np.save(os.path.join(outputFolder, 'train.npy'), trainData)
+        np.save(os.path.join(outputFolder, 'valid.npy'), validData)
+        np.save(os.path.join(outputFolder, 'test.npy'), testData)
 
-    with open(os.path.join(outputFolder, 'answer_vocabs.txt'), 'w') as f:
-        for k in catDict.iterkeys():
-            f.write('%s\n' % catDict[k]['name'].replace(' ', '_'))
+        with open(os.path.join(outputFolder, 'question_vocabs.txt'), 'w') as f:
+            for k in catDict.iterkeys():
+                f.write('%s\n' % catDict[k]['name'].replace(' ', '_'))
+
+        with open(os.path.join(outputFolder, 'answer_vocabs.txt'), 'w') as f:
+            for k in catDict.iterkeys():
+                f.write('%s\n' % catDict[k]['name'].replace(' ', '_'))
+    elif outputType == 'count':
+        if outputFolder is None: outputFolder = '../data/coco-count'    
+        f not os.path.exists(outputFolder):
+            os.makedirs(outputFolder)
+        countDict = gatherAttention(trainJsonFilename, validtrainJsonFilename)
+        with open(os.path.join(outputFolder, 'count.pkl'), 'wb') as f:
+            pkl.dump(countDict, f)
