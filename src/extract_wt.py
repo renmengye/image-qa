@@ -40,8 +40,8 @@ if __name__ == '__main__':
         elif flag == '-r' or flag == '-results':
             resultsFolder = sys.argv[i + 1]
     modelWeightsFile = os.path.join(resultsFolder, 
-        '%s/%s.w.npy' % modelId)
+        '%s/%s.w.npy' % (modelId, modelId))
     modelSpecFile = os.path.join(resultsFolder,
-        '%s/%s.model.yml' % modelId)
+        '%s/%s.model.yml' % (modelId, modelId))
     weights = np.load(modelWeightsFile)
     extractWeightsVISBLSTM(modelSpecFile, weights, outFile)
