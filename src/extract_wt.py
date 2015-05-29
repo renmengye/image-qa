@@ -3,6 +3,7 @@ import os
 
 import h5py
 import numpy as np
+import nn
 
 def extractWeightsVISBLSTM(modelSpecFile, weights, outFile):
     model = nn.load(modelSpecFile)
