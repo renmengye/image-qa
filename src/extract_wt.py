@@ -27,15 +27,18 @@ if __name__ == '__main__':
     """
     Usage: python extract_wt.py 
                             -m[odel] {modelId}
-                            -r[esults] {resultsFolder}
                             -o[utput] {outFile}
+                            [-r[esults] {resultsFolder}]
                             -t[ype] {VIS+BLSTM/}
     """
+    resultsFolder = '../results'
     for i, flag in enumerate(sys.argv):
         if flag == '-m' or flag == '-model':
             modelId = sys.argv[i + 1]
         elif flag == '-o' or flag == '-output':
             outFile = sys.argv[i + 1]
+        elif flag == '-r' or flag == '-results':
+            resultsFolder = sys.argv[i + 1]
     modelWeightsFile = os.path.join(resultsFolder, 
         '%s/%s.w.npy' % modelId)
     modelSpecFile = os.path.join(resultsFolder,
