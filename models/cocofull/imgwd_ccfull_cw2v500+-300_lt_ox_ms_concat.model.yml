@@ -129,7 +129,7 @@ specs:
       outputDim: 431
       initRange: 0.001
       initSeed: 7
-      learningRate: 0.01
+      learningRate: 0.1
       learningRateAnnealConst: 0.0
       momentum: 0.9
       gradientClip: 0.1
