@@ -121,7 +121,7 @@ specs:
       inputs: 'lstm, imgFeat'
       dropoutRate: 0.5
       initSeed: 3
-      outputDim: 500
+      outputDim: 300
     - name: 'softmax'
       type: 'map'
       inputs: 'dropout2'
