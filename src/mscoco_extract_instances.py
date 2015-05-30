@@ -12,7 +12,7 @@ imgidTrainFilename = '../../../data/mscoco/train/image_list.txt'
 imgidValidFilename = '../../../data/mscoco/valid/image_list.txt'
 trainJsonFilename = \
     '/ais/gobi3/datasets/mscoco/annotations/instances_train2014.json'
-validtrainJsonFilename = \
+validJsonFilename = \
     '/ais/gobi3/datasets/mscoco/annotations/instances_val2014.json'
 
 def buildImgIdDict(imgidTrainFilename, imgidValidFilename):
@@ -143,7 +143,7 @@ def parse(trainJsonFilename, validJsonFilename):
 
 def gatherCount(trainJsonFilename, validJsonFilename):
     annotations, images, categories = \
-        parse(trainJsonFilename, validtrainJsonFilename)
+        parse(trainJsonFilename, validJsonFilename)
     splitDict, imgidDict, imgidIdict, imgPathDict = \
         buildImgIdDict(imgidTrainFilename, imgidValidFilename)
     catDict = buildCatDict(categories)
@@ -181,7 +181,7 @@ def gatherCount(trainJsonFilename, validJsonFilename):
 
 def gatherAttention(trainJsonFilename, validJsonFilename):
     annotations, images, categories = \
-        parse(trainJsonFilename, validtrainJsonFilename)
+        parse(trainJsonFilename, validJsonFilename)
     splitDict, imgidDict, imgidIdict, imgPathDict = \
         buildImgIdDict(imgidTrainFilename, imgidValidFilename)
     catDict = buildCatDict(categories)
@@ -269,7 +269,7 @@ if __name__ == '__main__':
         if not os.path.exists(outputFolder):
             os.makedirs(outputFolder)
         trainData, validData, testData, catDict = \
-            gatherAttention(trainJsonFilename, validtrainJsonFilename)
+            gatherAttention(trainJsonFilename, validJsonFilename)
         np.save(os.path.join(outputFolder, 'train.npy'), trainData)
         np.save(os.path.join(outputFolder, 'valid.npy'), validData)
         np.save(os.path.join(outputFolder, 'test.npy'), testData)
@@ -285,6 +285,6 @@ if __name__ == '__main__':
         if outputFolder is None: outputFolder = '../data/coco-count'    
         if not os.path.exists(outputFolder):
             os.makedirs(outputFolder)
-        countDict = gatherCount(trainJsonFilename, validtrainJsonFilename)
+        countDict = gatherCount(trainJsonFilename, validJsonFilename)
         with open(os.path.join(outputFolder, 'count.pkl'), 'wb') as f:
             pkl.dump(countDict, f)

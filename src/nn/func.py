@@ -36,6 +36,30 @@ def crossEntIdx(Y, T, weights=None):
     dEdY = dEdY.reshape(Y.shape)
     return E, dEdY
 
+def crossEntOneIdx(Y, T, weights=None):
+    eps = 1e-8
+    Y2 = Y.reshape(Y.size / Y.shape[-1], Y.shape[-1])
+    T2 = T.reshape(T.size)
+    E = 0.0
+    dEdY = np.zeros(Y2.shape, float)
+    if weights is None:
+        for n in range(0, Y.shape[0]):
+            E += -np.log(Y2[n, T2[n]] + eps) + np.log(1 - Y2[n, T2[n] + eps])
+            E += -np.sum(np.log(1 - Y2[n, :] + eps))
+            dEdY[n, :] = 1 / (1 - Y2[n] + eps)
+            dEdY[n, T2[n]] = -1 / (Y2[n, T2[n]] + eps)
+    else:
+        for n in range(0, Y.shape[0]):
+            E += (-np.log(Y2[n, T2[n]] + eps) + \
+                np.log(1 - Y2[n, T2[n] + eps])) * weights[n]
+            E += (-np.sum(np.log(1 - Y2[n, :] + eps))) * weights[n]
+            dEdY[n, :] = (1 / (1 - Y2[n] + eps)) * weights[n]
+            dEdY[n, T2[n]] = (-1 / (Y2[n, T2[n]] + eps)) * weights[n]
+    E /= Y2.shape[0]
+    dEdY /= Y2.shape[0]
+    dEdY = dEdY.reshape(Y.shape)
+    return E, dEdY
+
 def crossEntOne(Y, T, weights=None):
     eps = 1e-8
     T = T.reshape(Y.shape)

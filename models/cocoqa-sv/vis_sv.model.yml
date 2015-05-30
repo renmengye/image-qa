@@ -45,7 +45,7 @@ specs:
       inputs: 'sentVec, imgFeat'
       activeFn: 'softmax'
       outputDim: 431
-      initRange: 0.001
+      initRange: 0.01
       initSeed: 7
       learningRate: 0.8
       momentum: 0.9
