@@ -216,8 +216,7 @@ class LSTM_SISO_Tests(StageTests):
         numEx = 1
         X = random.uniform(-0.1, 0.1, (numEx, 5))
         T = random.uniform(-0.1, 0.1, (numEx, 3))
-        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
-        print dEdW, dEdWTmp
+        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T, eps=1e-1)
         self.chkgrd(dEdW, dEdWTmp, tolerance=5e-1)
         self.chkgrd(dEdX, dEdXTmp, tolerance=5e-1)
 
