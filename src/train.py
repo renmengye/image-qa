@@ -68,9 +68,9 @@ def readFlags():
             params['testInputWeightsFilename'] = os.path.join(dataFolder, weightsPath + '-test.npy')
         elif flag == '-m' or flag == '-model':
             params['modelFilename'] = sys.argv[i + 1]
-        elif flag == '-s' or flag == '-saved'
+        elif flag == '-s' or flag == '-saved':
             params['savedModelId'] = sys.argv[i + 1]
-        elif flag == '-e' or flag == '-early'
+        elif flag == '-e' or flag == '-early':
             params['earlyStopScore'] = float(sys.argv[i + 1])
         elif flag == '-c' or flag == '-config':
             params['configFilename'] = sys.argv[i + 1]
