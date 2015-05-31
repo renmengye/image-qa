@@ -15,6 +15,7 @@ from conv1d import *
 from meanpool1d import *
 from maxpool1d import *
 from normalize import *
+from ordinal import *
 
 import unittest
 import numpy as np
@@ -784,6 +785,26 @@ class Normalize_Tests(StageTests):
         dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
         self.chkgrd(dEdX, dEdXTmp)
 
+class OrdinalRegression_Tests(StageTests):
+    def setUp(self):
+        self.stage = OrdinalRegression(
+            outputDim=5)
+        self.model = self.stage
+        self.costFn = crossEntIdx
+        self.testInputErr = True
+
+    def test_grad(self):
+        random = np.random.RandomState(1)
+        X = random.uniform(-1, 1, (30, 1))
+        T = random.uniform(0, 5, (30, 1)).astype('int')
+        print T
+        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
+        print dEdW/dEdWTmp
+        print dEdX/dEdXTmp
+        self.chkgrd(dEdW, dEdWTmp)
+        self.chkgrd(dEdX, dEdXTmp)
+
+
 if __name__ == '__main__':
     suite = unittest.TestSuite()
     suite.addTests(
@@ -842,4 +863,6 @@ if __name__ == '__main__':
           unittest.TestLoader().loadTestsFromTestCase(MeanPool1D_Tests))
     suite.addTests(
           unittest.TestLoader().loadTestsFromTestCase(Normalize_Tests))
+    suite.addTests(
+          unittest.TestLoader().loadTestsFromTestCase(OrdinalRegression_Tests))
     unittest.TextTestRunner(verbosity=2).run(suite)

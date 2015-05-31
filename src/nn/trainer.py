@@ -225,6 +225,7 @@ class Trainer:
             for step in range(0, numStepPerEpoch):
                 stepStart = step * numExPerStep
                 stepEnd = min((step + 1) * numExPerStep, N)
+                numExThisStep = stepEnd - stepStart
                 E = 0
                 correct = 0
                 total = 0
@@ -249,7 +250,7 @@ class Trainer:
                     # Loss
                     Etmp, dEdY = self.model.getCost(
                         Y_bat, T_bat, weights=trainInputWeights)
-                    E += Etmp * numExThisBat / float(numExPerStep)
+                    E += Etmp * numExThisBat / float(numExThisStep)
                     epochE += Etmp * numExThisBat / float(N)
                     
                     # Backward
