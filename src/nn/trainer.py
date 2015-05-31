@@ -47,19 +47,19 @@ class Logger:
         stats = 'N: %3d T: %5d  TE: %8.4f  TR: %8.4f  VE: %8.4f  VR: %8.4f' % \
                 (self.trainer.epoch,
                  timeElapsed,
-                 self.trainer.loss[self.trainer.epoch],
-                 self.trainer.rate[self.trainer.epoch],
-                 self.trainer.validLoss[self.trainer.epoch],
-                 self.trainer.validRate[self.trainer.epoch])
+                 self.trainer.loss[self.trainer.totalStep],
+                 self.trainer.rate[self.trainer.totalStep],
+                 self.trainer.validLoss[self.trainer.totalStep],
+                 self.trainer.validRate[self.trainer.totalStep])
         print stats
 
         if self.saveCsv:
             statsCsv = '%d,%.4f,%.4f,%.4f,%.4f' % \
                     (self.trainer.epoch,
-                     self.trainer.loss[self.trainer.epoch],
-                     self.trainer.rate[self.trainer.epoch],
-                     self.trainer.validLoss[self.trainer.epoch],
-                     self.trainer.validRate[self.trainer.epoch])
+                     self.trainer.loss[self.trainer.totalStep],
+                     self.trainer.rate[self.trainer.totalStep],
+                     self.trainer.validLoss[self.trainer.totalStep],
+                     self.trainer.validRate[self.trainer.totalStep])
             with open(self.outFilename, 'a+') as f:
                 f.write('%s\n' % statsCsv)
     pass
@@ -78,11 +78,13 @@ class Plotter:
     def plot(self):
         plt.figure(1)
         plt.clf()
-        plt.plot(np.arange(self.trainer.epoch + 1),
-                 self.trainer.loss[0 : self.trainer.epoch + 1], 'b-x')
+        plt.plot(np.arange(self.trainer.totalStep + 1),
+                 self.trainer.loss[0 : self.trainer.totalStep + 1], 
+                 'b-x')
         if self.trainer.trainOpt['needValid']:
-            plt.plot(np.arange(self.trainer.epoch + 1),
-                     self.trainer.validLoss[0 : self.trainer.epoch + 1], 'g-o')
+            plt.plot(np.arange(self.trainer.totalStep + 1),
+                     self.trainer.validLoss[0 : self.trainer.totalStep + 1], 
+                     'g-o')
             plt.legend(['Train', 'Valid'])
             plt.title('Train/Valid Loss Curve')
         else:
@@ -97,12 +99,13 @@ class Plotter:
         if self.trainer.trainOpt['calcError']:
             plt.figure(2)
             plt.clf()
-            plt.plot(np.arange(self.trainer.epoch + 1),
-                     1 - self.trainer.rate[0 : self.trainer.epoch + 1], 
+            plt.plot(np.arange(self.trainer.totalStep + 1),
+                     1 - self.trainer.rate[0 : self.trainer.totalStep + 1], 
                      'b-x')
             if self.trainer.trainOpt['needValid']:
-                plt.plot(np.arange(self.trainer.epoch + 1),
-                         1 - self.trainer.validRate[0 : self.trainer.epoch + 1], 
+                plt.plot(np.arange(self.trainer.totalStep + 1),
+                         1 - self.trainer.validRate[\
+                         0 : self.trainer.totalStep + 1],
                          'g-o')
                 plt.legend(['Train', 'Valid'])
                 plt.title('Train/Valid Error Curve')
@@ -132,11 +135,10 @@ class Trainer:
         self.startTime = time.time()
         self.random = np.random.RandomState(seed)
         numEpoch = trainOpt['numEpoch']
-        self.loss = np.zeros(numEpoch)
-        self.validLoss = np.zeros(numEpoch)
-        self.rate = np.zeros(numEpoch)
-        self.validRate = np.zeros(numEpoch)
-        self.stoppedEpoch = 0
+        self.loss = 0
+        self.validLoss = 0
+        self.rate = 0
+        self.validRate = 0
         self.epoch =  0
 
     def initFolder(self):
@@ -181,146 +183,187 @@ class Trainer:
         numEpoch = trainOpt['numEpoch']
         calcError = trainOpt['calcError']
         numExPerBat = trainOpt['batchSize']
-        progressWriter = ProgressWriter(N, width=80)
+        numBatPerStep = trainOpt['stepSize'] \
+            if trainOpt.has_key('stepSize') \
+            else int(np.ceil(N / float(numExPerBat)))
+        numExPerStep = numExPerBat * numBatPerStep \
+            if trainOpt.has_key('stepSize') \
+            else N
+        numStepPerEpoch = int(np.ceil(np.ceil(
+            N / float(numExPerBat)) / numBatPerStep)) \
+            if trainOpt.has_key('stepSize') \
+            else 1
+        progressWriter = ProgressWriter(numExPerStep, width=80)
         logger = Logger(self, csv=trainOpt['writeRecord'])
         logger.logMsg('Trainer ' + self.name)
         plotter = Plotter(self)
         bestVscore = None
         bestTscore = None
-        bestEpoch = 0
+        bestStep = 0
+        totalBat = 0
+        step = 0
+        totalStep = 0
         nAfterBest = 0
         stop = False
-
+        self.loss = np.zeros((numStepPerEpoch * numEpoch))
+        self.validLoss = np.zeros((numStepPerEpoch * numEpoch))
+        self.rate = np.zeros((numStepPerEpoch * numEpoch))
+        self.validRate = np.zeros((numStepPerEpoch * numEpoch))
+        
         # Train loop through epochs
         for epoch in range(0, numEpoch):
-            E = 0
-            correct = 0
-            total = 0
             self.epoch = epoch
-
+            epochE = 0
+            epochCorrect = 0
+            epochTotal = 0
+            
+            # Shuffle data
             if trainOpt['shuffle']:
                 X, T = vt.shuffleData(X, T, self.random)
-
-            batchStart = 0
-            while batchStart < N:
-                # Batch info
-                batchEnd = min(N, batchStart + numExPerBat)
-                numExThisBat = batchEnd - batchStart
-
-                # Write progress bar
-                if trainOpt['progress']:
-                    progressWriter.increment(amount=numExThisBat)
-
-                # Forward
-                Y_bat = self.model.forward(X[batchStart:batchEnd], dropout=True)
-                T_bat = T[batchStart:batchEnd]
-
-                # Loss
-                Etmp, dEdY = self.model.getCost(
-                                    Y_bat, T_bat, weights=trainInputWeights)
-                E += Etmp * numExThisBat / float(N)
-
-                # Backward
-                self.model.backward(dEdY)
-
-                # Update
-                self.model.updateWeights()
-
-                # Prediction error
+            
+            # Every step, validate
+            for step in range(0, numStepPerEpoch):
+                stepStart = step * numExPerStep
+                stepEnd = min((step + 1) * numExPerStep, N)
+                E = 0
+                correct = 0
+                total = 0
+                self.totalStep = totalStep
+                
+                # Every batch forward-backward
+                for batch in range(0, numBatPerStep):
+                    batchStart = stepStart + batch * numExPerBat
+                    batchEnd = min(
+                        stepStart + (batch + 1) * numExPerBat, stepEnd)
+                    numExThisBat = batchEnd - batchStart
+                    self.totalBatch = totalBat
+                    
+                    if trainOpt['progress']:
+                        progressWriter.increment(amount=numExThisBat)
+                    
+                    # Forward
+                    Y_bat = self.model.forward(
+                        X[batchStart:batchEnd], dropout=True)
+                    T_bat = T[batchStart:batchEnd]
+                    
+                    # Loss
+                    Etmp, dEdY = self.model.getCost(
+                        Y_bat, T_bat, weights=trainInputWeights)
+                    E += Etmp * numExThisBat / float(numExPerStep)
+                    epochE += Etmp * numExThisBat / float(N)
+                    
+                    # Backward
+                    self.model.backward(dEdY)
+                    
+                    # Update
+                    self.model.updateWeights()
+                    
+                    # Prediction error
+                    if calcError:
+                        rate_, correct_, total_ = \
+                            tester.calcRate(self.model, Y_bat, T_bat)
+                        correct += correct_
+                        total += total_
+                        epochCorrect += correct_
+                        epochTotal += total_
+                    
+                    totalBat += 1
+                
+                # Store train statistics
                 if calcError:
-                    rate_, correct_, total_ = \
-                        tester.calcRate(self.model, Y_bat, T_bat)
-                    correct += correct_
-                    total += total_
-
-                batchStart += numExPerBat
-                if trainOpt.has_key('logNumBat') and \
-                    np.mod(batchStart / numExPerBat, trainOpt['logNumBat']) == 0:
-                    self.loss[epoch] = E / float(batchStart) * float(N)
-                    logger.logTrainStats()
-
-            # Store train statistics
-            if calcError:
-                rate = correct / float(total)
-                self.rate[epoch] = rate
-            self.loss[epoch] = E
-
-            if not trainOpt.has_key('criterion'):
-                Tscore = E
-            else:
-                if trainOpt['criterion'] == 'loss':
-                    Tscore = E
-                elif trainOpt['criterion'] == 'rate':
-                    Tscore = 1 - rate
-                else:
-                    raise Exception('Unknown stopping criterion "%s"' % \
-                        trainOpt['criterion'])
-
-            # Run validation
-            if trainOpt['needValid']:
-                VY = tester.test(self.model, VX)
-                VE, dVE = self.model.getCost(VY, VT, weights=validInputWeights)
-                self.validLoss[epoch] = VE
-                if calcError:
-                    Vrate, correct, total = tester.calcRate(self.model, VY, VT)
-                    self.validRate[epoch] = Vrate
-
-                # Check stopping criterion
+                    rate = correct / float(total)
+                    self.rate[totalStep] = rate
+                self.loss[totalStep] = E
+                
+                # Early stop
                 if not trainOpt.has_key('criterion'):
-                    Vscore = VE
+                    Tscore = E
                 else:
                     if trainOpt['criterion'] == 'loss':
-                        Vscore = VE
+                        Tscore = E
                     elif trainOpt['criterion'] == 'rate':
-                        Vscore = 1 - Vrate
+                        Tscore = 1 - rate
                     else:
                         raise Exception('Unknown stopping criterion "%s"' % \
                             trainOpt['criterion'])
-                if (bestVscore is None) or (Vscore < bestVscore):
-                    bestVscore = Vscore
-                    bestTscore = Tscore
-                    nAfterBest = 0
-                    bestEpoch = epoch
-                    # Save trainer if VE is best
+                
+                # Run validation
+                if trainOpt['needValid']:
+                    VY = tester.test(self.model, VX)
+                    VE, dVE = self.model.getCost(
+                        VY, VT, weights=validInputWeights)
+                    self.validLoss[totalStep] = VE
+                    if calcError:
+                        Vrate, correct, total = tester.calcRate(
+                            self.model, VY, VT)
+                        self.validRate[totalStep] = Vrate
+                    
+                    # Check stopping criterion
+                    if not trainOpt.has_key('criterion'):
+                        Vscore = VE
+                    else:
+                        if trainOpt['criterion'] == 'loss':
+                            Vscore = VE
+                        elif trainOpt['criterion'] == 'rate':
+                            Vscore = 1 - Vrate
+                        else:
+                            raise Exception(
+                                'Unknown stopping criterion "%s"' % \
+                                trainOpt['criterion'])
+                    if (bestVscore is None) or (Vscore < bestVscore):
+                        bestVscore = Vscore
+                        bestTscore = Tscore
+                        nAfterBest = 0
+                        bestStep = totalStep
+
+                        # Save trainer if VE is best
+                        if trainOpt['saveModel']:
+                            self.save()
+                    else:
+                        nAfterBest += 1
+                        # Stop training if above patience level
+                        if nAfterBest > trainOpt['patience']:
+                            print 'Patience level reached, early stop.'
+                            print 'Will stop at score ', bestTscore
+                            stop = True
+                else:
                     if trainOpt['saveModel']:
                         self.save()
-                else:
-                    nAfterBest += 1
-                    # Stop training if above patience level
-                    if nAfterBest > trainOpt['patience']:
-                        print 'Patience level reached, early stop.'
-                        print 'Will stop at score ', bestTscore
+                    if trainOpt.has_key('stopScore') and \
+                        Tscore < trainOpt['stopScore']:
+                        print \
+                            'Training score is lower than %.4f , ealy stop.' % \
+                            trainOpt['stopScore'] 
                         stop = True
-            else:
-                if trainOpt['saveModel']:
-                    self.save()
-                if trainOpt.has_key('stopScore') and \
-                    Tscore < trainOpt['stopScore']:
-                    print 'Training score is lower than %.4f , ealy stop.' % \
-                        trainOpt['stopScore'] 
-                    stop = True                    
-
+                
+                logger.logTrainStats()
+                if trainOpt['needValid']:
+                    print 'P: %d' % nAfterBest,
+                print self.name
+                
+                if stop:
+                    break
+            
+            # Store train statistics
+            if calcError:
+                epochRate = epochCorrect / float(epochTotal)
+            print 'Epoch Final: %d TE: %.4f TR:%.4f' % \
+                (epoch, epochE, epochRate)
+            
             # Anneal learning rate
             self.model.updateLearningParams(epoch)
-
-            # Print statistics
-            logger.logTrainStats()
-            if trainOpt['needValid']:
-                print 'BT: %.4f' % bestTscore
-            print self.name
             
             # Plot train curves
             if trainOpt['plotFigs']:
                 plotter.plot()
-
+                
             # Terminate
             if stop:       
                 break
-
-        # Record final epoch number
+                
+        # Report best train score
         self.stoppedTrainScore = bestTscore
-        self.stoppedEpoch = bestEpoch if trainOpt['needValid'] else epoch
-
+        
     def save(self, filename=None):
         if filename is None:
             filename = self.modelFilename

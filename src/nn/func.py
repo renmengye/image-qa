@@ -60,6 +60,31 @@ def crossEntOneIdx(Y, T, weights=None):
     dEdY = dEdY.reshape(Y.shape)
     return E, dEdY
 
+def crossEntOneAccIdx(Y, T, weights=None):
+    eps = 1e-8
+    Y2 = Y.reshape(Y.size / Y.shape[-1], Y.shape[-1])
+    T2 = T.reshape(T.size)
+    E = 0.0
+    dEdY = np.zeros(Y2.shape, float)
+    if weights is None:
+        for n in range(0, Y.shape[0]):
+            t = T2[n]
+            E += -np.sum(np.log(Y2[n, t + 1:] + eps))
+            E += -np.sum(np.log(1 - Y2[n, :t + 1] + eps))
+            dEdY[n, t + 1:] = -1 / (Y2[n, t + 1:] + eps)
+            dEdY[n, :t + 1] = 1/ (1 - Y2[n, :t + 1] + eps)
+    else:
+        for n in range(0, Y.shape[0]):
+            t = T2[n]
+            E += -np.sum(np.log(Y2[n, t + 1:] + eps)) * weights[n]
+            E += -np.sum(np.log(1 - Y2[n, :t + 1] + eps)) * weights[n]
+            dEdY[n, t + 1:] = -1 / (Y2[n, t + 1:] + eps) * weights[n]
+            dEdY[n, :t + 1] = 1/ (1 - Y2[n, :t + 1] + eps) * weights[n]
+    E /= Y2.shape[0]
+    dEdY /= Y2.shape[0]
+    dEdY = dEdY.reshape(Y.shape)
+    return E, dEdY
+
 def crossEntOne(Y, T, weights=None):
     eps = 1e-8
     T = T.reshape(Y.shape)
@@ -78,6 +103,14 @@ def crossEntOne(Y, T, weights=None):
 
 def argmax(Y):
     return np.argmax(Y, axis=-1)
+
+def argmaxDiff(Y):
+    Y2 = Y.reshape(Y.size / Y.shape[-1], Y.shape[-1])
+    Ydiff = np.zeros(Y2.shape)
+    for i in range(Y2.shape[1] - 1):
+        Ydiff[:, i] = Y2[:, i + 1] - Y2[:, i]
+    Ydiff2 = np.reshape(Ydiff, Y.shape)
+    return np.argmax(Ydiff2, axis=-1)
 
 def meanSqErrEye(Y, T, weights=None):
     eye = np.eye(Y.shape[-1])

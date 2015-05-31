@@ -377,7 +377,7 @@ class MapSoftmaxWeighted_CrossEnt_Tests(StageTests):
         self.chkgrd(dEdW, dEdWTmp, tolerance=5e-1)
         self.chkgrd(dEdX, dEdXTmp, tolerance=5e-1)
 
-class MapSigmoid_CrossEntOneIdxTests(StageTests):
+class MapSigmoid_CrossEntOneIdx_Tests(StageTests):
     def setUp(self):
         self.stage = Map(
             outputDim=3,
@@ -395,6 +395,25 @@ class MapSigmoid_CrossEntOneIdxTests(StageTests):
             X, T, eps=1e-1, weights=random.uniform(-5, 5, (6)))
         self.chkgrd(dEdW, dEdWTmp, tolerance=5e-1)
         self.chkgrd(dEdW, dEdWTmp, tolerance=5e-1)
+
+class MapSigmoid_CrossEntOneAccIdx_Tests(StageTests):
+    def setUp(self):
+        self.stage = Map(
+            outputDim=4,
+            initRange=0.1,
+            initSeed=1,
+            activeFn=SigmoidActiveFn)
+        self.model = self.stage
+        self.testInputErr = True
+        self.costFn = crossEntOneAccIdx
+    def test_grad(self):
+        random = np.random.RandomState(2)
+        X = random.uniform(-0.1, 0.1, (6,5))
+        T = random.uniform(0, 3, (6)).astype(int)
+        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(
+            X, T, eps=1e-1)
+        self.chkgrd(dEdW, dEdWTmp, tolerance=5e-1)
+        self.chkgrd(dEdX, dEdXTmp, tolerance=5e-1)
 
 class LUT_Tests(StageTests):
     """Lookup table tests"""
@@ -792,7 +811,9 @@ if __name__ == '__main__':
     suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(MapSoftmax_CrossEnt_Tests))
     suite.addTests(
-        unittest.TestLoader().loadTestsFromTestCase(MapSigmoid_CrossEntIdx_Tests))
+        unittest.TestLoader().loadTestsFromTestCase(MapSigmoid_CrossEntOneIdx_Tests))
+    suite.addTests(
+        unittest.TestLoader().loadTestsFromTestCase(MapSigmoid_CrossEntOneAccIdx_Tests))
     suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(MapSoftmaxWeighted_CrossEnt_Tests))
     suite.addTests(
