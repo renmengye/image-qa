@@ -234,6 +234,13 @@ def addStage(stageDict):
             learningRateAnnealConst=learningRateAnnealConst,
             momentum=momentum,
             deltaMomentum=deltaMomentum)
+    elif stageDict['type'] == 'timeRepeat':
+        stage = TimeRepeat(
+            name=stageDict['name'],
+            numRepeats=stageDict['numRepeats'],
+            inputNames=inputList,
+            outputdEdX=outputdEdX
+        )
     elif stageDict['type'] == 'timeFold':
         stage = TimeFold(
             name=stageDict['name'],

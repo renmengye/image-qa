@@ -72,6 +72,25 @@ class TimeReverse(Stage):
         else:
             return None
 
+class TimeRepeat(State):
+    def __init__(self, numRepeats, inputNames=None, outputDim=0, name=None, outputdEdX=True):
+        Stage.__init__(self, name=name, inputNames=inputNames, outputDim=outputDim, outputdEdX=outputdEdX)
+        self.numRepeats = numRepeats
+
+    def forward(self, X):
+        self.Xshape = X.shape
+        if len(X.shape) == 2:
+            X = X.reshape(X.shape[0], 1, X.shape[1])
+        return np.tile(X, (1, self.numRepeats, 1))
+
+    def backward(self, dEdY):
+        if self.outputdEdX:
+            dEdY = dEdY.reshape(dEdY.shape[0], self.numRepeats, dEdY.shape[1], dEdY.shape[2])
+            dEdX = np.sum(dEdY, axis=1)
+            if len(self.Xshape) == 2:
+                dEdX = dEdX.reshape(dEdX.shape[0], dEdX.shape[-1])
+            return dEdX
+
 class TimeFinal(Stage):
     """
     Scans and selects the last timestep.
