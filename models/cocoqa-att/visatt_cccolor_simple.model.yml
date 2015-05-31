@@ -91,6 +91,7 @@ specs:
       type: 'active'
       inputs: 'controllerHidReshape'
       activeFn: 'softmax'
+      outputDim: 196
     - name: 'controllerMain'
       type: 'sumProd'
       inputs: 'controllerOut, imgCtxFold'
