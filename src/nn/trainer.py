@@ -180,19 +180,24 @@ class Trainer:
             VX = validInput
             VT = validTarget
         N = X.shape[0]
+        print 'Epoch size:', N
         numEpoch = trainOpt['numEpoch']
         calcError = trainOpt['calcError']
         numExPerBat = trainOpt['batchSize']
+        print 'Batch size:', numExPerBat
         numBatPerStep = trainOpt['stepSize'] \
             if trainOpt.has_key('stepSize') \
             else int(np.ceil(N / float(numExPerBat)))
+        print 'Step size:', numBatPerStep
         numExPerStep = numExPerBat * numBatPerStep \
             if trainOpt.has_key('stepSize') \
             else N
-        numStepPerEpoch = int(np.ceil(np.ceil(
-            N / float(numExPerBat)) / numBatPerStep)) \
+        print 'Examples per step:', numExPerStep
+        numStepPerEpoch = int(np.ceil(
+            N / float(numExPerStep))) \
             if trainOpt.has_key('stepSize') \
             else 1
+        print 'Steps per epoch:', numStepPerEpoch
         progressWriter = ProgressWriter(numExPerStep, width=80)
         logger = Logger(self, csv=trainOpt['writeRecord'])
         logger.logMsg('Trainer ' + self.name)
@@ -234,6 +239,8 @@ class Trainer:
                 # Every batch forward-backward
                 for batch in range(0, numBatPerStep):
                     batchStart = stepStart + batch * numExPerBat
+                    if batchStart > N:
+                        break
                     batchEnd = min(
                         stepStart + (batch + 1) * numExPerBat, stepEnd)
                     numExThisBat = batchEnd - batchStart
