@@ -15,6 +15,7 @@ from conv1d import *
 from maxpool1d import *
 from meanpool1d import *
 from normalize import *
+from ordinal import *
 
 from scipy import sparse
 
@@ -452,6 +453,20 @@ def addStage(stageDict):
             mean=mean,
             std=std,
             outputDim=stageDict['outputDim'],
+            outputdEdX=outputdEdX
+        )
+    elif stageDict['type'] == 'ordinal':
+        stage = OrdinalRegression(
+            name=stageDict['name'],
+            inputNames=inputList,
+            outputDim=stageDict['outputDim'],
+            learningRate=learningRate,
+            learningRateAnnealConst=learningRateAnnealConst,
+            momentum=momentum,
+            deltaMomentum=deltaMomentum,
+            gradientClip=gradientClip,
+            weightClip=weightClip,
+            weightRegConst=weightRegConst,
             outputdEdX=outputdEdX
         )
     else:
