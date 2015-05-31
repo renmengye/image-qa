@@ -12,6 +12,7 @@ stages:
     - 'controllerHid'
     - 'controllerHidReshape'
     - 'controllerOut'
+    - 'controllerOutReshape'
     - 'controllerMain'
     - 'classifier'
 outputs: 'classifier'
@@ -92,9 +93,14 @@ specs:
       inputs: 'controllerHidReshape'
       activeFn: 'softmax'
       outputDim: 196
+    - name: 'controllerOutReshape'
+      type: 'reshape'
+      inputs: 'controllerOut'
+      reshapeFn: '(x[0], x[1], 1)'
+      outputDim: 1
     - name: 'controllerMain'
       type: 'sumProd'
-      inputs: 'controllerOut, imgCtxFold'
+      inputs: 'controllerOutReshape, imgCtxFold'
       sumAxis: 1
       outputDim: 512
     - name: 'classifier'
