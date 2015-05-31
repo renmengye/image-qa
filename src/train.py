@@ -141,7 +141,7 @@ def trainValid(
         validInputWeights,
         initWeights=None):
     model = nn.load(params['modelFilename'])
-    if initWeightsFile is not None:
+    if initWeights is not None:
         model.loadWeights(initWeights)
     trainer = nn.Trainer(
         name=params['name']+\
