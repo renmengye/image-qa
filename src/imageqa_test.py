@@ -201,6 +201,8 @@ def testAll(
     testTruthFile = getTruthFilename(modelId, resultsFolder)
     data = loadDataset(dataFolder)
     outputTest = nn.test(model, data['testData'][0])
+    rate, correct, total = nn.calcRate(model, outputTest, data['testData'][1])
+    print 'rate: %.4f' % rate
     resultsRank, \
     resultsCategory, \
     resultsWups = runAllMetrics(
@@ -213,6 +215,7 @@ def testAll(
                         testTruthFile)
     writeMetricsToFile(
                 modelId,
+                rate,
                 resultsRank,
                 resultsCategory,
                 resultsWups,
@@ -238,12 +241,14 @@ def runAllMetrics(
 
 def writeMetricsToFile(
                         taskId, 
+                        rate,
                         resultsRank, 
                         resultsCategory, 
                         resultsWups, 
                         resultsFolder):
     resultsFile = os.path.join(resultsFolder, taskId, 'result.txt')
     with open(resultsFile, 'w') as f:
+        f.write('rate: %.4f\n' % rate)
         f.write('rate @ 1: %.4f\n' % resultsRank[0])
         f.write('rate @ 5: %.4f\n' % resultsRank[1])
         f.write('rate @ 10: %.4f\n' % resultsRank[2])
