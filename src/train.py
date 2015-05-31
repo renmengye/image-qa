@@ -278,35 +278,61 @@ if __name__ == '__main__':
             # Send email
             sendEmail(params, trainOpt, trainer)
     else:
-        # Train model
-        model, trainer = trainValid(
-            params,
-            trainOpt,
-            trainInput, 
-            trainTarget, 
-            trainInputWeights, 
-            validInput, 
-            validTarget, 
-            validInputWeights)
+        if params['earlyStopScore'] is None:
+            # Train model
+            model, trainer = trainValid(
+                params,
+                trainOpt,
+                trainInput, 
+                trainTarget, 
+                trainInputWeights, 
+                validInput, 
+                validTarget, 
+                validInputWeights)
 
-        # Reload model
-        model = nn.load(params['modelFilename'])
-        model.loadWeights(np.load(trainer.modelFilename))
+            # Reload model
+            model = nn.load(params['modelFilename'])
+            model.loadWeights(np.load(trainer.modelFilename))
 
-        # Run tests
-        runTests(params, model, trainer)
-        
-        # Send email
-        sendEmail(params, trainOpt, trainer)
+            # Run tests
+            runTests(params, model, trainer)
+            
+            # Send email
+            sendEmail(params, trainOpt, trainer)
+                
+            # Re-train
+            if params['testDataFilename'] is not None and \
+                params['validDataFilename'] is not None:
 
-        # Re-train
-        if params['testDataFilename'] is not None and \
-            params['validDataFilename'] is not None:
+                # Setup options
+                trainOpt['needValid'] = False
+                print 'Stopped score:', trainer.stoppedTrainScore
+                trainOpt['stopScore'] = trainer.stoppedTrainScore
 
-            # Setup options
+                # Train train+valid
+                model, trainer = trainAll(
+                    params,
+                    trainOpt,
+                    trainInput, 
+                    trainTarget, 
+                    trainInputWeights, 
+                    validInput, 
+                    validTarget, 
+                    validInputWeights)
+
+                # Reload model
+                model = nn.load(params['modelFilename'])
+                model.loadWeights(np.load(trainer.modelFilename))
+
+                # Run tests
+                runTests(params, model, trainer)
+                
+                # Send email
+                sendEmail(params, trainOpt, trainer)
+        else:
+            # Set up options
             trainOpt['needValid'] = False
-            print 'Stopped score:', trainer.stoppedTrainScore
-            trainOpt['stopScore'] = trainer.stoppedTrainScore
+            trainOpt['stopScore'] = params['earlyStopScore']
 
             # Train train+valid
             model, trainer = trainAll(
@@ -317,7 +343,8 @@ if __name__ == '__main__':
                 trainInputWeights, 
                 validInput, 
                 validTarget, 
-                validInputWeights)
+                validInputWeights,
+                initWeights=initWeights)
 
             # Reload model
             model = nn.load(params['modelFilename'])
