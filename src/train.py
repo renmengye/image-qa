@@ -299,7 +299,7 @@ if __name__ == '__main__':
             
             # Send email
             sendEmail(params, trainOpt, trainer)
-                
+
             # Re-train
             if params['testDataFilename'] is not None and \
                 params['validDataFilename'] is not None:
@@ -343,8 +343,7 @@ if __name__ == '__main__':
                 trainInputWeights, 
                 validInput, 
                 validTarget, 
-                validInputWeights,
-                initWeights=initWeights)
+                validInputWeights)
 
             # Reload model
             model = nn.load(params['modelFilename'])
