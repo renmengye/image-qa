@@ -460,6 +460,9 @@ def addStage(stageDict):
             name=stageDict['name'],
             inputNames=inputList,
             outputDim=stageDict['outputDim'],
+            fixExtreme=stageDict['fixExtreme'] \
+            if stageDict.has_key('fixExtreme') \
+            else True,
             learningRate=learningRate,
             learningRateAnnealConst=learningRateAnnealConst,
             momentum=momentum,

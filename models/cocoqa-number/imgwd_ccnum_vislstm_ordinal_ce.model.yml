@@ -132,6 +132,7 @@ specs:
       type: 'ordinal'
       inputs: 'mapping'
       outputDim: 11
+      fixExtreme: false
       initRange: 0.1
       initSeed: 7
       learningRate: 0.01

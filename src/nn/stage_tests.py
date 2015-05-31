@@ -788,7 +788,8 @@ class Normalize_Tests(StageTests):
 class OrdinalRegression_Tests(StageTests):
     def setUp(self):
         self.stage = OrdinalRegression(
-            outputDim=5)
+            outputDim=5,
+            fixExtreme=False)
         self.model = self.stage
         self.costFn = crossEntIdx
         self.testInputErr = True

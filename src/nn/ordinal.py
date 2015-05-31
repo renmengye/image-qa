@@ -5,7 +5,8 @@ import numpy as np
 class OrdinalRegression(Stage):
     def __init__(
                     self, 
-                    outputDim, 
+                    outputDim,
+                    fixExtreme=True,
                     inputNames=None, 
                     name=None, 
                     outputdEdX=True,
@@ -18,7 +19,7 @@ class OrdinalRegression(Stage):
                     weightRegConst=0.0):
         Stage.__init__(
                         self, 
-                        name=name, 
+                        name=name,
                         inputNames=inputNames, 
                         outputDim=outputDim, 
                         outputdEdX=outputdEdX,
@@ -33,6 +34,7 @@ class OrdinalRegression(Stage):
         # mu_0 = -1
         # mu_(n-1) = 1
         # mu_i = -1 + 2 * (i / n)
+        self.fixExtreme = fixExtreme
         mu = np.linspace(-1, 1, self.outputDim)
         # pi_i = 1/n
         pi = np.zeros(self.outputDim) + 1 / float(self.outputDim)
@@ -64,6 +66,10 @@ class OrdinalRegression(Stage):
         dEdMu = np.mean(
             (self.X - mu) *  
             (self.Y - targetInt), axis=0)
+        # Fix extreme mu's
+        if self.fixExtreme:
+            dEdMu[0] = 0
+            dEdMu[-1] = 0
         dEdPi = np.mean(self.Y - targetInt, axis=0)
         self.dEdW = np.zeros(self.W.shape)
         self.dEdW[0] = dEdMu
