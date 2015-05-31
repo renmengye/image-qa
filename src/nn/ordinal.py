@@ -37,7 +37,7 @@ class OrdinalRegression(Stage):
         self.fixExtreme = fixExtreme
         mu = np.linspace(-1, 1, self.outputDim)
         # pi_i = 1/n
-        pi = np.zeros(self.outputDim) + 1 / float(self.outputDim)
+        pi = np.zeros(self.outputDim) + np.log(1 / float(self.outputDim))
         self.W = np.zeros((2, self.outputDim))
         self.W[0] = mu
         self.W[1] = pi
