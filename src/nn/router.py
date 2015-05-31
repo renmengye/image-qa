@@ -26,12 +26,18 @@ def routeFn(name):
         return crossEntOne
     elif name == 'crossEntIdx':
         return crossEntIdx
+    elif name == 'crossEntOneIdx':
+        return crossEntOneIdx
+    elif name == 'crossEntOneAccIdx':
+        return crossEntOneAccIdx
     elif name == 'rankingLoss':
         return rankingLoss
     elif name == 'hardLimit':
         return hardLimit
     elif name == 'argmax':
         return argmax
+    elif name == 'argmaxDiff':
+        return argmaxDiff
     elif name == 'sigmoid':
         return SigmoidActiveFn
     elif name == 'softmax':
