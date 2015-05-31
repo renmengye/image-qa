@@ -84,7 +84,7 @@ specs:
       weightRegConst: 0.00005
     - name: 'controllerHidReshape'
       type: 'reshape'
-      inputs: 'controllerInput'
+      inputs: 'controllerHid'
       reshapeFn: '(x[0] / 196, 196)'
       outputDim: 196
     - name: 'controllerOut'
