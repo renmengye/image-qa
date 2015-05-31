@@ -8,13 +8,27 @@ class OrdinalRegression(Stage):
                     outputDim, 
                     inputNames=None, 
                     name=None, 
-                    outputdEdX=True):
+                    outputdEdX=True,
+                    learningRate=0.0,
+                    learningRateAnnealConst=0.0,
+                    momentum=0.0,
+                    deltaMomentum=0.0,
+                    weightClip=0.0,
+                    gradientClip=0.0,
+                    weightRegConst=0.0):
         Stage.__init__(
                         self, 
                         name=name, 
                         inputNames=inputNames, 
                         outputDim=outputDim, 
-                        outputdEdX=outputdEdX)
+                        outputdEdX=outputdEdX,
+                        learningRate=learningRate,
+                        learningRateAnnealConst=learningRateAnnealConst,
+                        momentum=momentum,
+                        deltaMomentum=deltaMomentum,
+                        weightClip=weightClip,
+                        gradientClip=gradientClip,
+                        weightRegConst=weightRegConst)
         # Uniform initialization
         # mu_0 = -1
         # mu_(n-1) = 1
