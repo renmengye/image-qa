@@ -85,7 +85,8 @@ class TimeRepeat(Stage):
 
     def backward(self, dEdY):
         if self.outputdEdX:
-            dEdY = dEdY.reshape(dEdY.shape[0], self.numRepeats, dEdY.shape[1], dEdY.shape[2])
+            dEdY = dEdY.reshape(
+                dEdY.shape[0], self.numRepeats, dEdY.shape[1] / self.numRepeats, dEdY.shape[2])
             dEdX = np.sum(dEdY, axis=1)
             if len(self.Xshape) == 2:
                 dEdX = dEdX.reshape(dEdX.shape[0], dEdX.shape[-1])
