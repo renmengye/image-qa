@@ -72,7 +72,7 @@ class TimeReverse(Stage):
         else:
             return None
 
-class TimeRepeat(State):
+class TimeRepeat(Stage):
     def __init__(self, numRepeats, inputNames=None, outputDim=0, name=None, outputdEdX=True):
         Stage.__init__(self, name=name, inputNames=inputNames, outputDim=outputDim, outputdEdX=outputdEdX)
         self.numRepeats = numRepeats
