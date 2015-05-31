@@ -208,10 +208,16 @@ class Stage:
             print
 
     def getWeights(self):
-        return self.W
+        if self.gpu:
+            return gpu.as_numpy_array(self.W)
+        else:
+            return self.W
 
     def loadWeights(self, W):
-        self.W = W
+        if self.gpu:
+            self.W = gpu.as_garray(W)
+        else:
+            self.W = W
 
     def copy(self):
         return copy.copy(self)
