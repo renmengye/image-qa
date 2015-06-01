@@ -1,0 +1,129 @@
+costFn: 'crossEntIdx'
+decisionFn: 'argmax'
+stages:
+    - 'imgSel'
+    - 'txtSel'
+    - 'imgFeat'
+    - 'txtDict'
+    - 'txtRepeat'
+    - 'imgCtxFold'
+    - 'controllerInput'
+    - 'controllerInputReshape'
+    - 'controllerHid'
+    - 'controllerHidReshape'
+    - 'controllerOut'
+    - 'controllerOutReshape'
+    - 'controllerMain'
+    - 'hiddenFC1'
+    - 'classifier'
+outputs: 'classifier'
+specs:
+    - name: 'imgSel'
+      type: 'selector'
+      inputs: 'input'
+      start: 0
+      end: 1
+      axis: 1
+    - name: 'txtSel'
+      type: 'selector'
+      inputs: 'input'
+      start: 7
+      end: 8
+      axis: 1
+    - name: 'imgFeat'
+      type: 'lut'
+      inputs: 'imgSel'
+      inputDim: 123287
+      outputDim: 100352
+      initWeights: '/ais/gobi3/u/mren/data/cocoqa-full/hidden_oxford.h5'
+      format: 'h5'
+      h5key: 'hidden5_4_conv'
+      sparse: true
+      learningRate: 0.0
+      outputdEdX: false
+    - name: 'txtDict'
+      type: 'lut'
+      inputs: 'txtSel'
+      inputDim: 2394
+      outputDim: 300
+      initRange: 1.0
+      initSeed: 2
+      learningRate: 0.8
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 500.0
+      outputdEdX: false
+    - name: 'txtRepeat'
+      type: 'timeRepeat'
+      inputs: 'txtDict'
+      numRepeats: 196
+    - name: 'imgCtxFold'
+      type: 'reshape'
+      inputs: 'imgFeat'
+      reshapeFn: '(x[0], 196, x[1] / 196)'
+      outputDim: 512
+    - name: 'controllerInput'
+      type: 'concat'
+      inputs: 'txtRepeat, imgCtxFold'
+      axis: 2
+      outputDim: 812
+    - name: 'controllerInputReshape'
+      type: 'reshape'
+      inputs: 'controllerInput'
+      reshapeFn: '(x[0] * x[1], x[2])'
+      outputDim: 812
+    - name: 'controllerHid'
+      type: 'map'
+      inputs: 'controllerInputReshape'
+      activeFn: 'sigmoid'
+      outputDim: 1
+      initRange: 0.1
+      initSeed: 2
+      learningRate: 0.1
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 100.0
+      weightRegConst: 0.00005
+    - name: 'controllerHidReshape'
+      type: 'reshape'
+      inputs: 'controllerHid'
+      reshapeFn: '(x[0] / 196, 196)'
+      outputDim: 196
+    - name: 'controllerOut'
+      type: 'active'
+      inputs: 'controllerHidReshape'
+      activeFn: 'softmax'
+      outputDim: 196
+    - name: 'controllerOutReshape'
+      type: 'reshape'
+      inputs: 'controllerOut'
+      reshapeFn: '(x[0], x[1], 1)'
+      outputDim: 1
+    - name: 'controllerMain'
+      type: 'sumProd'
+      inputs: 'controllerOutReshape, imgCtxFold'
+      sumAxis: 1
+      outputDim: 512
+    - name: 'hiddenFC1'
+      type: 'map'
+      inputs: 'controllerMain'
+      activeFn: 'relu'
+      outputDim: 512
+      initRange: 0.01
+      learningRate: 0.1
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 100.0
+      weightRegConst: 0.00005
+    - name: 'classifier'
+      type: 'map'
+      inputs: 'hiddenFC1, txtDict'
+      activeFn: 'softmax'
+      outputDim: 11
+      initRange: 0.01
+      initSeed: 3
+      learningRate: 0.01
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 100.0
+      weightRegConst: 0.00005

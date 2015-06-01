@@ -27,7 +27,7 @@ specs:
       inputs: 'txtUnfold'
       inputDim: 9738
       outputDim: 500
-      initWeights: '../data/cocoqa-full/word-embed-custom-q-500.npy'
+      initWeights: '/ais/gobi3/u/mren/data/cocoqa-full/word-embed-custom-q-500.npy'
       learningRate: 0.0
     - name: 'txtFold'
       type: 'timeFold'

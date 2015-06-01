@@ -13,6 +13,7 @@ class LUT(Stage):
                  inputNames,
                  inputDim,
                  outputDim,
+                 lazyInit=True,
                  initRange=1.0,
                  initSeed=2,
                  intConversion=False,
@@ -51,7 +52,10 @@ class LUT(Stage):
         # Zeroth rows of the weight matrix is reserved
         # for empty word at the end of a sentence.
         if needInit:
-            self.W = None
+            if lazyInit:
+                self.W = None
+            else:
+                self.initWeights()
         else:
             self.W = initWeights
             if use_gpu and self.W.dtype != np.float32:
@@ -62,6 +66,7 @@ class LUT(Stage):
         self.dEdW = 0.0
 
     def initWeights(self):
+        print self.name
         self.W = self.random.uniform(
             -self.initRange/2.0, self.initRange/2.0,
             (self.inputDim, self.outputDim))

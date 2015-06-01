@@ -1,0 +1,161 @@
+costFn: 'crossEntIdx'
+decisionFn: 'argmax'
+stages:
+    - 'imgSel'
+    - 'txtSel'
+    - 'imgConvFeat'
+    - 'imgFCFeat'
+    - 'imgFCFeatNorm'
+    - 'txtDict'
+    - 'txtRepeat'
+    - 'imgCtxFold'
+    - 'controllerInput'
+    - 'controllerInputReshape'
+    - 'controllerHid1'
+    - 'controllerHid1Reshape'
+    - 'controllerOut'
+    - 'controllerOutReshape'
+    - 'controllerMain'
+    - 'dropout'
+    - 'hiddenFC1'
+    - 'classifier'
+outputs: 'classifier'
+specs:
+    - name: 'imgSel'
+      type: 'selector'
+      inputs: 'input'
+      start: 0
+      end: 1
+      axis: 1
+    - name: 'txtSel'
+      type: 'selector'
+      inputs: 'input'
+      start: 7
+      end: 8
+      axis: 1
+    - name: 'txtDict'
+      type: 'lut'
+      inputs: 'txtSel'
+      inputDim: 2394
+      outputDim: 300
+      lazyInit: false
+      initRange: 1.0
+      initSeed: 2
+      learningRate: 0.8
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 500.0
+      outputdEdX: false
+    - name: 'imgConvFeat'
+      type: 'lut'
+      inputs: 'imgSel'
+      inputDim: 123287
+      outputDim: 100352
+      initWeights: '/ais/gobi3/u/mren/data/cocoqa-full/hidden_oxford.h5'
+      format: 'h5'
+      h5key: 'hidden5_4_conv'
+      sparse: true
+      learningRate: 0.0
+      outputdEdX: false
+    - name: 'imgFCFeat'
+      type: 'lut'
+      inputs: 'imgSel'
+      inputDim: 123287
+      outputDim: 4096
+      initWeights: '/ais/gobi3/u/mren/data/cocoqa-full/hidden_oxford.h5'
+      format: 'h5'
+      h5key: 'hidden7'
+      sparse: true
+      learningRate: 0.0
+      outputdEdX: false
+    - name: 'imgFCFeatNorm'
+      type: 'normalize'
+      inputs: 'imgFCFeat'
+      mean: '/ais/gobi3/u/mren/data/cocoqa-full/hidden_oxford.h5'
+      meanKey: 'hidden7_mean'
+      std: '/ais/gobi3/u/mren/data/cocoqa-full/hidden_oxford.h5'
+      stdKey: 'hidden7_std'
+      format: 'h5'
+      outputDim: 4096
+    - name: 'txtRepeat'
+      type: 'timeRepeat'
+      inputs: 'txtDict'
+      numRepeats: 196
+    - name: 'imgCtxFold'
+      type: 'reshape'
+      inputs: 'imgConvFeat'
+      reshapeFn: '(x[0], 196, x[1] / 196)'
+      outputDim: 512
+    - name: 'controllerInput'
+      type: 'concat'
+      inputs: 'txtRepeat, imgCtxFold'
+      axis: 2
+      outputDim: 812
+    - name: 'controllerInputReshape'
+      type: 'reshape'
+      inputs: 'controllerInput'
+      reshapeFn: '(x[0] * x[1], x[2])'
+      outputDim: 812
+    - name: 'controllerHid1'
+      type: 'map'
+      inputs: 'controllerInputReshape'
+      activeFn: 'sigmoid'
+      outputDim: 1
+      initRange: 0.3
+      initSeed: 20
+      learningRate: 0.03
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 100.0
+      weightRegConst: 0.00005
+    - name: 'controllerHid1Reshape'
+      type: 'reshape'
+      inputs: 'controllerHid1'
+      reshapeFn: '(x[0] / 196, 196)'
+      outputDim: 196
+    - name: 'controllerOut'
+      type: 'active'
+      inputs: 'controllerHid1Reshape'
+      activeFn: 'softmax'
+      outputDim: 196
+    - name: 'controllerOutReshape'
+      type: 'reshape'
+      inputs: 'controllerOut'
+      reshapeFn: '(x[0], x[1], 1)'
+      outputDim: 1
+    - name: 'controllerMain'
+      type: 'sumProd'
+      inputs: 'controllerOutReshape, imgCtxFold'
+      sumAxis: 1
+      outputDim: 512
+    - name: 'hiddenFC1'
+      type: 'map'
+      inputs: 'controllerMain'
+      activeFn: 'relu'
+      initType: 'positive'
+      outputDim: 512
+      initRange: 0.1
+      initSeed: 30
+      learningRate: 0.01
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 100.0
+      weightRegConst: 0.00005
+    - name: 'dropout'
+      type: 'dropout'
+      inputs: 'imgFCFeatNorm'
+      dropoutRate: 0.5
+      initSeed: 100
+      outputDim: 4096
+    - name: 'classifier'
+      type: 'map'
+      inputs: 'hiddenFC1, dropout, txtDict'
+      activeFn: 'softmax'
+      outputDim: 11
+      initRange: 0.01
+      initSeed: 3
+      learningRate: 0.01
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 100.0
+      weightRegConst: 0.00005

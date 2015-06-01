@@ -72,6 +72,8 @@ def addStage(stageDict):
     if stageDict.has_key('initRange') else 1.0
     
     if stageDict.has_key('initWeights'):
+        print 'Initializing weights for', stageDict['name']
+        print 'Reading', stageDict['initWeights']
         if stageDict.has_key('format'):
             if stageDict['format'] == 'plain':
                 initWeights = np.loadtxt(stageDict['initWeights'])
@@ -87,6 +89,7 @@ def addStage(stageDict):
                         (iwData, iwInd, iwPtr), shape=iwShape)
                 else:
                     initWeights = initWeightsFile[stageDict['h5key']][:]
+                print initWeights.shape
             elif stageDict['format'] == 'numpy':
                 initWeights = np.load(stageDict['initWeights'])
             else:
@@ -177,6 +180,8 @@ def addStage(stageDict):
             inputDim=stageDict['inputDim'],
             outputDim=stageDict['outputDim'],
             inputNames=inputList,
+            lazyInit=stageDict['lazyInit'] if \
+            stageDict.has_key('lazyInit') else True,
             initSeed=initSeed,
             initRange=initRange,
             initWeights=initWeights,

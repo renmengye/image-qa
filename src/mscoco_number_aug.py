@@ -9,8 +9,8 @@ import imageqa_test as it
 import prep
 
 countFile = '../data/coco-count/count.pkl'
-numberDatasetFolder = '../data/cocoqa-number'
-augmentDatasetFolder = '../data/cocoqa-number-aug'
+numberDatasetFolder = '../data/cocoqa-number-rv'
+augmentDatasetFolder = '../data/cocoqa-number-rv-aug'
 categoriesFile = '/ais/gobi3/u/mren/data/mscoco/categories.pkl'
 foundSingular = 0
 foundPlural = 0

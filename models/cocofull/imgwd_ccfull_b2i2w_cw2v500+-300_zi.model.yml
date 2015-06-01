@@ -24,7 +24,7 @@ specs:
       intConversion: true
       inputDim: 9738
       outputDim: 500
-      initWeights: '../data/cocoqa-full/word-embed-custom-q-500.npy'
+      initWeights: '/ais/gobi3/u/mren/data/cocoqa-full/word-embed-custom-q-500.npy'
       learningRate: 0.8
       momentum: 0.9
       gradientClip: 0.1

@@ -4,7 +4,7 @@ import shutil
 import imageqa_test as it
 import numpy as np
 
-realValueDict = {
+realValueDictZero = {
     'zero': 0,
     'one': 1,
     'two': 2,
@@ -16,11 +16,10 @@ realValueDict = {
     'eight': 8,
     'nine': 9,
     'ten': 10,
-    'eleven': 11,
-    'twelve': 12
+    'UNK': 11
 }
 
-realValueIdict = [
+realValueIdictZero = [
     'zero',
     'one',
     'two',
@@ -32,12 +31,41 @@ realValueIdict = [
     'eight',
     'nine',
     'ten',
-    'eleven',
-    'twelve'
+    'UNK'
 ]
+
+realValueDictNonZero = {
+    'one': 0,
+    'two': 1,
+    'three': 2,
+    'four': 3,
+    'five': 4,
+    'six': 5,
+    'seven': 6,
+    'eight': 7,
+    'nine': 8,
+    'ten': 9,
+    'UNK': 10
+}
+
+realValueIdictNonZero = [
+    'one',
+    'two',
+    'three',
+    'four',
+    'five',
+    'six',
+    'seven',
+    'eight',
+    'nine',
+    'ten',
+    'UNK'
+]
+
 
 if __name__ == '__main__':
     identity = False
+    includeZero = False
     for i, flag in enumerate(sys.argv):
         if flag == '-d' or flag == '-data':
             numDataFolder = sys.argv[i + 1]
@@ -45,8 +73,16 @@ if __name__ == '__main__':
             outputFolder = sys.argv[i + 1]
         elif flag == '-i' or flag == '-identity':
             identity = True
+        elif flag == '-z':
+            includeZero = True
     if not os.path.exists(outputFolder):
         os.makedirs(outputFolder)
+    if includeZero:
+        realValueDict = realValueDictZero
+        realValueIdict = realValueIdictZero
+    else:
+        realValueDict = realValueDictNonZero
+        realValueIdict = realValueDictNonZero
     data = it.loadDataset(numDataFolder)
     targetDataRV = []
     inputDataRV = []
@@ -60,16 +96,15 @@ if __name__ == '__main__':
         inputDataRVSep = []
 
         for n in range(targetData.shape[0]):
-            print targetData[n, 0]
             ans = ansIdict[targetData[n, 0]]
-            print ans
             if realValueDict.has_key(ans):
                 value = realValueDict[ansIdict[targetData[n, 0]]]
                 if identity:
                     targetDataRVSep.append(eye[value])
                 else:
                     targetDataRVSep.append(value)
-                        
+                print ans
+                print value
                 inputDataRVSep.append(inputData[n, :, 0])
 
         targetDataRVSep = np.array(targetDataRVSep)
@@ -106,6 +141,11 @@ if __name__ == '__main__':
     np.save(os.path.join(outputFolder, 'test-qtype.npy'),
         np.zeros(inputDataRV[0].shape[0], dtype='int') + 1)
 
-    shutil.copyfile(
-        os.path.join(numDataFolder, 'vocab-dict.npy'),
-        os.path.join(outputFolder, 'vocab-dict.npy'))
+    data['ansIdict'] = realValueIdict
+    data['ansDict'] = realValueDict
+    vocabDict = np.array((
+        data['questionDict'],
+        data['questionIdict'],
+        data['ansDict'],
+        data['ansIdict']), dtype='object')
+    np.save(os.path.join(outputFolder, 'vocab-dict.npy'), vocabDict)

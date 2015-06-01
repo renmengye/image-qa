@@ -12,6 +12,7 @@ import skimage
 import skimage.transform
 import skimage.io
 
+import numpy as np
 from nn.func import *
 import nn
 import imageqa_test as it
@@ -67,15 +68,26 @@ def plotAttention(
         elif len(X.shape) == 2:
             img = loadImage(imgPathDict[X[n, 0] - 1])
         plt.clf()
-        w = np.round(np.sqrt(Xend[n]))
-        h = np.ceil((Xend[n]) / float(w))
 
+        if mode == 0:
+            w = np.round(np.sqrt(Xend[n]))
+            h = np.ceil((Xend[n]) / float(w))
+        elif mode == 1:
+            w = 2
+            h = 1
         fig, ax = plt.subplots()
         plt.subplot(w, h, 1)
         plt.imshow(img)
         plt.axis('off')
         words = []
-        for t in range(1, Xend[n]):
+
+        if mode == 0: timespan = Xend[n]
+        elif mode == 1: timespan = 2
+        for t in range(1, timespan):
+            if mode == 0:
+                attention = A[n, t - 1]
+            elif mode == 1:
+                attention = A[n]
             if len(X.shape) == 3:
                 word = questionIdict[X[n, t] - 1]
             elif len(X.shape) == 2 and t == 1:
@@ -85,7 +97,7 @@ def plotAttention(
             words.append(word)
             plt.subplot(w, h, t + 1)
             plt.imshow(img)
-            alpha = A[n, t - 1].reshape(14, 14)
+            alpha = attention.reshape(14, 14)
             alphaImage = skimage.transform.resize(
                 alpha, [img.shape[0], img.shape[1]])
             plt.imshow(alphaImage, alpha=0.8)
@@ -108,26 +120,32 @@ if __name__ == '__main__':
     """
     Render visual attention.
     Usage: python visatt_render.py 
-                        -m[odel] {name:modelId}
-                        -d[ata] {dataFolder}
-                        -o[utput] {outputFolder}
-                        [-r[esults] {resultsFolder}]
+                        -m[odel] {model id}
+                        -d[ata] {data folder}
+                        -o[utput] {output folder}
+                        -l[ayer] {attention layer name}
+                        [-r[esults] {results folder}]
                         [-dataset {daquar/cocoqa}]
                         [-n[umber] {number of examples}]
+                        -mode {0/1}
     Parameters:
         -m[odel]: Model ID
         -d[ata]: Data folder
         -o[utput]: Output folder
+        -l[ayer]: Layer name of the attention output, e.g. 'attModel:attOut'
         -r[esults]: Results folder, default "../results"
         -dataset: DAQUAR/COCO-QA dataset, default "cocoqa"
         -n[number]: Render number of examples, default 10
+        -mode: Temporary flag
     """
     modelId = sys.argv[1]
     dataFolder = None
     outputFolder = None
     resultsFolder = '../results'
-    dataset = "cocoqa"
+    dataset = 'cocoqa'
+    attLayer = 'attModel:attOut'
     N = 10
+    mode = 0
     for i, flag in enumerate(sys.argv):
         if flag == '-m' or flag == '-model':
             modelId = sys.argv[i + 1]
@@ -135,15 +153,29 @@ if __name__ == '__main__':
             dataFolder = sys.argv[i + 1]
         elif flag == '-o' or flag == '-output':
             outputFolder = sys.argv[i + 1]
+        elif flag == '-l' or flag == '-layer':
+            attLayer = sys.argv[i + 1]
         elif flag == '-dataset':
             dataset = sys.argv[i + 1]
         elif flag == '-n' or flag == '-number':
             N = int(sys.argv[i + 1])
+        elif flag == '-r' or flag == '-results':
+            resultsFolder = sys.argv[i + 1]
+        elif flag == '-mode':
+            mode = int(sys.argv[i + 1])
     print modelId
     if not os.path.exists(outputFolder):
         os.makedirs(outputFolder)
 
     model = it.loadModel(modelId, resultsFolder)
+
+    #if mode == 1:
+    #    W = model.stageDict['controllerHid2'].getWeights()
+    #    print W
+    #    # Increase the temperature to have a smoother attention output
+    #    W /= 5.0
+    #    print W
+    #    model.stageDict['controllerHid2'].loadWeights(W)
     data = it.loadDataset(dataFolder)
     imgPathDict = ir.loadImgPath(dataset, dataFolder)
 
@@ -151,14 +183,17 @@ if __name__ == '__main__':
     T = data['testData'][1]
     for n in range(N):
         q = it.decodeQuestion(X[n], data['questionIdict'])
-        print q
-    Y, layers = nn.test(model, X[0:N], layerNames=['attModel:attOut'])
-    A = layers['attModel:attOut']
-    A = np.concatenate((
+        # print q
+    Y, layers = nn.test(model, X[0:N], layerNames=[attLayer])
+    A = layers[attLayer]
+
+    if mode == 0:
+        A = np.concatenate((
             np.zeros((A.shape[0], 1, A.shape[2])) + 1 / float(A.shape[2]),
             A[:, :-1, :]), axis=1)
 
     print A, A.shape
+    np.savetxt(os.path.join(outputFolder, 'attention.txt'), A, delimiter=',')
     Xend = np.zeros(X.shape[0], dtype='int') + A.shape[1] + 1
     plotAttention(
                 X=X[0:N, [0, 7], 0],

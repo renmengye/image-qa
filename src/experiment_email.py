@@ -9,8 +9,11 @@ def appendList(resultsFolder, name):
         f.write(name + '\n')
 
 if __name__ == '__main__':
-    resultsFolder = '/u/mren/code/image-qa/results/'
-    tosend = resultsFolder + 'tosend.txt'
+    resultsFolder = '/u/mren/code/image-qa/results'
+    if len(sys.argv) > 1:
+        resultsFolder = sys.argv[1]
+    print resultsFolder
+    tosend = os.path.join(resultsFolder, 'tosend.txt')
     if not os.path.exists(tosend):
         print 'No email task detected.'
         sys.exit()
@@ -20,10 +23,10 @@ if __name__ == '__main__':
 
     for id_ in id_s:
         i = id_[:-1] # Remove newline character
-        errfig = resultsFolder + '%s/%s_err.png' %(i, i)
-        lossfig = resultsFolder + '%s/%s_loss.png' %(i, i)
-        csv = resultsFolder + '%s/%s.csv' %(i, i)
-        result = resultsFolder + '%s/result.txt' % i
+        errfig = os.path.join(resultsFolder, '%s/%s_err.png' %(i, i))
+        lossfig = os.path.join(resultsFolder, '%s/%s_loss.png' %(i, i))
+        csv = os.path.join(resultsFolder, '%s/%s.csv' %(i, i))
+        result = os.path.join(resultsFolder, '%s/result.txt' % i)
         if not os.path.exists(result):
             result = csv
         emailCommand = ('mutt renmengye@gmail.com -s "Experiment Summary %s" -a "%s" -a "%s" -a "%s" < "%s"'
