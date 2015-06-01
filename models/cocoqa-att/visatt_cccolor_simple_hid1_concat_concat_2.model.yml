@@ -101,9 +101,9 @@ specs:
       inputs: 'controllerInputReshape'
       activeFn: 'identity'
       outputDim: 1
-      initRange: 0.1
+      initRange: 0.0001
       initSeed: 20
-      learningRate: 0.8
+      learningRate: 0.1
       momentum: 0.9
       gradientClip: 0.1
       weightClip: 100.0
