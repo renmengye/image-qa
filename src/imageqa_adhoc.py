@@ -92,7 +92,7 @@ if __name__ == '__main__':
         os.makedirs(params['outputFolder'])
     if params['format'] == 'html':
         print('Rendering HTML...')
-        pages = renderHtml(
+        pages = ir.renderHtml(
                     inputTest,
                     targetTest,
                     data['questionIdict'],
@@ -110,7 +110,7 @@ if __name__ == '__main__':
         # For LaTeX only, replace underscore in vocabulary.
         data['questionIdict'] = ir.escapeLatexIdict(data['questionIdict'])
         data['ansIdict'] = ir.escapeLatexIdict(data['ansIdict'])
-        renderLatex(
+        ir.renderLatex(
                 inputTest,
                 targetTest,
                 data['questionIdict'],
