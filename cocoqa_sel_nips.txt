@@ -6,3 +6,5 @@
 2792,what is the color of the suitcase, red
 4018,what is the color of the bowl,blue
 4018,what is the color of the vest,red
+4020,what is the color of the dogs,black
+4020,what is the color of the frisbee,purple
