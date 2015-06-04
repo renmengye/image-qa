@@ -104,7 +104,7 @@ if __name__ == '__main__':
                     questionIds=idx)
         for i, page in enumerate(pages):
             with open(os.path.join(params['outputFolder'],
-                '%s-%d.html' % (filename, i)), 'w') as f:
+                '%s-%d.html' % (params['outputFilename'], i)), 'w') as f:
                 f.write(page)
     elif params['format'] == 'latex':
         # For LaTeX only, replace underscore in vocabulary.
