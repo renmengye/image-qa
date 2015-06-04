@@ -12,6 +12,7 @@ def parseInputFile(filename):
     questions = []
     answers = []
     caption = ''
+    i = 0
     with open(filename) as f:
         for line in f:
             if i == 0 and line.startswith('caption:'):
@@ -21,6 +22,7 @@ def parseInputFile(filename):
                 qids.append(int(parts[0]))
                 questions.append(parts[1])
                 answers.append(parts[2].strip('\n'))
+            i += 1
     return caption, qids, questions, answers
 
 if __name__ == '__main__':
