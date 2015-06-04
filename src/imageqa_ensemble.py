@@ -105,9 +105,12 @@ def testEnsemble(
     ensembleAnswerFile = getAnswerFilename(ensembleId, resultsFolder)
     ensembleTruthFile = getTruthFilename(ensembleId, resultsFolder)
 
+    rate, correct, total = nn.calcRate(
+        model, ensembleOutputTest, data['testData'][1])
+    print 'rate: %.4f' % rate
     resultsRank, \
     resultsCategory, \
-    resultsWups = runAllMetrics(
+    resultsWups = it.runAllMetrics(
                                 inputTest,
                                 ensembleOutputTest,
                                 targetTest,
@@ -115,8 +118,9 @@ def testEnsemble(
                                 data['questionTypeArray'],
                                 ensembleAnswerFile,
                                 ensembleTruthFile)
-    writeMetricsToFile(
+    it.writeMetricsToFile(
                         ensembleId,
+                        rate,
                         resultsRank,
                         resultsCategory,
                         resultsWups,
@@ -207,6 +211,9 @@ def testEnsemblePrior(
     ensembleAnswerFile = it.getAnswerFilename(ensembleId, resultsFolder)
     ensembleTruthFile = it.getTruthFilename(ensembleId, resultsFolder)
 
+    rate, correct, total = nn.calcRate(
+        model, ensembleOutputTest, data['testData'][1])
+    print 'rate: %.4f' % rate
     resultsRank, \
     resultsCategory, \
     resultsWups = it.runAllMetrics(
@@ -219,6 +226,7 @@ def testEnsemblePrior(
                         ensembleTruthFile)
     it.writeMetricsToFile(
                         ensembleId,
+                        rate,
                         resultsRank,
                         resultsCategory,
                         resultsWups,

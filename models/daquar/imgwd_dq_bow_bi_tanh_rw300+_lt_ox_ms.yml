@@ -28,7 +28,7 @@ specs:
       axis: 1
     - name: 'imgFeat'
       type: 'lut'
-      inputs: 'imgUnfold'
+      inputs: 'imgSel'
       inputDim: 1449
       outputDim: 4096
       initWeights: '/ais/gobi3/u/mren/data/nyu-depth/hidden_oxford.h5'
