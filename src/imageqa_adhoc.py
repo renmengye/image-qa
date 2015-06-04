@@ -34,6 +34,7 @@ if __name__ == '__main__':
                     -m[odel] {name2:modelId2}
                     -em[odel] {name3:ensembleModelId3,ensembleModelId4,...}
                     -pem[odel] {name3:ensembleModelId5,ensembleModelId6,...}
+                    -aem[odel] {name3:ensembleModelId7,ensembleModelId8,...}
                     ...
                     -d[ata] {dataFolder}
                     -i[nput] {listFile}
