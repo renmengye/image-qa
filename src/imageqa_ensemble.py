@@ -4,6 +4,7 @@ import nn
 import numpy as np
 import imageqa_test as it
 import imageqa_visprior as ip
+import imageqa_modelavg as ia
 
 def loadEnsemble(
                     taskIds, 
@@ -261,6 +262,17 @@ def runAllModels(
                                     dataFolder,
                                     classDataFolders,
                                     questionTypeArray)
+        elif modelSpec['isAvgEnsemble']:
+            modelOutputs = []
+            for modelId in modelSpec['id'].split(','):
+                model = it.loadModel(modelId, resultsFolder)
+                modelOutputs.append(nn.test(model, inputTest)
+            outputTest = np.zeros(modelOutputs[0].shape)
+            for output in modelOutputs:
+                shape0 = min(outputTest.shape[0], output.shape[0])
+                shape1 = min(outputTest.shape[1], output.shape[1])
+                outputTest[:shape0, :shape1] += output[:shape0, :shape1] / \
+                    float(len(modelOutputs))
         else:
             print 'Running test data on model %s...' \
                     % modelSpec['name']
