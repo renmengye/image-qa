@@ -1,0 +1,4 @@
+585,what is the object on the chair,pillow
+585,where is the pillow found,chair
+179,what is the largest object,table
+179,what is around the largest object,chair
