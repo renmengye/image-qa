@@ -500,7 +500,7 @@ def parseComparativeParams(argv):
         [-k {top K answers}]
         [-p[icture] {pictureFolder}]
         [-r[esults] {resultsFolder}]
-        [-f[ile] {outputTexFilename}]
+        [-f[ile] {outputFilename}]
         [-dataset {daquar/cocoqa}]
         [-format {html/latex}]
 
@@ -530,7 +530,7 @@ def parseComparativeParams(argv):
         outputFolder: string
         topK: int
         pictureFolder: string
-        outputTexFilename: string
+        outputFilename: string
         dataset: string
     """
     dataset = 'cocoqa'
@@ -604,7 +604,7 @@ def parseComparativeParams(argv):
         'resultsFolder': resultsFolder,
         'topK': K,
         'pictureFolder': pictureFolder,
-        'outputTexFilename': filename,
+        'outputFilename': filename,
         'dataset': dataset,
         'format': format
     }
