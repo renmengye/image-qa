@@ -9,8 +9,8 @@ import imageqa_test as it
 import imageqa_ensemble as ie
 import requests
 
-jsonTrainFilename = '../../../data/mscoco/train/captions.json'
-jsonValidFilename = '../../../data/mscoco/valid/captions.json'
+jsonTrainFilename = '/ais/gobi3/datasets/mscoco/annotations/captions_train2014.json'
+jsonValidFilename = '/ais/gobi3/datasets/mscoco/annotations/captions_val2014.json'
 htmlHyperLink = '%d.html'
 cssHyperLink = 'style.css'
 daquarImageFolder = 'http://www.cs.toronto.edu/~mren/imageqa/data/nyu-depth-v2/jpg/'
@@ -490,7 +490,8 @@ def parseComparativeParams(argv):
         -m[odel] {name1:modelId1}
         -m[odel] {name2:modelId2}
         -em[odel] {name3:ensembleModelId3,ensembleModelId4,...}
-        -pem[odel] {name4:ensembleModelId5,ensembleModelId6,...}:
+        -pem[odel] {name4:ensembleModelId5,ensembleModelId6,...}
+        -aem[odel] {name4:ensembleModelId7,ensembleModelId8,...}
                 
         ...
         -d[ata] {dataFolder}
@@ -507,6 +508,7 @@ def parseComparativeParams(argv):
         -m[odel]: Normal models
         -em[odel]: Class-specific-ensemble models
         -pem[odel]: Class-specific-ensemble + prior models
+        -aem[odel]: Ensemble average of regular models
         -d[ata]: Data folder
         -i[nput]: Task-specific input file
         -o[utput]: Output folder
@@ -545,7 +547,8 @@ def parseComparativeParams(argv):
             models.append({
                 'name': parts[0],
                 'id': parts[1],
-                'isEnsemble': False,
+                'isClassEnsemble': False,
+                'isAverageEnsemble': False,
                 'runPrior': False
             })
         elif flag == '-em' or flag == '-emodel':
@@ -553,7 +556,8 @@ def parseComparativeParams(argv):
             models.append({
                 'name': parts[0],
                 'id': parts[1],
-                'isEnsemble': True,
+                'isClassEnsemble': True,
+                'isAverageEnsemble': False,
                 'runPrior': False
             })
         elif flag == '-pem' or flag == '-pemodel':
@@ -561,8 +565,18 @@ def parseComparativeParams(argv):
             models.append({
                 'name': parts[0],
                 'id': parts[1],
-                'isEnsemble': True,
+                'isClassEnsemble': True,
+                'isAverageEnsemble': False,
                 'runPrior': True
+            })
+        elif flag == '-aem' or flag == '-aemodel':
+            parts = sys.argv[i + 1].split(':')
+            models.append({
+                'name': parts[0],
+                'id': parts[1],
+                'isClassEnsemble': False,
+                'isAverageEnsemble': True,
+                'runPrior': False
             })
         elif flag == '-d' or flag == '-data':
             dataFolder = sys.argv[i + 1]
@@ -608,6 +622,7 @@ if __name__ == '__main__':
                         -m[odel] {name:modelId}
                         -em[odel] {name:ensembleModelId1,ensembleModelId2,...}
                         -pem[odel] {name:ensembleModelId3,ensembleModelId4,...}
+                        -aem[odel] {name:ensembleModelId5,ensembleModelId6,...}
                         -d[ata] {dataFolder}
                         -o[utput] {outputFolder}
                         [-k {Top K answers}]
