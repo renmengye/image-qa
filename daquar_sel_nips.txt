@@ -2,3 +2,5 @@
 585,where is the pillow found,chair
 179,what is the largest object,table
 179,what is around the largest object,chair
+2136,what is right of table,shelves
+2136,what is in front of table,chair
