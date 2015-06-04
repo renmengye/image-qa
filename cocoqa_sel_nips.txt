@@ -1,0 +1,2 @@
+12672,what is the color of the chair,orange
+12672,what is the color of the cat,gray

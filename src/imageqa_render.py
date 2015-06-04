@@ -623,10 +623,11 @@ if __name__ == '__main__':
                         -em[odel] {name:ensembleModelId1,ensembleModelId2,...}
                         -pem[odel] {name:ensembleModelId3,ensembleModelId4,...}
                         -aem[odel] {name:ensembleModelId5,ensembleModelId6,...}
-                        -d[ata] {dataFolder}
-                        -o[utput] {outputFolder}
+                        -d[ata] {data folder}
+                        -o[utput] {output folder}
                         [-k {Top K answers}]
                         [-dataset {daquar/cocoqa}]
+                        [-r[esults] {results folder}]
     Parameters:
         -m[odel]: Model ID
         -em[odel]: Ensemble model ID
