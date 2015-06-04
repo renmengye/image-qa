@@ -103,7 +103,7 @@ if __name__ == '__main__':
                     modelNames=ir.getModelNames(params['models']),
                     questionIds=idx)
         for i, page in enumerate(pages):
-            with open(os.path.join(outputFolder,
+            with open(os.path.join(params['outputFolder'],
                 '%s-%d.html' % (filename, i)), 'w') as f:
                 f.write(page)
     elif params['format'] == 'latex':
