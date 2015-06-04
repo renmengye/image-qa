@@ -7,8 +7,9 @@ import imageqa_test as it
 import nn
 
 def testAvgAll(modelOutputs, mixRatio, data, outputFolder):
-    finalOutput = mixRatio * modelOutputs[0] + \
-        (1 - mixRatio) * modelOutputs[1]
+    # finalOutput = mixRatio * modelOutputs[0] + \
+    #     (1 - mixRatio) * modelOutputs[1]
+    finalOutput = np.mean(modelOutputs)
     testAnswerFile = it.getAnswerFilename(outputFolder, resultsFolder)
     testTruthFile = it.getTruthFilename(outputFolder, resultsFolder)
     resultsRank, \
