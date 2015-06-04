@@ -140,10 +140,8 @@ def runEnsemblePrior(
     Run visprior on number and color questions.
     """
     data = it.loadDataset(dataFolder)
-    inputTest = data['testData'][0]
-    targetTest = data['testData'][1]
     numAns = len(data['ansIdict'])
-    outputTest = np.zeros((targetTest.shape[0], numAns))
+    outputTest = np.zeros((inputTest.shape[0], numAns))
     count = 0
 
     allOutput = []
