@@ -69,6 +69,7 @@ specs:
     - name: 'hidden'
       type: 'map'
       inputs: 'dropout'
+      outputDim: 1000
       initSeed: 11
       initRange: 0.01
       learningRate: 0.01
