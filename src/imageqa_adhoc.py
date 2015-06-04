@@ -74,7 +74,7 @@ if __name__ == '__main__':
     targetTestSel = data['testData'][1][idx]
     imgids = inputTestSel[:, 0, 0]
     adhocInputTest = prep.combine(\
-        prep.lookupQID(questions, worddict, maxlen), imgids)
+        prep.lookupQID(questions, data['questionDict'], maxlen), imgids)
     adhocTargetTest = prep.lookupAnsID(answers, ansdict)
     adhocQuestionTypeArray = testQuestionTypes[idx]
 
