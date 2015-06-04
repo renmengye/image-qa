@@ -523,7 +523,7 @@ def parseComparativeParams(argv):
         A dictionary with following keys:
         models: List of dictionaries, with following keys:
             modelName: string
-            isEnsemble: boolean
+            isClassEnsemble: boolean
             runPrior: boolean
         dataFolder: string
         inputFile: string

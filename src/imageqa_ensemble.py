@@ -242,7 +242,7 @@ def runAllModels(
                 dataFolder):
     allOutputs = []
     for modelSpec in modelSpecs:
-        if modelSpec['isEnsemble']:
+        if modelSpec['isClassEnsemble']:
             print 'Running test data on ensemble model %s...' \
                     % modelSpec['name']
             models = loadEnsemble(modelSpec['id'].split(','), resultsFolder)
