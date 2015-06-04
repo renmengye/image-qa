@@ -2,3 +2,5 @@
 12672,what is the color of the cat,gray
 2017,what is the color of the flowers,yellow
 2017,what is the color of the vase,white
+2792,what is the color of the cat,black
+2792,what is the color of the suitcase, red
