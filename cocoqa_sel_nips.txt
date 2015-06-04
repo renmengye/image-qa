@@ -8,3 +8,5 @@
 4018,what is the color of the vest,red
 4020,what is the color of the dogs,black
 4020,what is the color of the frisbee,purple
+14855,where are the ripe bananas sitting,basket
+14855,what are in the basket,bananas
