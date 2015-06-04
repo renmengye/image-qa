@@ -73,15 +73,15 @@ if __name__ == '__main__':
     inputTestSel = data['testData'][0][idx]
     targetTestSel = data['testData'][1][idx]
     imgids = inputTestSel[:, 0, 0]
-    adhocInputTest = prep.combine(\
+    inputTest = prep.combine(\
         prep.lookupQID(questions, data['questionDict'], maxlen), imgids)
-    adhocTargetTest = prep.lookupAnsID(answers, data['ansDict'])
-    adhocQuestionTypeArray = data['questionTypeArray'][idx]
+    targetTest = prep.lookupAnsID(answers, data['ansDict'])
+    questionTypeArray = data['questionTypeArray'][idx]
 
     print('Running models...')
     modelOutputs = ie.runAllModels(
-                        adhocInputTestSel, 
-                        adhocQuestionTypeArray, 
+                        inputTestSel, 
+                        questionTypeArray, 
                         params['models'],
                         params['resultsFolder'],
                         params['dataset'],
@@ -93,8 +93,8 @@ if __name__ == '__main__':
     if params['format'] == 'html':
         print('Rendering HTML...')
         pages = renderHtml(
-                    adhocInputTest,
-                    adhocTargetTest,
+                    inputTest,
+                    targetTest,
                     data['questionIdict'],
                     data['ansIdict'],
                     urlDict,
@@ -111,8 +111,8 @@ if __name__ == '__main__':
         data['questionIdict'] = ir.escapeLatexIdict(data['questionIdict'])
         data['ansIdict'] = ir.escapeLatexIdict(data['ansIdict'])
         renderLatex(
-                adhocInputTest,
-                adhocTargetTest,
+                inputTest,
+                targetTest,
                 data['questionIdict'],
                 data['ansIdict'],
                 urlDict, 
