@@ -9,7 +9,11 @@ import nn
 def testAvgAll(modelOutputs, mixRatio, data, outputFolder):
     # finalOutput = mixRatio * modelOutputs[0] + \
     #     (1 - mixRatio) * modelOutputs[1]
-    finalOutput = np.mean(modelOutputs)
+    finalOutput = np.zeros(modelOutputs[0].shape)
+    for output in modelOutputs:
+        shape0 = min(finalOutput.shape[0], output.shape[0])
+        shape1 = min(finalOutput.shape[1], output.shape[1])
+        finalOutput[:shape0, :shape1] += output[:shape0, :shape1] / float(len(modelOutputs))
     testAnswerFile = it.getAnswerFilename(outputFolder, resultsFolder)
     testTruthFile = it.getTruthFilename(outputFolder, resultsFolder)
     resultsRank, \
