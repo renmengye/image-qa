@@ -20,3 +20,5 @@
 10358,what is to the right of the cake,cup
 23419,what is the black and white cat wearing,hat
 23419,what is wearing a hat,cat
+20140,what is the color of the coat,orange
+20140,what is the color of the pants,black
