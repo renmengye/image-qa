@@ -92,9 +92,14 @@ if __name__ == '__main__':
     # bestMixRatio = validAvg(validModelOutputs, mixRatios, data['validData'][1])
     # print 'Best ratio found: %.4f' % bestMixRatio
     bestMixRatio = 0.5
+    shape = None
     for modelId, model in zip(modelIds, models):
         print 'Running model %s' % modelId
         modelOutput = nn.test(model, data['testData'][0])
+        if shape is None:
+            shape = modelOutput.shape
+        else:
+            modelOutput = modelOutput[:shape[0],:shape[1]]
         modelOutputs.append(modelOutput)
 
     testAvgAll(modelOutputs, bestMixRatio, data, outputFolder)

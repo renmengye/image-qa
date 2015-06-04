@@ -75,3 +75,14 @@ class OrdinalRegression(Stage):
         self.dEdW[0] = dEdMu
         self.dEdW[1] = dEdPi
         return dEdX
+
+    def updateLearningParams(self, numEpoch):
+        Stage.updateLearningParams(self, numEpoch)
+        print 'mu:',
+        for i in range(self.W.shape[-1]):
+            print '%.3f' % self.W[0, i],
+        print 'pi:',
+        for i in range(self.W.shape[-1]):
+            print '%.3f' % self.W[1, i],
+        print
+
