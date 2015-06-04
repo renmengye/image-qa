@@ -262,7 +262,7 @@ def runAllModels(
                                     dataFolder,
                                     classDataFolders,
                                     questionTypeArray)
-        elif modelSpec['isAvgEnsemble']:
+        elif modelSpec['isAverageEnsemble']:
             modelOutputs = []
             for modelId in modelSpec['id'].split(','):
                 model = it.loadModel(modelId, resultsFolder)
