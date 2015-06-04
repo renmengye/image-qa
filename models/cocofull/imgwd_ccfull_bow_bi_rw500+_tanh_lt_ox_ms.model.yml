@@ -82,7 +82,7 @@ specs:
       weightRegConst: 0.00005
     - name: 'softmax'
       type: 'map'
-      inputs: 'bow, imgFeat'
+      inputs: 'hidden'
       activeFn: 'softmax'
       outputDim: 431
       initRange: 0.01
