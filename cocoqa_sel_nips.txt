@@ -14,7 +14,6 @@
 1062,what is next to the cake,bottle
 3959,what is next to the box of cookies,cake
 3959,what is next to the cake,cookie
-7053,what is next to the orange toy
 10358,what is next to the fork and cup,pastry
 10358,what is next to the cup,pastry
 10358,what is to the left of the pastry,fork
