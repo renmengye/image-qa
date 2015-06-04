@@ -266,7 +266,7 @@ def runAllModels(
             modelOutputs = []
             for modelId in modelSpec['id'].split(','):
                 model = it.loadModel(modelId, resultsFolder)
-                modelOutputs.append(nn.test(model, inputTest)
+                modelOutputs.append(nn.test(model, inputTest))
             outputTest = np.zeros(modelOutputs[0].shape)
             for output in modelOutputs:
                 shape0 = min(outputTest.shape[0], output.shape[0])
