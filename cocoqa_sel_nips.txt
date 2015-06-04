@@ -12,3 +12,5 @@
 14855,what are in the basket,bananas
 1062,what is next to the bottle of beer,cake
 1062,what is next to the cake,bottle
+3959,what is next to the box of cookies,cake
+3959,what is next to hte cake,cookies
