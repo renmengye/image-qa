@@ -124,4 +124,4 @@ if __name__ == '__main__':
                 modelOutputs=modelOutputs,
                 modelNames=ir.getModelNames(params['models']),
                 questionIds=idx,
-                filename=params['outputTexFilename']+'.tex')
+                filename=params['outputFilename']+'.tex')

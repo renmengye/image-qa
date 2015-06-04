@@ -40,7 +40,7 @@ if __name__ == '__main__':
                     -o[utput] {outputFolder}
                     [-k {top K answers}]
                     [-p[icture] {pictureFolder}]
-                    [-f[ile] {outputTexFilename}]
+                    [-f[ile] {outputFilename}]
                     [-daquar/-cocoqa]
     Input file format:
     QID1[,Comment1]
@@ -92,4 +92,4 @@ if __name__ == '__main__':
                 modelOutputs=modelOutputs,
                 modelNames=ir.getModelNames(params['models']),
                 questionIds=idx,
-                filename=filename + '.tex')
+                filename=params['outputFilename'] + '.tex')
