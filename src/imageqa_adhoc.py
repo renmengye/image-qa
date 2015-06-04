@@ -80,7 +80,7 @@ if __name__ == '__main__':
 
     print('Running models...')
     modelOutputs = ie.runAllModels(
-                        inputTestSel, 
+                        inputTest, 
                         questionTypeArray, 
                         params['models'],
                         params['resultsFolder'],
