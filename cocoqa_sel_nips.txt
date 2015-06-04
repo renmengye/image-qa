@@ -10,3 +10,5 @@
 4020,what is the color of the frisbee,purple
 14855,where are the ripe bananas sitting,basket
 14855,what are in the basket,bananas
+1062,what is next to the bottle of beer,cake
+1062,what is next to the cake,bottle
