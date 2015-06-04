@@ -76,7 +76,7 @@ if __name__ == '__main__':
     adhocInputTest = prep.combine(\
         prep.lookupQID(questions, data['questionDict'], maxlen), imgids)
     adhocTargetTest = prep.lookupAnsID(answers, data['ansDict'])
-    adhocQuestionTypeArray = data['questionTypes'][idx]
+    adhocQuestionTypeArray = data['testQuestionTypes'][idx]
 
     print('Running models...')
     modelOutputs = ie.runAllModels(
