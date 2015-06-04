@@ -22,3 +22,5 @@
 23419,what is wearing a hat,cat
 20140,what is the color of the coat,orange
 20140,what is the color of the pants,black
+22891,what is the color of the coat,yellow
+22891,what is the color of the umbrella,red
