@@ -47,7 +47,7 @@ specs:
       outputDim: 300
       initRange: 0.1
       initSeed: 2
-      learningRate: 0.8
+      learningRate: 0.1
       momentum: 0.9
       gradientClip: 0.1
       weightClip: 500.0
@@ -73,7 +73,7 @@ specs:
       outputDim: 1000
       initSeed: 11
       initRange: 0.01
-      learningRate: 0.01
+      learningRate: 0.1
       momentum: 0.9
       gradientClip: 0.1
       weightClip: 100.0
@@ -85,7 +85,7 @@ specs:
       outputDim: 68
       initRange: 0.001
       initSeed: 7
-      learningRate: 0.01
+      learningRate: 0.1
       momentum: 0.9
       gradientClip: 0.01
       weightClip: 15.0
