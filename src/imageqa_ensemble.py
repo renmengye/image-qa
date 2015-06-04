@@ -150,14 +150,14 @@ def runEnsemblePrior(
         classAnsIdict.append(data_m['ansIdict'])
         tvData_m = ip.combineTrainValid(data_m['trainData'], data_m['validData'])
         print 'Running test data on model #%d...' % i
-        if i == 0 or i == 3:
-            # Object and location questions
+        if i == 0:
+            # Object questions
             print 'No prior'
             outputTest = nn.test(model, data_m['testData'][0])
             print 'Accuracy:',
             print ip.calcRate(outputTest, data_m['testData'][1])
-        elif i == 1 or i == 2:
-            # Number and color questions
+        elif i == 1 or i == 2 or i == 3:
+            # Number and color and location questions
             print 'Prior'
             # Delta is pre-determined
             if i == 1:
@@ -166,6 +166,9 @@ def runEnsemblePrior(
             elif i == 2:
                 delta = 5e-4
                 questionType = "color"
+            elif i == 3:
+                delta = 1.0
+                questionType = "location"
             outputTest = ip.runVisPrior(
                                 tvData_m,
                                 data_m['testData'],
