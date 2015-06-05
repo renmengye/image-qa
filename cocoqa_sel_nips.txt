@@ -24,3 +24,6 @@
 20140,what is the color of the pants,black
 22891,what is the color of the coat,yellow
 22891,what is the color of the umbrella,red
+2454,what is the color of the frisbee,yellow
+2454,what is the color of the dog,white
+2454,what is the color of the road,red
