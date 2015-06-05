@@ -8,3 +8,5 @@
 1553,what is there behind the table,sofa
 2989,what is the colour of the sofa,red
 2989,what is the colour of the table,white
+1426,what is on the right side table,television
+1426,what is on the left side,bed
