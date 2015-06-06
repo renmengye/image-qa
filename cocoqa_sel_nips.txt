@@ -27,3 +27,8 @@
 2454,what is the color of the frisbee,yellow
 2454,what is the color of the dog,white
 2454,what is the color of the road,red
+1,what is sitting next to the carrots,knife
+5022,what sits next to the cup of coffee,banana
+5022,what sits next to the banana,cup
+5022,what next to a banana,cup
+3377,what are close to oranges,apples
