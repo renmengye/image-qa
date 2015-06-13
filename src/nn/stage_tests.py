@@ -798,10 +798,7 @@ class OrdinalRegression_Tests(StageTests):
         random = np.random.RandomState(1)
         X = random.uniform(-1, 1, (30, 1))
         T = random.uniform(0, 5, (30, 1)).astype('int')
-        print T
         dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
-        print dEdW/dEdWTmp
-        print dEdX/dEdXTmp
         self.chkgrd(dEdW, dEdWTmp)
         self.chkgrd(dEdX, dEdXTmp)
 

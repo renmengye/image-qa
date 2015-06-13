@@ -7,4 +7,5 @@ from tester import *
 
 # Classes
 from trainer import *
+from dataset import *
 

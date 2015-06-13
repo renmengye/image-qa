@@ -10,7 +10,7 @@ import imageqa_test
 Train a neural network
 Usage: python train.py
                     -n[ame] {name} 
-                    -d[ata] {train/valid/test folder}
+                    -d[ata] {npz dataset file}
                     -m[odel] {model spec} 
                     -s[aved] {saved model id}
                     -e[arly] {early stop score}
@@ -21,7 +21,7 @@ Usage: python train.py
                     [-imageqa]
 Prameters: 
     -n[ame] Name of the model 
-    -d[ata] Data folder that contains 'train.npy', 'valid.npy', and 'test.npy'
+    -d[ata] Dataset NPZ file
     -m[odel] Model specification file name
     -s[aved] Saved model ID
     -e[arly] Early stop score
@@ -37,35 +37,22 @@ def readFlags():
     params['name'] = None
     params['outputFolder'] = None
     params['configFilename'] = None
-    params['trainDataFilename'] = None
-    params['testDataFilename'] = None
-    params['validDataFilename'] = None
+    params['datasetFilename'] = None
     params['allDataFilename'] = None
     params['modelFilename'] = None
     params['savedModelId'] = None
     params['earlyStopScore'] = None
     params['imageqa'] = True
-    params['trainInputWeightsFilename'] = None
-    params['validInputWeightsFilename'] = None
+    params['weightedExample'] = False
     for i, flag in enumerate(sys.argv):
         if flag == '-n' or flag == '-name':
             params['name'] = sys.argv[i + 1]
         elif flag == '-o' or flag == '-out':
             params['outputFolder'] = sys.argv[i + 1]
         elif flag == '-d' or flag == '-data':
-            dataFolder = sys.argv[i + 1]
-            trainPath = os.path.join(dataFolder, 'train.npy')
-            params['trainDataFilename'] = trainPath if os.path.isfile(trainPath) else None
-            validPath = os.path.join(dataFolder, 'valid.npy')
-            params['validDataFilename'] = validPath if os.path.isfile(validPath) else None
-            testPath = os.path.join(dataFolder, 'test.npy')
-            params['testDataFilename'] = testPath if os.path.isfile(testPath) else None
-            params['dataFolder'] = dataFolder
-        elif flag == '-w' or flag == '-weights':
-            weightsPath = sys.argv[i + 1]
-            params['trainInputWeightsFilename'] = os.path.join(dataFolder, weightsPath + '-train.npy')
-            params['validInputWeightsFilename'] = os.path.join(dataFolder, weightsPath + '-valid.npy')
-            params['testInputWeightsFilename'] = os.path.join(dataFolder, weightsPath + '-test.npy')
+            params['datasetFilename'] = sys.argv[i + 1]
+        elif flag == '-w' or flag == '-weighted':
+            params['weightedExample'] = True
         elif flag == '-m' or flag == '-model':
             params['modelFilename'] = sys.argv[i + 1]
         elif flag == '-s' or flag == '-saved':
@@ -84,7 +71,7 @@ def readFlags():
     # Check required parameters.
     if params['configFilename'] is None:
         raise Exception('Config file not specified')
-    if params['trainDataFilename'] is None:
+    if params['datasetFilename'] is None:
         raise Exception('Data file not specified')
     if params['modelFilename'] is None:
         raise Exception('Model file not specified')
@@ -93,15 +80,14 @@ def readFlags():
 
     return params
 
-def runTests(params, model, trainer):
-    if params['testDataFilename'] is not None:
+def runTests(dataset, model, trainer):
+    if dataset.containsTest():
         if params['imageqa']:
             imageqa_test.testAll(
                 trainer.name, model, params['dataFolder'], params['outputFolder'])
         else:
-            testData = np.load(params['testDataFilename'])
-            testInput = testData[0]
-            testTarget = testData[1]
+            testInput = dataset.getTestInput()
+            testTarget = dataset.getTestTarget()
             model.loadWeights(np.load(trainer.modelFilename))
             testOutput = nn.test(model, testInput)
             testRate, c, t = nn.calcRate(model, testOutput, testTarget)
@@ -204,21 +190,20 @@ if __name__ == '__main__':
         trainOpt = yaml.load(f)
     
     # Load dataset
-    trainData = np.load(params['trainDataFilename'])
-    trainInput = trainData[0]
-    trainTarget = trainData[1]
+    dataset = nn.Dataset(params['datasetFilename'], 'r')
+    trainInput = dataset.getTrainInput()
+    trainTarget = dataset.getTrainTarget()
     
-    if params['validDataFilename'] is not None:
-        validData = np.load(params['validDataFilename'])
-        validInput = validData[0]
-        validTarget = validData[1]
+    if dataset.containsValid() is not None:
+        validInput = dataset.getValidInput()
+        validTarget = dataset.getValidTarget()
     else:
         validInput = None
         validTarget = None
 
-    if params['trainInputWeightsFilename'] is not None:
-        trainInputWeights = np.load(params['trainInputWeightsFilename'])
-        validInputWeights = np.load(params['validInputWeightsFilename'])
+    if dataset.containsInputWeights() is not None:
+        trainInputWeights = dataset.getTrainInputWeights()
+        validInputWeights = dataset.getValidInputWeights()
     else:
         trainInputWeights = None
         validInputWeights = None  
@@ -250,8 +235,8 @@ if __name__ == '__main__':
             sendEmail(params, trainOpt, trainer)
             
             # Re-train
-            if params['testDataFilename'] is not None and \
-                params['validDataFilename'] is not None:
+            if dataset.containsTest() is not None and \
+                dataset.containsValid() is not None:
 
                 # Setup options
                 trainOpt['needValid'] = False

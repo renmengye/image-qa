@@ -55,7 +55,8 @@ class Recurrent_Tests(stage_tests.StageTests):
         Y2 = Y2.reshape(Y2.size)
         Y = Y.reshape(Y.size)
         for i in range(Y.size):
-            self.assertTrue((Y[i] == 0 and Y2[i] == 0) or (np.abs(Y[i] / Y2[i] - 1) < tolerance))
+            self.assertTrue((Y[i] == 0 and Y2[i] == 0) or \
+                (np.abs(Y[i] / Y2[i] - 1) < tolerance))
 
     def realForward(self, X):
         Y2 = np.zeros((self.N, self.T, self.D2))

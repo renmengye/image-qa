@@ -168,17 +168,9 @@ def wup_measure(a,b,similarity_threshold=0.925):
     return final_score 
 ###
 
-def runAll(gt_filepath, pred_filepath, thresh):
+def runAllList(gt, pred, thresh):
     global word_pair_dict
     word_pair_dict = {}
-    input_gt=file2list(gt_filepath)
-    input_pred=file2list(pred_filepath)
-
-    # print 'input gt'
-    # print input_gt
-    # print 'input pred'
-    # print input_pred
-
     if thresh == -1:
         our_element_membership=dirac_measure
     else:
@@ -191,8 +183,8 @@ def runAll(gt_filepath, pred_filepath, thresh):
         print 'standard Accuracy is used'
     else:
         print 'soft WUPS is used'
-    score_list=[score_it(ta,pa,our_set_membership) 
-            for (ta,pa) in zip(input_gt,input_pred)]
+    score_list=[score_it(ta,pa,our_set_membership)
+            for (ta,pa) in zip(gt, pred)]
     print 'computing the final score'
     final_score=sum(map(lambda x:float(x)/float(len(score_list)),score_list))
 
@@ -202,6 +194,11 @@ def runAll(gt_filepath, pred_filepath, thresh):
     print 'final score:', final_score
     return final_score
 
+
+def runAll(gt_filepath, pred_filepath, thresh):
+    input_gt=file2list(gt_filepath)
+    input_pred=file2list(pred_filepath)
+    return runAllList(input_gt, input_pred, thresh)
 
 if __name__ == '__main__':
 

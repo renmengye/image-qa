@@ -3,8 +3,11 @@ import re
 import sys
 import os
 
+import nn
 import prep
-import calculate_wups
+import word2vec_lookup as word2vec
+import word2vec_lookuptxt as word2vec_txt
+import word_embedding
 
 def escapeNumber(line):
     line = re.sub('^21$', 'twenty_one', line)
@@ -101,19 +104,19 @@ def extractQA(lines):
     return (questions, answers, imgIds)
 
 def getQuestionType(answer):
-    if answer == 'one' or answer == 'two' or answer == 'three' or\
-        answer == 'four' or answer == 'five' or answer == 'six' or\
-        answer == 'seven' or answer == 'eight' or answer == 'nine' or\
-        answer == 'ten' or answer == 'eleven' or answer == 'twelve' or\
-        answer == 'thirteen' or answer == 'fourteen' or answer == 'fifteen' or\
-        answer == 'sixteen' or answer == 'seventeen' or answer == 'eighteen' or\
-        answer == 'nineteen' or answer == 'twenty' or answer == 'twenty-one' or\
-        answer == 'twenty-two' or answer == 'twenty-three' or answer == 'twenty-four' or\
+    if answer == 'one' or answer == 'two' or answer == 'three' or \
+        answer == 'four' or answer == 'five' or answer == 'six' or \
+        answer == 'seven' or answer == 'eight' or answer == 'nine' or \
+        answer == 'ten' or answer == 'eleven' or answer == 'twelve' or \
+        answer == 'thirteen' or answer == 'fourteen' or answer == 'fifteen' or \
+        answer == 'sixteen' or answer == 'seventeen' or answer == 'eighteen' or \
+        answer == 'nineteen' or answer == 'twenty' or answer == 'twenty-one' or \
+        answer == 'twenty-two' or answer == 'twenty-three' or answer == 'twenty-four' or \
         answer == 'twenty-five' or answer == 'twenty-six' or answer == 'twenty-seven':
         return 1
-    elif answer == 'red' or answer == 'orange' or answer == 'yellow' or\
-        answer == 'green' or answer == 'blue' or answer == 'black' or\
-        answer == 'white' or answer == 'brown' or answer == 'grey' or\
+    elif answer == 'red' or answer == 'orange' or answer == 'yellow' or \
+        answer == 'green' or answer == 'blue' or answer == 'black' or \
+        answer == 'white' or answer == 'brown' or answer == 'grey' or \
         answer == 'gray' or answer == 'purple' or answer == 'pink':
         return 2
     else:
@@ -121,41 +124,59 @@ def getQuestionType(answer):
 
 if __name__ == '__main__':
     """
-    Usage: imgword_prep.py -train trainQAFile -test testQAFile -o outputFolder
+    Usage:
+    python daquar_prep.py \
+        -train {train QA raw plain text file} \
+        -test {test QA raw plain text file} \
+        -o[utput] {output file name, including '.npz' extension} \
+        [-word {output word embedding file name, including '.npz' extension, if not provided then no embedding}] \
+        [-type {all/object/number/color, all types or type specific dataset}]
+
+    Example:
+    python daquar_prep.py \
+        -train ../../../data/mpi-qa/qa.37.raw.train.txt \
+        -test ../../../data/mpi-qa/qa.37.raw.test.txt \
+        -output /ais/gobi3/u/$USER/data/daquar/reduced-37.npz \
+        -type all
     """
-    trainQAFilename = '../../../data/mpi-qa/qa.37.raw.train.txt'
-    testQAFilename = '../../../data/mpi-qa/qa.37.raw.test.txt'
-    outputFolder = '../data/daquar-37'
-    outputFolderSV = '../data/daquar-37-sv'
+    trainQAFilename = '/ais/gobi3/u/mren/data/daquar/qa.37.raw.train.txt'
+    testQAFilename = '/ais/gobi3/u/mren/data/daquar/qa.37.raw.test.txt'
+    outputFilename = '/ais/gobi3/u/mren/data/daquar/reduced-37.npz'
     buildObject = True
     buildNumber = True
     buildColor = True
+    lookupWordEmbed = False
+    wordEmbedFilename = '/ais/gobi3/u/$USER/data/daquar/reduced-37-word-embed.npz'
 
-    for i in range(1, len(sys.argv)):
-        if sys.argv[i] == '-train':
+    for i, flag in enumerate(sys.argv):
+        if flag == '-train':
             trainQAFilename = sys.argv[i + 1]
-        elif sys.argv[i] == '-test':
+        elif flag == '-test':
             testQAFilename = sys.argv[i + 1]
-        elif sys.argv[i] == '-o' or sys.argv[i] == '-output':
-            outputFolder = sys.argv[i + 1]
-            outputFolderSV = outputFolder + '-sv'
-        elif sys.argv[i] == '-object':
-            buildObject = True
-            buildNumber = False
-            buildColor = False
-        elif sys.argv[i] == '-number':
-            buildObject = False
-            buildNumber = True
-            buildColor = False
-        elif sys.argv[i] == '-color':
-            buildObject = False
-            buildNumber = False
-            buildColor = True
+        elif flag == '-o' or flag == '-output':
+            outputFilename = sys.argv[i + 1]
+        elif flag == '-word':
+            lookupWordEmbed = True
+            wordEmbedFilename = sys.argv[i + 1]
+        elif flag == '-type':
+            if sys.argv[i + 1] == 'object':
+                buildObject = True
+                buildNumber = False
+                buildColor = False
+            elif sys.argv[i + 1] == 'number':
+                buildObject = False
+                buildNumber = True
+                buildColor = False
+            elif sys.argv[i + 1] == 'color':
+                buildObject = False
+                buildNumber = False
+                buildColor = True
 
+    print 'Train input:', trainQAFilename
+    print 'Test input:', testQAFilename
+    outputFolder = os.path.dirname(os.path.abspath(outputFilename))
     if not os.path.exists(outputFolder):
         os.makedirs(outputFolder)
-    if not os.path.exists(outputFolderSV):
-        os.makedirs(outputFolderSV)
 
     # Read train file.
     with open(trainQAFilename) as f:
@@ -217,6 +238,7 @@ if __name__ == '__main__':
     print 'Valid Question Dist: ', validCount
     print 'Valid Question Dist: ', \
             validCount / float(len(validQuestions))
+
     trainValidQuestionsLen = len(trainQuestions) + len(validQuestions)
     print 'Train+Valid questions: ', trainValidQuestionsLen
     print 'Train+Valid Dist: ', trainCount + validCount
@@ -247,6 +269,8 @@ if __name__ == '__main__':
             typ = 1
         elif buildColor:
             typ = 2
+        else:
+            raise Exception('Unknown separate type')
         trainQuestions = trainQuestions[trainQuestionTypes == typ]
         trainAnswers = trainAnswers[trainQuestionTypes == typ]
         trainImgIds = trainImgIds[trainQuestionTypes == typ]
@@ -262,95 +286,54 @@ if __name__ == '__main__':
 
     trainInput = prep.combine(\
         prep.lookupQID(trainQuestions, worddict, maxlen), trainImgIds)
-    trainInputSV = prep.combineSV(\
-        range(1, len(trainQuestions) + 1), 
-        trainImgIds)
     trainTarget = prep.lookupAnsID(trainAnswers, ansdict)
     validInput = prep.combine(\
         prep.lookupQID(validQuestions, worddict, maxlen), validImgIds)
-    validInputSV = prep.combineSV(\
-        range(len(trainQuestions) + 1, len(trainQuestions) + len(validQuestions) + 1),
-        validImgIds)
     validTarget = prep.lookupAnsID(validAnswers, ansdict)
     testInput = prep.combine(\
         prep.lookupQID(testQuestions, worddict, maxlen), testImgIds)
-    testInputSV = prep.combineSV(\
-        range(len(trainQuestions) + len(validQuestions) + 1,
-            len(trainQuestions) + len(validQuestions) + len(testQuestions) + 1),
-        testImgIds)
     testTarget = prep.lookupAnsID(testAnswers, ansdict)
 
-    np.save(\
-        os.path.join(outputFolder, 'train.npy'),\
-        np.array((trainInput, trainTarget, 0),\
-            dtype=object))
-    np.save(\
-        os.path.join(outputFolder, 'valid.npy'),\
-        np.array((validInput, validTarget, 0),\
-            dtype=object))
-    np.save(\
-        os.path.join(outputFolder, 'test.npy'),\
-        np.array((testInput, testTarget, 0),\
-            dtype=object))
-    np.save(\
-        os.path.join(outputFolder, 'test-qtype.npy'),\
-        testQuestionTypes)
-    np.save(\
-        os.path.join(outputFolder, 'vocab-dict.npy'),\
-        np.array((worddict, idict, 
-            ansdict, iansdict, 0), dtype=object))
-
-    np.save(\
-        os.path.join(outputFolderSV, 'train.npy'),\
-        np.array((trainInputSV, trainTarget, 0),\
-            dtype=object))
-    np.save(\
-        os.path.join(outputFolderSV, 'valid.npy'),\
-        np.array((validInputSV, validTarget, 0),\
-            dtype=object))
-    np.save(\
-        os.path.join(outputFolderSV, 'test.npy'),\
-        np.array((testInputSV, testTarget, 0),\
-            dtype=object))
-    np.save(\
-        os.path.join(outputFolderSV, 'test-qtype.npy'),\
-        testQuestionTypes)
-    np.save(\
-        os.path.join(outputFolderSV, 'vocab-dict.npy'),\
-        np.array((worddict, idict, 
-            ansdict, iansdict, 0), dtype=object))
-
-    with open(os.path.join(outputFolder, 'question_vocabs.txt'), 'w+') as f:
-        for word in idict:
-            f.write(word + '\n')
-
-    with open(os.path.join(outputFolder, 'answer_vocabs.txt'), 'w+') as f:
-        for word in iansdict:
-            f.write(word + '\n')
-
+    dataset = nn.Dataset(outputFilename, 'w')
+    dataset.setTrainInput(trainInput)
+    dataset.setTrainTarget(trainTarget)
+    dataset.setValidInput(validInput)
+    dataset.setValidTarget(validTarget)
+    dataset.setTestInput(testInput)
+    dataset.setTestTarget(testTarget)
+    dataset.set('testQuestionTypes', testQuestionTypes)
+    dataset.set('questionDict', worddict)
+    dataset.set('questionIdict', idict)
+    dataset.set('ansDict', ansdict)
+    dataset.set('ansIdict', iansdict)
     trainImgIds = []
     for i in range(1449):
         if split.has_key(i) and split[i] == 1:
             trainImgIds.append(i)
-    with open(os.path.join(outputFolder, 'train_imgids.txt'), 'w+') as f:
-        for i in trainImgIds:
-            f.write(str(i) + '\n')
-    with open(os.path.join(outputFolderSV, 'train_imgids.txt'), 'w+') as f:
-        for i in trainImgIds:
-            f.write(str(i) + '\n')
+    dataset.set('trainImageIds', np.array(trainImgIds, dtype='int'))
 
-    with open(os.path.join(outputFolder, 'questions.txt'), 'w+') as f:
-        for q in trainQuestions:
-            f.write(q + '\n')
-        for q in validQuestions:
-            f.write(q + '\n')
-        for q in testQuestions:
-            f.write(q + '\n')
+    print 'Saving dataset...'
+    dataset.save()
+
+    # Look up word embedding
+    if lookupWordEmbed:
+        wordEmbed = nn.Dataset(wordEmbedFilename)
+        print 'Building word embeddings...'
+        w2v300QuestionEmbedding = word_embedding.getWordEmbedding(word2vec.lookup(idict))
+        w2v300AnswerEmbedding = word_embedding.getWordEmbedding(word2vec.lookup(iansdict))
+        cw2v300QuestionEmbedding = word_embedding.getWordEmbedding(word2vec_txt.lookup(idict))
+        cw2v300AnswerEmbedding = word_embedding.getWordEmbedding(word2vec_txt.lookup(iansdict))
+        cw2v500QuestionEmbedding = word_embedding.getWordEmbedding(word2vec_txt.lookup(idict))
+        cw2v500AnswerEmbedding = word_embedding.getWordEmbedding(word2vec_txt.lookup(iansdict))
+        wordEmbed.set('word2vecGoogleNews300Question', w2v300QuestionEmbedding)
+        wordEmbed.set('word2vecGoogleNews300Answer', w2v300AnswerEmbedding)
+        wordEmbed.set('word2vecCustom300Question', cw2v300QuestionEmbedding)
+        wordEmbed.set('word2vecCustom300Answer', cw2v300AnswerEmbedding)
+        wordEmbed.set('word2vecCustom300Question', cw2v500QuestionEmbedding)
+        wordEmbed.set('word2vecCustom300Answer', cw2v500AnswerEmbedding)
 
     # Build baseline solution
     prep.guessBaseline(
                     testQuestions, 
                     testAnswers, 
-                    testQuestionTypes, 
-                    outputFolder=outputFolder, 
-                    calcWups=True)
+                    testQuestionTypes)

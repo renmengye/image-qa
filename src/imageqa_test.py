@@ -154,34 +154,6 @@ def getTruthFilename(
                     folder,
                     '%s.test.t.txt' % taskId)
 
-def loadDataset(dataFolder):
-    print 'Loading dataset...'
-    trainDataFile = os.path.join(dataFolder, 'train.npy')
-    validDataFile = os.path.join(dataFolder, 'valid.npy')
-    testDataFile = os.path.join(dataFolder, 'test.npy')
-    vocabDictFile = os.path.join(dataFolder, 'vocab-dict.npy')
-    qtypeFile = os.path.join(dataFolder, 'test-qtype.npy')
-    trainData = np.load(trainDataFile)
-    validData = np.load(validDataFile)
-    testData = np.load(testDataFile)
-    vocabDict = np.load(vocabDictFile)
-    qTypeArray = np.load(qtypeFile)
-    inputTest = testData[0]
-    targetTest = testData[1]
-    qDict = vocabDict[0]
-    qIdict = vocabDict[1]
-    aDict = vocabDict[2]
-    aIdict = vocabDict[3]
-    return {
-            'trainData': trainData,
-            'validData': validData,
-            'testData': testData,
-            'questionDict': qDict,
-            'questionIdict': qIdict,
-            'ansDict': aDict,
-            'ansIdict': aIdict,
-            'questionTypeArray': qTypeArray}
-
 def loadModel(
                 taskId,
                 resultsFolder):
@@ -195,22 +167,22 @@ def loadModel(
 def testAll(
             modelId, 
             model, 
-            dataFolder, 
+            datasetFilename,
             resultsFolder):
     testAnswerFile = getAnswerFilename(modelId, resultsFolder)
     testTruthFile = getTruthFilename(modelId, resultsFolder)
-    data = loadDataset(dataFolder)
-    outputTest = nn.test(model, data['testData'][0])
-    rate, correct, total = nn.calcRate(model, outputTest, data['testData'][1])
+    data = nn.Dataset(datasetFilename)
+    outputTest = nn.test(model, data.getTestInput())
+    rate, correct, total = nn.calcRate(model, outputTest, data.getTestTarget())
     print 'rate: %.4f' % rate
     resultsRank, \
     resultsCategory, \
     resultsWups = runAllMetrics(
-                        data['testData'][0],
+                        data.getTestInput(),
                         outputTest,
-                        data['testData'][1],
-                        data['ansIdict'],
-                        data['questionTypeArray'],
+                        data.getTestTarget(),
+                        data.get('ansIdict'),
+                        data.get('questionTypeArray'),
                         testAnswerFile,
                         testTruthFile)
     writeMetricsToFile(
@@ -235,7 +207,7 @@ def runAllMetrics(
     resultsRank = calcPrecision(outputTest, targetTest)
     correct, total = calcRate(inputTest, 
         outputTest, targetTest, questionTypeArray=questionTypeArray)
-    resultsCategory = correct / total.astype(float)
+    resultsCategory = correct / total.astype('float')
     resultsWups = runWups(testAnswerFile, testTruthFile)
     return (resultsRank, resultsCategory, resultsWups)
 

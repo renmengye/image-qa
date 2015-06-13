@@ -91,7 +91,10 @@ def addStage(stageDict):
                     initWeights = initWeightsFile[stageDict['h5key']][:]
                 print initWeights.shape
             elif stageDict['format'] == 'numpy':
-                initWeights = np.load(stageDict['initWeights'])
+                if stageDict.has_key('npkey'):
+                    initWeights = np.load(stageDict['initWeights'])[stageDict['npkey']]
+                else:
+                    initWeights = np.load(stageDict['initWeights'])
             else:
                 raise Exception(
                     'Unknown weight matrix format: %s' % stageDict['format'])

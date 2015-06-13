@@ -2,51 +2,71 @@ import sys
 import numpy as np
 import io
 import struct
-#with open('D:\\Projects\\word2vec_win\\Debug\\vocab_index.txt', 'r') as f:
 
-# Usage: word2vec_read vocab-file output-file vec-bin-file vec-bin-index-file
-if len(sys.argv) > 2:
-    vocabFilename = sys.argv[1]
-    vecOutputFilename = sys.argv[2]
-else:
-    vocabFilename = '../data/sentiment3/vocabs.txt'
-    vecOutputFilename = '../data/sentiment3/vocabs-vec.npy'
-if len(sys.argv) > 4:
-    word2vecBinFilename = sys.argv[3]
-    word2vecIdxFilename = sys.argv[4]
-else:
-    word2vecBinFilename = '../../../data/word2vec/GoogleNews-vectors-negative300.bin'
-    word2vecIdxFilename = '../../../data/word2vec/vocab_index.txt'
-word2vecIdxFile = open(word2vecIdxFilename, 'r')
-word2vecBinFile = open(word2vecBinFilename, 'rb')
-vocabFile = open(vocabFilename, 'r')
-
-numWords = 3000000
+word2vecBinFilename = '/ais/gobi3/u/mren/data/word2vec/GoogleNews-vectors-negative300.bin'
+word2vecIdxFilename = '/ais/gobi3/u/mren/data/word2vec/vocab_index.txt'
 numDim = 300
 
-wordLocationDict = {}
+def lookup(words, binFilename=word2vecBinFilename, idxFilename=word2vecIdxFilename, numDim=300):
+    vocabsDict = {}
+    wordLocationDict = {}
+    idxFile = open(word2vecIdxFilename, 'r')
+    binFile = open(word2vecBinFilename, 'rb')
+    i = 0
+    for word in words:
+        vocabsDict[word[0:-1]] = i
+        i += 1
 
-allVocabs = vocabFile.readlines()
-allVocabsDict = {}
-i = 0
-for word in allVocabs:
-    allVocabsDict[word[0:-1]] = i
-    i += 1
+    vecArray = np.zeros((len(words), numDim), float)
 
-vecArray = np.zeros((len(allVocabs), numDim), float)
+    for line in idxFile.readlines():
+        parts = line.split(',')
+        word = parts[0].lower()
+        if not wordLocationDict.has_key(word) and vocabsDict.has_key(word):
+            location = long(parts[-1])
+            wordLocationDict[word] = location
+            binFile.seek(location, io.SEEK_SET)
+            i = vocabsDict[word]
+            for j in range(0, numDim):
+                vecArray[i, j] = struct.unpack('f', binFile.read(4))[0]
 
-for line in word2vecIdxFile.readlines():
-    parts = line.split(',')
-    word = parts[0].lower()
-    if not wordLocationDict.has_key(word) and allVocabsDict.has_key(word):
-        location = long(parts[-1])
-        wordLocationDict[word] = location
-        word2vecBinFile.seek(location, io.SEEK_SET)
-        i = allVocabsDict[word]
-        for j in range(0, numDim):
-            vecArray[i, j] = struct.unpack('f', word2vecBinFile.read(4))[0]
+    binFile.close()
+    idxFile.close()
+    return vecArray
 
-np.save(vecOutputFilename, vecArray)
-word2vecBinFile.close()
-word2vecIdxFile.close()
-vocabFile.close()
+if __name__ == '__main__':
+    """
+    Usage:
+    python word2vec_lookup.py
+        -w[ord] {input word list}
+        -o[utput] {output npy file}
+        [-b[in] {word2vec binary file}]
+        [-i[ndex] {word2vec index file}]
+        [-d[im] {number of word vector dimension}]
+    """
+    vocabFilename = None
+    vecOutputFilename = None
+    for i, flag in enumerate(sys.argv):
+        if flag == '-w' or flag == '-word':
+            vocabFilename = sys.argv[i + 1]
+        elif flag == '-o' or flag == '-output':
+            vecOutputFilename = sys.argv[i + 1]
+        elif flag == '-b' or flag == '-bin':
+            word2vecBinFilename = sys.argv[i + 1]
+        elif flag == '-i' or flag == '-index':
+            word2vecIdxFilename = sys.argv[i + 1]
+        elif flag == '-d' or flag == '-dim':
+            numDim = int(sys.argv[i + 1])
+
+    if vocabFilename is None:
+        raise Exception('No input word list provided.')
+    if vecOutputFilename is None:
+        raise Exception('No output npy file provided.')
+
+    with open(vocabFilename) as f:
+        words = f.readlines()
+    vecArray = lookup(words,
+                      binFilename=word2vecBinFilename,
+                      idxFilename=word2vecIdxFilename,
+                      numDim=numDim)
+    np.save(vecOutputFilename, vecArray)

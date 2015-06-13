@@ -81,9 +81,7 @@ def combineSV(qids, imgids):
 def guessBaseline(
                     questions, 
                     answers, 
-                    questionTypes, 
-                    outputFolder=None, 
-                    calcWups=False):
+                    questionTypes):
     """
     Run mode-guessing baseline on a dataset.
     If need to calculate WUPS score, outputFolder must be provided.
@@ -126,20 +124,12 @@ def guessBaseline(
     print 'Baseline color: %.4f' % baselineRate[2]
     print 'Baseline location: %.4f' % baselineRate[3]
 
-    if calcWups:
-        baselineFilename = os.path.join(outputFolder, 'baseline.txt')
-        groundTruthFilename = os.path.join(outputFolder, 'ground_truth.txt')
-        with open(baselineFilename, 'w+') as f:
-            for answer in baseline:
-                f.write(answer + '\n')
-        with open(groundTruthFilename, 'w+') as f:
-            for answer in answers:
-                f.write(answer + '\n')
-        wups = np.zeros(3)
-        for i, thresh in enumerate([-1, 0.9, 0.0]):
-            wups[i] = calculate_wups.runAll(groundTruthFilename, baselineFilename, thresh)
-        print 'Baseline WUPS -1: %.4f' % wups[0]
-        print 'Baseline WUPS 0.9: %.4f' % wups[1]
-        print 'Baseline WUPS 0.0: %.4f' % wups[2]
+    # Calculate WUPS score
+    wups = np.zeros(3)
+    for i, thresh in enumerate([-1, 0.9, 0.0]):
+        wups[i] = calculate_wups.runAllList(baseline, answers, thresh)
+    print 'Baseline WUPS -1: %.4f' % wups[0]
+    print 'Baseline WUPS 0.9: %.4f' % wups[1]
+    print 'Baseline WUPS 0.0: %.4f' % wups[2]
 
     return baseline
