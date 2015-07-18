@@ -1,0 +1,111 @@
+name: 'bow'
+costFn: 'crossEntIdx'
+decisionFn: 'argmax'
+stages:
+    - 'imgSel'
+    - 'imgFeat'
+    - 'cnnFC6'
+    - 'cnnFC7'
+    - 'txtSel'
+    - 'txtUnfold'
+    - 'txtDict'
+    - 'txtFold'
+    - 'bow'
+    - 'softmax'
+outputs: 'softmax'
+specs:
+    - name: 'imgSel'
+      type: 'selector'
+      inputs: 'input'
+      start: 0
+      end: 1
+      axis: 1
+    - name: 'txtSel'
+      type: 'selector'
+      inputs: 'input'
+      start: 1
+      end: 56
+      axis: 1
+    - name: 'imgFeat'
+      type: 'lut'
+      inputs: 'imgSel'
+      inputDim: 123288
+      outputDim: 25088
+      initWeights: '/ais/gobi3/u/mren/data/cocoqa-full/hidden_oxford.h5'
+      sparse: true
+      format: 'h5'
+      h5key: 'hidden5_maxpool'
+      learningRate: 0.0
+      outputdEdX: false
+    - name: 'txtUnfold'
+      type: 'timeUnfold'
+      inputs: 'txtSel'
+      outputdEdX: false
+    - name: 'cnnFC6'
+      type: 'map'
+      activeFn: 'relu'
+      inputs: 'imgFeat'
+      inputDim: 25088
+      outputDim: 4096
+      initWeights: '/ais/gobi3/u/mren/models/oxford_vgg/weights.h5'
+      format: 'h5'
+      h5key: 'hidden56'
+      learningRate: 0.01
+      moemtum: 0.9
+      gradientClip: 0.01
+      weightClip: 1000.0
+      weightRegConst: 0.00001
+    - name: 'cnnFC7'
+      type: 'map'
+      activeFn: 'relu'
+      inputs: 'cnnFC6'
+      inputDim: 4096
+      outputDim: 4096
+      initWeights: '/ais/gobi3/u/mren/models/oxford_vgg/weights.h5'
+      format: 'h5'
+      h5key: 'hidden67'
+      learningRate: 0.01
+      momentum: 0.9
+      gradientClip: 0.01
+      weightClip: 1000.0
+      weightRegConst: 0.00001
+    - name: 'txtDict'
+      type: 'lut'
+      inputs: 'txtUnfold'
+      intConversion: true
+      inputDim: 9738
+      outputDim: 500
+      initWeights: '/ais/gobi3/u/mren/models/img_bow_v.h5'
+      format: 'h5'
+      h5key: 'txtDict'
+      # initRange: 1.0
+      # initSeed: 2
+      learningRate: 0.05
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 1000.0
+    - name: 'txtFold'
+      type: 'timeFold'
+      inputs: 'txtDict'
+      timespan: 55
+    - name: 'bow'
+      type: 'sum2'
+      inputs: 'txtFold'
+      numComponents: 52
+      outputDim: 500
+    - name: 'softmax'
+      type: 'map'
+      inputs: 'bow, cnnFC7'
+      activeFn: 'softmax'
+      outputDim: 431
+      initWeights: '/ais/gobi3/u/mren/models/img_bow_v.h5'
+      format: 'h5'
+      h5key: 'answer'
+      # initRange: 0.01
+      # initSeed: 7
+      learningRate: 0.005
+      learningRateAnnealConst: 0.0
+      momentum: 0.9
+      gradientClip: 0.1
+      weightClip: 15.0
+      weightRegConst: 0.00005
