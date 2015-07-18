@@ -476,6 +476,8 @@ def loadImgPath(dataset, dataFolder):
         for i in range(1, 1450):
             pathList.append('/u/mren/data/nyu-depth/jpg/image%d.jpg' % i)
         return pathList
+    else:
+        raise Exception('Unknown dataset: ' + dataset)
 
 def escapeLatexIdict(idict):
     for i in range(len(idict)):

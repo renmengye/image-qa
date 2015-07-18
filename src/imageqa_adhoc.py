@@ -71,9 +71,10 @@ if __name__ == '__main__':
     print('Parsing input file...')
     caption, qids, questions, answers = parseInputFile(params['inputFile'])
     idx = np.array(qids, dtype='int')
-    inputTestSel = data['testData'][0][idx]
-    targetTestSel = data['testData'][1][idx]
-    imgids = inputTestSel[:, 0, 0]
+    #inputTestSel = data['testData'][0][idx]
+    #targetTestSel = data['testData'][1][idx]
+    imgids = qids
+    #imgids = inputTestSel[:, 0, 0]
     inputTest = prep.combine(\
         prep.lookupQID(questions, data['questionDict'], maxlen), imgids)
     targetTest = prep.lookupAnsID(answers, data['ansDict'])

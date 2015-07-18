@@ -66,7 +66,7 @@ class LUT(Stage):
         self.dEdW = 0.0
 
     def initWeights(self):
-        print self.name
+        # print self.name
         self.W = self.random.uniform(
             -self.initRange/2.0, self.initRange/2.0,
             (self.inputDim, self.outputDim))
