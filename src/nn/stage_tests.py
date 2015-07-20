@@ -6,14 +6,14 @@ from inner_prod import *
 from reshape import *
 from cosine_similarity_layer import *
 from sum import *
-from elemwise import *
+from element_wise import *
 from activation_layer import *
 from sum_prod import *
 from activation_func import *
 from selector import *
-from convolution import *
-from mean_pooling import *
-from max_pooling import *
+from convolution_layer import *
+from mean_pooling_layer import *
+from max_pooling_layer import *
 from normalization_layer import *
 from ordinal_regression_layer import *
 

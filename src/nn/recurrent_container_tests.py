@@ -3,7 +3,7 @@ from lstm import *
 import stage_tests
 import unittest
 
-class Recurrent_Tests(stage_tests.StageTests):
+class RecurrentContainer_Tests(stage_tests.StageTests):
     def setUp(self):
         self.N = 5
         self.T = 5

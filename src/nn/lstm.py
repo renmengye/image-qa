@@ -1,5 +1,5 @@
-from recurrent import *
-from elemwise import *
+from recurrent_container import *
+from element_wise import *
 from sum import *
 from activation_layer import *
 from reshape import *

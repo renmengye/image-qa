@@ -11,9 +11,9 @@ from lstm import *
 from sum_prod import *
 from selector import *
 from sum2 import *
-from convolution import *
-from max_pooling import *
-from mean_pooling import *
+from convolution_layer import *
+from max_pooling_layer import *
+from mean_pooling_layer import *
 from normalization_layer import *
 from ordinal_regression_layer import *
 
