@@ -1,9 +1,9 @@
-from active_func import *
-from map import *
+from activation_func import *
+from fully_connected_layer import *
 
-class Input(Stage):
+class Input(Layer):
     def __init__(self, name, outputDim):
-        Stage.__init__(self,
+        Layer.__init__(self,
             name=name, 
             inputNames=[],
             outputDim=outputDim)
@@ -14,9 +14,9 @@ class Input(Stage):
     def backward(self, dEdY):
         return dEdY
 
-class Output(Stage):
+class Output(Layer):
     def __init__(self, name, inputNames, outputDim=0, defaultValue=0):
-        Stage.__init__(self,
+        Layer.__init__(self,
             name=name, 
             inputNames=inputNames,
             defaultValue=defaultValue,
@@ -26,7 +26,7 @@ class Output(Stage):
     def graphBackward(self):
         self.sendError(self.dEdY)
 
-class Container(Stage):
+class Container(Layer):
     def __init__(self,
                  stages,
                  outputStageNames,
@@ -35,7 +35,7 @@ class Container(Stage):
                  inputNames,
                  name=None,
                  outputdEdX=True):
-        Stage.__init__(self,
+        Layer.__init__(self,
                 name=name, 
                 inputNames=inputNames,
                 outputDim=outputDim, 
@@ -96,22 +96,15 @@ class Container(Stage):
         self.dEdY = 0.0
         self.receivedError = False
 
-    def graphForward(self, dropout=True):
+    def graphForward(self):
         self.X = self.getInput()
-        self.Y = self.forward(self.X, dropout=dropout)
+        self.Y = self.forward(self.X)
 
-    #@profile
-    def forward(self, X, dropout=True):
+    def forward(self, X):
         self.stages[0].Y = X
         for s in range(1, len(self.stages) - 1):
             if self.stages[s].used:
-                if hasattr(self.stages[s], 'dropout'):
-                    self.stages[s].dropout = dropout
-                    self.stages[s].graphForward()
-                elif isinstance(self.stages[s], Container):
-                    self.stages[s].graphForward(dropout=dropout)
-                else:
-                    self.stages[s].graphForward()
+                self.stages[s].graphForward()
         self.stages[-1].graphForward()
         Y = self.stages[-1].Y
 
@@ -121,11 +114,9 @@ class Container(Stage):
         self.X = X
         return Y
 
-    #@profile
     def backward(self, dEdY):
         self.stages[-1].sendError(dEdY)
         for s in reversed(range(1, len(self.stages) - 1)):
-            #print 'container backward', self.stages[s].name, self.stages[s].used, self.stages[s].receivedError
             if self.stages[s].used and self.stages[s].receivedError:
                 self.stages[s].graphBackward()
 
@@ -168,3 +159,7 @@ class Container(Stage):
     def loadWeights(self, W):
         for s in range(1, len(self.stages) - 1):
             self.stages[s].loadWeights(W[s - 1])
+
+    def setIsTraining(self, isTraining):
+        for s in self.stages:
+            s.setIsTraining(isTraining)

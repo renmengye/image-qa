@@ -1,11 +1,11 @@
-from stage import *
+from layer import *
 import os
 use_gpu = os.environ.get('GNUMPY_USE_GPU', 'yes') == 'yes'
 if use_gpu:
     import gnumpy as gpu
     import gnumpy as gnp
 
-class Map(Stage):
+class FullyConnectedLayer(Layer):
     def __init__(self,
                  outputDim,
                  activeFn,
@@ -26,9 +26,9 @@ class Map(Stage):
                  weightRegConst=0.0,
                  outputdEdX=True,
                  defaultValue=0.0,
-                 gpu=use_gpu,
+                 useGpu=use_gpu,
                  name=None):
-        Stage.__init__(self,
+        Layer.__init__(self,
                  name=name,
                  inputNames=inputNames,
                  outputDim=outputDim,
@@ -40,14 +40,14 @@ class Map(Stage):
                  weightClip=weightClip,
                  gradientClip=gradientClip,
                  weightRegConst=weightRegConst,
-                 gpu=gpu,
+                 useGpu=useGpu,
                  outputdEdX=outputdEdX)
         self.bias = bias
         self.activeFn = activeFn
         self.inputDim = None
         self.random = np.random.RandomState(initSeed)
         if not needInit:
-            if self.gpu:
+            if self.useGpu:
                 self.W = gnp.as_garray(initWeights)
             else:
                 self.W = initWeights
@@ -81,7 +81,7 @@ class Map(Stage):
         else:
             self.W = self.random.uniform(
                     -self.initRange/2.0, self.initRange/2.0, (self.inputDim, self.outputDim))
-        if self.gpu:
+        if self.useGpu:
             self.W = gpu.as_garray(self.W.astype('float32'))
     
     def forward(self, X):
@@ -91,7 +91,7 @@ class Map(Stage):
             self.X = np.concatenate((X, np.ones((X.shape[0], 1), dtype=X.dtype)), axis=-1)
         else:
             self.X = X
-        if self.gpu:
+        if self.useGpu:
             self.X = gpu.as_garray(self.X.astype('float32'))
             Z = gpu.dot(self.X, self.W)
             Z = Z.as_numpy_array(dtype='float32')
@@ -103,7 +103,7 @@ class Map(Stage):
 
     def backward(self, dEdY):
         dEdZ = self.activeFn.backward(dEdY, self.Y, 0)
-        if self.gpu:
+        if self.useGpu:
             gdEdZ = gpu.as_garray(dEdZ.astype('float32'))
             self.dEdW = gpu.dot(self.X.transpose(), gdEdZ)
             if self.bias:

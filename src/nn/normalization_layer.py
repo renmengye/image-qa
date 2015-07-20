@@ -1,6 +1,6 @@
-from stage import *
+from layer import *
 
-class Normalize(Stage):
+class NormalizationLayer(Layer):
     def __init__(self,
                  outputDim,
                  mean,
@@ -8,7 +8,7 @@ class Normalize(Stage):
                  name=None,
                  inputNames=None,
                  outputdEdX=True):
-        Stage.__init__(self,
+        Layer.__init__(self,
                  name=name,
                  inputNames=inputNames,
                  outputDim=outputDim,

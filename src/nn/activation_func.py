@@ -1,6 +1,6 @@
 from func import *
 
-class SoftmaxActiveFn():
+class SoftmaxActivationFn():
     def __init__(self):
         pass
 
@@ -19,7 +19,7 @@ class SoftmaxActiveFn():
         dEdZ = U - np.sum(U, axis=-1).reshape(timespan, 1) * Y
         return dEdZ
 
-class SigmoidActiveFn():
+class SigmoidActivationFn():
     def __init__(self):
         pass
 
@@ -33,7 +33,7 @@ class SigmoidActiveFn():
         dEdZ = dEdY * Y * (1 - Y)
         return dEdZ
 
-class TanhActiveFn():
+class TanhActivationFn():
     def __init__(self):
         pass
 
@@ -47,7 +47,7 @@ class TanhActiveFn():
         dEdZ = dEdY * (1 - Y * Y)
         return dEdZ
 
-class IdentityActiveFn():
+class IdentityActivationFn():
     def __init__(self):
         pass
 
@@ -59,7 +59,7 @@ class IdentityActiveFn():
     def backward(dEdY, Y, Z):
         return dEdY
 
-class ReluActiveFn():
+class ReluActivationFn():
     def __init__(self):
         pass
 

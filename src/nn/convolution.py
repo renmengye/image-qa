@@ -3,9 +3,9 @@ use_gpu = os.environ.get('GNUMPY_USE_GPU', 'yes') == 'yes'
 if use_gpu:
     import gnumpy as gpu
     import gnumpy as gnp
-from stage import *
+from layer import *
 
-class Conv1D(Stage):
+class Convolution1DLayer(Layer):
     """
     1D temporal convolution.
     No padding, stride=1.
@@ -28,9 +28,9 @@ class Conv1D(Stage):
                  weightRegConst=0.0,
                  defaultValue=0.0,
                  outputdEdX=True,
-                 gpu=use_gpu,
+                 useGpu=use_gpu,
                  name=None):
-        Stage.__init__(self,
+        Layer.__init__(self,
                  name=name,
                  inputNames=inputNames,
                  outputDim=numFilters,
@@ -42,7 +42,7 @@ class Conv1D(Stage):
                  weightClip=weightClip,
                  gradientClip=gradientClip,
                  weightRegConst=weightRegConst,
-                 gpu=gpu,
+                 useGpu=useGpu,
                  outputdEdX=outputdEdX)
         self.numFilters = numFilters
         self.numChannels = numChannels
@@ -53,7 +53,7 @@ class Conv1D(Stage):
                         (self.windowSize * self.numChannels, self.numFilters))
         else:
             self.W = initWeights
-        if self.gpu:
+        if self.useGpu:
             self.W = gnp.as_garray(self.W.astype('float32'))
         self.X = 0
         self.Y = 0
@@ -74,7 +74,7 @@ class Conv1D(Stage):
         for i in range(T - S + 1):
             Z[:, i, :, :] = X[:, i : i + S, :]
         Z = Z.reshape(N * (T - S + 1), S * D)
-        if self.gpu:
+        if self.useGpu:
             Z = gpu.as_garray(Z.astype('float32'))
             Y = gpu.dot(Z, self.W)
             Y = gpu.as_numpy_array(Y)
@@ -94,14 +94,14 @@ class Conv1D(Stage):
         dEdY = dEdY.reshape(N * (T - S + 1), F)
         dEdX = np.zeros(self.X.shape, self.X.dtype)
         
-        if self.gpu:
+        if self.useGpu:
             gdEdY = gpu.as_garray(dEdY.astype('float32'))
             self.dEdW = gpu.dot(self.Z.transpose(), gdEdY)
         else:
             self.dEdW = np.dot(self.Z.transpose(), dEdY)
 
         if self.outputdEdX:
-            if self.gpu:
+            if self.useGpu:
                 gdEdZ = gpu.dot(gdEdY, self.W.transpose())
                 dEdZ = gpu.as_numpy_array(gdEdZ)
             else:

@@ -1,10 +1,10 @@
-from stage import *
+from layer import *
 
-class Sum2(Stage):
+class Sum2(Layer):
     """Stage summing first half of the input with second half."""
     def __init__(self, name, inputNames, outputDim,
                  defaultValue=0.0):
-        Stage.__init__(
+        Layer.__init__(
             self,
             name=name,
             inputNames=inputNames,

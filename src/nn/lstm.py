@@ -1,7 +1,8 @@
 from recurrent import *
-from elem_prod import *
+from elemwise import *
 from sum import *
-from active import *
+from activation_layer import *
+from reshape import *
 
 class LSTM(RecurrentContainer):
     def __init__(self,
@@ -31,11 +32,17 @@ class LSTM(RecurrentContainer):
         if name is None: print 'Warning: name is None.'
         self.inputDim = inputDim
         self.outputDim = outputDim
-        self.I = RecurrentAdapter(Map(
+
+        self.state1 = RecurrentAdapter(ConcatenationLayer(
+                      name=name + '.st1',
+                      inputNames=['input(0)', name +'.H(-1)', name +'.C(-1)'],
+                      axis=-1))
+
+        self.I = RecurrentAdapter(FullyConnectedLayer(
                  name=name + '.I',
-                 inputNames=['input(0)', name + '.H(-1)', name + '.C(-1)'],
+                 inputNames=[name + '.st1'],
                  outputDim=D2,
-                 activeFn=SigmoidActiveFn(),
+                 activeFn=SigmoidActivationFn(),
                  initRange=initRange,
                  initSeed=initSeed,
                  biasInitConst=1.0,
@@ -47,11 +54,11 @@ class LSTM(RecurrentContainer):
                  weightClip=weightClip,
                  weightRegConst=weightRegConst))
 
-        self.F = RecurrentAdapter(Map(
+        self.F = RecurrentAdapter(FullyConnectedLayer(
                  name=name + '.F',
-                 inputNames=['input(0)', name + '.H(-1)', name + '.C(-1)'],
+                 inputNames=[name + '.st1'],
                  outputDim=D2,
-                 activeFn=SigmoidActiveFn(),
+                 activeFn=SigmoidActivationFn(),
                  initRange=initRange,
                  initSeed=initSeed+1,
                  biasInitConst=1.0,
@@ -63,11 +70,16 @@ class LSTM(RecurrentContainer):
                  weightClip=weightClip,
                  weightRegConst=weightRegConst))
 
-        self.Z = RecurrentAdapter(Map(
+        self.state2 = RecurrentAdapter(ConcatenationLayer(
+                      name=name + '.st2',
+                      inputNames=['input(0)', name +'.H(-1)'],
+                      axis=-1))
+
+        self.Z = RecurrentAdapter(FullyConnectedLayer(
                  name=name + '.Z',
-                 inputNames=['input(0)', name + '.H(-1)'],
+                 inputNames=[name + '.st2'],
                  outputDim=D2,
-                 activeFn=TanhActiveFn(),
+                 activeFn=TanhActivationFn(),
                  initRange=initRange,
                  initSeed=initSeed+2,
                  biasInitConst=0.0,
@@ -79,11 +91,16 @@ class LSTM(RecurrentContainer):
                  weightClip=weightClip,
                  weightRegConst=weightRegConst))
 
-        self.O = RecurrentAdapter(Map(
+        self.state3 = RecurrentAdapter(ConcatenationLayer(
+                      name=name + '.st3',
+                      inputNames=['input(0)', name +'.H(-1)', name +'.C(0)'],
+                      axis=-1))
+
+        self.O = RecurrentAdapter(FullyConnectedLayer(
                  name=name + '.O',
-                 inputNames=['input(0)', name + '.H(-1)', name + '.C(0)'],
+                 inputNames=[name + '.st3'],
                  outputDim=D2,
-                 activeFn=SigmoidActiveFn(),
+                 activeFn=SigmoidActivationFn(),
                  initRange=initRange,
                  initSeed=initSeed+3,
                  biasInitConst=1.0,
@@ -98,35 +115,36 @@ class LSTM(RecurrentContainer):
         if not needInit:
             self.I.W, self.F.W, self.Z.W, self.O.W = self.splitWeights(initWeights)
 
-        self.FC = RecurrentAdapter(ElementProduct(
+        self.FC = RecurrentAdapter(ElementWiseProduct(
                   name=name + '.F*C',
                   inputNames=[name + '.F', name + '.C(-1)'],
                   outputDim=D2))
 
-        self.IZ = RecurrentAdapter(ElementProduct(
+        self.IZ = RecurrentAdapter(ElementWiseProduct(
                   name=name + '.I*Z',
                   inputNames=[name + '.I', name + '.Z'],
                   outputDim=D2))
 
-        self.C = RecurrentAdapter(Sum(
+        self.C = RecurrentAdapter(ElementWiseSum(
                  name=name + '.C',
                  inputNames=[name + '.F*C', name + '.I*Z'],
-                 numComponents=2,
                  outputDim=D2))
 
-        self.U = RecurrentAdapter(Active(
+        self.U = RecurrentAdapter(ActivationLayer(
                  name=name + '.U',
                  inputNames=[name + '.C'],
                  outputDim=D2,
-                 activeFn=TanhActiveFn()))
+                 activationFn=TanhActivationFn()))
 
-        self.H = RecurrentAdapter(ElementProduct(
+        self.H = RecurrentAdapter(ElementWiseProduct(
                  name=name + '.H',
                  inputNames=[name + '.O', name + '.U'],
                  outputDim=D2,
                  defaultValue=defaultValue))
 
-        stages = [self.I, self.F, self.Z, self.FC, self.IZ, self.C, self.O, self.U, self.H]
+        stages = [self.state1, self.state2, self.I, self.F, self.Z, self.FC,
+                  self.IZ, self.C, self.state3, self.O, self.U, self.H]
+
         RecurrentContainer.__init__(self,
                            stages=stages,
                            timespan=timespan,
@@ -141,7 +159,7 @@ class LSTM(RecurrentContainer):
                            outputdEdX=outputdEdX)
 
     def getWeights(self):
-        if self.I.stages[0].gpu:
+        if self.I.stages[0].useGpu:
             return np.concatenate((
                     gpu.as_numpy_array(self.I.getWeights()),
                     gpu.as_numpy_array(self.F.getWeights()),
@@ -154,7 +172,7 @@ class LSTM(RecurrentContainer):
                                self.O.getWeights()), axis=0)
             
     def getGradient(self):
-        if self.I.stages[0].gpu:
+        if self.I.stages[0].useGpu:
             return np.concatenate((
                 gpu.as_numpy_array(self.I.getGradient()),
                 gpu.as_numpy_array(self.F.getGradient()),
@@ -179,7 +197,7 @@ class LSTM(RecurrentContainer):
 
     def loadWeights(self, W):
         IW, FW, ZW, OW = self.splitWeights(W)
-        if self.I.stages[0].gpu:
+        if self.I.stages[0].useGpu:
             self.I.loadWeights(gpu.as_garray(IW))
             self.F.loadWeights(gpu.as_garray(FW))
             self.Z.loadWeights(gpu.as_garray(ZW))

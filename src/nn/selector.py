@@ -1,13 +1,13 @@
-from stage import *
+from layer import *
 
-class Selector(Stage):
+class Selector(Layer):
     def __init__(self, 
                  name, 
                  inputNames,
                  start, 
                  end, 
                  axis=-1):
-        Stage.__init__(
+        Layer.__init__(
                  self,
                  name=name, 
                  inputNames=inputNames,

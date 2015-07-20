@@ -1,8 +1,8 @@
 # Neural network package
 # Package level functions
-from loader import *
+from model_loader import *
 from func import *
-from active_func import *
+from activation_func import *
 from tester import *
 
 # Classes

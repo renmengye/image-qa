@@ -1,23 +1,23 @@
-from stage import *
+from layer import *
 
-class Active(Stage):
+class ActivationLayer(Layer):
     def __init__(self,
-                 activeFn,
+                 activationFn,
                  inputNames,
                  outputDim,
                  defaultValue=0.0,
                  outputdEdX=True,
                  name=None):
-        Stage.__init__(self,
+        Layer.__init__(self,
                  name=name,
                  inputNames=inputNames,
                  outputDim=outputDim,
                  defaultValue=defaultValue,
                  outputdEdX=outputdEdX)
-        self.activeFn = activeFn
+        self.activationFn = activationFn
     def forward(self, X):
-        self.Y = self.activeFn.forward(X)
+        self.Y = self.activationFn.forward(X)
         return self.Y
     def backward(self, dEdY):
         self.dEdW = 0
-        return self.activeFn.backward(dEdY, self.Y, 0)
+        return self.activationFn.backward(dEdY, self.Y, 0)

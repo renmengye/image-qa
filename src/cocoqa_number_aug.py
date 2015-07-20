@@ -4,7 +4,7 @@ import pattern.en
 import numpy as np
 import shutil
 
-import mscoco_extract_instances as ext
+import cocoqa_extract_instances as ext
 import imageqa_test as it
 import prep
 

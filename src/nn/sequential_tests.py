@@ -1,10 +1,10 @@
-from sequential import *
+from sequential_container import *
 from lstm_old import *
-from map import *
-from dropout import *
+from fully_connected_layer import *
+from dropout_layer import *
 from reshape import *
-from lut import *
-from active_func import *
+from embedding_layer import *
+from activation_func import *
 import unittest
 
 class Sequential_Tests(unittest.TestCase):
@@ -19,7 +19,7 @@ class Sequential_Tests(unittest.TestCase):
         timespan = self.trainInput.shape[1]
         time_unfold = TimeUnfold()
 
-        lut = LUT(
+        lut = EmbeddingLayer(
             inputDim=np.max(self.trainInput)+1,
             outputDim=5,
             inputNames=None,
@@ -27,9 +27,9 @@ class Sequential_Tests(unittest.TestCase):
             initWeights=wordEmbed
         )
 
-        m = Map(
+        m = FullyConnectedLayer(
             outputDim=5,
-            activeFn=IdentityActiveFn(),
+            activeFn=IdentityActivationFn(),
             inputNames=None,
             initRange=0.1,
             initSeed=1,
@@ -48,7 +48,7 @@ class Sequential_Tests(unittest.TestCase):
             multiErr=True
         )
 
-        dropout = Dropout(
+        dropout = DropoutLayer(
             name='d1',
             dropoutRate=0.5,
             inputNames=None,
@@ -66,14 +66,14 @@ class Sequential_Tests(unittest.TestCase):
             multiErr=False
         )
 
-        soft = Map(
+        soft = FullyConnectedLayer(
             outputDim=2,
-            activeFn=SoftmaxActiveFn,
+            activeFn=SoftmaxActivationFn,
             initRange=0.1,
             initSeed=5
         )
 
-        self.model = Sequential(
+        self.model = SequentialContainer(
             stages=[
                 time_unfold,
                 lut,
@@ -86,16 +86,14 @@ class Sequential_Tests(unittest.TestCase):
             ])
         self.hasDropout = True
         costFn = crossEntIdx
-        output = self.model.forward(self.trainInput, dropout=self.hasDropout)
+        self.model.setIsTraining(self.hasDropout) # Activates dropout
+        output = self.model.forward(self.trainInput)
         E, dEdY = costFn(output, self.trainTarget)
         dEdX = self.model.backward(dEdY)
         self.chkgrd(soft.dEdW, self.evaluateGrad(soft.getWeights(), costFn))
-        #self.chkgrd(lstm_second.dEdW, self.evaluateGrad(lstm_second.getWeights(), costFn))
-        #self.chkgrd(lstm.dEdW, self.evaluateGrad(lstm.getWeights(), costFn))
         self.chkgrd(m.dEdW, self.evaluateGrad(m.getWeights(), costFn))
 
     def chkgrd(self, dE, dETmp):
-        #print dE/dETmp
         dE = dE.reshape(dE.size)
         dETmp = dETmp.reshape(dE.size)
         tolerance = 5e-1
@@ -110,11 +108,11 @@ class Sequential_Tests(unittest.TestCase):
         for i in range(W.shape[0]):
             for j in range(W.shape[1]):
                 W[i,j] += eps
-                output = self.model.forward(self.trainInput, dropout=self.hasDropout)
+                output = self.model.forward(self.trainInput)
                 Etmp1, d1 = costFn(output, self.trainTarget)
 
                 W[i,j] -= 2 * eps
-                output = self.model.forward(self.trainInput, dropout=self.hasDropout)
+                output = self.model.forward(self.trainInput)
                 Etmp2, d2 = costFn(output, self.trainTarget)
 
                 dEdW[i,j] = (Etmp1 - Etmp2) / 2.0 / eps

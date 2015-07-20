@@ -1,13 +1,15 @@
-from stage import *
+from layer import *
 
-class Reshape(Stage):
+class Reshape(Layer):
     def __init__(self, reshapeFn, inputNames=None, outputDim=0, name=None, outputdEdX=True):
-        Stage.__init__(self, name=name, inputNames=inputNames, outputDim=outputDim, outputdEdX=outputdEdX)
+        Layer.__init__(self, name=name, inputNames=inputNames, outputDim=outputDim, outputdEdX=outputdEdX)
         self.reshapeFn = eval('lambda x: ' + reshapeFn)
         self.Xshape = 0
 
     def forward(self, X):
         self.Xshape = X.shape
+        # if self.inputs[0].outputGpu:
+        #     return gpu
         return np.reshape(X, self.reshapeFn(X.shape))
 
     def backward(self, dEdY):
@@ -32,9 +34,9 @@ class TimeFold(Reshape):
                          reshapeFn='(x[0] / '+t+','+t+', x[1])',
                          outputdEdX=outputdEdX)
 
-class TimeReverse(Stage):
+class TimeReverse(Layer):
     def __init__(self, inputNames, outputDim=0, name=None, outputdEdX=True):
-        Stage.__init__(self, 
+        Layer.__init__(self,
                        name=name,
                        inputNames=inputNames,
                        outputDim=outputDim,
@@ -72,9 +74,9 @@ class TimeReverse(Stage):
         else:
             return None
 
-class TimeRepeat(Stage):
+class TimeRepeat(Layer):
     def __init__(self, numRepeats, inputNames=None, outputDim=0, name=None, outputdEdX=True):
-        Stage.__init__(self, name=name, inputNames=inputNames, outputDim=outputDim, outputdEdX=outputdEdX)
+        Layer.__init__(self, name=name, inputNames=inputNames, outputDim=outputDim, outputdEdX=outputdEdX)
         self.numRepeats = numRepeats
 
     def forward(self, X):
@@ -92,12 +94,12 @@ class TimeRepeat(Stage):
                 dEdX = dEdX.reshape(dEdX.shape[0], dEdX.shape[-1])
             return dEdX
 
-class TimeFinal(Stage):
+class TimeFinal(Layer):
     """
     Scans and selects the last timestep.
     """
     def __init__(self, inputNames, outputDim=0, name=None, outputdEdX=True):
-        Stage.__init__(self, 
+        Layer.__init__(self,
                        name=name, 
                        inputNames=inputNames, 
                        outputDim=outputDim, 
@@ -131,10 +133,11 @@ class TimeFinal(Stage):
         else:
             return None
 
-class Concat(Stage):
+class ConcatenationLayer(Layer):
     def __init__(self, inputNames, axis, name=None):
-        Stage.__init__(self, name=name, inputNames=inputNames, outputDim=0)
+        Layer.__init__(self, name=name, inputNames=inputNames, outputDim=0)
         self.axis = axis
+
     def getInput(self):
         if len(self.inputs) > 1:
             self.splX = []
@@ -144,19 +147,21 @@ class Concat(Stage):
             return np.concatenate(self.splX, axis=self.axis)
         else:
             return self.inputs[0].Y
+
     def sendError(self, dEdX):
         """
         Iterates over input list and sends dEdX.
         """
+        axis = np.mod(self.axis, len(dEdX.shape))
         if len(self.inputs) > 1:
             s = 0
             for stage in self.inputs:
                 s2 = s + stage.Y.shape[self.axis]
-                if self.axis == 0:
+                if axis == 0:
                     stage.dEdY += dEdX[s : s2]
-                elif self.axis == 1:
+                elif axis == 1:
                     stage.dEdY += dEdX[:, s : s2]
-                elif self.axis == 2:
+                elif axis == 2:
                     stage.dEdY += dEdX[:, :, s : s2]
                 s = s2
                 stage.receivedError = True
@@ -166,5 +171,6 @@ class Concat(Stage):
 
     def forward(self, X):
         return X
+
     def backward(self, dEdY):
         return dEdY

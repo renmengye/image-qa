@@ -177,7 +177,7 @@ if __name__ == '__main__':
     This program only assembles generated questions.
 
     Usage:
-    mscoco_prep.py  [-toy] Build the toy set, default is full dataset
+    cocoqa_prep.py  [-toy] Build the toy set, default is full dataset
                     [-image] Build image features, default is not building
                     [-object] Object type question only
                     [-number] Number type question only

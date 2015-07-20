@@ -1,12 +1,12 @@
-from stage import *
+from layer import *
 
-class ConstValue(Stage):
+class ConstantLayer(Layer):
     def __init__(self,
                  name,
                  inputNames,
                  outputDim,
                  value):
-        Stage.__init__(self,
+        Layer.__init__(self,
                  name=name,
                  outputDim=outputDim,
                  inputNames=inputNames,

@@ -1,6 +1,6 @@
-from stage import *
+from layer import *
 
-class ConstWeights(Stage):
+class ConstWeights(Layer):
     def __init__(self,
                  name,
                  outputDim=0,
@@ -16,7 +16,7 @@ class ConstWeights(Stage):
                  weightClip=0.0,
                  gradientClip=0.0,
              weightRegConst=0.0):
-        Stage.__init__(self,
+        Layer.__init__(self,
                  name=name,
                  outputDim=outputDim,
                  inputNames=['input'],

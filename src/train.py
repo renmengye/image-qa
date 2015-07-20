@@ -216,11 +216,11 @@ if __name__ == '__main__':
             model, trainer = trainValid(
                 params,
                 trainOpt,
-                trainInput, 
-                trainTarget, 
-                trainInputWeights, 
-                validInput, 
-                validTarget, 
+                trainInput,
+                trainTarget,
+                trainInputWeights,
+                validInput,
+                validTarget,
                 validInputWeights,
                 initWeights=initWeights)
 

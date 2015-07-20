@@ -183,7 +183,7 @@ def runEnsemblePrior(
                                 delta)
         allOutput.append(outputTest)
     counter = [0, 0, 0, 0]
-    for n in range(targetTest.shape[0]):
+    for n in range(inputTest.shape[0]):
         qtype = questionTypeArray[n]
         output = allOutput[qtype]
         for i in range(output.shape[1]):

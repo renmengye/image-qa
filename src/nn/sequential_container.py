@@ -1,24 +1,18 @@
 from container import *
 
-class Sequential(Stage):
+class SequentialContainer(Layer):
     def __init__(self, stages, inputNames=None, name=None, outputDim=0, outputdEdX=True):
-        Stage.__init__(self,
+        Layer.__init__(self,
                  name=name,
                  outputDim=outputDim,
                  inputNames=inputNames,
                  outputdEdX=outputdEdX)
         self.stages = stages
 
-    def forward(self, X, dropout=True):
+    def forward(self, X):
         X1 = X
         for stage in self.stages:
-            if isinstance(stage, Container) or isinstance(stage, Sequential):
-                X1 = stage.forward(X1, dropout)
-            elif hasattr(stage, 'dropout'):
-                stage.dropout = dropout
-                X1 = stage.forward(X1)
-            else:
-                X1 = stage.forward(X1)
+            X1 = stage.forward(X1)
         return X1
 
     def backward(self, dEdY):

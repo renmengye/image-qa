@@ -1,8 +1,0 @@
-6200,what is the color of the cone,yellow
-6200,what is the color of the bear,white
-6058,what is the color of the coat,yellow
-6058,what is the color of the umbrella,red
-2007,what is next to the cup,banana
-2007,what is sitting next to a banana,cup
-614,what next to the mouse and some batteries wrapped up,keyboard
-614,what is next to the keyboard,mouse

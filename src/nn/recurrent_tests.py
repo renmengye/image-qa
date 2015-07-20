@@ -1,11 +1,7 @@
-from recurrent import *
 from lstm_old import *
+from lstm import *
 import stage_tests
 import unittest
-from map import *
-from active import *
-from elem_prod import *
-from sum import *
 
 class Recurrent_Tests(stage_tests.StageTests):
     def setUp(self):
@@ -13,20 +9,22 @@ class Recurrent_Tests(stage_tests.StageTests):
         self.T = 5
         self.D = 10
         self.D2 = 5
-        self.sigm_ = Map(
-                        name='sigm',
+        self.state = RecurrentAdapter(ConcatenationLayer(name='state',
                         inputNames=['input(0)', 'sigm(-1)', 'sigm(-2)'],
+                        axis=-1))
+        self.sigm_ = FullyConnectedLayer(
+                        name='sigm',
+                        inputNames=['state'],
                         outputDim=self.D2,
-                        activeFn=SigmoidActiveFn(),
+                        activeFn=SigmoidActivationFn(),
                         initRange=1,
                         initSeed=5,
                         learningRate=0.9
                     )
-        self.sigm = RecurrentAdapter(
-            stage=self.sigm_)
+        self.sigm = RecurrentAdapter(self.sigm_)
         self.stage = self.sigm.getStage(time=0)
         self.model = RecurrentContainer(
-            stages=[self.sigm],
+            stages=[self.state, self.sigm],
             timespan=self.T,
             inputDim=self.D,
             outputDim=self.D2,
@@ -42,7 +40,7 @@ class Recurrent_Tests(stage_tests.StageTests):
         random = np.random.RandomState(1)
         X = random.rand(self.N, self.T, self.D)
         T = random.rand(self.N, self.T, self.D2)
-        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, T)
+        dEdW, dEdWTmp, dEdX, dEdXTmp = self.calcgrd(X, X, T)
         self.chkgrd(dEdW, dEdWTmp)
         self.chkgrd(dEdX, dEdXTmp)
 
@@ -77,95 +75,16 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
         D = 10
         D2 = 5
         Time = 5
-        I = RecurrentAdapter(Map(
-                name='I',
-                inputNames=['input(0)', 'H(-1)', 'C(-1)'],
-                outputDim=D2,
-                activeFn=SigmoidActiveFn(),
-                initRange=0.1,
-                initSeed=5,
-                biasInitConst=1.0,
-                learningRate=0.8,
-                momentum=0.9
-            ))
 
-        F = RecurrentAdapter(Map(
-                name='F',
-                inputNames=['input(0)', 'H(-1)', 'C(-1)'],
-                outputDim=D2,
-                activeFn=SigmoidActiveFn(),
-                initRange=0.1,
-                initSeed=6,
-                biasInitConst=1.0,
-                learningRate=0.8,
-                momentum=0.9
-            ))
-
-        Z = RecurrentAdapter(Map(
-                name='Z',
-                inputNames=['input(0)', 'H(-1)'],
-                outputDim=D2,
-                activeFn=TanhActiveFn(),
-                initRange=0.1,
-                initSeed=7,
-                biasInitConst=0.0,
-                learningRate=0.8,
-                momentum=0.9
-            ))
-
-        FC = RecurrentAdapter(ElementProduct(
-                name='F.C',
-                inputNames=['F(0)', 'C(-1)'],
-                outputDim=D2
-            ))
-
-        IZ = RecurrentAdapter(ElementProduct(
-                name='I.Z',
-                inputNames=['I(0)', 'Z(0)'],
-                outputDim=D2
-            ))
-
-        C = RecurrentAdapter(Sum(
-                name='C',
-                inputNames=['F.C(0)', 'I.Z(0)'],
-                numComponents=2,
-                outputDim=D2
-            ))
-
-        O = RecurrentAdapter(Map(
-                name='O',
-                inputNames=['input(0)', 'H(-1)', 'C(0)'],
-                outputDim=D2,
-                activeFn=SigmoidActiveFn(),
-                initRange=0.1,
-                initSeed=8,
-                biasInitConst=1.0,
-                learningRate=0.8,
-                momentum=0.9
-            ))
-
-        U = RecurrentAdapter(Active(
-                name='U',
-                inputNames=['C(0)'],
-                outputDim=D2,
-                activeFn=TanhActiveFn()
-            ))
-
-        H = RecurrentAdapter(ElementProduct(
-                name='H',
-                inputNames=['O(0)', 'U(0)'],
-                outputDim=D2
-            ))
-
-        lstm = RecurrentContainer(
-                name='lstm',
-                stages=[I, F, Z, FC, IZ, C, O, U, H],
-                timespan=Time,
-                inputDim=D,
-                outputDim=D2,
-                outputStageNames=['H'],
-                multiOutput=multiOutput,
-                outputdEdX=True)
+        lstm = LSTM(
+                 name='lstm',
+                 inputDim=D,
+                 outputDim=D2,
+                 inputNames=[],
+                 timespan=Time,
+                 multiOutput=multiOutput,
+                 learningRate=0.8,
+                 momentum=0.9)
 
         lstm2 = LSTM_Old(
             name='lstm2',
@@ -193,16 +112,7 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
             E, dEdY = costFn(Y, T)
             dEdX = lstm.backward(dEdY)
             if i == 0:
-                if I.stages[0].gpu:            
-                    W = np.concatenate((
-                        gpu.as_numpy_array(I.getWeights()),
-                        gpu.as_numpy_array(F.getWeights()),
-                        gpu.as_numpy_array(Z.getWeights()),
-                        gpu.as_numpy_array(O.getWeights())), axis=0)
-                else:
-                    W = np.concatenate((I.getWeights(), 
-                        F.getWeights(), Z.getWeights(), 
-                        O.getWeights()), axis=0)
+                W = lstm.getWeights()
                 lstm2.W = W.transpose()
             if multiOutput:
                 Y2 = lstm2.forward(X)[:,:-1]
@@ -215,36 +125,19 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
             else:
                 dEdX2 = lstm2.backward(dEdY2)
 
-            if I.stages[0].gpu:
-                dEdW = np.concatenate((
-                    gpu.as_numpy_array(I.getGradient()),
-                    gpu.as_numpy_array(F.getGradient()),
-                    gpu.as_numpy_array(Z.getGradient()),
-                    gpu.as_numpy_array(O.getGradient())), axis=0)
-            else:
-                dEdW = np.concatenate((I.getGradient(),
-                                       F.getGradient(),
-                                       Z.getGradient(),
-                                       O.getGradient()), axis=0)
+            dEdW = lstm.getGradient()
             dEdW2 = lstm2.dEdW
+            self.chkEqual(dEdW.transpose(), dEdW2)
+
             lstm.updateWeights()
             lstm2.updateWeights()
-            #self.chkEqual(Y, Y2)
 
-            #self.chkEqual(dEdX, dEdX2)
-            self.chkEqual(dEdW.transpose(), dEdW2)
-            if I.stages[0].gpu:            
-                W = np.concatenate((
-                    gpu.as_numpy_array(I.getWeights()),
-                    gpu.as_numpy_array(F.getWeights()),
-                    gpu.as_numpy_array(Z.getWeights()),
-                    gpu.as_numpy_array(O.getWeights())), axis=0)
-            else:
-                W = np.concatenate((I.getWeights(), 
-                    F.getWeights(), Z.getWeights(), 
-                    O.getWeights()), axis=0)
+            self.chkEqual(Y, Y2)
+            self.chkEqual(dEdX, dEdX2)
+
+            W = lstm.getWeights()
             W2 = lstm2.W
-            #self.chkEqual(W.transpose(), W2)
+            self.chkEqual(W.transpose(), W2)
 
     def chkEqual(self, a, b):
         tolerance = 1e-1
@@ -259,5 +152,6 @@ class LSTM_Recurrent_Random_Tests(unittest.TestCase):
                 (a[i] == 0 and b[i] == 0) or
                 (np.abs(a[i]) < 1e-8 and np.abs(b[i]) < 1e-8) or
                 (np.abs(a[i] / b[i] - 1) < tolerance))
+
 if __name__ == '__main__':
     unittest.main()

@@ -1,8 +1,8 @@
-from sequential import *
+from sequential_container import *
 from lstm_old import *
-from dropout import *
+from dropout_layer import *
 from reshape import *
-from lut import *
+from embedding_layer import *
 from lstm import *
 import unittest
 
@@ -19,7 +19,7 @@ class LSTM_Recurrent_Real_Tests(unittest.TestCase):
         Time = trainInput.shape[1]
         multiOutput = False
         time_unfold = TimeUnfold()
-        lut = LUT(
+        lut = EmbeddingLayer(
             inputDim=np.max(trainInput)+1,
             outputDim=D,
             inputNames=None,
@@ -32,14 +32,14 @@ class LSTM_Recurrent_Real_Tests(unittest.TestCase):
             inputNames=None
         )
 
-        dropout = Dropout(
+        dropout = DropoutLayer(
             name='d1',
             dropoutRate=0.2,
             initSeed=2,
             inputNames=None,
             outputDim=D2
         )
-        dropout2 = Dropout(
+        dropout2 = DropoutLayer(
             name='d2',
             dropoutRate=0.2,
             initSeed=2,
@@ -71,10 +71,10 @@ class LSTM_Recurrent_Real_Tests(unittest.TestCase):
             momentum=0.9,
             outputdEdX=True)
 
-        sig = Map(
+        sig = FullyConnectedLayer(
             name='sig',
             outputDim=1,
-            activeFn=SigmoidActiveFn(),
+            activeFn=SigmoidActivationFn(),
             initRange=0.1,
             initSeed=5,
             learningRate=0.01,
@@ -83,10 +83,10 @@ class LSTM_Recurrent_Real_Tests(unittest.TestCase):
             gradientClip=0.1,
             weightRegConst=0.00005
         )
-        sig2 = Map(
+        sig2 = FullyConnectedLayer(
             name='sig',
             outputDim=1,
-            activeFn=SigmoidActiveFn(),
+            activeFn=SigmoidActivationFn(),
             initRange=0.1,
             initSeed=5,
             learningRate=0.01,
@@ -97,7 +97,7 @@ class LSTM_Recurrent_Real_Tests(unittest.TestCase):
         )
 
         costFn = crossEntOne
-        model1 = Sequential(
+        model1 = SequentialContainer(
             stages=[
                 time_unfold,
                 lut,
@@ -108,7 +108,7 @@ class LSTM_Recurrent_Real_Tests(unittest.TestCase):
             ]
         )
 
-        model2 = Sequential(
+        model2 = SequentialContainer(
             stages=[
                 time_unfold,
                 lut,

@@ -1,21 +1,21 @@
 from lstm_old import *
-from lut import *
+from embedding_layer import *
 from reshape import *
 from inner_prod import *
-from dropout import *
-from sequential import *
+from dropout_layer import *
+from sequential_container import *
 from const_weights import *
-from const_value import *
-from cos_sim import *
+from constant_layer import *
+from cosine_similarity_layer import *
 from lstm import *
 from sum_prod import *
 from selector import *
 from sum2 import *
-from conv1d import *
-from maxpool1d import *
-from meanpool1d import *
-from normalize import *
-from ordinal import *
+from convolution import *
+from max_pooling import *
+from mean_pooling import *
+from normalization_layer import *
+from ordinal_regression_layer import *
 
 from scipy import sparse
 
@@ -40,15 +40,15 @@ def routeFn(name):
     elif name == 'argmaxDiff':
         return argmaxDiff
     elif name == 'sigmoid':
-        return SigmoidActiveFn
+        return SigmoidActivationFn
     elif name == 'softmax':
-        return SoftmaxActiveFn
+        return SoftmaxActivationFn
     elif name == 'tanh':
-        return TanhActiveFn
+        return TanhActivationFn
     elif name == 'identity':
-        return IdentityActiveFn
+        return IdentityActivationFn
     elif name == 'relu':
-        return ReluActiveFn
+        return ReluActivationFn
     elif name == 'mse':
         return meanSqErr
     elif name == 'mseEye':
@@ -178,7 +178,7 @@ def addStage(stageDict):
             outputdEdX=outputdEdX
         )
     elif stageDict['type'] == 'lut':
-        stage = LUT(
+        stage = EmbeddingLayer(
             name=stageDict['name'],
             inputDim=stageDict['inputDim'],
             outputDim=stageDict['outputDim'],
@@ -203,7 +203,7 @@ def addStage(stageDict):
             outputdEdX=stageDict['outputdEdX'] if stageDict.has_key('outputdEdX') else False
         )
     elif stageDict['type'] == 'map':
-        stage = Map(
+        stage = FullyConnectedLayer(
             name=stageDict['name'],
             outputDim=stageDict['outputDim'],
             inputNames=inputList,
@@ -230,7 +230,7 @@ def addStage(stageDict):
             inputNames=inputList,
             outputdEdX=outputdEdX)
     elif stageDict['type'] == 'concat':
-        stage = Concat(
+        stage = ConcatenationLayer(
             name=stageDict['name'],
             inputNames=inputList,
             axis=stageDict['axis'])
@@ -277,7 +277,7 @@ def addStage(stageDict):
             outputDim=stageDict['outputDim']
         )
     elif stageDict['type'] == 'dropout':
-        stage = Dropout(
+        stage = DropoutLayer(
             name=stageDict['name'],
             dropoutRate=stageDict['dropoutRate'],
             initSeed=stageDict['initSeed'],
@@ -289,7 +289,7 @@ def addStage(stageDict):
         realStages = []
         for i in range(len(stages)):
             realStages.append(stageLib[stages[i]])
-        stage = Sequential(
+        stage = SequentialContainer(
             name=stageDict['name'],
             stages=realStages,
             inputNames=inputList,
@@ -314,21 +314,21 @@ def addStage(stageDict):
             weightRegConst=weightRegConst
         )
     elif stageDict['type'] == 'constValue':
-        stage = ConstValue(
+        stage = ConstantLayer(
             name=stageDict['name'],
             inputNames=inputList,
             outputDim=stageDict['outputDim'],
             value=stageDict['value']
         )
     elif stageDict['type'] == 'cosSimilarity':
-        stage = CosSimilarity(
+        stage = CosineSimilarityLayer(
             name=stageDict['name'],
             inputNames=inputList,
             outputDim=0,
             bankDim=stageDict['bankDim']
         )
     elif stageDict['type'] == 'componentProd':
-        stage = ElementProduct(
+        stage = ElementWiseProduct(
             name=stageDict['name'],
             inputNames=inputList,
             outputDim=stageDict['outputDim']
@@ -357,18 +357,18 @@ def addStage(stageDict):
             defaultValue=defaultValue
         )
     elif stageDict['type'] == 'elemProd':
-        stage = ElementProduct(
+        stage = ElementWiseProduct(
             name=stageDict['name'],
             inputNames=inputList,
             outputDim=stageDict['outputDim'],
             defaultValue=defaultValue
         )
     elif stageDict['type'] == 'active':
-        stage = Active(
+        stage = ActivationLayer(
             name=stageDict['name'],
             inputNames=inputList,
             outputDim=stageDict['outputDim'],
-            activeFn=routeFn(stageDict['activeFn']),
+            activationFn=routeFn(stageDict['activeFn']),
             defaultValue=defaultValue
         )
     elif stageDict['type'] == 'sumProd':
@@ -413,7 +413,7 @@ def addStage(stageDict):
             outputDim=stageDict['outputDim']
         )
     elif stageDict['type'] == 'conv1d':
-        stage = Conv1D(
+        stage = Convolution1DLayer(
             name=stageDict['name'],
             inputNames=inputList,
             numFilters=stageDict['numFilters'],
@@ -433,7 +433,7 @@ def addStage(stageDict):
             outputdEdX=outputdEdX
         )
     elif stageDict['type'] == 'maxpool1d':
-        stage = MaxPool1D(
+        stage = MaxPooling1DLayer(
             name=stageDict['name'],
             inputNames=inputList,
             windowSize=stageDict['windowSize'],
@@ -441,7 +441,7 @@ def addStage(stageDict):
             outputdEdX=outputdEdX
         )
     elif stageDict['type'] == 'meanpool1d':
-        stage = MeanPool1D(
+        stage = MeanPooling1DLayer(
             name=stageDict['name'],
             inputNames=inputList,
             windowSize=stageDict['windowSize'],
@@ -455,7 +455,7 @@ def addStage(stageDict):
         else:
             mean = np.load(stageDict['mean'])
             std = np.load(stageDict['std'])
-        stage = Normalize(
+        stage = NormalizationLayer(
             name=stageDict['name'],
             inputNames=inputList,
             mean=mean,
@@ -464,7 +464,7 @@ def addStage(stageDict):
             outputdEdX=outputdEdX
         )
     elif stageDict['type'] == 'ordinal':
-        stage = OrdinalRegression(
+        stage = OrdinalRegressionLayer(
             name=stageDict['name'],
             inputNames=inputList,
             outputDim=stageDict['outputDim'],

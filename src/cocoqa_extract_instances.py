@@ -252,7 +252,7 @@ def gatherAttention(trainJsonFilename, validJsonFilename):
 if __name__ == '__main__':
     """
     Usage:
-    python mscoco_extract_instances.py 
+    python cocoqa_extract_instances.py
                         -t[ype] {attention/count}
                         [-o[utput] {outputFolder}]
     """

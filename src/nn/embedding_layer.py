@@ -1,8 +1,8 @@
-from stage import *
+from layer import *
 import os
 use_gpu = os.environ.get('GNUMPY_USE_GPU', 'yes') == 'yes'
 
-class LUT(Stage):
+class EmbeddingLayer(Layer):
     """
     Look-up table.
     WARNING: this implementation of LUT is index 1-based.
@@ -29,7 +29,7 @@ class LUT(Stage):
                  weightRegConst=0.0,
                  outputdEdX=False,
                  name=None):
-        Stage.__init__(self,
+        Layer.__init__(self,
                  name=name,
                  inputNames=inputNames,
                  learningRate=learningRate,
@@ -40,7 +40,7 @@ class LUT(Stage):
                  weightClip=weightClip,
                  gradientClip=gradientClip,
                  weightRegConst=weightRegConst,
-                 gpu=False,
+                 useGpu=False,
                  outputdEdX=outputdEdX)
         self.outputDim = outputDim
         self.inputDim = inputDim
@@ -66,7 +66,6 @@ class LUT(Stage):
         self.dEdW = 0.0
 
     def initWeights(self):
-        print self.name
         self.W = self.random.uniform(
             -self.initRange/2.0, self.initRange/2.0,
             (self.inputDim, self.outputDim))
@@ -103,7 +102,7 @@ class LUT(Stage):
         if self.learningRate == 0.0:
             return
         else:
-            Stage.loadWeights(self, W)
+            Layer.loadWeights(self, W)
 
     def getWeights(self):
         if self.learningRate == 0.0:

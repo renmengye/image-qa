@@ -1,11 +1,11 @@
-from stage import *
+from layer import *
 
-class CosSimilarity(Stage):
+class CosineSimilarityLayer(Layer):
     """
     Compute the cosine similartiy of vectors with a bank of vectors
     """
     def __init__(self, bankDim, inputNames, outputDim, name=None):
-        Stage.__init__(self, name=name, inputNames=inputNames, outputDim=outputDim)
+        Layer.__init__(self, name=name, inputNames=inputNames, outputDim=outputDim)
         self.bankDim = bankDim
         self.A = 0
         self.Z = 0

@@ -129,7 +129,6 @@ if __name__ == '__main__':
         -train {train QA raw plain text file} \
         -test {test QA raw plain text file} \
         -o[utput] {output file name, including '.npz' extension} \
-        [-word {output word embedding file name, including '.npz' extension, if not provided then no embedding}] \
         [-type {all/object/number/color, all types or type specific dataset}]
 
     Example:
@@ -145,8 +144,6 @@ if __name__ == '__main__':
     buildObject = True
     buildNumber = True
     buildColor = True
-    lookupWordEmbed = False
-    wordEmbedFilename = '/ais/gobi3/u/$USER/data/daquar/reduced-37-word-embed.npz'
 
     for i, flag in enumerate(sys.argv):
         if flag == '-train':
@@ -155,9 +152,6 @@ if __name__ == '__main__':
             testQAFilename = sys.argv[i + 1]
         elif flag == '-o' or flag == '-output':
             outputFilename = sys.argv[i + 1]
-        elif flag == '-word':
-            lookupWordEmbed = True
-            wordEmbedFilename = sys.argv[i + 1]
         elif flag == '-type':
             if sys.argv[i + 1] == 'object':
                 buildObject = True
@@ -316,23 +310,22 @@ if __name__ == '__main__':
     dataset.save()
 
     # Look up word embedding
-    if lookupWordEmbed:
-        wordEmbed = nn.Dataset(wordEmbedFilename)
-        print 'Building word embeddings...'
-        w2v300QuestionEmbedding = word_embedding.getWordEmbedding(word2vec.lookup(idict))
-        w2v300AnswerEmbedding = word_embedding.getWordEmbedding(word2vec.lookup(iansdict))
-        cw2v300QuestionEmbedding = word_embedding.getWordEmbedding(word2vec_txt.lookup(idict))
-        cw2v300AnswerEmbedding = word_embedding.getWordEmbedding(word2vec_txt.lookup(iansdict))
-        cw2v500QuestionEmbedding = word_embedding.getWordEmbedding(word2vec_txt.lookup(idict))
-        cw2v500AnswerEmbedding = word_embedding.getWordEmbedding(word2vec_txt.lookup(iansdict))
-        wordEmbed.set('word2vecGoogleNews300Question', w2v300QuestionEmbedding)
-        wordEmbed.set('word2vecGoogleNews300Answer', w2v300AnswerEmbedding)
-        wordEmbed.set('word2vecCustom300Question', cw2v300QuestionEmbedding)
-        wordEmbed.set('word2vecCustom300Answer', cw2v300AnswerEmbedding)
-        wordEmbed.set('word2vecCustom300Question', cw2v500QuestionEmbedding)
-        wordEmbed.set('word2vecCustom300Answer', cw2v500AnswerEmbedding)
+    print 'Building word embeddings...'
+    w2v300QuestionEmbedding = word_embedding.getWordEmbedding(word2vec.lookup(idict))
+    w2v300AnswerEmbedding = word_embedding.getWordEmbedding(word2vec.lookup(iansdict))
+    cw2v300QuestionEmbedding = word_embedding.getWordEmbedding(word2vec_txt.lookup(idict))
+    cw2v300AnswerEmbedding = word_embedding.getWordEmbedding(word2vec_txt.lookup(iansdict))
+    cw2v500QuestionEmbedding = word_embedding.getWordEmbedding(word2vec_txt.lookup(idict))
+    cw2v500AnswerEmbedding = word_embedding.getWordEmbedding(word2vec_txt.lookup(iansdict))
+    dataset.set('word2vecGoogleNews300Question', w2v300QuestionEmbedding)
+    dataset.set('word2vecGoogleNews300Answer', w2v300AnswerEmbedding)
+    dataset.set('word2vecCustom300Question', cw2v300QuestionEmbedding)
+    dataset.set('word2vecCustom300Answer', cw2v300AnswerEmbedding)
+    dataset.set('word2vecCustom300Question', cw2v500QuestionEmbedding)
+    dataset.set('word2vecCustom300Answer', cw2v500AnswerEmbedding)
 
     # Build baseline solution
+    print 'Computing guess baseline...'
     prep.guessBaseline(
                     testQuestions, 
                     testAnswers, 

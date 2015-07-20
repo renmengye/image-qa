@@ -1,5 +1,5 @@
 import yaml
-import router
+import layer_factory
 from model import *
 
 def load(modelSpecFilename):
@@ -16,15 +16,15 @@ def load(modelSpecFilename):
         modelDict = yaml.load(f)
 
     for stageDict in modelDict['specs']:
-        router.addStage(stageDict)
+        layer_factory.addStage(stageDict)
 
     modelStages = []
     for s in modelDict['stages']:
-        modelStages.append(router.routeStage(s))
-    costFn=router.routeFn(modelDict['costFn'])
+        modelStages.append(layer_factory.routeStage(s))
+    costFn=layer_factory.routeFn(modelDict['costFn'])
 
     if modelDict.has_key('decisionFn'):
-        decisionFn = router.routeFn(modelDict['decisionFn'])
+        decisionFn = layer_factory.routeFn(modelDict['decisionFn'])
     else:
         decisionFn = None
     outputList = modelDict['outputs'].split(',')

@@ -1,6 +1,6 @@
-from stage import *
+from layer import *
 
-class InnerProduct(Stage):
+class InnerProduct(Layer):
     """
     Inner product calculates the inner product of two input vectors.
     Two vectors aligns on the second axis (time-axis).
@@ -17,7 +17,7 @@ class InnerProduct(Stage):
                 gradientClip=0.0,
                 weightRegConst=0.0,
                 outputdEdX=True):
-        Stage.__init__(self,
+        Layer.__init__(self,
                  name=name,
                  outputDim=outputDim,
                  inputNames=inputNames,

@@ -44,7 +44,7 @@ class AttentionPenalty(RecurrentStage):
         self.X = 0.0
         self.dEdX = 0.0
         self.timespan = 0
-        self.gpu = False
+        self.useGpu = False
         
     def initTime(self, timespan):
         self.timespan = timespan
@@ -96,12 +96,12 @@ class AttentionPenalty(RecurrentStage):
     def getStage(self, time):
         return self
 
-class RecurrentAdapter(Stage, RecurrentStage):
+class RecurrentAdapter(Layer, RecurrentStage):
     """
     Convert a standard stage into a recurrent stage.
     """
     def __init__(self, stage):
-        Stage.__init__(self,
+        Layer.__init__(self,
                             name=stage.name,
                             inputNames=stage.inputNames,
                             outputDim=stage.outputDim)
@@ -142,7 +142,7 @@ class RecurrentAdapter(Stage, RecurrentStage):
     def syncGradient(self):
         # Sum error through time
         W = self.stages[0].getWeights()
-        if self.stages[0].gpu and self.stages[0].learningRate > 0.0:
+        if self.stages[0].useGpu and self.stages[0].learningRate > 0.0:
             tmp = gpu.zeros((self.timespan, W.shape[0], W.shape[1]))
             for t in range(self.timespan):
                 tmp[t] = self.stages[t].getGradient()
@@ -187,11 +187,11 @@ class RecurrentAdapter(Stage, RecurrentStage):
             Y[:, t] = stage.getValue()
         return Y
 
-class Constant(Stage):
+class Constant(Layer):
     def __init__(self,
         name,
         value):
-        Stage.__init__(self,
+        Layer.__init__(self,
             name=name,
             inputNames=[],
             outputDim=value.size)
@@ -308,7 +308,7 @@ class RecurrentContainer(Container, RecurrentStage):
         for stage in self.stages:
             stage.syncWeights()
 
-    def timeForward(self, time, dropout=True):
+    def timeForward(self, time):
         """
         Forward one step (used as a recurrent stage/container).
         :param time: integer
@@ -322,21 +322,15 @@ class RecurrentContainer(Container, RecurrentStage):
                 s.Y = np.tile(s.value, (X.shape[0], 1))
         for s in range(0, len(self.stages)):
             if self.stages[s].getStage(time=time).used:
-                if hasattr(self.stages[s], 'dropout'):
-                    self.stages[s].getStage(time=time).dropout = dropout
-                elif isinstance(self.stages[s], RecurrentContainer):
-                    self.stages[s].timeForward(time=time, dropout=dropout)
-                else:
-                    self.stages[s].timeForward(time=time)
+                self.stages[s].timeForward(time=time)
         self.Y = self.stages[-1].Y
         return self.Y
 
     #@profile
-    def forward(self, X, dropout=True):
+    def forward(self, X):
         """
         Forward an entire sequence (used as a standard container).
         :param X: integer
-        :param dropout: whether or not dropout
         :return:
         """
         # Sync weights if new.
@@ -378,12 +372,7 @@ class RecurrentContainer(Container, RecurrentStage):
                     self.stages[0].getStage(time=t).Y = np.zeros(X.shape)
             for s in range(1, len(self.stages)):
                 if self.stages[s].getStage(time=t).used:
-                    if hasattr(self.stages[s], 'dropout'):
-                        self.stages[s].getStage(time=t).dropout = dropout
-                    elif isinstance(self.stages[s], RecurrentContainer):
-                        self.stages[s].timeForward(time=t, dropout=dropout)
-                    else:
-                        self.stages[s].timeForward(time=t)
+                    self.stages[s].timeForward(time=t)
 
         # Gather output.
         if self.multiOutput:

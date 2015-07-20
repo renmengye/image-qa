@@ -1,8 +1,0 @@
-585,what is the object on the chair,pillow
-585,where is the pillow found,chair
-1520,how many shelves are there,three
-1520,how many sofas are there,two
-2989,what is the colour of the sofa,red
-2989,what is the colour of the table,white
-2136,what is right of table,shelves
-2136,what is in front of table,chair

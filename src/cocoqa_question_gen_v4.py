@@ -1208,7 +1208,7 @@ def testHook(sentence):
 if __name__ == '__main__':
     """
     Usage:
-    python mscoco_question_gen_v4.py 
+    python cocoqa_question_gen_v4.py
                     -f[older] Input folder default '../../../data/mscoco/train'
                               Make sure the folder contains
                               1. captions.parse.txt Parsed by Stanford Parser

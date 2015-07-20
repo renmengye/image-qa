@@ -1,8 +1,8 @@
-from stage import *
+from layer import *
 import numpy as np
 
 
-class OrdinalRegression(Stage):
+class OrdinalRegressionLayer(Layer):
     def __init__(
                     self, 
                     outputDim,
@@ -17,7 +17,7 @@ class OrdinalRegression(Stage):
                     weightClip=0.0,
                     gradientClip=0.0,
                     weightRegConst=0.0):
-        Stage.__init__(
+        Layer.__init__(
                         self, 
                         name=name,
                         inputNames=inputNames, 
@@ -77,7 +77,7 @@ class OrdinalRegression(Stage):
         return dEdX
 
     def updateLearningParams(self, numEpoch):
-        Stage.updateLearningParams(self, numEpoch)
+        Layer.updateLearningParams(self, numEpoch)
         print 'mu:',
         for i in range(self.W.shape[-1]):
             print '%.3f' % self.W[0, i],

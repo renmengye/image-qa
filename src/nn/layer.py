@@ -6,7 +6,7 @@ verbose = os.environ.get('VERBOSE', 'no') == 'yes'
 if use_gpu:
     import gnumpy as gpu
 
-class Stage:
+class Layer:
     def __init__(self,
                  name,
                  inputNames,
@@ -19,7 +19,8 @@ class Stage:
                  weightClip=0.0,
                  gradientClip=0.0,
                  weightRegConst=0.0,
-                 gpu=False,
+                 useGpu=False,
+                 outputGpu=False,
                  outputdEdX=True):
         self.name = name
         self.inputNames = inputNames
@@ -43,9 +44,11 @@ class Stage:
         self.Y = 0.0
         self.X = 0.0
         self.dEdY = 0.0
-        self.gpu = gpu
+        self.useGpu = useGpu
+        self.outputGpu = outputGpu
         self.splX = None
         self.receivedError = False
+        self.isTraining = True
     def __str__(self):
         return self.name
 
@@ -57,21 +60,13 @@ class Stage:
 
     def getInput(self):
         """
-        Fetches input from each input stage.
-        Concatenates input into one vector.
+        Get input from previous layer
+        :return:
         """
-        #print self.name
-        if len(self.inputs) > 1:
-            self.splX = []
-            for stage in self.inputs:
-                X = stage.Y
-                self.splX.append(X)
-                #print self.name, 'get input', stage.name, X.dtype
-                #print '>', stage.name, X.shape
-            return np.concatenate(self.splX, axis=-1)
-        else:
-            #print self.name,'get input', self.inputs[0].Y.dtype
+        if len(self.inputs) == 1:
             return self.inputs[0].Y
+        else:
+            return [input.Y for input in self.inputs]
 
     def clearError(self):
         self.dEdY = 0.0
@@ -79,21 +74,17 @@ class Stage:
 
     def sendError(self, dEdX):
         """
-        Iterates over input list and sends dEdX.
+
+        :param dEdX:
+        :return:
         """
-        if len(self.inputs) > 1:
-            s = 0
-            for stage in self.inputs:
-                s2 = s + stage.Y.shape[-1]
-                stage.dEdY += dEdX[:, s : s2]
-                s = s2
-                stage.receivedError = True
-        else:
-            #if type(self.inputs[0].dEdY) == np.ndarray:
-            #    print self.name, self.inputs[0].name, self.inputs[0].dEdY.shape, dEdX.shape
+        if len(self.inputs) == 1:
             self.inputs[0].dEdY += dEdX
             self.inputs[0].receivedError = True
-            #print self.name, 'send error', self.inputs[0].name
+        else:
+            for i in range(len(self.inputs)):
+                self.inputs[i].dEdY += dEdX[i]
+                self.inputs[i].receivedError = True
 
     def getValue(self):
         """
@@ -159,7 +150,7 @@ class Stage:
         self._updateWeights(self.dEdW)
 
     def _updateWeights(self, dEdW):
-        if self.gpu:
+        if self.useGpu:
             if self.gradientClip > 0.0:
                 self.dEdWnorm = gpu.sqrt(gpu.sum(dEdW ** 2))
                 if self.dEdWnorm > self.gradientClip:
@@ -208,16 +199,19 @@ class Stage:
             print
 
     def getWeights(self):
-        if self.gpu:
+        if self.useGpu:
             return gpu.as_numpy_array(self.W)
         else:
             return self.W
 
     def loadWeights(self, W):
-        if self.gpu:
+        if self.useGpu:
             self.W = gpu.as_garray(W)
         else:
             self.W = W
 
     def copy(self):
         return copy.copy(self)
+
+    def setIsTraining(self, isTraining):
+        self.isTraining = isTraining

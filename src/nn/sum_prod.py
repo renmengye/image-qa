@@ -1,21 +1,21 @@
-from stage import *
+from layer import *
 use_gpu = os.environ.get('GNUMPY_USE_GPU', 'yes') == 'yes'
 if use_gpu:
     import gnumpy as gpu
     import gnumpy as gnp
 
-class SumProduct(Stage):
+class SumProduct(Layer):
     def __init__(self, 
                 name, 
                 inputNames, 
                 sumAxis,
                 outputDim,
-                gpu=use_gpu,
+                useGpu=use_gpu,
                 beta=1.0):
-        Stage.__init__(self,
+        Layer.__init__(self,
             name=name, 
             inputNames=inputNames,
-            gpu=gpu,
+            useGpu=useGpu,
             outputDim=outputDim)
         self.sumAxis = sumAxis
         self.beta = beta
@@ -38,7 +38,7 @@ class SumProduct(Stage):
             self.inputs[2].receivedError = True
 
     def forward(self, X):
-        if self.gpu:
+        if self.useGpu:
             self.X = []
             self.X.append(gpu.as_garray(X[0].astype('float32')))
             self.X.append(gpu.as_garray(X[1].astype('float32')))
@@ -61,7 +61,7 @@ class SumProduct(Stage):
     def backward(self, dEdY):
         # Need to generalize, but now, let's assume it's the attention model.
         dEdX = []
-        if self.gpu:
+        if self.useGpu:
             if len(self.X) == 2:
                 dEdY = dEdY.reshape(dEdY.shape[0], 1, dEdY.shape[1])
                 dEdY = gpu.as_garray(dEdY)
