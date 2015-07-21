@@ -29,7 +29,7 @@ class Sequential_Tests(unittest.TestCase):
 
         m = FullyConnectedLayer(
             outputDim=5,
-            activeFn=IdentityActivationFn(),
+            activationFn=IdentityActivationFn(),
             inputNames=None,
             initRange=0.1,
             initSeed=1,
@@ -68,7 +68,7 @@ class Sequential_Tests(unittest.TestCase):
 
         soft = FullyConnectedLayer(
             outputDim=2,
-            activeFn=SoftmaxActivationFn,
+            activationFn=SoftmaxActivationFn,
             initRange=0.1,
             initSeed=5
         )

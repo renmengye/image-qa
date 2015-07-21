@@ -12,8 +12,6 @@ class Weight():
         self._gradient = 0
         self._gradientStack = []
         self._useGpu = useGpu
-
-    def init(self):
         weight = self._initializer.initialize()
         if self._useGpu:
             self._weight = gnp.as_garray(weight)

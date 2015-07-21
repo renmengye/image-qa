@@ -207,7 +207,7 @@ def addStage(stageDict):
             name=stageDict['name'],
             outputDim=stageDict['outputDim'],
             inputNames=inputList,
-            activeFn=routeFn(stageDict['activeFn']),
+            activationFn=routeFn(stageDict['activeFn']),
             initSeed=initSeed,
             initRange=initRange,
             initWeights=initWeights,

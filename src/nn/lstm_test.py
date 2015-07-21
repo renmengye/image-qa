@@ -74,7 +74,7 @@ class LSTM_Recurrent_Real_Tests(unittest.TestCase):
         sig = FullyConnectedLayer(
             name='sig',
             outputDim=1,
-            activeFn=SigmoidActivationFn(),
+            activationFn=SigmoidActivationFn(),
             initRange=0.1,
             initSeed=5,
             learningRate=0.01,
@@ -86,7 +86,7 @@ class LSTM_Recurrent_Real_Tests(unittest.TestCase):
         sig2 = FullyConnectedLayer(
             name='sig',
             outputDim=1,
-            activeFn=SigmoidActivationFn(),
+            activationFn=SigmoidActivationFn(),
             initRange=0.1,
             initSeed=5,
             learningRate=0.01,

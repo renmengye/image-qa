@@ -3,17 +3,11 @@ from environment import *
 class Layer:
     def __init__(self,
                  name,
-                 weight=None,
-                 outputDim=0,
-                 defaultValue=0.0,
                  useGpu=False,
                  outputGpu=False,
                  outputdEdX=True):
         self.name = name
         self.inputLayers = []
-        self.outputDim = outputDim
-        self.defaultValue = np.zeros(outputDim) + defaultValue
-        self.weight = weight
         self._outputValue = 0.0
         self._inputValue = 0.0
         self._gradientToOutput = 0.0
@@ -112,9 +106,9 @@ class Layer:
         """
         return
 
-    def update(self):
-        if self.isTraining:
-            self.weight.update()
+    # def update(self):
+    #     if self.isTraining:
+    #         self.weight.update()
 
     def setIsTraining(self, isTraining):
         self.isTraining = isTraining

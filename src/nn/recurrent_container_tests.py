@@ -16,7 +16,7 @@ class RecurrentContainer_Tests(stage_tests.StageTests):
                         name='sigm',
                         inputNames=['state'],
                         outputDim=self.D2,
-                        activeFn=SigmoidActivationFn(),
+                        activationFn=SigmoidActivationFn(),
                         initRange=1,
                         initSeed=5,
                         learningRate=0.9

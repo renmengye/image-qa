@@ -229,7 +229,7 @@ class MapIdentity_Tests(StageTests):
             outputDim=3,
             initRange=0.1,
             initSeed=1,
-            activeFn=IdentityActivationFn)
+            activationFn=IdentityActivationFn)
         self.model = self.stage
         self.testInputErr = True
         self.costFn = meanSqErr
@@ -248,7 +248,7 @@ class MapIdentityWeighted_Tests(StageTests):
             outputDim=3,
             initRange=0.1,
             initSeed=1,
-            activeFn=IdentityActivationFn)
+            activationFn=IdentityActivationFn)
         self.model = self.stage
         self.testInputErr = True
         self.costFn = meanSqErr
@@ -268,7 +268,7 @@ class MapSigmoid_Tests(StageTests):
             outputDim=3,
             initRange=0.1,
             initSeed=1,
-            activeFn=SigmoidActivationFn)
+            activationFn=SigmoidActivationFn)
         self.model = self.stage
         self.testInputErr = True
         self.costFn = meanSqErr
@@ -287,7 +287,7 @@ class MapSigmoid_CrossEnt_Tests(StageTests):
             outputDim=3,
             initRange=0.1,
             initSeed=1,
-            activeFn=SigmoidActivationFn)
+            activationFn=SigmoidActivationFn)
         self.model = self.stage
         self.testInputErr = True
         self.costFn = crossEntOne
@@ -306,7 +306,7 @@ class MapSoftmax_Tests(StageTests):
             outputDim=3,
             initRange=0.1,
             initSeed=1,
-            activeFn=SoftmaxActivationFn)
+            activationFn=SoftmaxActivationFn)
         self.model = self.stage
         self.testInputErr = True
         self.costFn = meanSqErr
@@ -326,7 +326,7 @@ class MapRelu_Tests(StageTests):
             outputDim=3,
             initRange=0.1,
             initSeed=1,
-            activeFn=ReluActivationFn)
+            activationFn=ReluActivationFn)
         self.model = self.stage
         self.testInputErr = True
         self.costFn = meanSqErr
@@ -346,7 +346,7 @@ class MapSoftmax_CrossEnt_Tests(StageTests):
             outputDim=3,
             initRange=0.1,
             initSeed=1,
-            activeFn=SoftmaxActivationFn)
+            activationFn=SoftmaxActivationFn)
         self.model = self.stage
         self.testInputErr = True
         self.costFn = crossEntIdx
@@ -366,7 +366,7 @@ class MapSoftmaxWeighted_CrossEnt_Tests(StageTests):
             outputDim=3,
             initRange=0.1,
             initSeed=1,
-            activeFn=SoftmaxActivationFn)
+            activationFn=SoftmaxActivationFn)
         self.model = self.stage
         self.testInputErr = True
         self.costFn = crossEntIdx
@@ -386,7 +386,7 @@ class MapSigmoid_CrossEntOneIdx_Tests(StageTests):
             outputDim=3,
             initRange=0.1,
             initSeed=1,
-            activeFn=SigmoidActivationFn)
+            activationFn=SigmoidActivationFn)
         self.model = self.stage
         self.testInputErr = True
         self.costFn = crossEntOneIdx
@@ -405,7 +405,7 @@ class MapSigmoid_CrossEntOneAccIdx_Tests(StageTests):
             outputDim=4,
             initRange=0.1,
             initSeed=1,
-            activeFn=SigmoidActivationFn)
+            activationFn=SigmoidActivationFn)
         self.model = self.stage
         self.testInputErr = True
         self.costFn = crossEntOneAccIdx

@@ -14,7 +14,7 @@ class UniformWeightInitializer(WeightInitializer):
     """
 
     """
-    def __init__(self, limit, seed, shape, affine=True, biasInitConst=0.0):
+    def __init__(self, limit, seed, shape, affine=True, biasInitConst=-1.0):
         """
 
         :param limit:
@@ -40,7 +40,7 @@ class UniformWeightInitializer(WeightInitializer):
         if self._affine:
             if self._biasInitConst >= 0.0:
                 return np.concatenate((self._random.uniform(
-                    r0, r1, self._shape),
+                    r0, r1, (self._shape[0] - 1, self._shape[1])),
                     np.ones((1, self._shape[1])) * self._biasInitConst), axis=0)
             else:
                 return self._random.uniform(r0, r1, self._shape)
