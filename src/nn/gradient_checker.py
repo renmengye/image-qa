@@ -1,12 +1,34 @@
 import numpy as np
 
 class GradientChecker():
+    """
+    Utility for checking gradient computation in a layer using finite
+    difference.
+    """
     def __init__(self, layer, tolerance=1e-4, epsilon=1e-5):
+        """
+
+        :param layer: a subclass instance of Layer
+        :param tolerance: double, relative difference allowed between
+        expected and
+        actual gradient
+        :param epsilon: double, finite difference step
+        :return:
+        """
         self._tolerance = tolerance
         self._epsilon = epsilon
         self._layer = layer
 
     def computeGradientToInput(self, inputValue):
+        """
+        Compute the gradient and numerical gradient w.r.t. the input
+        vector evaluated at certain input value. Internally it uses a sum of
+        squares cost function with target to be the zero vector.
+        :param inputValue: numpy.ndarray or gnumpy.garray object, input value
+        to the layer.
+        :return: 2-tuple, gradient computed by the layer, and numerical
+        gradient computed by finite difference, both in numpy.ndarray format.
+        """
         outputValue = self._layer.forward(inputValue)
         gradientToOutput = -outputValue
         gradient = self._layer.backward(gradientToOutput)
@@ -26,6 +48,15 @@ class GradientChecker():
         return gradient, gradientNumerical.reshape(gradient.shape)
 
     def computeGradientToWeight(self, inputValue):
+        """
+        Compute the gradient and numerical gradient w.r.t. the weight matrix
+        evaluated at certain input value. Internally it uses a sum of squares
+        cost function with target to be the zero vector.
+        :param inputValue: numpy.ndarray or gnumpy.garray object, input value
+        to the layer.
+        :return: 2-tuple, gradient compute by the layer, and numerical
+        gradient computed by finite difference, both in numpy.ndarray format.
+        """
         outputValue = self._layer.forward(inputValue)
         gradientToOutput = -outputValue
         self._layer.backward(gradientToOutput)
@@ -51,6 +82,15 @@ class GradientChecker():
         return gradient, gradientNumerical.reshape(gradient.shape)
 
     def checkGradient(self, testClass, gradient, gradientNumerical):
+        """
+        Check if the gradient and numerical gradient are similar enough.
+        :param testClass: A unittest.TestCase subclass that has assertTrue
+        method.
+        :param gradient: numpy.ndarray, gradient computed by the layer
+        :param gradientNumerical: numpy.ndarray, gradient compute by finite
+        difference.
+        :return:
+        """
         print gradient / gradientNumerical
         gradientNumerical = gradientNumerical.reshape(gradient.size)
         gradient = gradient.reshape(gradient.size)
@@ -61,13 +101,39 @@ class GradientChecker():
                  self._tolerance))
 
     def runInput(self, testClass, inputValue):
+        """
+        Compute the gradient w.r.t. the input value evaluated at certain input
+        value and check the correctness
+        :param testClass: A unittest.TestCase subclass that has assertTrue
+        method.
+        :param inputValue: numpy.ndarray or gnumpy.garray, input value to the
+        layer.
+        :return:
+        """
         grd, grdNum = self.computeGradientToInput(inputValue)
         self.checkGradient(testClass, grd, grdNum)
 
     def runWeight(self, testClass, inputValue):
+        """
+        Compute the gradient w.r.t. the weight matrix evaluated at certain
+        input value and check the correctness.
+        :param testClass: A unittest.TestCase subclass that has assertTrue
+        method.
+        :param inputValue: numpy.ndarray or gnumpy.garray, input value to the
+        layer.
+        :return:
+        """
         grd, grdNum = self.computeGradientToWeight(inputValue)
         self.checkGradient(testClass, grd, grdNum)
 
     def runAll(self, testClass, inputValue):
+        """
+        Compute the gradient w.r.t. the weight matrix and the input value
+        evaluated at certain input value and check the correctness.
+        :param testClass: A unittest.TestCase subclass that has assertTrue
+        method.
+        :param inputValue: numpy.ndarray or gnumpy.garray, input value to the layer
+        :return:
+        """
         self.runInput(testClass, inputValue)
         self.runWeight(testClass, inputValue)
