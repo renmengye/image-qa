@@ -1,6 +1,6 @@
 import yaml
 import layer_factory
-from model import *
+from graph_model import *
 
 def load(modelSpecFilename):
     """
