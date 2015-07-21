@@ -9,7 +9,7 @@ from sum import *
 from element_wise import *
 from activation_layer import *
 from sum_prod import *
-from activation_func import *
+from activation_fn import *
 from selector import *
 from convolution_layer import *
 from mean_pooling_layer import *

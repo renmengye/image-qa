@@ -2,7 +2,7 @@
 # Package level functions
 from model_loader import *
 from func import *
-from activation_func import *
+from activation_fn import *
 from tester import *
 
 # Classes

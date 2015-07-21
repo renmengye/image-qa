@@ -1,4 +1,4 @@
-from activation_func import *
+from activation_fn import *
 from fully_connected_layer import *
 
 class Input(Layer):

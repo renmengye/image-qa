@@ -4,7 +4,7 @@ from fully_connected_layer import *
 from dropout_layer import *
 from reshape import *
 from embedding_layer import *
-from activation_func import *
+from activation_fn import *
 import unittest
 
 class Sequential_Tests(unittest.TestCase):
