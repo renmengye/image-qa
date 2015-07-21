@@ -7,12 +7,12 @@ class GradientChecker():
     """
     def __init__(self, layer, tolerance=1e-4, epsilon=1e-5):
         """
-
+        Initialize the gradient checker with configurations.
         :param layer: a subclass instance of Layer
         :param tolerance: double, relative difference allowed between
-        expected and
-        actual gradient
-        :param epsilon: double, finite difference step
+        expected and actual gradient, recommend 0.0001 for CPU and 0.1 for GPU.
+        :param epsilon: double, finite difference step, recommend 0.00001 for 
+        CPU and 0.01 for GPU.
         :return:
         """
         self._tolerance = tolerance
@@ -62,7 +62,6 @@ class GradientChecker():
         self._layer.backward(gradientToOutput)
         self._layer.weight.update()
         gradient = self._layer.weight.getGradient()
-        print gradient
         gradientNumerical = np.zeros(gradient.size)
         weight = self._layer.weight.get()
         weightReshape = weight.reshape(weight.size)
