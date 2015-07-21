@@ -10,9 +10,9 @@ class Sum2(Layer):
             inputNames=inputNames,
             outputDim=outputDim,
             defaultValue=defaultValue)
-    def forward(self, X):
-        self.numComponents = X.shape[1]
-        return np.sum(X, axis=1)
-    def backward(self, dEdY):
+    def forward(self, inputValue):
+        self.numComponents = inputValue.shape[1]
+        return np.sum(inputValue, axis=1)
+    def backward(self, gradientToOutput):
         self.dEdW = 0.0
-        return np.tile(dEdY.reshape(dEdY.shape[0], 1, dEdY.shape[1]), (1, self.numComponents, 1))
+        return np.tile(gradientToOutput.reshape(gradientToOutput.shape[0], 1, gradientToOutput.shape[1]), (1, self.numComponents, 1))

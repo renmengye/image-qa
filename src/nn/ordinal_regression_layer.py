@@ -42,35 +42,35 @@ class OrdinalRegressionLayer(Layer):
         self.W[0] = mu
         self.W[1] = pi
 
-    def forward(self, X):
+    def forward(self, inputValue):
         mu = self.W[0].reshape(1, self.W.shape[1])
         pi = self.W[1].reshape(1, self.W.shape[1])
-        self.Xshape = X.shape
-        X = X.reshape(X.shape[0], 1)
-        self.X = X
-        Z = np.exp(mu * X + (pi - np.power(mu, 2) / 2))
-        Y = Z / np.sum(Z, axis=-1).reshape(X.shape[0], 1)
+        self.Xshape = inputValue.shape
+        inputValue = inputValue.reshape(inputValue.shape[0], 1)
+        self._inputValue = inputValue
+        Z = np.exp(mu * inputValue + (pi - np.power(mu, 2) / 2))
+        Y = Z / np.sum(Z, axis=-1).reshape(inputValue.shape[0], 1)
         self.Z = Z
-        self.Y = Y
+        self._outputValue = Y
         return Y
 
-    def backward(self, dEdY):
+    def backward(self, gradientToOutput):
         # Here we ignore the dEdY because this is always the last layer...
-        target = dEdY != 0.0
+        target = gradientToOutput != 0.0
         targetInt = target.astype('int')
         targetIdx = np.nonzero(target)[1]
         mu = self.W[0]
         pi = self.W[1]
-        dEdX = (-mu[targetIdx] + np.dot(self.Y, mu)) / float(self.X.shape[0])
+        dEdX = (-mu[targetIdx] + np.dot(self._outputValue, mu)) / float(self._inputValue.shape[0])
         dEdX = dEdX.reshape(self.Xshape)
         dEdMu = np.mean(
-            (self.X - mu) *  
-            (self.Y - targetInt), axis=0)
+            (self._inputValue - mu) *
+            (self._outputValue - targetInt), axis=0)
         # Fix extreme mu's
         if self.fixExtreme:
             dEdMu[0] = 0
             dEdMu[-1] = 0
-        dEdPi = np.mean(self.Y - targetInt, axis=0)
+        dEdPi = np.mean(self._outputValue - targetInt, axis=0)
         self.dEdW = np.zeros(self.W.shape)
         self.dEdW[0] = dEdMu
         self.dEdW[1] = dEdPi

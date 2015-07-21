@@ -1,120 +1,75 @@
 from layer import *
 import os
 use_gpu = os.environ.get('GNUMPY_USE_GPU', 'yes') == 'yes'
-if use_gpu:
+if USE_GPU:
     import gnumpy as gpu
     import gnumpy as gnp
 
 class FullyConnectedLayer(Layer):
     def __init__(self,
-                 outputDim,
                  activeFn,
-                 inputNames=None,
                  initRange=1.0,
-                 bias=True,
-                 biasInitConst=-1.0,
-                 initSeed=2,
-                 needInit=True,
-                 initWeights=0,
-                 initType='zeroMean',
-                 learningRate=0.0,
-                 learningRateAnnealConst=0.0,
-                 momentum=0.0,
-                 deltaMomentum=0.0,
-                 weightClip=0.0,
-                 gradientClip=0.0,
-                 weightRegConst=0.0,
+                 affine=True,
                  outputdEdX=True,
                  defaultValue=0.0,
-                 useGpu=use_gpu,
+                 useGpu=USE_GPU,
                  name=None):
         Layer.__init__(self,
                  name=name,
-                 inputNames=inputNames,
-                 outputDim=outputDim,
-                 defaultValue=defaultValue,
-                 learningRate=learningRate,
-                 learningRateAnnealConst=learningRateAnnealConst,
-                 momentum=momentum,
-                 deltaMomentum=deltaMomentum,
-                 weightClip=weightClip,
-                 gradientClip=gradientClip,
-                 weightRegConst=weightRegConst,
                  useGpu=useGpu,
                  outputdEdX=outputdEdX)
-        self.bias = bias
         self.activeFn = activeFn
-        self.inputDim = None
-        self.random = np.random.RandomState(initSeed)
-        if not needInit:
-            if self.useGpu:
-                self.W = gnp.as_garray(initWeights)
-            else:
-                self.W = initWeights
-        else:
-            # Lazy initialize the weights until the first data arrives
-            self.W = None
-        self.initRange = initRange
-        self.biasInitConst = biasInitConst
-        self.initType = initType
-        self.X = 0
-        self.Y = 0
-        pass
+        self._affine = affine
 
-    def initWeights(self):
-        if self.initType == 'zeroMean':
-            r0 = -self.initRange/2.0
-            r1 = self.initRange/2.0
-        elif self.initType == 'positive':
-            r0 = 0.0
-            r1 = self.initRange
+    def forward(self, inputValue):
+        if self._affine:
+            self._inputValue = \
+                np.concatenate(
+                    (inputValue, np.ones((inputValue.shape[0], 1),
+                                         dtype=inputValue.dtype)), axis=-1)
         else:
-            raise Exception('Unknown initialization type: ' + self.initType)
-        if self.bias:
-            if self.biasInitConst >= 0.0:
-                self.W = np.concatenate((self.random.uniform(
-                    r0, r1, (self.inputDim, self.outputDim)),
-                    np.ones((1, self.outputDim)) * self.biasInitConst), axis=0)
-            else:
-                self.W = self.random.uniform(
-                    r0, r1, (self.inputDim + 1, self.outputDim))
-        else:
-            self.W = self.random.uniform(
-                    -self.initRange/2.0, self.initRange/2.0, (self.inputDim, self.outputDim))
+            self._inputValue = inputValue
         if self.useGpu:
-            self.W = gpu.as_garray(self.W.astype('float32'))
-    
-    def forward(self, X):
-        if self.inputDim is None: self.inputDim = X.shape[-1]
-        if self.W is None: self.initWeights()
-        if self.bias:
-            self.X = np.concatenate((X, np.ones((X.shape[0], 1), dtype=X.dtype)), axis=-1)
+            self._inputValue = gpu.as_garray(self._inputValue.astype('float32'))
+            weightedSum = gpu.dot(self._inputValue, self.weight.get())
+            weightedSum = weightedSum.as_numpy_array(dtype='float32')
+            self._outputValue = self.activeFn.forward(weightedSum)
         else:
-            self.X = X
-        if self.useGpu:
-            self.X = gpu.as_garray(self.X.astype('float32'))
-            Z = gpu.dot(self.X, self.W)
-            Z = Z.as_numpy_array(dtype='float32')
-            self.Y = self.activeFn.forward(Z)
-        else:
-            Z = np.dot(self.X, self.W)
-            self.Y = self.activeFn.forward(Z)
-        return self.Y
+            weightedSum = np.dot(self._inputValue, self.weight.get())
+            self._outputValue = self.activeFn.forward(weightedSum)
+        return self._outputValue
 
-    def backward(self, dEdY):
-        dEdZ = self.activeFn.backward(dEdY, self.Y, 0)
+    def backward(self, gradientToOutput):
+        #######################################################
+        # Attention, may need to convert this to GPU as well! #
+        #######################################################
+        gradientToWeightedSum = self.activeFn.backward(gradientToOutput,
+                                          self._outputValue, 0)
         if self.useGpu:
-            gdEdZ = gpu.as_garray(dEdZ.astype('float32'))
-            self.dEdW = gpu.dot(self.X.transpose(), gdEdZ)
-            if self.bias:
-                dEdX = gpu.dot(gdEdZ, self.W[:-1, :].transpose())
+            #################################################################
+            # Attention here, explicit conversion. Want to remove it in the #
+            # future                                                        #
+            #################################################################
+            gradientToWeightedSumGpu = gnp.as_garray(
+                gradientToWeightedSum.astype('float32'))
+            gradient = gnp.dot(self._inputValue.transpose(),
+                               gradientToWeightedSumGpu)
+            self.weight.addGradient(gradient)
+            if self._affine:
+                gradientToInput = gnp.dot(gradientToWeightedSumGpu,
+                                          self.weight.get()[:-1, :].transpose())
             else:
-                dEdX = gpu.dot(gdEdZ, self.W.transpose())
-            dEdX = gpu.as_numpy_array(dEdX)
+                gradientToInput = gnp.dot(gradientToWeightedSumGpu,
+                                          self.weight.get().transpose())
+            gradientToInput = gnp.as_numpy_array(gradientToInput)
         else:
-            self.dEdW = np.dot(self.X.transpose(), dEdZ)
-            if self.bias:
-                dEdX = np.dot(dEdZ, self.W[:-1, :].transpose())
+            gradient = np.dot(self._inputValue.transpose(),
+                              gradientToWeightedSum)
+            self.weight.addGradient(gradient)
+            if self._affine:
+                gradientToInput = np.dot(gradientToWeightedSum,
+                                         self.weight.get()[:-1, :].transpose())
             else:
-                dEdX = np.dot(dEdZ, self.W.transpose())
-        return dEdX if self.outputdEdX else None
+                gradientToInput = np.dot(gradientToWeightedSum,
+                                         self.weight.get().transpose())
+        return gradientToInput if self.outputdEdX else None

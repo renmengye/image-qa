@@ -1,126 +1,90 @@
-import numpy as np
-import copy
-import os
-use_gpu = os.environ.get('GNUMPY_USE_GPU', 'yes') == 'yes'
-verbose = os.environ.get('VERBOSE', 'no') == 'yes'
-if use_gpu:
-    import gnumpy as gpu
+from environment import *
 
 class Layer:
     def __init__(self,
                  name,
-                 inputNames,
-                 outputDim,
+                 weight=None,
+                 outputDim=0,
                  defaultValue=0.0,
-                 learningRate=0.0,
-                 learningRateAnnealConst=0.0,
-                 momentum=0.0,
-                 deltaMomentum=0.0,
-                 weightClip=0.0,
-                 gradientClip=0.0,
-                 weightRegConst=0.0,
                  useGpu=False,
                  outputGpu=False,
                  outputdEdX=True):
         self.name = name
-        self.inputNames = inputNames
-        self.inputs = None
+        self.inputLayers = []
         self.outputDim = outputDim
         self.defaultValue = np.zeros(outputDim) + defaultValue
-        self.startLearningRate = learningRate
-        self.learningRate = learningRate
-        self.learningRateAnnealConst = learningRateAnnealConst
-        self.momentum = momentum
-        self.deltaMomentum = deltaMomentum
-        self.weightClip = weightClip
-        self.gradientClip = gradientClip
-        self.weightRegConst = weightRegConst
-        self.outputdEdX=outputdEdX
-        self.dEdWnorm = 0.0
-        self.Wnorm = 0.0
-        self.dEdW = 0.0
-        self.lastdW = 0.0
-        self.W = 0.0
-        self.Y = 0.0
-        self.X = 0.0
-        self.dEdY = 0.0
+        self.weight = weight
+        self._outputValue = 0.0
+        self._inputValue = 0.0
+        self._gradientToOutput = 0.0
+        self._gradientToInput = 0.0
         self.useGpu = useGpu
         self.outputGpu = outputGpu
-        self.splX = None
         self.receivedError = False
         self.isTraining = True
+
+        # deprecated. Should be able to compute from isTraining
+        self.outputdEdX = outputdEdX
+
     def __str__(self):
         return self.name
 
     def addInput(self, stage):
-        if self.inputs is None:
-            self.inputs = [stage]
+        if self.inputLayers is None:
+            self.inputLayers = [stage]
         else:
-            self.inputs.append(stage)
+            self.inputLayers.append(stage)
 
     def getInput(self):
         """
-        Get input from previous layer
+        Get inputs from previous layer
         :return:
         """
-        if len(self.inputs) == 1:
-            return self.inputs[0].Y
+        if len(self.inputLayers) == 1:
+            return self.inputLayers[0].Y
         else:
-            return [input.Y for input in self.inputs]
+            return [inputLayer.Y for inputLayer in self.inputLayers]
 
     def clearError(self):
-        self.dEdY = 0.0
+        self._gradientToOutput = 0.0
         self.receivedError = False
 
-    def sendError(self, dEdX):
-        """
+    def receiveError(self, gradientToOutput):
+        self._gradientToOutput += gradientToOutput
+        self.receivedError = True
 
-        :param dEdX:
+    def sendError(self, gradientToInput):
+        """
+        :param gradientToInput:
         :return:
         """
-        if len(self.inputs) == 1:
-            self.inputs[0].dEdY += dEdX
-            self.inputs[0].receivedError = True
+        if len(self.inputLayers) == 1:
+            self.inputLayers[0].receiveError(gradientToInput)
         else:
-            for i in range(len(self.inputs)):
-                self.inputs[i].dEdY += dEdX[i]
-                self.inputs[i].receivedError = True
+            for i in range(len(self.inputLayers)):
+                self.inputLayers[i].receiveError(gradientToInput[i])
 
     def getValue(self):
         """
         Gets the output value.
         """
-        return self.Y
-
-    def getGradient(self):
-        """
-        Gets the gradient with regard to the weights.
-        """
-        return self.dEdW
-
-    def setGradient(self, value):
-        """
-        Sets the gradient with regard to the weights.
-        :param value: float or numpy array
-        :return:
-        """
-        self.dEdW = value
+        return self._outputValue
 
     def graphForward(self):
         """
         Forward propagates.
         """
-        self.X = self.getInput()
-        if verbose and hasattr(self.X, 'shape'):
-            print 'forward in', self.name, self.X.shape
-        self.Y = self.forward(self.X)
-        if verbose and hasattr(self.Y, 'shape'):
-            print 'forward out', self.name, self.Y.shape
+        self._inputValue = self.getInput()
+        if VERBOSE and hasattr(self._inputValue, 'shape'):
+            print 'forward in', self.name, self._inputValue.shape
+        self._outputValue = self.forward(self._inputValue)
+        if VERBOSE and hasattr(self._outputValue, 'shape'):
+            print 'forward out', self.name, self._outputValue.shape
 
-    def forward(self, X):
+    def forward(self, inputValue):
         """
         Abstract method. Forward pass input to the stage.
-        :param X: The input. At least two dimensional numpy array.
+        :param inputValue: The input. At least two dimensional numpy array.
         The first dimension is always the number of examples.
         :return: The output of the stage.
         """
@@ -130,88 +94,27 @@ class Layer:
         """
         Backward propagates.
         """
-        if verbose and hasattr(self.dEdY, 'shape'):
-            print 'backward in', self.name, self.dEdY.shape, np.mean(self.dEdY)
-        dEdX = self.backward(self.dEdY)
+        if VERBOSE and hasattr(self._gradientToOutput, 'shape'):
+            print 'backward in', self.name, self._gradientToOutput.shape, \
+                np.mean(self._gradientToOutput)
+        self._gradientToInput = self.backward(self._gradientToOutput)
         if self.outputdEdX:
-            self.sendError(dEdX)
-        if verbose and hasattr(dEdX, 'shape'):
-            print 'backward out', self.name, dEdX.shape, np.mean(dEdX)
+            self.sendError(self._gradientToInput)
+        if VERBOSE and hasattr(self._gradientToInput, 'shape'):
+            print 'backward out', self.name, self._gradientToInput.shape, \
+                np.mean(self._gradientToInput)
 
-    def backward(self, dEdY):
+    def backward(self, gradientToOutput):
         """
         Abstract method. Backward propagate error in the stage.
-        :param dEdY: The error of the output.
+        :param gradientToOutput: The error of the output.
         :return: The error of the input.
         """
         return
 
-    def updateWeights(self):
-        self._updateWeights(self.dEdW)
-
-    def _updateWeights(self, dEdW):
-        if self.useGpu:
-            if self.gradientClip > 0.0:
-                self.dEdWnorm = gpu.sqrt(gpu.sum(dEdW ** 2))
-                if self.dEdWnorm > self.gradientClip:
-                    dEdW *= self.gradientClip / self.dEdWnorm
-            if self.learningRate > 0.0:
-                self.lastdW = -self.learningRate * dEdW + \
-                           self.momentum * self.lastdW
-                self.W += self.lastdW
-            if self.weightRegConst > 0.0:
-                a = self.learningRate * self.weightRegConst
-                self.W -= a * self.W
-            if self.weightClip > 0.0:
-                self.Wnorm = gpu.sqrt(gpu.sum(self.W ** 2))
-                if self.Wnorm > self.weightClip:
-                    self.W *= self.weightClip / self.Wnorm
-        else:
-            if self.gradientClip > 0.0:
-                self.dEdWnorm = np.sqrt(np.sum(np.power(dEdW, 2)))
-                if self.dEdWnorm > self.gradientClip:
-                    dEdW *= self.gradientClip / self.dEdWnorm
-            if self.learningRate > 0.0:
-                self.lastdW = -self.learningRate * dEdW + \
-                           self.momentum * self.lastdW
-                self.W += self.lastdW
-            if self.weightRegConst > 0.0:
-                a = self.learningRate * self.weightRegConst
-                self.W -= a * self.W
-            if self.weightClip > 0.0:
-                self.Wnorm = np.sqrt(np.sum(np.power(self.W, 2)))
-                if self.Wnorm > self.weightClip:
-                    self.W *= self.weightClip / self.Wnorm
-
-    def updateLearningParams(self, numEpoch):
-        self.learningRate = self.startLearningRate / \
-                                   (1.0 + self.learningRateAnnealConst * numEpoch)
-        self.momentum -= self.deltaMomentum
-
-        if self.gradientClip > 0.0 or self.weightClip > 0.0:
-            print 'ST: %11s ' % self.name,
-            if self.gradientClip > 0.0:
-                print 'GN: %8.4f ' % self.dEdWnorm,
-                print 'GC: %8.4f ' % self.gradientClip,
-            if self.weightClip > 0.0:
-                print 'WN: %8.4f ' % self.Wnorm,
-                print 'WC: %8.4f ' % self.weightClip,
-            print
-
-    def getWeights(self):
-        if self.useGpu:
-            return gpu.as_numpy_array(self.W)
-        else:
-            return self.W
-
-    def loadWeights(self, W):
-        if self.useGpu:
-            self.W = gpu.as_garray(W)
-        else:
-            self.W = W
-
-    def copy(self):
-        return copy.copy(self)
+    def update(self):
+        if self.isTraining:
+            self.weight.update()
 
     def setIsTraining(self, isTraining):
         self.isTraining = isTraining

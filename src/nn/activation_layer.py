@@ -15,9 +15,9 @@ class ActivationLayer(Layer):
                  defaultValue=defaultValue,
                  outputdEdX=outputdEdX)
         self.activationFn = activationFn
-    def forward(self, X):
-        self.Y = self.activationFn.forward(X)
-        return self.Y
-    def backward(self, dEdY):
+    def forward(self, inputValue):
+        self._outputValue = self.activationFn.forward(inputValue)
+        return self._outputValue
+    def backward(self, gradientToOutput):
         self.dEdW = 0
-        return self.activationFn.backward(dEdY, self.Y, 0)
+        return self.activationFn.backward(gradientToOutput, self._outputValue, 0)

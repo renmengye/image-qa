@@ -18,23 +18,23 @@ class Selector(Layer):
         if axis < -2 or axis > 2:
             raise Exception('Selector axis=%d not supported' % axis)
 
-    def forward(self, X):
-        self.X = X
+    def forward(self, inputValue):
+        self._inputValue = inputValue
         if self.axis == -1:
-            self.axis = len(X.shape) - 1
+            self.axis = len(inputValue.shape) - 1
         if self.axis == 0:
-            return X[self.start:self.end]
+            return inputValue[self.start:self.end]
         elif self.axis == 1:
-            return X[:, self.start:self.end]
+            return inputValue[:, self.start:self.end]
         elif self.axis == 2:
-            return X[:, :, self.start:self.end]
+            return inputValue[:, :, self.start:self.end]
 
-    def backward(self, dEdY):
-        dEdX = np.zeros(self.X.shape)
+    def backward(self, gradientToOutput):
+        dEdX = np.zeros(self._inputValue.shape)
         if self.axis == 0:
-            dEdX[self.start:self.end] = dEdY
+            dEdX[self.start:self.end] = gradientToOutput
         elif self.axis == 1:
-            dEdX[:, self.start:self.end] = dEdY
+            dEdX[:, self.start:self.end] = gradientToOutput
         elif self.axis == 2:
-            dEdX[:, :, self.start:self.end] = dEdY
+            dEdX[:, :, self.start:self.end] = gradientToOutput
         return dEdX

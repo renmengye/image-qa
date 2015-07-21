@@ -15,10 +15,10 @@ class ConstantLayer(Layer):
         self.value = value
         
     def graphBackward(self):
-        self.backward(self.dEdY)
+        self.backward(self._gradientToOutput)
 
-    def forward(self, X):
-        return np.zeros((X.shape[0], self.outputDim)) + self.value
+    def forward(self, inputValue):
+        return np.zeros((inputValue.shape[0], self.outputDim)) + self.value
 
-    def backward(self, dEdY):
+    def backward(self, gradientToOutput):
         return None

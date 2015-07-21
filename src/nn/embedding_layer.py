@@ -58,10 +58,10 @@ class EmbeddingLayer(Layer):
                 self.initWeights()
         else:
             self.W = initWeights
-            if use_gpu and self.W.dtype != np.float32:
+            if USE_GPU and self.W.dtype != np.float32:
                 self.W = self.W.astype('float32')
-        self.X = 0
-        self.Y = 0
+        self._inputValue = 0
+        self._outputValue = 0
         self.sparse = sparse
         self.dEdW = 0.0
 
@@ -69,30 +69,30 @@ class EmbeddingLayer(Layer):
         self.W = self.random.uniform(
             -self.initRange/2.0, self.initRange/2.0,
             (self.inputDim, self.outputDim))
-        if use_gpu and self.W.dtype != np.float32:
+        if USE_GPU and self.W.dtype != np.float32:
             self.W = self.W.astype('float32')
 
-    def forward(self, X):
+    def forward(self, inputValue):
         if self.W is None: self.initWeights()
-        if self.intConversion: X = X.astype(int)
-        self.X = X
-        X = X.reshape(X.size)
-        Y = np.zeros((X.shape[0], self.outputDim), self.W.dtype)
-        for n in range(0, X.shape[0]):
+        if self.intConversion: inputValue = inputValue.astype(int)
+        self._inputValue = inputValue
+        inputValue = inputValue.reshape(inputValue.size)
+        Y = np.zeros((inputValue.shape[0], self.outputDim), self.W.dtype)
+        for n in range(0, inputValue.shape[0]):
             if self.sparse:
-                if X[n] != 0:
-                    Y[n] = self.W[X[n] - 1].todense()
+                if inputValue[n] != 0:
+                    Y[n] = self.W[inputValue[n] - 1].todense()
             else:
-                if X[n] != 0:
-                    Y[n] = self.W[X[n] - 1]
+                if inputValue[n] != 0:
+                    Y[n] = self.W[inputValue[n] - 1]
         return Y
 
-    def backward(self, dEdY):
-        X = self.X
+    def backward(self, gradientToOutput):
+        X = self._inputValue
         if self.learningRate > 0.0:
             self.dEdW = np.zeros(self.W.shape, self.W.dtype)
             for n in range(0, X.shape[0]):
-                self.dEdW[X[n] - 1] += dEdY[n]
+                self.dEdW[X[n] - 1] += gradientToOutput[n]
         if self.outputdEdX:
             return np.zeros(X.shape)
         else:

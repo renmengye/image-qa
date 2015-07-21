@@ -271,9 +271,9 @@ class LSTM_Old(Layer):
             self.W = np.concatenate((Wi, Wf, Wc, Wo), axis = 1)
         else:
             self.W = initWeights
-        self.X = 0
+        self._inputValue = 0
         self.Xend = 0
-        self.Y = 0
+        self._outputValue = 0
         self.C = 0
         self.Z = 0
         self.Gi = 0
@@ -281,13 +281,13 @@ class LSTM_Old(Layer):
         self.Go = 0
         pass
 
-    def forward(self, X):
+    def forward(self, inputValue):
         Y, C, Z, Gi, Gf, Go, Xend = \
             forwardPassN(
-            X, self.cutOffZeroEnd, self.W)
+            inputValue, self.cutOffZeroEnd, self.W)
 
-        self.X = X
-        self.Y = Y
+        self._inputValue = inputValue
+        self._outputValue = Y
         self.C = C
         self.Z = Z
         self.Gi = Gi
@@ -297,8 +297,8 @@ class LSTM_Old(Layer):
 
         return Y if self.multiErr else Y[:,-1]
 
-    def backward(self, dEdY):
-        self.dEdW, dEdX = backPropagateN(dEdY,self.X,self.Y,
+    def backward(self, gradientToOutput):
+        self.dEdW, dEdX = backPropagateN(gradientToOutput,self._inputValue,self._outputValue,
                                 self.C,self.Z,self.Gi,
                                 self.Gf,self.Go,
                                 self.Xend,self.cutOffZeroEnd,

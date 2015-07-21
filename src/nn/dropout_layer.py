@@ -19,23 +19,23 @@ class DropoutLayer(Layer):
         self.random = np.random.RandomState(initSeed)
         self.seed = initSeed
 
-    def forward(self, X):
+    def forward(self, inputValue):
         if self.dropoutRate > 0.0 and self.isTraining:
             if self.debug:
                 self.random = np.random.RandomState(self.seed)
-            self.dropoutVec = (self.random.uniform(0, 1, (X.shape[-1])) >
+            self.dropoutVec = (self.random.uniform(0, 1, (inputValue.shape[-1])) >
                                self.dropoutRate)
-            Y = X * self.dropoutVec
+            Y = inputValue * self.dropoutVec
         else:
-            Y = X * (1 - self.dropoutRate)
-        self.X = X
+            Y = inputValue * (1 - self.dropoutRate)
+        self._inputValue = inputValue
         return Y
 
-    def backward(self, dEdY):
+    def backward(self, gradientToOutput):
         dEdX = None
         if self.outputdEdX:
             if self.isTraining:
-                dEdX = dEdY * self.dropoutVec
+                dEdX = gradientToOutput * self.dropoutVec
             else:
-                dEdX = dEdY / (1 - self.dropoutRate)
+                dEdX = gradientToOutput / (1 - self.dropoutRate)
         return dEdX

@@ -15,12 +15,12 @@ class NormalizationLayer(Layer):
                  outputdEdX=outputdEdX)
         self.mean = mean
         self.std = std
-        self.X = 0
-        self.Y = 0
+        self._inputValue = 0
+        self._outputValue = 0
         pass
 
-    def forward(self, X):
-        return (X - self.mean) / self.std
+    def forward(self, inputValue):
+        return (inputValue - self.mean) / self.std
 
-    def backward(self, dEdY):
-        return dEdY / self.std
+    def backward(self, gradientToOutput):
+        return gradientToOutput / self.std

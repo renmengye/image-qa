@@ -19,18 +19,18 @@ class LossLayer(Layer):
                  outputGpu=False,
                  outputdEdX=True)
 
-    def forward(self, X):
-        Y = X[0]
-        T = X[1]
-        if len(X) > 2:
-            weights = X[2]
+    def forward(self, inputValue):
+        Y = inputValue[0]
+        T = inputValue[1]
+        if len(inputValue) > 2:
+            weights = inputValue[2]
         else:
             weights = None
         E, dEdX = self.computeLossWithGrad(Y, T, weights)
         self.dEdX = dEdX
         return E
 
-    def backward(self, dEdY):
+    def backward(self, gradientToOutput):
         return self.dEdX
 
     def computeLossWithGrad(self, Y, T, weights=None):

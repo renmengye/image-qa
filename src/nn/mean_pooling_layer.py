@@ -20,18 +20,18 @@ class MeanPooling1DLayer(Layer):
                  defaultValue=defaultValue,
                  outputdEdX=outputdEdX)
         self.windowSize = windowSize
-        self.X = 0
-        self.Y = 0
+        self._inputValue = 0
+        self._outputValue = 0
 
-    def forward(self, X):
-        X = X.reshape(X.shape[0], self.windowSize, X.shape[1] / self.windowSize, X.shape[2])
-        Y = np.mean(X, axis=1)
-        self.X = X
+    def forward(self, inputValue):
+        inputValue = inputValue.reshape(inputValue.shape[0], self.windowSize, inputValue.shape[1] / self.windowSize, inputValue.shape[2])
+        Y = np.mean(inputValue, axis=1)
+        self._inputValue = inputValue
         return Y
 
-    def backward(self, dEdY):
+    def backward(self, gradientToOutput):
         dEdX = np.tile(
-            dEdY.reshape(dEdY.shape[0], 1, dEdY.shape[1], dEdY.shape[2]), 
+            gradientToOutput.reshape(gradientToOutput.shape[0], 1, gradientToOutput.shape[1], gradientToOutput.shape[2]),
             (1, self.windowSize, 1, 1))
         dEdX /= float(self.windowSize)
         dEdX = dEdX.reshape(dEdX.shape[0], dEdX.shape[1] * dEdX.shape[2], dEdX.shape[3])

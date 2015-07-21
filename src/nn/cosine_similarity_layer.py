@@ -14,26 +14,26 @@ class CosineSimilarityLayer(Layer):
         self.Auni = 0
         self.Zuni = 0
 
-    def forward(self, X):
+    def forward(self, inputValue):
         bankDim = self.bankDim
-        A = X[:bankDim]
-        Z = X[bankDim:]
-        Xnorm2 = np.sum(np.power(X, 2), axis=-1)
+        A = inputValue[:bankDim]
+        Z = inputValue[bankDim:]
+        Xnorm2 = np.sum(np.power(inputValue, 2), axis=-1)
         Xnorm = np.sqrt(Xnorm2)
         Anorm = Xnorm[:bankDim]
         Znorm = Xnorm[bankDim:]
         Zuni = Z / Znorm.reshape(Z.shape[0], 1)
         Auni = A / Anorm.reshape(bankDim, 1)
-        self.Y = np.inner(Zuni, Auni)
+        self._outputValue = np.inner(Zuni, Auni)
         self.A = A
         self.Z = Z
         self.Anorm = Anorm
         self.Znorm = Znorm
         self.Auni = Auni
         self.Zuni = Zuni
-        return self.Y
+        return self._outputValue
 
-    def backward(self, dEdY):
+    def backward(self, gradientToOutput):
         # For now, output gradient towards the vector bank.
         self.dEdW = 0
         Z = self.Z
@@ -43,12 +43,12 @@ class CosineSimilarityLayer(Layer):
         Auni = self.Auni
         Zuni = self.Zuni
 
-        V = np.dot(dEdY, Auni)
+        V = np.dot(gradientToOutput, Auni)
         dEdZ = np.sum(V * Z, axis=-1).reshape(Z.shape[0], 1) * \
         (-Z / (Znorm ** 3).reshape(Z.shape[0], 1)) + \
         V / Znorm.reshape(Z.shape[0], 1)
 
-        U = np.dot(dEdY.transpose(), Zuni)
+        U = np.dot(gradientToOutput.transpose(), Zuni)
         dEdA = np.sum(U * A, axis=-1).reshape(A.shape[0], 1) * \
         (-A / (Anorm ** 3).reshape(A.shape[0], 1)) + \
         U / Anorm.reshape(A.shape[0], 1)

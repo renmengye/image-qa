@@ -1,6 +1,6 @@
 import os
 use_gpu = os.environ.get('GNUMPY_USE_GPU', 'yes') == 'yes'
-if use_gpu:
+if USE_GPU:
     import gnumpy as gpu
     import gnumpy as gnp
 from layer import *
@@ -28,7 +28,7 @@ class Convolution1DLayer(Layer):
                  weightRegConst=0.0,
                  defaultValue=0.0,
                  outputdEdX=True,
-                 useGpu=use_gpu,
+                 useGpu=USE_GPU,
                  name=None):
         Layer.__init__(self,
                  name=name,
@@ -55,24 +55,24 @@ class Convolution1DLayer(Layer):
             self.W = initWeights
         if self.useGpu:
             self.W = gnp.as_garray(self.W.astype('float32'))
-        self.X = 0
-        self.Y = 0
+        self._inputValue = 0
+        self._outputValue = 0
 
-    def forward(self, X):
-        self.X = X
+    def forward(self, inputValue):
+        self._inputValue = inputValue
         # Num of examples
-        N = X.shape[0]
+        N = inputValue.shape[0]
         # Timespan
-        T = X.shape[1]
+        T = inputValue.shape[1]
         # Windows size
         S = self.windowSize
         # Channels
         D = self.numChannels
         # Num filters
         F = self.numFilters
-        Z = np.zeros((N, T - S + 1, S, D), X.dtype)
+        Z = np.zeros((N, T - S + 1, S, D), inputValue.dtype)
         for i in range(T - S + 1):
-            Z[:, i, :, :] = X[:, i : i + S, :]
+            Z[:, i, :, :] = inputValue[:, i : i + S, :]
         Z = Z.reshape(N * (T - S + 1), S * D)
         if self.useGpu:
             Z = gpu.as_garray(Z.astype('float32'))
@@ -85,27 +85,27 @@ class Convolution1DLayer(Layer):
         self.Z = Z
         return Y
 
-    def backward(self, dEdY):
-        N = dEdY.shape[0]
+    def backward(self, gradientToOutput):
+        N = gradientToOutput.shape[0]
         S = self.windowSize
-        T = dEdY.shape[1] + S - 1
-        F = dEdY.shape[2]
-        D = self.X.shape[2]
-        dEdY = dEdY.reshape(N * (T - S + 1), F)
-        dEdX = np.zeros(self.X.shape, self.X.dtype)
+        T = gradientToOutput.shape[1] + S - 1
+        F = gradientToOutput.shape[2]
+        D = self._inputValue.shape[2]
+        gradientToOutput = gradientToOutput.reshape(N * (T - S + 1), F)
+        dEdX = np.zeros(self._inputValue.shape, self._inputValue.dtype)
         
         if self.useGpu:
-            gdEdY = gpu.as_garray(dEdY.astype('float32'))
+            gdEdY = gpu.as_garray(gradientToOutput.astype('float32'))
             self.dEdW = gpu.dot(self.Z.transpose(), gdEdY)
         else:
-            self.dEdW = np.dot(self.Z.transpose(), dEdY)
+            self.dEdW = np.dot(self.Z.transpose(), gradientToOutput)
 
         if self.outputdEdX:
             if self.useGpu:
                 gdEdZ = gpu.dot(gdEdY, self.W.transpose())
                 dEdZ = gpu.as_numpy_array(gdEdZ)
             else:
-                dEdZ = np.dot(dEdY, self.W.transpose())
+                dEdZ = np.dot(gradientToOutput, self.W.transpose())
 
             dEdZ = dEdZ.reshape(N, T - S + 1, S, D)
             for t in range(0, T):

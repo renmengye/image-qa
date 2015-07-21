@@ -37,11 +37,11 @@ class ConstWeights(Layer):
         self.dEdW = 0
         
     def graphBackward(self):
-        self.backward(self.dEdY)
+        self.backward(self._gradientToOutput)
 
-    def forward(self, X):
+    def forward(self, inputValue):
         return self.W
 
-    def backward(self, dEdY):
-        self.dEdW = dEdY
+    def backward(self, gradientToOutput):
+        self.dEdW = gradientToOutput
         return None

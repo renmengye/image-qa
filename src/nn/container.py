@@ -8,11 +8,11 @@ class Input(Layer):
             inputNames=[],
             outputDim=outputDim)
     def setValue(self, value):
-        self.Y = value
-    def forward(self, X):
-        return X
-    def backward(self, dEdY):
-        return dEdY
+        self._outputValue = value
+    def forward(self, inputValue):
+        return inputValue
+    def backward(self, gradientToOutput):
+        return gradientToOutput
 
 class Output(Layer):
     def __init__(self, name, inputNames, outputDim=0, defaultValue=0):
@@ -22,9 +22,9 @@ class Output(Layer):
             defaultValue=defaultValue,
             outputDim=outputDim)
     def graphForward(self):
-        self.Y = self.getInput()
+        self._outputValue = self.getInput()
     def graphBackward(self):
-        self.sendError(self.dEdY)
+        self.sendError(self._gradientToOutput)
 
 class Container(Layer):
     def __init__(self,
@@ -93,15 +93,15 @@ class Container(Layer):
     def clearError(self):
         for stage in self.stages:
             stage.clearError()
-        self.dEdY = 0.0
+        self._gradientToOutput = 0.0
         self.receivedError = False
 
     def graphForward(self):
-        self.X = self.getInput()
-        self.Y = self.forward(self.X)
+        self._inputValue = self.getInput()
+        self._outputValue = self.forward(self._inputValue)
 
-    def forward(self, X):
-        self.stages[0].Y = X
+    def forward(self, inputValue):
+        self.stages[0].Y = inputValue
         for s in range(1, len(self.stages) - 1):
             if self.stages[s].used:
                 self.stages[s].graphForward()
@@ -111,11 +111,11 @@ class Container(Layer):
         # Clear error and ready for next batch
         self.clearError()
 
-        self.X = X
+        self._inputValue = inputValue
         return Y
 
-    def backward(self, dEdY):
-        self.stages[-1].sendError(dEdY)
+    def backward(self, gradientToOutput):
+        self.stages[-1].sendError(gradientToOutput)
         for s in reversed(range(1, len(self.stages) - 1)):
             if self.stages[s].used and self.stages[s].receivedError:
                 self.stages[s].graphBackward()

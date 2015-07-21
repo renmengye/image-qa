@@ -90,7 +90,7 @@ class AttentionPenalty(RecurrentStage):
             one = np.ones((self.X.shape[0], self.X.shape[2])) * self.timespan / float(self.X.shape[2])
             self.dEdX = self.errorConst * (s - one)
         self.inputs[time].dEdY += self.dEdX
-        if verbose:
+        if VERBOSE:
             print 'backward out', self.name, self.dEdX.shape, np.mean(self.dEdX)
         
     def getStage(self, time):
@@ -196,10 +196,10 @@ class Constant(Layer):
             inputNames=[],
             outputDim=value.size)
         self.value = np.reshape(value, (1, value.size))
-    def forward(self, X):
-        return np.tile(self.value, (X.shape[0], 1))
+    def forward(self, inputValue):
+        return np.tile(self.value, (inputValue.shape[0], 1))
     def graphForward(self):
-        self.Y = self.forward(self.X)
+        self._outputValue = self.forward(self._inputValue)
 
 class RecurrentContainer(Container, RecurrentStage):
     def __init__(self,
@@ -297,7 +297,7 @@ class RecurrentContainer(Container, RecurrentStage):
             stage.clearError()
         for stage in self.constStages:
             stage.clearError()
-        self.dEdY = 0.0
+        self._gradientToOutput = 0.0
         self.receivedError = False
 
     def syncGradient(self):
@@ -323,26 +323,26 @@ class RecurrentContainer(Container, RecurrentStage):
         for s in range(0, len(self.stages)):
             if self.stages[s].getStage(time=time).used:
                 self.stages[s].timeForward(time=time)
-        self.Y = self.stages[-1].Y
-        return self.Y
+        self._outputValue = self.stages[-1].Y
+        return self._outputValue
 
     #@profile
-    def forward(self, X):
+    def forward(self, inputValue):
         """
         Forward an entire sequence (used as a standard container).
-        :param X: integer
+        :param inputValue: integer
         :return:
         """
         # Sync weights if new.
         if not self.init:
             self.init = True
-            XX = np.ones(X.shape, dtype=X.dtype)
+            XX = np.ones(inputValue.shape, dtype=inputValue.dtype)
             self.forward(XX)
             self.syncWeights()
 
-        N = X.shape[0]
+        N = inputValue.shape[0]
         self.Xend = np.zeros(N, dtype=int) + self.timespan
-        reachedEnd = np.sum(X, axis=-1) == 0.0
+        reachedEnd = np.sum(inputValue, axis=-1) == 0.0
         if self.multiOutput:
             Y = np.zeros((N, self.timespan, self.outputDim))
         else:
@@ -351,7 +351,7 @@ class RecurrentContainer(Container, RecurrentStage):
         # Scan for the end of the sequence.
         if self.cutOffZeroEnd:
             for n in range(N):
-                for t in range(X.shape[1]):
+                for t in range(inputValue.shape[1]):
                     if reachedEnd[n, t]:
                         self.Xend[n] = t
                         break
@@ -359,17 +359,17 @@ class RecurrentContainer(Container, RecurrentStage):
 
         # Set value for constant stages.
         for s in self.constStages:
-            s.Y = np.tile(s.value, (X.shape[0], 1))
+            s.Y = np.tile(s.value, (inputValue.shape[0], 1))
 
         # Propagating through time.
         for t in range(self.XendAll):
             if self.multiInput:
-                self.stages[0].getStage(time=t).Y = X[:, t, :]
+                self.stages[0].getStage(time=t).Y = inputValue[:, t, :]
             else:
                 if t == 0:
-                    self.stages[0].getStage(time=t).Y = X
+                    self.stages[0].getStage(time=t).Y = inputValue
                 else:
-                    self.stages[0].getStage(time=t).Y = np.zeros(X.shape)
+                    self.stages[0].getStage(time=t).Y = np.zeros(inputValue.shape)
             for s in range(1, len(self.stages)):
                 if self.stages[s].getStage(time=t).used:
                     self.stages[s].timeForward(time=t)
@@ -387,8 +387,8 @@ class RecurrentContainer(Container, RecurrentStage):
 
         # Clear error for backward
         self.clearError()
-        self.Y = Y
-        self.X = X
+        self._outputValue = Y
+        self._inputValue = inputValue
         return Y
 
     def timeBackward(self, time):
@@ -403,40 +403,40 @@ class RecurrentContainer(Container, RecurrentStage):
             if self.stages[s].getStage(time=time).used:
                 self.stages[s].timeBackward(time=time)
 
-    def sendError(self, dEdX):
+    def sendError(self, gradientToInput):
         """
         Iterates over input list and sends dEdX.
         """
-        if len(self.inputs) > 1:
+        if len(self.inputLayers) > 1:
             s = 0
-            for stage in self.inputs:
+            for stage in self.inputLayers:
                 s2 = s + stage.Y.shape[-1]
-                stage.dEdY += dEdX[:, :, s : s2]
+                stage.dEdY += gradientToInput[:, :, s : s2]
                 s = s2
                 stage.receivedError = True
         else:
-            self.inputs[0].dEdY += dEdX
-            self.inputs[0].receivedError = True
+            self.inputLayers[0].dEdY += gradientToInput
+            self.inputLayers[0].receivedError = True
 
     #@profile
-    def backward(self, dEdY):
+    def backward(self, gradientToOutput):
         """
         Backward an entire sequence (used as a standard container).
-        :param dEdY: numpy array, error from the output
+        :param gradientToOutput: numpy array, error from the output
         :return:
         """
-        N = self.X.shape[0]
-        dEdX = np.zeros(self.X.shape)
+        N = self._inputValue.shape[0]
+        dEdX = np.zeros(self._inputValue.shape)
 
         # Send errors from output stages.
         if self.multiOutput:
             for t in range(self.XendAll):
-                self.stages[-1].getStage(time=t).sendError(dEdY[:, t, :])
+                self.stages[-1].getStage(time=t).sendError(gradientToOutput[:, t, :])
         else:
             for n in range(N):
                 if self.Xend[n] > 0:
-                    err = np.zeros(dEdY.shape)
-                    err[n] = dEdY[n]
+                    err = np.zeros(gradientToOutput.shape)
+                    err[n] = gradientToOutput[n]
                     self.stages[-1].getStage(time=self.Xend[n] - 1).sendError(err)
 
         # Back propagating through time.

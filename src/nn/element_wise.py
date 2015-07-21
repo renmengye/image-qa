@@ -9,15 +9,15 @@ class ElementWiseProduct(Layer):
             inputNames=inputNames,
             outputDim=outputDim,
             defaultValue=defaultValue)
-    def forward(self, X):
+    def forward(self, inputValue):
         # self.X = X
         # return X[:,:X.shape[1]/2] * X[:,X.shape[1]/2:]
-        self.X = X
-        return X[0] * X[1]
+        self._inputValue = inputValue
+        return inputValue[0] * inputValue[1]
 
-    def backward(self, dEdY):
+    def backward(self, gradientToOutput):
         self.dEdW = 0.0
-        return [self.X[1] * dEdY, self.X[0] * dEdY]
+        return [self._inputValue[1] * gradientToOutput, self._inputValue[0] * gradientToOutput]
         # return np.concatenate(
         #     (self.X[:,self.X.shape[1]/2:] * dEdY,
         #     self.X[:,:self.X.shape[1]/2] * dEdY),
@@ -33,9 +33,9 @@ class ElementWiseSum(Layer):
             outputDim=outputDim,
             defaultValue=defaultValue)
 
-    def forward(self, X):
-        return X[0] + X[1]
+    def forward(self, inputValue):
+        return inputValue[0] + inputValue[1]
 
-    def backward(self, dEdY):
+    def backward(self, gradientToOutput):
         self.dEdW = 0.0
-        return [dEdY, dEdY]
+        return [gradientToOutput, gradientToOutput]

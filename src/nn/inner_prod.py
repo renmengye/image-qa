@@ -30,16 +30,16 @@ class InnerProduct(Layer):
                  weightRegConst=weightRegConst,
                  outputdEdX=outputdEdX)
         self.W = 1
-    def forward(self, X):
-        Y = np.sum(X[:, 0, :] * X[:, 1, :], axis=-1) + self.W
-        self.Y = Y
-        self.X = X
+    def forward(self, inputValue):
+        Y = np.sum(inputValue[:, 0, :] * inputValue[:, 1, :], axis=-1) + self.W
+        self._outputValue = Y
+        self._inputValue = inputValue
         return Y
 
-    def backward(self, dEdY):
-        self.dEdW = np.sum(dEdY,axis=0)
+    def backward(self, gradientToOutput):
+        self.dEdW = np.sum(gradientToOutput,axis=0)
         #print dEdY
-        dEdX = np.zeros(self.X.shape)
-        dEdX[:, 1, :] = dEdY.reshape(dEdY.size, 1) * self.X[:, 0, :]
-        dEdX[:, 0, :] = dEdY.reshape(dEdY.size, 1) * self.X[:, 1, :]
+        dEdX = np.zeros(self._inputValue.shape)
+        dEdX[:, 1, :] = gradientToOutput.reshape(gradientToOutput.size, 1) * self._inputValue[:, 0, :]
+        dEdX[:, 0, :] = gradientToOutput.reshape(gradientToOutput.size, 1) * self._inputValue[:, 1, :]
         return dEdX

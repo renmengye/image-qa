@@ -9,17 +9,17 @@ class SequentialContainer(Layer):
                  outputdEdX=outputdEdX)
         self.stages = stages
 
-    def forward(self, X):
-        X1 = X
+    def forward(self, inputValue):
+        X1 = inputValue
         for stage in self.stages:
             X1 = stage.forward(X1)
         return X1
 
-    def backward(self, dEdY):
+    def backward(self, gradientToOutput):
         for stage in reversed(self.stages):
-            dEdY = stage.backward(dEdY)
-            if dEdY is None: break
-        return dEdY if self.outputdEdX else None
+            gradientToOutput = stage.backward(gradientToOutput)
+            if gradientToOutput is None: break
+        return gradientToOutput if self.outputdEdX else None
 
     def updateWeights(self):
         for stage in self.stages:
