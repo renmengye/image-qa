@@ -1,8 +1,8 @@
 from fully_connected_layer import *
-from activation_fn import *
-from weight import *
-from weight_initializer import *
-from gradient_checker import *
+from activation_fn import SigmoidActivationFn
+from weight import Weight
+from weight_initializer import UniformWeightInitializer
+from gradient_checker import GradientChecker
 import unittest
 
 class FullyConnectedLayerTest(unittest.TestCase):
@@ -11,11 +11,13 @@ class FullyConnectedLayerTest(unittest.TestCase):
                                     activationFn=SigmoidActivationFn(),
                                     numNode=4,
                                     weight=Weight(
+                                        name='fc',
                                         initializer=UniformWeightInitializer(
                                             limit=[-0.5, 0.5],
                                             seed=2),
                                         gdController=None,
                                         shared=False))
+        layer.init(inputNumNode=4)
         if USE_GPU:
             epsilon = 1e-2
             tolerance = 1e-1

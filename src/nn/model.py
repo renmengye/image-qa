@@ -19,9 +19,10 @@ class Model():
         the last layer of the model.
         :return:
         """
-        self.loss = 0
-        self._inputLayer = IdentityLayer(name='input')
-        self._targetLayer = IdentityLayer(name='target')
+        self._inputLayer = IdentityLayer(name='input',
+                                         numNode=inputLayers[0].numNode)
+        self._targetLayer = IdentityLayer(name='target',
+                                          numNode=outputLayer.numNode)
         self._outputLayer = outputLayer
         self._lossLayer = lossLayer
         for layer in inputLayers:
@@ -64,12 +65,12 @@ class Model():
         return sortedOrder
 
 
-    def trainStep(self, inputValue, targetValue, weights=None):
+    def trainStep(self, inputValue, targetValue, exampleWeights=None):
         """
 
         :param inputValue:
         :param targetValue: 
-        :param weights: numpy.ndarray or gnumpy.garray, weights of each
+        :param exampleWeights: numpy.ndarray or gnumpy.garray, weights of each
         examples.
         :return:
         """
@@ -77,7 +78,6 @@ class Model():
         self._targetLayer.setValue(targetValue)
         for layer in self.layers:
             layer.graphForward()
-        self.loss = self._lossLayer.loss
         for layer in reversed(self.layers):
             layer.graphBackward()
 
@@ -93,6 +93,9 @@ class Model():
             if layer is not self._lossLayer:
                 layer.graphForward()
         return self._outputLayer.getValue()
+
+    def getLoss(self):
+        return self._lossLayer.getLoss()
 
     def toDict(self, filename):
         pass

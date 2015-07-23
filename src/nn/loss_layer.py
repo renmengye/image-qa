@@ -1,13 +1,17 @@
 from layer import *
 
 class LossLayer(Layer):
-    def __init__(self, name=None, useGpu=USE_GPU):
+    def __init__(self, name=None, gpuEnabled=USE_GPU):
         Layer.__init__(
                  self,
                  name=name,
-                 useGpu=useGpu,
-                 outputGpu=False,
+                 numNode=1,
+                 gpuEnabled=gpuEnabled,
                  outputdEdX=True)
+        self._loss = 0.0
+
+    def getLoss(self):
+        return self._loss;
 
     def forward(self, inputValue):
         outputValue = inputValue[0]
@@ -16,14 +20,12 @@ class LossLayer(Layer):
             weights = outputValue[2]
         else:
             weights = None
-        loss, gradientToInput = self.computeLossWithGrad(outputValue,
-                                                         targetValue,
-                                                         weights)
-        self.gradientToInput = gradientToInput
-        return loss
+        self._loss, self._gradientToInput = \
+            self.computeLossWithGrad(outputValue, targetValue, weights)
+        return self._loss
 
     def backward(self, gradientToOutput):
-        return self.gradientToInput
+        return self._gradientToInput
 
     def computeLossWithGrad(self, outputValue, targetValue, weights=None):
         """

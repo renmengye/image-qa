@@ -1,8 +1,8 @@
 from layer import *
 
 class IdentityLayer(Layer):
-    def __init__(self, name):
-        Layer.__init__(self, name=name, useGpu=False)
+    def __init__(self, name, numNode):
+        Layer.__init__(self, name=name, numNode=numNode, gpuEnabled=USE_GPU)
         pass
 
     def graphForward(self):

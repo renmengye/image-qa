@@ -8,9 +8,9 @@ import unittest
 
 class ModelTest(unittest.TestCase):
     def testTraverseSequential(self):
-        lastLayer = Layer(name='layer1')\
-            .connect(Layer(name='layer2'))\
-            .connect(Layer(name='layer3'))
+        lastLayer = Layer(name='layer1', numNode=0)\
+            .connect(Layer(name='layer2', numNode=0))\
+            .connect(Layer(name='layer3', numNode=0))
         order = Model._computeTraversalOrder(lastLayer)
         self.assertEqual(3, len(order))
         self.assertEqual('layer1', order[0].name)
@@ -18,13 +18,13 @@ class ModelTest(unittest.TestCase):
         self.assertEqual('layer3', order[2].name)
 
     def testTraverseParallel(self):
-        layer1 = Layer(name='layer1')
+        layer1 = Layer(name='layer1', numNode=0)
         layer2a = layer1\
-            .connect(Layer(name='layer2a'))
+            .connect(Layer(name='layer2a', numNode=0))
         layer2b = layer1\
-            .connect(Layer(name='layer2b'))
+            .connect(Layer(name='layer2b', numNode=0))
         layer3 = layer2a\
-            .connect(Layer(name='layer3'))
+            .connect(Layer(name='layer3', numNode=0))
         layer3.addInput(layer2b)
         order = Model._computeTraversalOrder(layer3)
         self.assertEqual(4, len(order))
@@ -32,14 +32,14 @@ class ModelTest(unittest.TestCase):
         self.assertEqual('layer3', order[3].name)
 
     def testTraverseComplex(self):
-        layer1 = Layer(name='layer1')
-        layer2 = layer1.connect(Layer(name='layer2'))
+        layer1 = Layer(name='layer1', numNode=0)
+        layer2 = layer1.connect(Layer(name='layer2', numNode=0))
         layer4 = layer2\
-            .connect(Layer(name='layer3'))\
-            .connect(Layer(name='layer4'))
+            .connect(Layer(name='layer3', numNode=0))\
+            .connect(Layer(name='layer4', numNode=0))
         layer4.addInput(layer2)
-        layer5 = layer2.connect(Layer(name='layer5'))
-        layer6 = layer5.connect(Layer(name='layer6'))
+        layer5 = layer2.connect(Layer(name='layer5', numNode=0))
+        layer6 = layer5.connect(Layer(name='layer6', numNode=0))
         layer6.addInput(layer4)
         order = Model._computeTraversalOrder(layer6)
         self.assertEqual(6, len(order))
@@ -59,6 +59,7 @@ class ModelTest(unittest.TestCase):
                                     activationFn=SigmoidActivationFn(),
                                     numNode=4,
                                     weight=Weight(
+                                        name='fc1',
                                         initializer=UniformWeightInitializer(
                                             limit=[-0.5, 0.5],
                                             seed=2),
@@ -68,6 +69,7 @@ class ModelTest(unittest.TestCase):
                                      activationFn=SigmoidActivationFn(),
                                      numNode=3,
                                      weight=Weight(
+                                         name='fc2',
                                         initializer=UniformWeightInitializer(
                                             limit=[-0.5, 0.5],
                                             seed=2),
@@ -77,6 +79,7 @@ class ModelTest(unittest.TestCase):
                                      activationFn=SigmoidActivationFn(),
                                      numNode=5,
                                      weight=Weight(
+                                         name='fc2',
                                         initializer=UniformWeightInitializer(
                                             limit=[-0.5, 0.5],
                                             seed=2),
@@ -85,10 +88,13 @@ class ModelTest(unittest.TestCase):
         model = Model(inputLayers=[inputLayer], outputLayer=outputLayer,
                       lossLayer=MSELossLayer(name='mse'))
         X = np.random.rand(5, 4)
+        T = np.zeros((5, 5))
         if USE_GPU:
             X = gnp.as_garray(X)
         Y = model.runOnce(X)
         self.assertEqual((5, 5), Y.shape)
+        dLdX = model.trainStep(X, T)
+        self.assertGreater(model.getLoss(), 0)
 
 if __name__ == '__main__':
     unittest.main()

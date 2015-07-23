@@ -32,7 +32,7 @@ class GradientChecker():
         outputValue = self._layer.forward(inputValue)
         gradientToOutput = -outputValue
         gradient = self._layer.backward(gradientToOutput)
-        if self._layer.outputGpu:
+        if self._layer.gpuEnabled:
             gradientNumerical = gnp.zeros(gradient.size)
         else:
             gradientNumerical = np.zeros(gradient.size)
@@ -44,7 +44,7 @@ class GradientChecker():
             inputValueReshape[i] -= 2 * self._epsilon
             inputValueTmp = inputValueReshape.reshape(inputValue.shape)
             outputValueTmpMinus = self._layer.forward(inputValueTmp)
-            if self._layer.outputGpu:
+            if self._layer.gpuEnabled:
                 lossPlus = .5 * gnp.sum(outputValueTmpPlus ** 2)
                 lossMinus = .5 * gnp.sum(outputValueTmpMinus ** 2)
             else:
@@ -69,7 +69,7 @@ class GradientChecker():
         self._layer.backward(gradientToOutput)
         self._layer.weight.update()
         gradient = self._layer.weight.getGradient()
-        if self._layer.useGpu:
+        if self._layer.gpuEnabled:
             gradientNumerical = gnp.zeros(gradient.size)
         else:
             gradientNumerical = np.zeros(gradient.size)
@@ -84,7 +84,7 @@ class GradientChecker():
             weightTmp = weightReshape.reshape(weight.shape)
             self._layer.weight.set(weightTmp)
             outputValueTmpMinus = self._layer.forward(inputValue)
-            if self._layer.outputGpu:
+            if self._layer.gpuEnabled:
                 lossPlus = .5 * gnp.sum(outputValueTmpPlus ** 2)
                 lossMinus = .5 * gnp.sum(outputValueTmpMinus ** 2)
             else:

@@ -3,18 +3,19 @@ from environment import *
 class Layer:
     def __init__(self,
                  name,
-                 useGpu=USE_GPU,
-                 outputGpu=USE_GPU,
+                 numNode,
+                 gpuEnabled=USE_GPU,
                  # Deprecated
                  outputdEdX=True):
         self.name = name
         self.inputLayers = []
+        self.numNode = numNode
         self._outputValue = 0.0
         self._inputValue = 0.0
         self._gradientToOutput = 0.0
         self._gradientToInput = 0.0
-        self.useGpu = useGpu
-        self.outputGpu = outputGpu
+        #self.useGpu = useGpu
+        self.gpuEnabled = gpuEnabled
         self.receivedError = False
         self.isTraining = True
 
@@ -58,22 +59,23 @@ class Layer:
         :return:
         """
         if len(self.inputLayers) == 1:
-            if self.useGpu and not self.inputLayers[0].outputGpu:
+            value = self.inputLayers[0].getValue()
+            if self.gpuEnabled and type(value) is np.ndarray:
                 if VERBOSE:
                     print 'Converting from CPU to GPU'
-                return gnp.as_garray(self.inputLayers[0].getValue())
-            elif not self.useGpu and self.inputLayers[0].outputGpu:
+                return gnp.as_garray(value)
+            elif not self.gpuEnabled and type(value) is not np.ndarray:
                 if VERBOSE:
                     print 'Converting from GPU to CPU'
-                return gnp.as_numpy_array(self.inputLayers[0].getValue())
+                return gnp.as_numpy_array(value)
             else:
-                return self.inputLayers[0].getValue()
+                return value
         else:
             result = []
             for inputLayer in self.inputLayers:
-                if self.useGpu and not inputLayer.outputGpu:
+                if self.gpuEnabled and not inputLayer.gpuEnabled:
                     result.append(gnp.as_garray(inputLayer.getValue()))
-                elif not self.useGpu and inputLayer.outputGpu:
+                elif not self.gpuEnabled and inputLayer.gpuEnabled:
                     result.append(gnp.as_numpy_array(inputLayer.getValue()))
                 else:
                     result.append(inputLayer.getValue())
@@ -120,13 +122,31 @@ class Layer:
         Forward propagates.
         """
         self._inputValue = self.getInput()
-        if VERBOSE and hasattr(self._inputValue, 'shape'):
-            print 'forward in', self.name, self._inputValue.shape, \
-                type(self._inputValue)
+        if VERBOSE:
+            print '-->> in',
+            self._printValueDebugString(self._inputValue)
         self._outputValue = self.forward(self._inputValue)
-        if VERBOSE and hasattr(self._outputValue, 'shape'):
-            print 'forward out', self.name, self._outputValue.shape, \
-                type(self._outputValue)
+        if VERBOSE:
+            print '-->> out',
+            self._printValueDebugString(self._outputValue)
+
+    def _printValueDebugString(self, value):
+        print self.name, \
+            (value.shape if hasattr(self._inputValue, 'shape') else ''), \
+            self._getTypeString(value), \
+            'mean', \
+            '%.4f' % \
+            (np.mean(value) if not self.gpuEnabled else gnp.mean(value))
+
+    def _getTypeString(self, value):
+        if type(value) is np.ndarray or type(value) is np.float64 or type(
+                value) is np.float32:
+            return 'CPU'
+        elif self.gpuEnabled:
+            if type(value) is gnp.garray:
+                return 'GPU'
+        else:
+            return str(type(value))
 
     def forward(self, inputValue):
         """
@@ -141,15 +161,15 @@ class Layer:
         """
         Backward propagates.
         """
-        if VERBOSE and hasattr(self._gradientToOutput, 'shape'):
-            print 'backward in', self.name, self._gradientToOutput.shape, \
-                np.mean(self._gradientToOutput)
+        if VERBOSE:
+            print '<<-- in',
+            self._printValueDebugString(self._gradientToOutput)
         self._gradientToInput = self.backward(self._gradientToOutput)
         if self.outputdEdX:
             self.sendError(self._gradientToInput)
-        if VERBOSE and hasattr(self._gradientToInput, 'shape'):
-            print 'backward out', self.name, self._gradientToInput.shape, \
-                np.mean(self._gradientToInput)
+        if VERBOSE:
+            print '<<-- out',
+            self._printValueDebugString(self._gradientToInput)
 
     def backward(self, gradientToOutput):
         """
@@ -175,7 +195,7 @@ class Layer:
         return {
             'name': self.name,
             'useGpu': self.useGpu,
-            'outputGpu': self.outputGpu
+            'outputGpu': self.gpuEnabled
         }
 
     @staticmethod
@@ -189,5 +209,5 @@ class Layer:
         return Layer(name=value['name'],
                      useGpu=value['useGpu'] if value.has_key('useGpu') else
                      USE_GPU,
-                     outputGpu=value['outputGpu'] if value.has_key(
+                     gpuEnabled=value['outputGpu'] if value.has_key(
                          'outputGpu') else USE_GPU)
