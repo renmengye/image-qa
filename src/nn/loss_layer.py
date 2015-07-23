@@ -1,43 +1,35 @@
 from layer import *
 
 class LossLayer(Layer):
-    def __init__(self, inputNames, name=None):
+    def __init__(self, name=None, useGpu=USE_GPU):
         Layer.__init__(
                  self,
                  name=name,
-                 inputNames=inputNames,
-                 outputDim=1,
-                 defaultValue=0.0,
-                 learningRate=0.0,
-                 learningRateAnnealConst=0.0,
-                 momentum=0.0,
-                 deltaMomentum=0.0,
-                 weightClip=0.0,
-                 gradientClip=0.0,
-                 weightRegConst=0.0,
-                 useGpu=False,
+                 useGpu=useGpu,
                  outputGpu=False,
                  outputdEdX=True)
 
     def forward(self, inputValue):
-        Y = inputValue[0]
-        T = inputValue[1]
+        outputValue = inputValue[0]
+        targetValue = inputValue[1]
         if len(inputValue) > 2:
-            weights = inputValue[2]
+            weights = outputValue[2]
         else:
             weights = None
-        E, dEdX = self.computeLossWithGrad(Y, T, weights)
-        self.dEdX = dEdX
-        return E
+        loss, gradientToInput = self.computeLossWithGrad(outputValue,
+                                                         targetValue,
+                                                         weights)
+        self.gradientToInput = gradientToInput
+        return loss
 
     def backward(self, gradientToOutput):
-        return self.dEdX
+        return self.gradientToInput
 
-    def computeLossWithGrad(self, Y, T, weights=None):
+    def computeLossWithGrad(self, outputValue, targetValue, weights=None):
         """
         Abstract method
-        :param Y: Model output
-        :param T: Model target
+        :param outputValue: Model output
+        :param targetValue: Model target
         :return: Tuple of the loss value and the gradient of loss w.r.t. Y.
         """
         pass

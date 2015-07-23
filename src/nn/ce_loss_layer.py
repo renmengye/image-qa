@@ -8,20 +8,20 @@ class CEBinaryLossLayer(LossLayer):
         LossLayer.__init__(self, inputNames=inputNames, name=name)
         pass
 
-    def computeLossWithGrad(self, Y, T, weights=None):
+    def computeLossWithGrad(self, outputValue, targetValue, weights=None):
         eps = 1e-8
-        T = T.reshape(Y.shape)
-        cost = -T * np.log(Y + eps) - (1 - T) * np.log(1 - Y + eps)
-        dcost = -T / (Y + eps) + (1 - T) / (1 - Y + eps)
+        targetValue = targetValue.reshape(outputValue.shape)
+        cost = -targetValue * np.log(outputValue + eps) - (1 - targetValue) * np.log(1 - outputValue + eps)
+        dcost = -targetValue / (outputValue + eps) + (1 - targetValue) / (1 - outputValue + eps)
         if weights is not None:
             cost *= weights
             dcost *= weights.reshape(weights.shape[0], 1)
-        if len(Y.shape) == 0:
+        if len(outputValue.shape) == 0:
             E = cost
             dEdY = dcost
         else:
-            E = np.sum(cost) / float(Y.size)
-            dEdY = dcost / float(Y.size)
+            E = np.sum(cost) / float(outputValue.size)
+            dEdY = dcost / float(outputValue.size)
         return E, dEdY
 
 class CEMultiClassLossLayer(LossLayer):
@@ -32,10 +32,10 @@ class CEMultiClassLossLayer(LossLayer):
         LossLayer.__init__(self, inputNames=inputNames, name=name)
         pass
 
-    def computeLossWithGrad(self, Y, T, weights=None):
+    def computeLossWithGrad(self, outputValue, targetValue, weights=None):
         eps = 1e-8
-        Y2 = Y.reshape(Y.size / Y.shape[-1], Y.shape[-1])
-        T2 = T.reshape(T.size)
+        Y2 = outputValue.reshape(outputValue.size / outputValue.shape[-1], outputValue.shape[-1])
+        T2 = targetValue.reshape(targetValue.size)
         E = 0.0
         dEdY = np.zeros(Y2.shape, float)
         if weights is None:
@@ -48,5 +48,5 @@ class CEMultiClassLossLayer(LossLayer):
                 dEdY[n, T2[n]] = -1 / (Y2[n, T2[n]] + eps) * weights[n]
         E /= Y2.shape[0]
         dEdY /= Y2.shape[0]
-        dEdY = dEdY.reshape(Y.shape)
+        dEdY = dEdY.reshape(outputValue.shape)
         return E, dEdY

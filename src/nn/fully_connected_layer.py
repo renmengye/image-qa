@@ -9,6 +9,7 @@ class FullyConnectedLayer(Layer):
     def __init__(self,
                  name,
                  activationFn,
+                 numNode,
                  weight,
                  affine=True,
                  outputdEdX=True,
@@ -19,12 +20,19 @@ class FullyConnectedLayer(Layer):
                  outputdEdX=outputdEdX)
         self._activationFn = activationFn
         self._affine = affine
+        self._numNode = numNode
         self.weight = weight
         if self._activationFn.useGpu != self.useGpu:
             raise Exception('Activation function does not have the same GPU '
                             'configuration as Layer ' + self.name)
 
     def forward(self, inputValue):
+        # Lazy initialization
+        if not self.weight.hasInitialized:
+            if self._affine:
+                self.weight.initialize([inputValue.shape[-1] + 1, self._numNode])
+            else:
+                self.weight.initialize([inputValue.shape[-1], self._numNode])
         if self.useGpu:
             if type(inputValue) is not gnp.garray:
                 inputValue = gnp.as_garray(inputValue)
@@ -41,6 +49,7 @@ class FullyConnectedLayer(Layer):
             self._outputValue = self._activationFn.forward(weightedSum)
         else:
             if type(inputValue) is not np.ndarray:
+                print type(inputValue), inputValue, self.name
                 inputValue = gnp.as_numpy_array(inputValue)
             if self._affine:
                 self._inputValue = \

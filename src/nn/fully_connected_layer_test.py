@@ -9,12 +9,11 @@ class FullyConnectedLayerTest(unittest.TestCase):
     def test(self):
         layer = FullyConnectedLayer(name='fc',
                                     activationFn=SigmoidActivationFn(),
+                                    numNode=4,
                                     weight=Weight(
                                         initializer=UniformWeightInitializer(
                                             limit=[-0.5, 0.5],
-                                            seed=2,
-                                            shape=[5, 6],
-                                            affine=True),
+                                            seed=2),
                                         gdController=None,
                                         shared=False))
         if USE_GPU:

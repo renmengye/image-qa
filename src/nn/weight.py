@@ -5,7 +5,8 @@ class Weight():
     Designed as a weights matrix wrapper for the ease of sharing parameters.
     Currently only considered for gradient descent optimization.
     """
-    def __init__(self, initializer, gdController, useGpu=USE_GPU, shared=False):
+    def __init__(self, initializer, gdController, useGpu=USE_GPU,
+                 shared=False):
         self._gdController = gdController
         self._initializer = initializer
         self._weight = 0
@@ -13,7 +14,11 @@ class Weight():
         self._gradientStack = []
         self._useGpu = useGpu
         self._shared = shared
-        weight = self._initializer.initialize()
+        self.hasInitialized = False
+
+    def initialize(self, shape):
+        weight = self._initializer.initialize(shape)
+        self.hasInitialized = True
         if self._useGpu:
             self._weight = gnp.as_garray(weight)
         else:
