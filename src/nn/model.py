@@ -34,6 +34,9 @@ class Model():
         else:
             # Inference model only
             self.layers = self._computeTraversalOrder(outputLayer)
+        # Initialize weights
+        for layer in self.layers:
+            layer.init()
 
     @staticmethod
     def _computeTraversalOrder(lastLayer):

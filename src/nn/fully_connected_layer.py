@@ -11,7 +11,7 @@ class FullyConnectedLayer(Layer):
                  activationFn,
                  numNode,
                  weight,
-                 affine=True,
+                 hasBias=True,
                  outputdEdX=True,
                  useGpu=USE_GPU):
         Layer.__init__(self,
@@ -20,22 +20,24 @@ class FullyConnectedLayer(Layer):
                  outputGpu=useGpu,
                  outputdEdX=outputdEdX)
         self._activationFn = activationFn
-        self._affine = affine
-        self._numNode = numNode
+        self._hasBias = hasBias
+        self.numNode = numNode
         self.weight = weight
         if self._activationFn.useGpu != self.useGpu:
             raise Exception('Activation function does not have the same GPU '
                             'configuration as Layer ' + self.name)
 
-    def forward(self, inputValue):
-        # Lazy initialization
+    def init(self):
+        inputNumNode = self.inputLayers[0].numNode
         if not self.weight.hasInitialized:
-            if self._affine:
-                self.weight.initialize([inputValue.shape[-1] + 1, self._numNode])
+            if self._hasBias:
+                self.weight.initialize([inputNumNode + 1, self.numNode])
             else:
-                self.weight.initialize([inputValue.shape[-1], self._numNode])
+                self.weight.initialize([inputNumNode.shape[-1], self.numNode])
+
+    def forward(self, inputValue):
         if self.useGpu:
-            if self._affine:
+            if self._hasBias:
                 self._inputValue = \
                     gnp.concatenate(
                         (inputValue, gnp.ones((inputValue.shape[0], 1))),
@@ -45,7 +47,7 @@ class FullyConnectedLayer(Layer):
             weightedSum = gpu.dot(self._inputValue, self.weight.get())
             self._outputValue = self._activationFn.forward(weightedSum)
         else:
-            if self._affine:
+            if self._hasBias:
                 self._inputValue = \
                     np.concatenate(
                         (inputValue, np.ones((inputValue.shape[0], 1),
@@ -73,7 +75,7 @@ class FullyConnectedLayer(Layer):
             #################################################################
             gradient = gnp.dot(self._inputValue.transpose(),
                                gradientToWeightedSum)
-            if self._affine:
+            if self._hasBias:
                 gradientToInput = gnp.dot(gradientToWeightedSum,
                                           self.weight.get()[:-1, :].transpose())
             else:
@@ -83,7 +85,7 @@ class FullyConnectedLayer(Layer):
         else:
             gradient = np.dot(self._inputValue.transpose(),
                               gradientToWeightedSum)
-            if self._affine:
+            if self._hasBias:
                 gradientToInput = np.dot(gradientToWeightedSum,
                                          self.weight.get()[:-1, :].transpose())
             else:

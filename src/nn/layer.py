@@ -24,6 +24,13 @@ class Layer:
     def __str__(self):
         return self.name
 
+    def init(self):
+        """
+        Abstract method, for initializing weights, etc.
+        :return:
+        """
+        pass
+
     def addInput(self, layer):
         """
         Add an input to this layer
