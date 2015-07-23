@@ -16,7 +16,7 @@ class Layer:
         self._gradientToInput = 0.0
         #self.useGpu = useGpu
         self.gpuEnabled = gpuEnabled
-        self.receivedError = False
+        #self.receivedError = False
         self.isTraining = True
 
         # deprecated. Should be able to compute from isTraining
@@ -59,38 +59,44 @@ class Layer:
         :return:
         """
         if len(self.inputLayers) == 1:
-            value = self.inputLayers[0].getValue()
-            if self.gpuEnabled and type(value) is np.ndarray:
-                if VERBOSE:
-                    print 'Converting from CPU to GPU'
-                return gnp.as_garray(value)
-            elif not self.gpuEnabled and type(value) is not np.ndarray:
-                if VERBOSE:
-                    print 'Converting from GPU to CPU'
-                return gnp.as_numpy_array(value)
-            else:
-                return value
+            return self._getInput(self.inputLayers[0])
         else:
-            result = []
-            for inputLayer in self.inputLayers:
-                if self.gpuEnabled and not inputLayer.gpuEnabled:
-                    result.append(gnp.as_garray(inputLayer.getValue()))
-                elif not self.gpuEnabled and inputLayer.gpuEnabled:
-                    result.append(gnp.as_numpy_array(inputLayer.getValue()))
-                else:
-                    result.append(inputLayer.getValue())
-            return result
+            return [self._getInput(inputLayer )for inputLayer in
+                    self.inputLayers]
+
+    def _getInput(self, inputLayer):
+        """
+        Get input from one of the previous layers
+        :param inputLayer:
+        :return:
+        """
+        if self.gpuEnabled and not inputLayer.gpuEnabled:
+            if VERBOSE:
+                print 'Converting from CPU to GPU'
+            return gnp.as_garray(inputLayer.getValue())
+        elif not self.gpuEnabled and inputLayer.gpuEnabled:
+            if VERBOSE:
+                print 'Converting from GPU to CPU'
+            return gnp.as_numpy_array(inputLayer.getValue())
+        else:
+            return inputLayer.getValue()
 
     def clearError(self):
+        """
+
+        :return:
+        """
         self._gradientToOutput = 0.0
-        self.receivedError = False
+        #self.receivedError = False
 
     def receiveError(self, gradientToOutput):
-        ############################################################
-        # Careful here to handle both GPU and CPU gradientToOutput #
-        ############################################################
+        """
+
+        :param gradientToOutput:
+        :return:
+        """
         self._gradientToOutput += gradientToOutput
-        self.receivedError = True
+        #self.receivedError = True
 
     def sendError(self, gradientToInput):
         """
@@ -98,10 +104,21 @@ class Layer:
         :return:
         """
         if len(self.inputLayers) == 1:
-            self.inputLayers[0].receiveError(gradientToInput)
+            inputLayer = self.inputLayers[0]
+            self._sendError(inputLayer, gradientToInput)
         else:
-            for i in range(len(self.inputLayers)):
-                self.inputLayers[i].receiveError(gradientToInput[i])
+            for inputLayer, gradient in zip(self.inputLayers, gradientToInput):
+                self._sendError(inputLayer, gradient)
+
+    def _sendError(self, inputLayer, gradientToInput):
+        if inputLayer.gpuEnabled and not self.gpuEnabled:
+            inputLayer.receiveError(
+                gnp.as_garray(gradientToInput))
+        elif not inputLayer.gpuEnabled and self.gpuEnabled:
+            inputLayer.receiveError(
+                gnp.as_numpy_array(gradientToInput))
+        else:
+            inputLayer.receiveError(gradientToInput)
 
     def getValue(self):
         """
@@ -194,8 +211,8 @@ class Layer:
         """
         return {
             'name': self.name,
-            'useGpu': self.useGpu,
-            'outputGpu': self.gpuEnabled
+            'numNode': self.numNode,
+            'gpuEnabled': self.gpuEnabled
         }
 
     @staticmethod
@@ -207,7 +224,5 @@ class Layer:
         :return:
         """
         return Layer(name=value['name'],
-                     useGpu=value['useGpu'] if value.has_key('useGpu') else
-                     USE_GPU,
-                     gpuEnabled=value['outputGpu'] if value.has_key(
-                         'outputGpu') else USE_GPU)
+                     gpuEnabled=value['useGpu'] if value.has_key('useGpu') else
+                     USE_GPU)
