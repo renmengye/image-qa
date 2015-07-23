@@ -49,6 +49,9 @@ class Weight():
             self._gradient = gradient
 
     def getGradient(self):
+        return self._gradient
+
+    def getGradientNumpy(self):
         if self._useGpu:
             return gnp.as_numpy_array(self._gradient)
         else:

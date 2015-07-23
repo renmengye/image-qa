@@ -85,6 +85,8 @@ class ModelTest(unittest.TestCase):
         model = Model(inputLayers=[inputLayer], outputLayer=outputLayer,
                       lossLayer=MSELossLayer(name='mse'))
         X = np.random.rand(5, 4)
+        if USE_GPU:
+            X = gnp.as_garray(X)
         Y = model.runOnce(X)
         self.assertEqual((5, 5), Y.shape)
 

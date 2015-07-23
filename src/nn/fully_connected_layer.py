@@ -17,6 +17,7 @@ class FullyConnectedLayer(Layer):
         Layer.__init__(self,
                  name=name,
                  useGpu=useGpu,
+                 outputGpu=useGpu,
                  outputdEdX=outputdEdX)
         self._activationFn = activationFn
         self._affine = affine
@@ -34,8 +35,6 @@ class FullyConnectedLayer(Layer):
             else:
                 self.weight.initialize([inputValue.shape[-1], self._numNode])
         if self.useGpu:
-            if type(inputValue) is not gnp.garray:
-                inputValue = gnp.as_garray(inputValue)
             if self._affine:
                 self._inputValue = \
                     gnp.concatenate(
@@ -43,14 +42,9 @@ class FullyConnectedLayer(Layer):
                         axis=-1)
             else:
                 self._inputValue = inputValue
-            self._inputValue = gpu.as_garray(self._inputValue.astype('float32'))
             weightedSum = gpu.dot(self._inputValue, self.weight.get())
-            weightedSum = weightedSum.as_numpy_array(dtype='float32')
             self._outputValue = self._activationFn.forward(weightedSum)
         else:
-            if type(inputValue) is not np.ndarray:
-                print type(inputValue), inputValue, self.name
-                inputValue = gnp.as_numpy_array(inputValue)
             if self._affine:
                 self._inputValue = \
                     np.concatenate(

@@ -1,4 +1,4 @@
-import numpy as np
+from environment import *
 
 class GradientChecker():
     """
@@ -32,17 +32,24 @@ class GradientChecker():
         outputValue = self._layer.forward(inputValue)
         gradientToOutput = -outputValue
         gradient = self._layer.backward(gradientToOutput)
-        gradientNumerical = np.zeros(gradient.size)
+        if self._layer.outputGpu:
+            gradientNumerical = gnp.zeros(gradient.size)
+        else:
+            gradientNumerical = np.zeros(gradient.size)
         inputValueReshape = inputValue.reshape(inputValue.size)
         for i in range(inputValueReshape.size):
             inputValueReshape[i] += self._epsilon
             inputValueTmp = inputValueReshape.reshape(inputValue.shape)
             outputValueTmpPlus = self._layer.forward(inputValueTmp)
-            lossPlus = .5 * np.sum(outputValueTmpPlus ** 2)
             inputValueReshape[i] -= 2 * self._epsilon
             inputValueTmp = inputValueReshape.reshape(inputValue.shape)
             outputValueTmpMinus = self._layer.forward(inputValueTmp)
-            lossMinus = .5 * np.sum(outputValueTmpMinus ** 2)
+            if self._layer.outputGpu:
+                lossPlus = .5 * gnp.sum(outputValueTmpPlus ** 2)
+                lossMinus = .5 * gnp.sum(outputValueTmpMinus ** 2)
+            else:
+                lossPlus = .5 * np.sum(outputValueTmpPlus ** 2)
+                lossMinus = .5 * np.sum(outputValueTmpMinus ** 2)
             gradientNumerical[i] = (lossPlus - lossMinus)\
                                    / 2 / self._epsilon
         return gradient, gradientNumerical.reshape(gradient.shape)
@@ -62,7 +69,10 @@ class GradientChecker():
         self._layer.backward(gradientToOutput)
         self._layer.weight.update()
         gradient = self._layer.weight.getGradient()
-        gradientNumerical = np.zeros(gradient.size)
+        if self._layer.useGpu:
+            gradientNumerical = gnp.zeros(gradient.size)
+        else:
+            gradientNumerical = np.zeros(gradient.size)
         weight = self._layer.weight.get()
         weightReshape = weight.reshape(weight.size)
         for i in range(weightReshape.size):
@@ -70,12 +80,16 @@ class GradientChecker():
             weightTmp = weightReshape.reshape(weight.shape)
             self._layer.weight.set(weightTmp)
             outputValueTmpPlus = self._layer.forward(inputValue)
-            lossPlus = .5 * np.sum(outputValueTmpPlus ** 2)
             weightReshape[i] -= 2 * self._epsilon
             weightTmp = weightReshape.reshape(weight.shape)
             self._layer.weight.set(weightTmp)
             outputValueTmpMinus = self._layer.forward(inputValue)
-            lossMinus = .5 * np.sum(outputValueTmpMinus ** 2)
+            if self._layer.outputGpu:
+                lossPlus = .5 * gnp.sum(outputValueTmpPlus ** 2)
+                lossMinus = .5 * gnp.sum(outputValueTmpMinus ** 2)
+            else:
+                lossPlus = .5 * np.sum(outputValueTmpPlus ** 2)
+                lossMinus = .5 * np.sum(outputValueTmpMinus ** 2)
             gradientNumerical[i] = (lossPlus - lossMinus)\
                                    / 2 / self._epsilon
         return gradient, gradientNumerical.reshape(gradient.shape)
@@ -96,7 +110,7 @@ class GradientChecker():
         for i in range(gradient.size):
             testClass.assertTrue(
                 (gradient[i] == 0 and gradientNumerical[i] == 0) or
-                (np.abs(gradient[i] / gradientNumerical[i] - 1) <
+                (abs(gradient[i] / gradientNumerical[i] - 1) <
                  self._tolerance))
 
     def runInput(self, testClass, inputValue):
