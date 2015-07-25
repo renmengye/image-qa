@@ -62,9 +62,9 @@ class SigmoidActivationFn(ActivationFn):
 
     def forward(self, inputValue):
         if self.gpuEnabled:
-            self._outputValue = 1 / (1 + gnp.exp(inputValue))
+            self._outputValue = 1 / (1 + gnp.exp(-inputValue))
         else:
-            self._outputValue = 1 / (1 + np.exp(inputValue))
+            self._outputValue = 1 / (1 + np.exp(-inputValue))
         return self._outputValue
 
     def backward(self, gradientToOutput):

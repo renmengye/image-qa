@@ -5,44 +5,70 @@ class GradientChecker():
     Utility for checking gradient computation in a layer using finite
     difference.
     """
-    def __init__(self, layer, tolerance=1e-4, epsilon=1e-5):
+    def __init__(self, layer, tolerance=None, epsilon=None):
         """
         Initialize the gradient checker with configurations.
         :param layer: a subclass instance of Layer
         :param tolerance: double, relative difference allowed between
-        expected and actual gradient, recommend 0.0001 for CPU and 0.1 for GPU.
-        :param epsilon: double, finite difference step, recommend 0.00001 for 
+        expected and actual gradient, recommend 0.001 for CPU and 0.1 for GPU.
+        :param epsilon: double, finite difference step, recommend 0.000001 for
         CPU and 0.01 for GPU.
         :return:
         """
-        self._tolerance = tolerance
-        self._epsilon = epsilon
+        if tolerance is None:
+            if USE_GPU:
+                self._tolerance = 1e-1
+            else:
+                self._tolerance = 1e-3
+        else:
+            self._tolerance = tolerance
+        if epsilon is None:
+            if USE_GPU:
+                self._epsilon = 1e-2
+            else:
+                self._epsilon = 1e-6
+        else:
+            self._epsilon = epsilon
         self._layer = layer
 
-    def computeGradientToInput(self, inputValue):
+    def runGradientToInput(self, inputValue):
+        outputValue = self._layer.forward(inputValue)
+        gradientToOutput = outputValue
+        gradient = self._layer.backward(gradientToOutput)
+        return gradient
+
+    def runGradientToWeight(self, inputValue):
+        outputValue = self._layer.forward(inputValue)
+        gradientToOutput = outputValue
+        self._layer.backward(gradientToOutput)
+        if self._layer.weight.shared:
+            self._layer.weight.update()
+        gradient = self._layer.weight.getGradient()
+        return gradient
+
+    def computeGradientToInput(self, inputValue, iterValue):
         """
         Compute the gradient and numerical gradient w.r.t. the input
         vector evaluated at certain input value. Internally it uses a sum of
         squares cost function with target to be the zero vector.
-        :param inputValue: numpy.ndarray or gnumpy.garray object, input value
+        :param inputValue: numpy.ndarray or gnumpy.garray or list, input value
         to the layer.
+        :param iterValue: numpy.ndarray or gnumpy.garray, input value to
+        iterate.
         :return: 2-tuple, gradient computed by the layer, and numerical
         gradient computed by finite difference, both in numpy.ndarray format.
         """
-        outputValue = self._layer.forward(inputValue)
-        gradientToOutput = -outputValue
-        gradient = self._layer.backward(gradientToOutput)
+        iterValueReshape = iterValue.reshape(iterValue.size)
         if self._layer.gpuEnabled:
-            gradientNumerical = gnp.zeros(gradient.size)
+            gradientNumerical = gnp.zeros(iterValue.size)
         else:
-            gradientNumerical = np.zeros(gradient.size)
-        inputValueReshape = inputValue.reshape(inputValue.size)
-        for i in range(inputValueReshape.size):
-            inputValueReshape[i] += self._epsilon
-            inputValueTmp = inputValueReshape.reshape(inputValue.shape)
+            gradientNumerical = np.zeros(iterValue.size)
+        for i in range(iterValueReshape.size):
+            iterValueReshape[i] += self._epsilon
+            inputValueTmp = iterValueReshape.reshape(iterValue.shape)
             outputValueTmpPlus = self._layer.forward(inputValueTmp)
-            inputValueReshape[i] -= 2 * self._epsilon
-            inputValueTmp = inputValueReshape.reshape(inputValue.shape)
+            iterValueReshape[i] -= 2 * self._epsilon
+            inputValueTmp = iterValueReshape.reshape(iterValue.shape)
             outputValueTmpMinus = self._layer.forward(inputValueTmp)
             if self._layer.gpuEnabled:
                 lossPlus = .5 * gnp.sum(outputValueTmpPlus ** 2)
@@ -52,7 +78,7 @@ class GradientChecker():
                 lossMinus = .5 * np.sum(outputValueTmpMinus ** 2)
             gradientNumerical[i] = (lossPlus - lossMinus)\
                                    / 2 / self._epsilon
-        return gradient, gradientNumerical.reshape(gradient.shape)
+        return gradientNumerical.reshape(iterValue.shape)
 
     def computeGradientToWeight(self, inputValue):
         """
@@ -64,16 +90,11 @@ class GradientChecker():
         :return: 2-tuple, gradient compute by the layer, and numerical
         gradient computed by finite difference, both in numpy.ndarray format.
         """
-        outputValue = self._layer.forward(inputValue)
-        gradientToOutput = -outputValue
-        self._layer.backward(gradientToOutput)
-        self._layer.weight.update()
-        gradient = self._layer.weight.getGradient()
-        if self._layer.gpuEnabled:
-            gradientNumerical = gnp.zeros(gradient.size)
-        else:
-            gradientNumerical = np.zeros(gradient.size)
         weight = self._layer.weight.get()
+        if self._layer.gpuEnabled:
+            gradientNumerical = gnp.zeros(weight.size)
+        else:
+            gradientNumerical = np.zeros(weight.size)
         weightReshape = weight.reshape(weight.size)
         for i in range(weightReshape.size):
             weightReshape[i] += self._epsilon
@@ -92,7 +113,7 @@ class GradientChecker():
                 lossMinus = .5 * np.sum(outputValueTmpMinus ** 2)
             gradientNumerical[i] = (lossPlus - lossMinus)\
                                    / 2 / self._epsilon
-        return gradient, gradientNumerical.reshape(gradient.shape)
+        return gradientNumerical.reshape(weight.shape)
 
     def checkGradient(self, testClass, gradient, gradientNumerical):
         """
@@ -119,12 +140,20 @@ class GradientChecker():
         value and check the correctness
         :param testClass: A unittest.TestCase subclass that has assertTrue
         method.
-        :param inputValue: numpy.ndarray or gnumpy.garray, input value to the
-        layer.
+        :param inputValue: numpy.ndarray or gnumpy.garray or list, input value
+        to the layer.
         :return:
         """
-        grd, grdNum = self.computeGradientToInput(inputValue)
-        self.checkGradient(testClass, grd, grdNum)
+        grd = self.runGradientToInput(inputValue)
+        if type(inputValue) is list:
+            grdNum = []
+            for i, inputValueItem in enumerate(inputValue):
+                grdNum.append(
+                    self.computeGradientToInput(inputValue, inputValueItem))
+                self.checkGradient(testClass, grd[i], grdNum[i])
+        else:
+            grdNum = self.computeGradientToInput(inputValue, inputValue)
+            self.checkGradient(testClass, grd, grdNum)
 
     def runWeight(self, testClass, inputValue):
         """
@@ -136,7 +165,8 @@ class GradientChecker():
         layer.
         :return:
         """
-        grd, grdNum = self.computeGradientToWeight(inputValue)
+        grd = self.runGradientToWeight(inputValue)
+        grdNum = self.computeGradientToWeight(inputValue)
         self.checkGradient(testClass, grd, grdNum)
 
     def runAll(self, testClass, inputValue):

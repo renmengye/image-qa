@@ -2,6 +2,9 @@ from environment import *
 from layer import Layer
 
 class FullyConnectedLayer(Layer):
+    """
+
+    """
     def __init__(self,
                  name,
                  activationFn,
@@ -10,6 +13,17 @@ class FullyConnectedLayer(Layer):
                  hasBias=True,
                  outputdEdX=True,
                  gpuEnabled=USE_GPU):
+        """
+
+        :param name:
+        :param activationFn:
+        :param numNode:
+        :param weight:
+        :param hasBias:
+        :param outputdEdX:
+        :param gpuEnabled:
+        :return:
+        """
         Layer.__init__(self,
                  name=name,
                  numNode=numNode,
@@ -23,6 +37,11 @@ class FullyConnectedLayer(Layer):
                             'configuration as Layer ' + self.name)
 
     def init(self, inputNumNode=None):
+        """
+
+        :param inputNumNode:
+        :return:
+        """
         if len(self.inputLayers) > 0:
             inputNumNode = self.inputLayers[0].numNode
         else:
@@ -32,6 +51,11 @@ class FullyConnectedLayer(Layer):
         self._initWeight(inputNumNode)
 
     def _initWeight(self, inputNumNode):
+        """
+
+        :param inputNumNode:
+        :return:
+        """
         if not self.weight.hasInitialized:
             if self._hasBias:
                 self.weight.initialize([inputNumNode + 1, self.numNode])
@@ -39,6 +63,11 @@ class FullyConnectedLayer(Layer):
                 self.weight.initialize([inputNumNode.shape[-1], self.numNode])
 
     def forward(self, inputValue):
+        """
+
+        :param inputValue:
+        :return:
+        """
         if self.gpuEnabled:
             if self._hasBias:
                 self._inputValue = \
@@ -62,20 +91,13 @@ class FullyConnectedLayer(Layer):
         return self._outputValue
 
     def backward(self, gradientToOutput):
-        #######################################################
-        # Attention, may need to convert this to GPU as well! #
-        #######################################################
-        # if self.outputGpu and type(gradientToOutput) is np.ndarray:
-        #     gradientToOutput = gnp.as_garray(gradientToOutput.astype('float32'))
-        # elif not self.outputGpu and type(gradientToOutput) is not np.ndarray:
-        #     gradientToOutput = gnp.as_numpy_array(gradientToOutput)
+        """
 
+        :param gradientToOutput:
+        :return:
+        """
         gradientToWeightedSum = self._activationFn.backward(gradientToOutput)
         if self.gpuEnabled:
-            #################################################################
-            # Attention here, explicit conversion. Want to remove it in the #
-            # future                                                        #
-            #################################################################
             gradient = gnp.dot(self._inputValue.transpose(),
                                gradientToWeightedSum)
             if self._hasBias:

@@ -18,16 +18,7 @@ class FullyConnectedLayerTest(unittest.TestCase):
                                         gdController=None,
                                         shared=False))
         layer.init(inputNumNode=4)
-        if USE_GPU:
-            epsilon = 1e-2
-            tolerance = 1e-1
-        else:
-            epsilon = 1e-5
-            tolerance = 1e-4
-        gradientChecker = GradientChecker(
-                            layer=layer, 
-                            epsilon=epsilon, 
-                            tolerance=tolerance)
+        gradientChecker = GradientChecker(layer=layer)
         X = np.random.rand(5, 4)
         if USE_GPU:
             X = gnp.as_garray(X)

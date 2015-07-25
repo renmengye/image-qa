@@ -87,7 +87,6 @@ class Layer:
         :return:
         """
         self._gradientToOutput = 0.0
-        #self.receivedError = False
 
     def receiveError(self, gradientToOutput):
         """
@@ -96,7 +95,6 @@ class Layer:
         :return:
         """
         self._gradientToOutput += gradientToOutput
-        #self.receivedError = True
 
     def sendError(self, gradientToInput):
         """
@@ -224,5 +222,6 @@ class Layer:
         :return:
         """
         return Layer(name=value['name'],
+                     numNode=value['numNode'],
                      gpuEnabled=value['useGpu'] if value.has_key('useGpu') else
                      USE_GPU)

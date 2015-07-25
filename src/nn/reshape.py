@@ -98,11 +98,9 @@ class TimeFinal(Layer):
     """
     Scans and selects the last timestep.
     """
-    def __init__(self, inputNames, outputDim=0, name=None, outputdEdX=True):
+    def __init__(self, name, outputdEdX=True):
         Layer.__init__(self,
-                       name=name, 
-                       inputNames=inputNames, 
-                       outputDim=outputDim, 
+                       name=name,
                        outputdEdX=outputdEdX)
         self.Xend = 0.0
 
@@ -132,45 +130,3 @@ class TimeFinal(Layer):
             return dEdX
         else:
             return None
-
-class ConcatenationLayer(Layer):
-    def __init__(self, inputNames, axis, name=None):
-        Layer.__init__(self, name=name, inputNames=inputNames, outputDim=0)
-        self.axis = axis
-
-    def getInput(self):
-        if len(self.inputLayers) > 1:
-            self.splX = []
-            for stage in self.inputLayers:
-                X = stage.Y
-                self.splX.append(X)
-            return np.concatenate(self.splX, axis=self.axis)
-        else:
-            return self.inputLayers[0].Y
-
-    def sendError(self, gradientToInput):
-        """
-        Iterates over input list and sends dEdX.
-        """
-        axis = np.mod(self.axis, len(gradientToInput.shape))
-        if len(self.inputLayers) > 1:
-            s = 0
-            for stage in self.inputLayers:
-                s2 = s + stage.Y.shape[self.axis]
-                if axis == 0:
-                    stage.dEdY += gradientToInput[s : s2]
-                elif axis == 1:
-                    stage.dEdY += gradientToInput[:, s : s2]
-                elif axis == 2:
-                    stage.dEdY += gradientToInput[:, :, s : s2]
-                s = s2
-                stage.receivedError = True
-        else:
-            self.inputLayers[0].dEdY += gradientToInput
-            self.inputLayers[0].receivedError = True
-
-    def forward(self, inputValue):
-        return inputValue
-
-    def backward(self, gradientToOutput):
-        return gradientToOutput
