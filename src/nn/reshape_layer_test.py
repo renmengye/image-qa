@@ -11,7 +11,7 @@ class ConcatenationLayerTest(unittest.TestCase):
         gradientChecker = GradientChecker(layer=layer)
         X = np.random.rand(2, 2, 3)
         if USE_GPU:
-            X[0] = gnp.as_garray(X)
+            X = gnp.as_garray(X)
         gradientChecker.runInput(self, X)
 
 if __name__ == '__main__':

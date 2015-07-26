@@ -563,7 +563,13 @@ def sin(x):
  """ This works on garrays, numpy arrays, and numbers, preserving type (though all numbers become floats). """
  return _elementwise__base(x, None, numpy.sin)
  
+def copy(x):
+ """ Just a port of x.copy() """
+ return x.copy()
 
+def reshape(x, shape):
+ """ Just a port of x.reshape(shape) """
+ return x.reshape(shape)
  
  
 

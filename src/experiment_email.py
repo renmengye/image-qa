@@ -9,7 +9,7 @@ def appendList(resultsFolder, name):
         f.write(name + '\n')
 
 if __name__ == '__main__':
-    resultsFolder = '/u/mren/code/image-qa/results'
+    resultsFolder = '../results'
     if len(sys.argv) > 1:
         resultsFolder = sys.argv[1]
     print resultsFolder
