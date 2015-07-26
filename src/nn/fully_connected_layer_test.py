@@ -1,8 +1,9 @@
-from fully_connected_layer import *
+from fully_connected_layer import FullyConnectedLayer
 from activation_fn import SigmoidActivationFn
 from weight import Weight
 from weight_initializer import UniformWeightInitializer
 from gradient_checker import GradientChecker
+from environment import *
 import unittest
 
 class FullyConnectedLayerTest(unittest.TestCase):

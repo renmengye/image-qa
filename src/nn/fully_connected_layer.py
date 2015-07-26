@@ -64,7 +64,7 @@ class FullyConnectedLayer(Layer):
         :param inputNumNode:
         :return:
         """
-        print 'Initiating weights for layer', self.name,
+        print 'Initializing weights for layer', self.name,
         if self._hasBias:
             self.weight.initialize([inputNumNode + 1, self.numNode])
         else:
@@ -77,6 +77,8 @@ class FullyConnectedLayer(Layer):
         :param inputValue:
         :return:
         """
+        if not self.weight.hasInitialized:
+            self._initWeight(inputValue.shape[-1])
         if self.gpuEnabled:
             if self._hasBias:
                 self._inputValue = \
