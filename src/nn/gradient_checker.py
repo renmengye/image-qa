@@ -32,12 +32,22 @@ class GradientChecker():
         self._layer = layer
 
     def runGradientToInput(self, inputValue):
+        """
+
+        :param inputValue:
+        :return:
+        """
         outputValue = self._layer.forward(inputValue)
         gradientToOutput = outputValue
         gradient = self._layer.backward(gradientToOutput)
         return gradient
 
     def runGradientToWeight(self, inputValue):
+        """
+
+        :param inputValue:
+        :return:
+        """
         outputValue = self._layer.forward(inputValue)
         gradientToOutput = outputValue
         self._layer.backward(gradientToOutput)
@@ -66,10 +76,20 @@ class GradientChecker():
         for i in range(iterValueReshape.size):
             iterValueReshape[i] += self._epsilon
             inputValueTmp = iterValueReshape.reshape(iterValue.shape)
-            outputValueTmpPlus = self._layer.forward(inputValueTmp)
+            if self._layer.gpuEnabled:
+                outputValueTmpPlus = gnp.copy(self._layer.forward(
+                    inputValueTmp))
+            else:
+                outputValueTmpPlus = np.copy(self._layer.forward(inputValueTmp))
             iterValueReshape[i] -= 2 * self._epsilon
             inputValueTmp = iterValueReshape.reshape(iterValue.shape)
-            outputValueTmpMinus = self._layer.forward(inputValueTmp)
+            if self._layer.gpuEnabled:
+                outputValueTmpMinus = gnp.copy(self._layer.forward(
+                    inputValueTmp))
+            else:
+                outputValueTmpMinus = np.copy(self._layer.forward(
+                    inputValueTmp))
+            iterValueReshape[i] += self._epsilon
             if self._layer.gpuEnabled:
                 lossPlus = .5 * gnp.sum(outputValueTmpPlus ** 2)
                 lossMinus = .5 * gnp.sum(outputValueTmpMinus ** 2)
@@ -100,11 +120,18 @@ class GradientChecker():
             weightReshape[i] += self._epsilon
             weightTmp = weightReshape.reshape(weight.shape)
             self._layer.weight.set(weightTmp)
-            outputValueTmpPlus = self._layer.forward(inputValue)
+            if self._layer.gpuEnabled:
+                outputValueTmpPlus = gnp.copy(self._layer.forward(inputValue))
+            else:
+                outputValueTmpPlus = np.copy(self._layer.forward(inputValue))
             weightReshape[i] -= 2 * self._epsilon
             weightTmp = weightReshape.reshape(weight.shape)
             self._layer.weight.set(weightTmp)
-            outputValueTmpMinus = self._layer.forward(inputValue)
+            if self._layer.gpuEnabled:
+                outputValueTmpMinus = gnp.copy(self._layer.forward(inputValue))
+            else:
+                outputValueTmpMinus = np.copy(self._layer.forward(inputValue))
+            weightReshape[i] += self._epsilon
             if self._layer.gpuEnabled:
                 lossPlus = .5 * gnp.sum(outputValueTmpPlus ** 2)
                 lossMinus = .5 * gnp.sum(outputValueTmpMinus ** 2)

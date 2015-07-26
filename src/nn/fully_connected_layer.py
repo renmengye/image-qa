@@ -42,13 +42,21 @@ class FullyConnectedLayer(Layer):
         :param inputNumNode:
         :return:
         """
-        if len(self.inputLayers) > 0:
-            inputNumNode = self.inputLayers[0].numNode
+        skip = False
+        if not self.weight.hasInitialized:
+            if len(self.inputLayers) > 0:
+                if self.inputLayers[0].numNode > 0:
+                    inputNumNode = self.inputLayers[0].numNode
+                else:
+                    skip = True
+            else:
+                if inputNumNode is None:
+                    skip = True
+        if skip:
+            # Will initiate lazily at run time.
+            print 'Skipped weight initialization for layer', self.name
         else:
-            if inputNumNode is None:
-                raise Exception('Need to specify input node dimension if no '
-                                'connection is present.')
-        self._initWeight(inputNumNode)
+            self._initWeight(inputNumNode)
 
     def _initWeight(self, inputNumNode):
         """
@@ -56,11 +64,12 @@ class FullyConnectedLayer(Layer):
         :param inputNumNode:
         :return:
         """
-        if not self.weight.hasInitialized:
-            if self._hasBias:
-                self.weight.initialize([inputNumNode + 1, self.numNode])
-            else:
-                self.weight.initialize([inputNumNode.shape[-1], self.numNode])
+        print 'Initiating weights for layer', self.name,
+        if self._hasBias:
+            self.weight.initialize([inputNumNode + 1, self.numNode])
+        else:
+            self.weight.initialize([inputNumNode.shape[-1], self.numNode])
+        print self.weight.get().shape
 
     def forward(self, inputValue):
         """

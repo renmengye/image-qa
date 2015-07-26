@@ -38,8 +38,7 @@ class TimeReverse(Layer):
     def __init__(self, inputNames, outputDim=0, name=None, outputdEdX=True):
         Layer.__init__(self,
                        name=name,
-                       inputNames=inputNames,
-                       outputDim=outputDim,
+                       numNode=outputDim,
                        outputdEdX=outputdEdX)
 
     def forward(self, inputValue):
