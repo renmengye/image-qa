@@ -56,18 +56,21 @@ class GradientChecker():
         gradient = self._layer.weight.getGradient()
         return gradient
 
-    def computeGradientToInput(self, inputValue, iterValue):
+    def computeGradientToInput(self, inputValue, iterIdx):
         """
         Compute the gradient and numerical gradient w.r.t. the input
         vector evaluated at certain input value. Internally it uses a sum of
         squares cost function with target to be the zero vector.
         :param inputValue: numpy.ndarray or gnumpy.garray or list, input value
         to the layer.
-        :param iterValue: numpy.ndarray or gnumpy.garray, input value to
-        iterate.
+        :param iterIdx: int, input value list index to iterate.
         :return: 2-tuple, gradient computed by the layer, and numerical
         gradient computed by finite difference, both in numpy.ndarray format.
         """
+        if iterIdx is None:
+            iterValue = inputValue
+        else:
+            iterValue = inputValue[iterIdx]
         iterValueReshape = iterValue.reshape(iterValue.size)
         if self._layer.gpuEnabled:
             gradientNumerical = gnp.zeros(iterValue.size)
@@ -75,21 +78,31 @@ class GradientChecker():
             gradientNumerical = np.zeros(iterValue.size)
         for i in range(iterValueReshape.size):
             iterValueReshape[i] += self._epsilon
-            inputValueTmp = iterValueReshape.reshape(iterValue.shape)
-            if self._layer.gpuEnabled:
-                outputValueTmpPlus = gnp.copy(self._layer.forward(
-                    inputValueTmp))
+            iterValueTmp = iterValueReshape.reshape(iterValue.shape)
+            if iterIdx is None:
+                inputValue = iterValueTmp
             else:
-                outputValueTmpPlus = np.copy(self._layer.forward(inputValueTmp))
+                inputValue[iterIdx] = iterValueTmp
+            if self._layer.gpuEnabled:
+                outputValueTmpPlus = gnp.copy(self._layer.forward(inputValue))
+            else:
+                outputValueTmpPlus = np.copy(self._layer.forward(inputValue))
             iterValueReshape[i] -= 2 * self._epsilon
-            inputValueTmp = iterValueReshape.reshape(iterValue.shape)
-            if self._layer.gpuEnabled:
-                outputValueTmpMinus = gnp.copy(self._layer.forward(
-                    inputValueTmp))
+            iterValueTmp = iterValueReshape.reshape(iterValue.shape)
+            if iterIdx is None:
+                inputValue = iterValueTmp
             else:
-                outputValueTmpMinus = np.copy(self._layer.forward(
-                    inputValueTmp))
+                inputValue[iterIdx] = iterValueTmp
+            if self._layer.gpuEnabled:
+                outputValueTmpMinus = gnp.copy(self._layer.forward(inputValue))
+            else:
+                outputValueTmpMinus = np.copy(self._layer.forward(inputValue))
             iterValueReshape[i] += self._epsilon
+            iterValueTmp = iterValueReshape.reshape(iterValue.shape)
+            if iterIdx is None:
+                inputValue = iterValueTmp
+            else:
+                inputValue[iterIdx] = iterValueTmp
             if self._layer.gpuEnabled:
                 lossPlus = .5 * gnp.sum(outputValueTmpPlus ** 2)
                 lossMinus = .5 * gnp.sum(outputValueTmpMinus ** 2)
@@ -174,12 +187,12 @@ class GradientChecker():
         grd = self.runGradientToInput(inputValue)
         if type(inputValue) is list:
             grdNum = []
-            for i, inputValueItem in enumerate(inputValue):
+            for i in range(len(inputValue)):
                 grdNum.append(
-                    self.computeGradientToInput(inputValue, inputValueItem))
+                    self.computeGradientToInput(inputValue, iterIdx=i))
                 self.checkGradient(testClass, grd[i], grdNum[i])
         else:
-            grdNum = self.computeGradientToInput(inputValue, inputValue)
+            grdNum = self.computeGradientToInput(inputValue, iterIdx=None)
             self.checkGradient(testClass, grd, grdNum)
 
     def runWeight(self, testClass, inputValue):

@@ -1,23 +1,36 @@
-from layer import *
+from layer import Layer
 
 class ActivationLayer(Layer):
+    """
+
+    """
     def __init__(self,
+                 name,
                  activationFn,
-                 inputNames,
-                 outputDim,
-                 defaultValue=0.0,
-                 outputdEdX=True,
-                 name=None):
-        Layer.__init__(self,
-                 name=name,
-                 inputNames=inputNames,
-                 outputDim=outputDim,
-                 defaultValue=defaultValue,
-                 outputdEdX=outputdEdX)
+                 numNode):
+        """
+
+        :param name:
+        :param activationFn:
+        :param numNode:
+        :return:
+        """
+        Layer.__init__(self, name=name, numNode=numNode)
         self.activationFn = activationFn
+
     def forward(self, inputValue):
+        """
+
+        :param inputValue:
+        :return:
+        """
         self._outputValue = self.activationFn.forward(inputValue)
         return self._outputValue
+
     def backward(self, gradientToOutput):
-        self.dEdW = 0
-        return self.activationFn.backward(gradientToOutput, self._outputValue, 0)
+        """
+
+        :param gradientToOutput:
+        :return:
+        """
+        return self.activationFn.backward(gradientToOutput)

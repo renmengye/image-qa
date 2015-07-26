@@ -1,10 +1,11 @@
+import unittest
+
 from lstm_old import *
 from lstm import *
 from fully_connected_layer import *
 from embedding_layer import *
 from inner_prod import *
-from reshape import *
-from cosine_similarity_layer import *
+from src.nn.legacy.reshape import *
 from sum import *
 from element_wise import *
 from activation_layer import *
@@ -13,12 +14,10 @@ from activation_fn import *
 from selector import *
 from convolution_layer import *
 from mean_pooling_layer import *
-from max_pooling_layer import *
+from src.nn.legacy.max_pooling_layer import *
 from normalization_layer import *
 from ordinal_regression_layer import *
 
-import unittest
-import numpy as np
 
 class StageTests(unittest.TestCase):
     def calcgrd(self, X, Xpart, T, eps=1e-3, weights=None):

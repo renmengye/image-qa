@@ -1,7 +1,9 @@
+import unittest
+
 from lstm_old import *
 from lstm import *
-import stage_tests
-import unittest
+from src.nn.legacy import stage_tests
+
 
 class RecurrentContainer_Tests(stage_tests.StageTests):
     def setUp(self):

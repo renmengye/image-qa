@@ -1,6 +1,8 @@
 import yaml
-import layer_factory
-from graph_model import *
+
+from src.nn.legacy.graph_model import *
+from src.nn.legacy import layer_factory
+
 
 def load(modelSpecFilename):
     """
@@ -21,7 +23,7 @@ def load(modelSpecFilename):
     modelStages = []
     for s in modelDict['stages']:
         modelStages.append(layer_factory.routeStage(s))
-    costFn=layer_factory.routeFn(modelDict['costFn'])
+    costFn= layer_factory.routeFn(modelDict['costFn'])
 
     if modelDict.has_key('decisionFn'):
         decisionFn = layer_factory.routeFn(modelDict['decisionFn'])

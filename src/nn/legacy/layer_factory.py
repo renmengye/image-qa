@@ -1,26 +1,23 @@
+from scipy import sparse
+import h5py
+
 from lstm_old import *
 from embedding_layer import *
-from reshape import *
 from inner_prod import *
 from dropout_layer import *
 from sequential_container import *
 from const_weights import *
-from constant_layer import *
 from cosine_similarity_layer import *
 from lstm import *
 from sum_prod import *
 from selector import *
 from sum2 import *
 from convolution_layer import *
-from max_pooling_layer import *
+from src.nn.legacy.max_pooling_layer import *
 from mean_pooling_layer import *
 from normalization_layer import *
 from ordinal_regression_layer import *
 
-from scipy import sparse
-
-import h5py
-import pickle
 
 def routeFn(name):
     if name == 'crossEntOne':

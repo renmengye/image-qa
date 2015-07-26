@@ -1,10 +1,12 @@
-from sequential_container import *
+import unittest
+
+from src.nn.legacy.sequential_container import *
 from lstm_old import *
 from dropout_layer import *
 from reshape import *
 from embedding_layer import *
 from lstm import *
-import unittest
+
 
 class LSTM_Recurrent_Real_Tests(unittest.TestCase):
     def test_all(self):

@@ -1,8 +1,7 @@
-from recurrent_container import *
+from src.nn.legacy.recurrent_container import *
 from element_wise import *
-from sum import *
 from activation_layer import *
-from reshape import *
+from src.nn.legacy.reshape import *
 
 class LSTM(RecurrentContainer):
     def __init__(self,
