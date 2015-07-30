@@ -1,23 +1,19 @@
-from layer import *
+from layer import Layer
+from environment import *
 
 class NormalizationLayer(Layer):
     def __init__(self,
-                 outputDim,
+                 name,
                  mean,
                  std,
-                 name=None,
-                 inputNames=None,
-                 outputdEdX=True):
+                 numNode,
+                 gpuEnabled=USE_GPU):
         Layer.__init__(self,
                  name=name,
-                 inputNames=inputNames,
-                 outputDim=outputDim,
-                 outputdEdX=outputdEdX)
+                 numNode=numNode,
+                 gpuEnabled=gpuEnabled)
         self.mean = mean
         self.std = std
-        self._inputValue = 0
-        self._outputValue = 0
-        pass
 
     def forward(self, inputValue):
         return (inputValue - self.mean) / self.std

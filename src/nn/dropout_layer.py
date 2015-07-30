@@ -1,4 +1,5 @@
-from layer import *
+from layer import Layer
+from environment import *
 
 class DropoutLayer(Layer):
     def __init__(self,
@@ -20,6 +21,12 @@ class DropoutLayer(Layer):
         self.seed = initSeed
 
     def forward(self, inputValue):
+        """
+
+        :param inputValue:
+        :return:
+        """
+        ### ADD GPU SUPPORT!
         if self.dropoutRate > 0.0 and self.isTraining:
             if self.debug:
                 self.random = np.random.RandomState(self.seed)
