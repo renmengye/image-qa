@@ -16,9 +16,9 @@ class FullyConnectedLayerTest(unittest.TestCase):
                                         initializer=UniformWeightInitializer(
                                             limit=[-0.5, 0.5],
                                             seed=2),
-                                        gdController=None,
+                                        controller=None,
                                         shared=False))
-        layer.init(inputNumNode=4)
+        layer.initialize(inputNumNode=4)
         gradientChecker = GradientChecker(layer=layer)
         X = np.random.rand(5, 4)
         if USE_GPU:

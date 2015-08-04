@@ -157,7 +157,7 @@ class RecurrentAdapter(Layer, RecurrentStage):
 
     def syncWeights(self):
         for t in range(1, self.timespan):
-            self.stages[t].loadWeights(self.stages[0].getWeights())
+            self.stages[t].deserializeWeights(self.stages[0].getWeights())
 
     def updateWeights(self):
         if self.stages[0].learningRate > 0.0:
@@ -174,7 +174,7 @@ class RecurrentAdapter(Layer, RecurrentStage):
 
     def loadWeights(self, W):
         for t in range(0, self.timespan):
-            self.stages[t].loadWeights(W)
+            self.stages[t].deserializeWeights(W)
 
     def getGradient(self):
         return self.stages[0].getGradient()

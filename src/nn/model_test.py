@@ -1,16 +1,22 @@
-from model import *
-from fully_connected_layer import *
-from weight import *
-from activation_fn import *
-from weight_initializer import *
-from mse_loss_layer import *
+from model import Model
+from layer import Layer
+from fully_connected_layer import FullyConnectedLayer
+from weight import Weight
+from weight_initializer import UniformWeightInitializer
+from mse_loss_layer import MSELossLayer
+from activation_fn import SigmoidActivationFn
+from environment import *
 import unittest
+
 
 class ModelTest(unittest.TestCase):
     def testTraverseSequential(self):
-        lastLayer = Layer(name='layer1', numNode=0)\
-            .connect(Layer(name='layer2', numNode=0))\
-            .connect(Layer(name='layer3', numNode=0))
+        lastLayer = Layer(name='layer1',
+                          numNode=0).connect(
+            Layer(name='layer2',
+                  numNode=0)).connect(
+            Layer(name='layer3',
+                  numNode=0))
         order = Model._computeTraversalOrder(lastLayer)
         self.assertEqual(3, len(order))
         self.assertEqual('layer1', order[0].name)
@@ -19,12 +25,15 @@ class ModelTest(unittest.TestCase):
 
     def testTraverseParallel(self):
         layer1 = Layer(name='layer1', numNode=0)
-        layer2a = layer1\
-            .connect(Layer(name='layer2a', numNode=0))
-        layer2b = layer1\
-            .connect(Layer(name='layer2b', numNode=0))
-        layer3 = layer2a\
-            .connect(Layer(name='layer3', numNode=0))
+        layer2a = layer1.connect(
+            Layer(name='layer2a',
+                  numNode=0))
+        layer2b = layer1.connect(
+            Layer(name='layer2b',
+                  numNode=0))
+        layer3 = layer2a.connect(
+            Layer(name='layer3',
+                  numNode=0))
         layer3.addInput(layer2b)
         order = Model._computeTraversalOrder(layer3)
         self.assertEqual(4, len(order))
@@ -63,17 +72,17 @@ class ModelTest(unittest.TestCase):
                                         initializer=UniformWeightInitializer(
                                             limit=[-0.5, 0.5],
                                             seed=2),
-                                        gdController=None,
+                                        controller=None,
                                         shared=False))
-        outputLayer = inputLayer.connect(FullyConnectedLayer(name='fc2',
-                                     activationFn=SigmoidActivationFn(),
-                                     numNode=3,
-                                     weight=Weight(
-                                         name='fc2',
-                                        initializer=UniformWeightInitializer(
-                                            limit=[-0.5, 0.5],
+        outputLayer = inputLayer.connect(
+            FullyConnectedLayer(name='fc2',
+                                activationFn=SigmoidActivationFn(),
+                                numNode=3,
+                                weight=Weight(name='fc2',
+                                    initializer=UniformWeightInitializer(
+                                    limit=[-0.5, 0.5],
                                             seed=2),
-                                        gdController=None,
+                                        controller=None,
                                         shared=False)))\
                                 .connect(FullyConnectedLayer(name='fc3',
                                      activationFn=SigmoidActivationFn(),
@@ -83,7 +92,7 @@ class ModelTest(unittest.TestCase):
                                         initializer=UniformWeightInitializer(
                                             limit=[-0.5, 0.5],
                                             seed=2),
-                                        gdController=None,
+                                        controller=None,
                                         shared=False)))
         model = Model(inputLayers=[inputLayer], outputLayer=outputLayer,
                       lossLayer=MSELossLayer(name='mse'))

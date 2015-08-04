@@ -1,6 +1,8 @@
-from identity_layer import *
+from layer import WeightLayer
+from container import Container
+from identity_layer import IdentityLayer
 
-class Model():
+class Model(Container):
     """
     bunch of layers.
     output value.
@@ -25,6 +27,7 @@ class Model():
                                           numNode=outputLayer.numNode)
         self._outputLayer = outputLayer
         self._lossLayer = lossLayer
+        self._weights = {}
         for layer in inputLayers:
             layer.addInput(self._inputLayer)
 
@@ -35,35 +38,14 @@ class Model():
         else:
             # Inference model only
             self.layers = self._computeTraversalOrder(outputLayer)
-        # Initialize weights
+
+        # Check for layer name conflict
+        self.layerDict = {}
         for layer in self.layers:
-            layer.init()
-
-    @staticmethod
-    def _computeTraversalOrder(lastLayer):
-        """
-        Requires all layers have unique name.
-        :param lastLayer:
-        :return:
-        """
-        workingList = [lastLayer]
-        traversedMap = {}
-        counter = 0
-        while len(workingList) > 0:
-            currentLayer = workingList[0]
-            if not traversedMap.has_key(currentLayer):
-                traversedMap[currentLayer] = counter
-                counter += 1
-            workingList.remove(currentLayer)
-            for previousLayer in currentLayer.inputLayers:
-                # Fix if the children is ahead of the parent.
-                if traversedMap.has_key(previousLayer):
-                    traversedMap.pop(previousLayer)
-                workingList.append(previousLayer)
-        sortedOrder = sorted(traversedMap.keys(),
-                             key=lambda x:-traversedMap[x])
-        return sortedOrder
-
+            if layer.name in self.layerDict:
+                raise Exception('Layer name conflict: ' + layer.name)
+            else:
+                self.layerDict[layer.name] = layer
 
     def trainStep(self, inputValue, targetValue, exampleWeights=None):
         """
@@ -81,6 +63,12 @@ class Model():
         for layer in reversed(self.layers):
             layer.graphBackward()
 
+    def forward(self, inputValue):
+        pass
+
+    def backward(self):
+        pass
+
     def runOnce(self, inputValue):
         """
         Run inference in the network.
@@ -97,15 +85,3 @@ class Model():
     def getLoss(self):
         return self._lossLayer.getLoss()
 
-    def toDict(self, filename):
-        pass
-
-    @staticmethod
-    def fromDict(self, filename):
-        pass
-
-    def serializeWeights(self):
-        pass
-
-    def loadWeights(self, weights):
-        pass

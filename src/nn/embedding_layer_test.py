@@ -15,9 +15,9 @@ class EmbeddingLayerTest(unittest.TestCase):
                                    initializer=UniformWeightInitializer(
                                        limit=[-0.5, 0.5],
                                        seed=2),
-                                   gdController=None,
+                                   controller=None,
                                    shared=False))
-        layer.init()
+        layer.initialize()
         gradientChecker = GradientChecker(layer=layer)
         X = (np.random.rand(5, 1) * 3).astype('int') + 1
         gradientChecker.runWeight(self, X)

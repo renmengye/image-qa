@@ -34,18 +34,18 @@ class StageTests(unittest.TestCase):
             for i in range(0, W.shape[0]):
                 for j in range(0, W.shape[1]):
                     W[i,j] += eps
-                    self.stage.loadWeights(W)
+                    self.stage.deserializeWeights(W)
                     Y = self.model.forward(X)
                     Etmp1, d1 = self.costFn(Y, T, weights)
 
                     W[i,j] -= 2 * eps
-                    self.stage.loadWeights(W)
+                    self.stage.deserializeWeights(W)
                     Y = self.model.forward(X)
                     Etmp2, d2 = self.costFn(Y, T, weights)
 
                     dEdWTmp[i,j] = (Etmp1 - Etmp2) / 2.0 / eps
                     W[i,j] += eps
-                    self.stage.loadWeights(W)
+                    self.stage.deserializeWeights(W)
         else:
             dEdW = 0
             dEdWTmp = 0

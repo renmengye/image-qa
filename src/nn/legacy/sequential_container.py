@@ -39,4 +39,4 @@ class SequentialContainer(Layer):
 
     def loadWeights(self, W):
         for i in range(W.shape[0]):
-            self.stages[i].loadWeights(W[i])
+            self.stages[i].deserializeWeights(W[i])

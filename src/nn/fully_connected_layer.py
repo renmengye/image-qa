@@ -1,7 +1,7 @@
 from environment import *
-from layer import Layer
+from layer import WeightLayer
 
-class FullyConnectedLayer(Layer):
+class FullyConnectedLayer(WeightLayer):
     """
 
     """
@@ -24,19 +24,19 @@ class FullyConnectedLayer(Layer):
         :param gpuEnabled:
         :return:
         """
-        Layer.__init__(self,
+        WeightLayer.__init__(self,
                  name=name,
                  numNode=numNode,
+                 weight=weight,
                  gpuEnabled=gpuEnabled,
                  outputdEdX=outputdEdX)
         self._activationFn = activationFn
         self._hasBias = hasBias
-        self.weight = weight
         if self._activationFn.gpuEnabled != self.gpuEnabled:
             raise Exception('Activation function does not have the same GPU '
                             'configuration as Layer ' + self.name)
 
-    def init(self, inputNumNode=None):
+    def initialize(self, inputNumNode=None):
         """
 
         :param inputNumNode:

@@ -7,7 +7,7 @@ import nn
 
 def extractWeightsVISBLSTM(modelSpecFile, weights, outFile):
     model = nn.load(modelSpecFile)
-    model.loadWeights(weights)
+    model.deserializeWeights(weights)
     imgMapFirst = model.stageDict['imgMapFirst']
     imgMapLast = model.stageDict['imgMapLast']
     txtDict = model.stageDict['txtDict']

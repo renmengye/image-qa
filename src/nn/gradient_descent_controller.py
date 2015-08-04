@@ -1,43 +1,79 @@
 from environment import *
 
-class gradientDescentController():
+class GradientDescentControllerFactory():
+    singletonControllers = {}
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def createFromSpec(name, spec):
+        if spec['name'] in \
+                GradientDescentControllerFactory.singletonControllers:
+            return GradientDescentControllerFactory.\
+                singletonControllers[spec['name']]
+        if spec['type'] != 'sgd':
+            raise Exception(
+                'Gradient descent controller type not implemented: ' +
+                spec['type'])
+        learningRate = 0.0 \
+            if 'learningRate' not in spec else spec['learningRate']
+        momentum = 0.0 if 'momentum' not in spec else spec['momentum']
+        gradientClip = 0.0 if 'gradientClip' not in spec else spec['gradientClip']
+        weightClip = 0.0 if 'weightClip' not in spec else spec['weightClip']
+        weightRegConst = 0.0 \
+            if 'weightRegConst' not in spec else spec['weightRegConst']
+        gpuEnabled = USE_GPU if 'gpuEnabled' not in spec else spec['gpuEnabled']
+        controller = SGDController(name=spec['name'],
+                                   learningRate=learningRate,
+                                   momentum=momentum,
+                                   gradientClip=gradientClip,
+                                   weightClip=weightClip,
+                                   weightRegConst=weightRegConst,
+                                   gpuEnabled=gpuEnabled)
+        GradientDescentControllerFactory.\
+            singletonControllers[spec['name']] = controller
+
+class SGDController():
     def __init__(self,
-                 learningRate,
-                 momentum,
-                 gradientClip,
-                 weightClip,
-                 weightRegConst,
-                 learningRateAnnealConst,
-                 deltaMomentum,
-                 useGpu):
+                 name,
+                 learningRate=0.0,
+                 momentum=0.0,
+                 gradientClip=0.0,
+                 weightClip=0.0,
+                 weightRegConst=0.0,
+                 # learningRateAnnealConst,
+                 # deltaMomentum,
+                 gpuEnabled=USE_GPU):
         self._learningRate = learningRate
         self._startLearningRate = learningRate
         self._momentum = momentum
         self._gradientClip = gradientClip
         self._weightClip = weightClip
         self._weightRegConst = weightRegConst
-        self._learningRateAnnealConst = learningRateAnnealConst
-        self._deltaMomentum = deltaMomentum
-        self._useGpu = useGpu
+        self._learningRateAnnealConst = 0.0
+        self._deltaMomentum = 0.0
+        #self._learningRateAnnealConst = learningRateAnnealConst
+        #self._deltaMomentum = deltaMomentum
+        self._gpuEnabled = gpuEnabled
         self._gradientHistory = 0
         self._gradientNorm = 0
         self._weightNorm = 0
         self._counter = 0
 
     def getGradientHistory(self):
-        if self._useGpu:
+        if self._gpuEnabled:
             return gnp.as_numpy_array(self._gradientHistory)
         else:
             return self._gradientHistory
 
     def setGradientHistory(self, gradientHistory):
-        if self._useGpu:
+        if self._gpuEnabled:
             self._gradientHistory = gnp.as_garray(self._gradientHistory)
         else:
             self._gradientHistory = gradientHistory
 
     def updateWeight(self, weight, gradient):
-        if self._useGpu:
+        if self._gpuEnabled:
             if self._gradientClip > 0.0:
                 gradientNorm = gnp.sqrt(gnp.sum(gradient ** 2))
                 if gradientNorm > self._gradientClip:
@@ -90,3 +126,14 @@ class gradientDescentController():
 
     def incrementCounter(self):
         self._counter += 1
+
+    def toDict(self):
+        return {
+            'type': 'sgd',
+            'learningRate': self._learningRate,
+            'momentum': self._momentum,
+            'gradientClip': self._gradientClip,
+            'weightClip': self._weightClip,
+            'weightRegConst': self._weightRegConst,
+            'gpuEnabled': self._gpuEnabled
+        }

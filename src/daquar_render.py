@@ -64,7 +64,7 @@ if __name__ == '__main__':
     resultFolder = '../results/%s' % taskId
     modelFile = '../results/%s/%s.model.yml' % (taskId, taskId)
     model = nn.load(modelFile)
-    model.loadWeights(
+    model.deserializeWeights(
         np.load('../results/%s/%s.w.npy' % (taskId, taskId)))
 
     testDataFile = os.path.join(dataFolder, 'test.npy')

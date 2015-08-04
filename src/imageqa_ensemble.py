@@ -18,7 +18,7 @@ def loadEnsemble(
         modelSpec = os.path.join(taskFolder, '%s.model.yml' % taskId)
         modelWeights = os.path.join(taskFolder, '%s.w.npy' % taskId)
         model = nn.load(modelSpec)
-        model.loadWeights(np.load(modelWeights))
+        model.deserializeWeights(np.load(modelWeights))
         models.append(model)
     return models
 

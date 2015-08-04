@@ -161,7 +161,7 @@ def loadModel(
     modelSpecFile = '%s/%s/%s.model.yml' % (resultsFolder, taskId, taskId)
     modelWeightsFile = '%s/%s/%s.w.npy' % (resultsFolder, taskId, taskId)
     model = nn.load(modelSpecFile)
-    model.loadWeights(np.load(modelWeightsFile))
+    model.deserializeWeights(np.load(modelWeightsFile))
     return model
 
 def testAll(

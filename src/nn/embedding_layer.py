@@ -1,7 +1,7 @@
-from layer import Layer
-from environment import  *
+from layer import WeightLayer
+from environment import *
 
-class EmbeddingLayer(Layer):
+class EmbeddingLayer(WeightLayer):
     """
     Embedding layer (i.e. look-up table.)
     This implementation of look-up table is 1-based index.
@@ -24,7 +24,11 @@ class EmbeddingLayer(Layer):
         representation.
         :return:
         """
-        Layer.__init__(self, name=name, numNode=numNode, gpuEnabled=False)
+        WeightLayer.__init__(self,
+                             name=name,
+                             numNode=numNode,
+                             weight=weight,
+                             gpuEnabled=False)
 
         # Zeroth rows of the weight matrix is reserved
         # for empty word at the end of a sentence.
@@ -32,7 +36,7 @@ class EmbeddingLayer(Layer):
         self._sparse = sparse
         self._inputDim = inputDim
 
-    def init(self):
+    def initialize(self):
         """
 
         :return:

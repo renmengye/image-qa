@@ -88,7 +88,7 @@ def runTests(dataset, model, trainer):
         else:
             testInput = dataset.getTestInput()
             testTarget = dataset.getTestTarget()
-            model.loadWeights(np.load(trainer.modelFilename))
+            model.deserializeWeights(np.load(trainer.modelFilename))
             testOutput = nn.test(model, testInput)
             testRate, c, t = nn.calcRate(model, testOutput, testTarget)
             print 'Test rate: ', testRate
@@ -128,7 +128,7 @@ def trainValid(
         initWeights=None):
     model = nn.load(params['modelFilename'])
     if initWeights is not None:
-        model.loadWeights(initWeights)
+        model.deserializeWeights(initWeights)
     trainer = nn.Trainer(
         name=params['name']+\
         ('-v' if params['validDataFilename'] is not None else ''),
@@ -159,7 +159,7 @@ def trainAll(
         initWeights=None):            
     model = nn.load(params['modelFilename'])
     if initWeights is not None:
-        model.loadWeights(initWeights)
+        model.deserializeWeights(initWeights)
     trainer = nn.Trainer(
         name=params['name'],
         model=model,
@@ -226,7 +226,7 @@ if __name__ == '__main__':
 
             # Reload model
             model = nn.load(params['modelFilename'])
-            model.loadWeights(np.load(trainer.modelFilename))
+            model.deserializeWeights(np.load(trainer.modelFilename))
 
             # Run tests
             runTests(params, model, trainer)
@@ -256,7 +256,7 @@ if __name__ == '__main__':
 
                 # Reload model
                 model = nn.load(params['modelFilename'])
-                model.loadWeights(np.load(trainer.modelFilename))
+                model.deserializeWeights(np.load(trainer.modelFilename))
 
                 # Run tests
                 runTests(params, model, trainer)
@@ -285,7 +285,7 @@ if __name__ == '__main__':
 
             # Reload model
             model = nn.load(params['modelFilename'])
-            model.loadWeights(np.load(trainer.modelFilename))
+            model.deserializeWeights(np.load(trainer.modelFilename))
 
             # Run tests
             runTests(params, model, trainer)
@@ -307,7 +307,7 @@ if __name__ == '__main__':
 
             # Reload model
             model = nn.load(params['modelFilename'])
-            model.loadWeights(np.load(trainer.modelFilename))
+            model.deserializeWeights(np.load(trainer.modelFilename))
 
             # Run tests
             runTests(params, model, trainer)
@@ -337,7 +337,7 @@ if __name__ == '__main__':
 
                 # Reload model
                 model = nn.load(params['modelFilename'])
-                model.loadWeights(np.load(trainer.modelFilename))
+                model.deserializeWeights(np.load(trainer.modelFilename))
 
                 # Run tests
                 runTests(params, model, trainer)
@@ -362,7 +362,7 @@ if __name__ == '__main__':
 
             # Reload model
             model = nn.load(params['modelFilename'])
-            model.loadWeights(np.load(trainer.modelFilename))
+            model.deserializeWeights(np.load(trainer.modelFilename))
 
             # Run tests
             runTests(params, model, trainer)

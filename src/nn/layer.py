@@ -7,6 +7,8 @@ class Layer:
                  gpuEnabled=USE_GPU,
                  # Deprecated
                  outputdEdX=True):
+        if ':' in name:
+            raise Exception('Layer name does not allow character ":"')
         self.name = name
         self.inputLayers = []
         self.numNode = numNode
@@ -14,9 +16,7 @@ class Layer:
         self._inputValue = 0.0
         self._gradientToOutput = 0.0
         self._gradientToInput = 0.0
-        #self.useGpu = useGpu
         self.gpuEnabled = gpuEnabled
-        #self.receivedError = False
         self.isTraining = True
 
         # deprecated. Should be able to compute from isTraining
@@ -25,7 +25,7 @@ class Layer:
     def __str__(self):
         return self.name
 
-    def init(self):
+    def initialize(self):
         """
         Abstract method, for initializing weights, etc.
         :return:
@@ -225,3 +225,39 @@ class Layer:
                      numNode=value['numNode'],
                      gpuEnabled=value['useGpu'] if value.has_key('useGpu') else
                      USE_GPU)
+
+
+class WeightLayer(Layer):
+    def __init__(self,
+                 name,
+                 numNode,
+                 weight,
+                 gpuEnabled=USE_GPU,
+                 # Deprecated
+                 outputdEdX=True):
+        Layer.__init__(self,
+                 name=name,
+                 numNode=numNode,
+                 gpuEnabled=gpuEnabled,
+                 outputdEdX=outputdEdX)
+        self.weight = weight
+
+    def serializeWeight(self):
+        """
+        Save the weights to a dictionary if the weights.
+        :return:
+        """
+        if self.weight.savedToFile:
+            return self.weight.serialize()
+        else:
+            return {}
+
+    def deserializeWeight(self, value):
+        """
+        Read the weights from a dictionary.
+        :param value: A dictionary with keys to be names of the weights and
+        values are the serialized version of the weights.
+        :return:
+        """
+        if not self.weight.hasInitialized:
+            self.weight.deserialize(value)
