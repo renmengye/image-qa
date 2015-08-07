@@ -1,5 +1,6 @@
 from stage import *
-use_gpu = os.environ.get('GNUMPY_USE_GPU', 'yes') == 'yes'
+#use_gpu = os.environ.get('GNUMPY_USE_GPU', 'yes') == 'yes'
+use_gpu = False
 if use_gpu:
     import gnumpy as gpu
     import gnumpy as gnp

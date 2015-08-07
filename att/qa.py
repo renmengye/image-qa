@@ -18,15 +18,15 @@ import warnings
 
 from homogeneous_data import HomogeneousData
 
-import flickr8k, daquar
+import flickr8k, daquar, cocoqa
 
 # datasets: 'name', 'load_data: returns iterator', 'prepare_data: some preprocessing'
 # This  is a modified flickr8k with random 'answer' labels - just for debugging purposes
-# TODO: Add DAQUAR dataset
 datasets = {
     'flickr8k': (flickr8k.load_data, flickr8k.prepare_data),
-    'daquar': (daquar.load_data, daquar.prepare_data)
-    }
+    'daquar': (daquar.load_data, daquar.prepare_data),
+    'cocoqa': (cocoqa.load_data, cocoqa.prepare_data)
+}
 
 def get_dataset(name):
     return datasets[name][0], datasets[name][1]
@@ -741,9 +741,9 @@ if __name__ == '__main__':
     #    n_answers=63, \
     #    use_dropout=dropout, \
     #    use_dropout_lstm=dropout);
-    train(dataset='daquar',
-        n_answers=63,
+    train(dataset='cocoqa',
+        n_answers=431,
         use_dropout=dropout,
         use_dropout_lstm=dropout,
-        reload_=True,
-        test_=True);
+        reload_=False,
+        test_=False);

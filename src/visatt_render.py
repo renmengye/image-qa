@@ -80,20 +80,19 @@ def plotAttention(
         plt.imshow(img)
         plt.axis('off')
         words = []
-
+        print X.shape
         if mode == 0: timespan = Xend[n]
         elif mode == 1: timespan = 2
         for t in range(1, timespan):
             if mode == 0:
                 attention = A[n, t - 1]
+                word = questionIdict[X[n, t] - 1]
             elif mode == 1:
                 attention = A[n]
-            if len(X.shape) == 3:
-                word = questionIdict[X[n, t] - 1]
-            elif len(X.shape) == 2 and t == 1:
-                word = questionIdict[X[n, 1] - 1]
-            else:
-                word = ''
+                if t == 1:
+                    word = questionIdict[X[n, 1] - 1]
+                else:
+                    word = ''
             words.append(word)
             plt.subplot(w, h, t + 1)
             plt.imshow(img)
@@ -178,7 +177,7 @@ if __name__ == '__main__':
     #    model.stageDict['controllerHid2'].loadWeights(W)
     data = it.loadDataset(dataFolder)
     imgPathDict = ir.loadImgPath(dataset, dataFolder)
-
+   #  print imgPathDict
     X = data['testData'][0]
     T = data['testData'][1]
     for n in range(N):
@@ -193,10 +192,10 @@ if __name__ == '__main__':
             A[:, :-1, :]), axis=1)
 
     print A, A.shape
-    np.savetxt(os.path.join(outputFolder, 'attention.txt'), A, delimiter=',')
+    # np.savetxt(os.path.join(outputFolder, 'attention.txt'), A, delimiter=',')
     Xend = np.zeros(X.shape[0], dtype='int') + A.shape[1] + 1
     plotAttention(
-                X=X[0:N, [0, 7], 0],
+                X=X[0:N, [0, 7], 0] if mode == 1 else X[0:N],
                 A=A[0:N],
                 Xend=Xend, 
                 prefix='test', 
