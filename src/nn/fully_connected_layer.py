@@ -14,14 +14,14 @@ class FullyConnectedLayer(WeightLayer):
                  outputdEdX=True,
                  gpuEnabled=USE_GPU):
         """
-
-        :param name:
-        :param activationFn:
-        :param numNode:
-        :param weight:
-        :param hasBias:
-        :param outputdEdX:
-        :param gpuEnabled:
+        FC layer constructor.
+        :param name: string, name of the layer.
+        :param activationFn: object, subclass instance of ActivationFn.
+        :param numNode: int or list, number of nodes.
+        :param weight: object, subclass instance of Weight.
+        :param hasBias: bool, whether the layer adds a bias.
+        :param outputdEdX: bool, whether the layer back-propagate gradient.
+        :param gpuEnabled: bool, whether the layer computation is on GPU.
         :return:
         """
         WeightLayer.__init__(self,
@@ -38,8 +38,8 @@ class FullyConnectedLayer(WeightLayer):
 
     def initialize(self, inputNumNode=None):
         """
-
-        :param inputNumNode:
+        Initialize the weight matrix.
+        :param inputNumNode: int or list, number of nodes from the input.
         :return:
         """
         skip = False
@@ -73,7 +73,7 @@ class FullyConnectedLayer(WeightLayer):
 
     def forward(self, inputValue):
         """
-
+        Forward pass.
         :param inputValue:
         :return:
         """
@@ -103,9 +103,9 @@ class FullyConnectedLayer(WeightLayer):
 
     def backward(self, gradientToOutput):
         """
-
-        :param gradientToOutput:
-        :return:
+        Backward pass. Compute gradient wrt. weights and input.
+        :param gradientToOutput: gradient wrt. output.
+        :return: numpy or gnumpy array, gradient wrt. input.
         """
         gradientToWeightedSum = self._activationFn.backward(gradientToOutput)
         if self.gpuEnabled:
@@ -126,6 +126,5 @@ class FullyConnectedLayer(WeightLayer):
             else:
                 gradientToInput = np.dot(gradientToWeightedSum,
                                          self.weight.get().transpose())
-
         self.weight.addGradient(gradient)
         return gradientToInput if self.outputdEdX else None

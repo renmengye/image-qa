@@ -1,6 +1,9 @@
 from identity_layer import IdentityLayer
 from layer import Layer, WeightLayer
 
+###
+# Let's support multiple output layers. Just do multiple traversals.
+###
 class Container(Layer):
     def __init__(self,
                  name,

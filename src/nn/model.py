@@ -64,14 +64,8 @@ class Model(Container):
             layer.graphBackward()
 
     def forward(self, inputValue):
-        pass
-
-    def backward(self):
-        pass
-
-    def runOnce(self, inputValue):
         """
-        Run inference in the network.
+        Forward pass.
         :param inputValue: Input values
         :return:
         """
@@ -81,6 +75,13 @@ class Model(Container):
             if layer is not self._lossLayer:
                 layer.graphForward()
         return self._outputLayer.getValue()
+
+    def backward(self):
+        """
+
+        :return:
+        """
+        pass
 
     def getLoss(self):
         return self._lossLayer.getLoss()

@@ -83,24 +83,24 @@ class ModelTest(unittest.TestCase):
                                     limit=[-0.5, 0.5],
                                             seed=2),
                                         controller=None,
-                                        shared=False)))\
-                                .connect(FullyConnectedLayer(name='fc3',
-                                     activationFn=SigmoidActivationFn(),
-                                     numNode=5,
-                                     weight=Weight(
-                                         name='fc2',
-                                        initializer=UniformWeightInitializer(
-                                            limit=[-0.5, 0.5],
-                                            seed=2),
-                                        controller=None,
-                                        shared=False)))
+                                        shared=False))).connect(
+            FullyConnectedLayer(name='fc3',
+                 activationFn=SigmoidActivationFn(),
+                 numNode=5,
+                 weight=Weight(
+                     name='fc2',
+                    initializer=UniformWeightInitializer(
+                        limit=[-0.5, 0.5],
+                        seed=2),
+                    controller=None,
+                    shared=False)))
         model = Model(inputLayers=[inputLayer], outputLayer=outputLayer,
                       lossLayer=MSELossLayer(name='mse'))
         X = np.random.rand(5, 4)
         T = np.zeros((5, 5))
         if USE_GPU:
             X = gnp.as_garray(X)
-        Y = model.runOnce(X)
+        Y = model.forward(X)
         self.assertEqual((5, 5), Y.shape)
         dLdX = model.trainStep(X, T)
         self.assertGreater(model.getLoss(), 0)

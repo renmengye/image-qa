@@ -9,7 +9,7 @@ class Weight():
 
     Currently there is no sparse update and sparse serialization.
     """
-    def __init__(self, name, initializer, controller, gpuEnabled=USE_GPU,
+    def __init__(self, name, initializer, controller=None, gpuEnabled=USE_GPU,
                  shared=False, saveToFile=True):
         self._controller = controller
         self._initializer = initializer
@@ -59,7 +59,7 @@ class Weight():
         or H5 files.
         """
         if self.savedToFile:
-            return {self.name, self._getNumpy()}
+            return {self.name: self._getNumpy()}
         else:
             return None
 
@@ -100,7 +100,7 @@ class Weight():
             self._gradientStack = []
         if self._controller is not None:
             self._weight = self._controller.updateWeight(self._weight,
-                                                           self._gradient)
+                                                         self._gradient)
     def toDict(self):
         return {
             'name': self.name,
@@ -110,13 +110,14 @@ class Weight():
         }
 
     @staticmethod
-    def fromDict(self, value):
+    def fromDict(value):
         return Weight(name=value['name'],
                       initializer=WeightInitializerFactory.createFromSpec(
                           value['initializerSpec']),
-                      controller=GradientDescentControllerFactory.
-                      createFromSpec(name=self.name,
-                                     spec=value['controllerSpec']),
+                      controller=None if 'controllerSpec' not in value else
+                      GradientDescentControllerFactory.createFromSpec(
+                          name=value['name'],
+                          spec=value['controllerSpec']),
                       gpuEnabled=value['gpuEnabled'])
 
 class SparseWeight(Weight):

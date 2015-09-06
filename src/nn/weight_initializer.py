@@ -26,7 +26,7 @@ class WeightInitializerFactory():
         seed = 0 if 'seed' not in spec else spec['seed']
         dataFormat = 'numpy' if 'format' not in spec else spec['format']
         sparse = False if 'sparse' not in spec else spec['sparse']
-        key = None if 'key' in spec else spec['key']
+        key = None if 'key' not in spec else spec['key']
         if spec['type'] == 'uniform':
             return UniformWeightInitializer(limit=eval(spec['limit']),
                                             seed=seed)
@@ -89,7 +89,7 @@ class UniformWeightInitializer(WeightInitializer):
     def toDict(self):
         return {
             'type': 'uniform',
-            'limit': self._limit,
+            'limit': str(self._limit),
             'seed': self._seed
         }
 
