@@ -612,6 +612,9 @@ if __name__ == '__main__':
     # Image ID file
     with open(os.path.join(outputFolder, 'imgid_dict.pkl'), 'wb') as f:
         pkl.dump(imgidDict3, f)
+    with open(os.path.join(outputFolder, 'imgid_dict.txt'), 'w+') as f:
+        for imgid in imgidDict3:
+            f.write(imgid + '\n')
 
     # For dataset release, output plain text file
     releaseFolder = os.path.join(outputFolder, 'release')
