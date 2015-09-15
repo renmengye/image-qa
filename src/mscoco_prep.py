@@ -666,25 +666,25 @@ if __name__ == '__main__':
     # plt.rc('font',**{'family':'serif','serif':['Time New Roman']})
     # plt.rc('text', usetex=True)
 
-    sorted_keys = sorted(range(len(afterFreq)), key=lambda k: afterFreq[k], reverse=True)
-    bins = np.linspace(0, topKAnswers, num=topKAnswers + 1)
-    beforeFreq2 = []
-    for k in sorted_keys[:topKAnswers]:
-        word = afterIdict[k]
-        beforeIndex = beforeWorddict[word]
-        beforeFreq2.append(beforeFreq[beforeIndex])
+    # sorted_keys = sorted(range(len(afterFreq)), key=lambda k: afterFreq[k], reverse=True)
+    # bins = np.linspace(0, topKAnswers, num=topKAnswers + 1)
+    # beforeFreq2 = []
+    # for k in sorted_keys[:topKAnswers]:
+    #     word = afterIdict[k]
+    #     beforeIndex = beforeWorddict[word]
+    #     beforeFreq2.append(beforeFreq[beforeIndex])
 
-    (left, right, bottom, top) = hist.calcPath(beforeFreq2, bins)
-    hist.hist(left, right, bottom, top, ax, 'blue')
-    hist.setLimit(left, right, bottom, top, ax)
+    # (left, right, bottom, top) = hist.calcPath(beforeFreq2, bins)
+    # hist.hist(left, right, bottom, top, ax, 'blue')
+    # hist.setLimit(left, right, bottom, top, ax)
 
-    (left, right, bottom, top) = hist.calcPath(sorted(afterFreq)[::-1][:topKAnswers], bins)
-    hist.hist(left, right, bottom, top, ax, 'red')
+    # (left, right, bottom, top) = hist.calcPath(sorted(afterFreq)[::-1][:topKAnswers], bins)
+    # hist.hist(left, right, bottom, top, ax, 'red')
 
-    plt.legend(['Before', 'After'])
-    plt.xlabel('Top 100 Answers')
-    plt.ylabel('Number of Appearances in the Entire COCO-QA')
-    plt.title(r'\textbf{Effect of Common Answer Rejection}')
+    # plt.legend(['Before', 'After'])
+    # plt.xlabel('Top 100 Answers')
+    # plt.ylabel('Number of Appearances in the Entire COCO-QA')
+    # plt.title(r'\textbf{Effect of Common Answer Rejection}')
     
-    plt.savefig(os.path.join(outputFolder, 'answer_dist.pdf'))
-    plt.savefig(os.path.join(outputFolder, 'answer_dist.eps'))
+    # plt.savefig(os.path.join(outputFolder, 'answer_dist.pdf'))
+    # plt.savefig(os.path.join(outputFolder, 'answer_dist.eps'))
