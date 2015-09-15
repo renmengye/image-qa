@@ -614,7 +614,7 @@ if __name__ == '__main__':
         pkl.dump(imgidDict3, f)
     with open(os.path.join(outputFolder, 'imgid_dict.txt'), 'w+') as f:
         for imgid in imgidDict3:
-            f.write(imgid + '\n')
+            f.write('%s\n' % imgid)
 
     # For dataset release, output plain text file
     releaseFolder = os.path.join(outputFolder, 'release')
@@ -659,12 +659,12 @@ if __name__ == '__main__':
         for typ in testQuestionTypes:
             f.write(str(typ) + '\n')
 
-    # Plot answer distribution
-    fig, ax = plt.subplots()
-    ax.set_yscale('log')
-    topKAnswers = min(100, len(afterFreq))
-    plt.rc('font',**{'family':'serif','serif':['Time New Roman']})
-    plt.rc('text', usetex=True)
+    # # Plot answer distribution
+    # fig, ax = plt.subplots()
+    # ax.set_yscale('log')
+    # topKAnswers = min(100, len(afterFreq))
+    # plt.rc('font',**{'family':'serif','serif':['Time New Roman']})
+    # plt.rc('text', usetex=True)
 
     sorted_keys = sorted(range(len(afterFreq)), key=lambda k: afterFreq[k], reverse=True)
     bins = np.linspace(0, topKAnswers, num=topKAnswers + 1)
