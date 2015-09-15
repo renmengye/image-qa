@@ -344,7 +344,13 @@ class Trainer:
                             trainOpt['stopScore'] 
                         stop = True
                 
+                # Log statistics
                 logger.logTrainStats()
+                
+                # Plot curves
+                if trainOpt['plotFigs']:
+                    plotter.plot()
+                
                 if trainOpt['needValid']:
                     print 'P: %d' % nAfterBest,
                 print self.name
@@ -361,10 +367,6 @@ class Trainer:
             # Anneal learning rate
             self.model.updateLearningParams(epoch)
             
-            # Plot train curves
-            if trainOpt['plotFigs']:
-                plotter.plot()
-                
             # Terminate
             if stop:       
                 break

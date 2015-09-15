@@ -121,10 +121,10 @@ class Stage:
         """
         self.X = self.getInput()
         if verbose and hasattr(self.X, 'shape'):
-            print 'forward in', self.name, self.X.shape
+            print 'forward in', self.name, self.X.shape, np.mean(self.X)
         self.Y = self.forward(self.X)
         if verbose and hasattr(self.Y, 'shape'):
-            print 'forward out', self.name, self.Y.shape
+            print 'forward out', self.name, self.Y.shape, np.mean(self.Y)
 
     def forward(self, X):
         """

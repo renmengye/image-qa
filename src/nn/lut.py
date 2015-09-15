@@ -66,14 +66,16 @@ class LUT(Stage):
         self.dEdW = 0.0
 
     def initWeights(self):
-        # print self.name
+        # print 'Initializing', self.name
         self.W = self.random.uniform(
             -self.initRange/2.0, self.initRange/2.0,
             (self.inputDim, self.outputDim))
         if use_gpu and self.W.dtype != np.float32:
             self.W = self.W.astype('float32')
+        # print 'shape:', self.W.shape, 'mean:', np.mean(self.W)
 
     def forward(self, X):
+        # print self.name, X
         if self.W is None: self.initWeights()
         if self.intConversion: X = X.astype(int)
         self.X = X
