@@ -89,6 +89,7 @@ def wup_measure(a,b,similarity_threshold=0.925):
         max_{x \in interp(a)} max_{y \in interp(b)} wup(x,y)
         where interp is a 'interpretation field'
     """
+    print 'Original', a, b
     if word_pair_dict.has_key(a+','+b):
         return  word_pair_dict[a+','+b]
 
@@ -149,12 +150,15 @@ def wup_measure(a,b,similarity_threshold=0.925):
     if interp_a == [] or interp_b == []:
         return 0
 
+    print 'Stem', a, b
     global_max=0.0
     for x in interp_a:
         for y in interp_b:
+            print 'Local', local_score
             local_score=x.wup_similarity(y)
             if local_score > global_max:
                 global_max=local_score
+    print 'Global' global_max
 
     # we need to use the semantic fields and therefore we downweight
     # unless the score is high which indicates both are synonyms
