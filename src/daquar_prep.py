@@ -260,20 +260,22 @@ if __name__ == '__main__':
         testImgIds = testImgIds[testQuestionTypes == typ]
         testQuestionTypes = testQuestionTypes[testQuestionTypes == typ]
 
-    trainInput = prep.combine(\
-        prep.lookupQID(trainQuestions, worddict, maxlen), trainImgIds)
+    trainQID = prep.lookupQID(trainQuestions, worddict, maxlen)
+    trainInput = prep.combine(np.array(trainQID, dtype=int), trainImgIds)
     trainInputSV = prep.combineSV(\
         range(1, len(trainQuestions) + 1), 
         trainImgIds)
     trainTarget = prep.lookupAnsID(trainAnswers, ansdict)
-    validInput = prep.combine(\
-        prep.lookupQID(validQuestions, worddict, maxlen), validImgIds)
+    
+    validQID = prep.lookupQID(validQuestions, worddict, maxlen)
+    validInput = prep.combine(np.array(validQID, dtype=int), validImgIds)
     validInputSV = prep.combineSV(\
         range(len(trainQuestions) + 1, len(trainQuestions) + len(validQuestions) + 1),
         validImgIds)
     validTarget = prep.lookupAnsID(validAnswers, ansdict)
-    testInput = prep.combine(\
-        prep.lookupQID(testQuestions, worddict, maxlen), testImgIds)
+
+    testQID = prep.lookupQID(testQuestions, worddict, maxlen)
+    testInput = prep.combine(np.array(testQID, dtype=int), testImgIds)
     testInputSV = prep.combineSV(\
         range(len(trainQuestions) + len(validQuestions) + 1,
             len(trainQuestions) + len(validQuestions) + len(testQuestions) + 1),
