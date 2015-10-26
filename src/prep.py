@@ -82,7 +82,7 @@ def lookupQID(questions, worddict, maxlen):
 
 def combine(wordids, imgids):
     return np.concatenate(\
-        (np.array(imgids).reshape(len(imgids), 1, 1), \
+        (np.array(imgids, dtype=int).reshape(len(imgids), 1, 1), \
         wordids), axis=1)
 
 def combineSV(qids, imgids):
