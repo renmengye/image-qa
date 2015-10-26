@@ -11,6 +11,7 @@ def buildDict(lines, keystart, pr=False):
     word_freq = []
     # if key is 1-based, then 0 is reserved for sentence end.
     key = keystart
+    total = 0
 
     for i in range(0, len(lines)):
         line = lines[i].replace(',', '')
@@ -24,9 +25,11 @@ def buildDict(lines, keystart, pr=False):
             else:
                 k = word_dict[words[j]]
                 word_freq[k - keystart] += 1
+            total += 1
     word_dict['UNK'] = key
     word_array.append('UNK')
-    sorted_x = sorted(range(len(word_freq)), key=lambda k: word_freq[k], reverse=True)
+    sorted_x = sorted(range(len(word_freq)), 
+        key=lambda k: word_freq[k], reverse=True)
     if pr:
         summ = 0
         for x in sorted_x:
@@ -38,9 +41,10 @@ def buildDict(lines, keystart, pr=False):
             if medsumm > med:
                 break
             medsumm += word_freq[x]
-        print 'median: ', word_array[x], word_freq[x]
+        print 'median: ', word_array[x], word_freq[x], word_freq[x] / float(total)
         #print sorted_x
         print 'Dictionary length', len(word_dict)
+        print 'total: ', total
     return  word_dict, word_array, word_freq
 
 def lookupAnsID(answers, ansdict):

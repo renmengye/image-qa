@@ -82,9 +82,6 @@ def wup_measure(a, b, similarity_threshold = 0.925, debug = False):
 def runAllList(gt, pred, thresh):
     global word_pair_dict
     word_pair_dict = {}
-    input_gt=file2list(gt_filepath)
-    input_pred=file2list(pred_filepath)
-
     if thresh == -1:
         measure = dirac_measure
     else:
@@ -94,7 +91,7 @@ def runAllList(gt, pred, thresh):
         print 'standard Accuracy is used'
     else:
         print 'soft WUPS is used'
-    score_list = [measure(ta, pa) for (ta, pa) in zip(input_gt, input_pred)]
+    score_list = [measure(ta, pa) for (ta, pa) in zip(gt, pred)]
     final_score = sum(map(
         lambda x: float(x) / float(len(score_list)), score_list))
 
