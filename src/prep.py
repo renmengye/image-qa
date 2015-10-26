@@ -28,8 +28,17 @@ def buildDict(lines, keystart, pr=False):
     word_array.append('UNK')
     sorted_x = sorted(range(len(word_freq)), key=lambda k: word_freq[k], reverse=True)
     if pr:
+        summ = 0
         for x in sorted_x:
             print word_array[x], word_freq[x],
+            summ += word_freq[x]
+        med = summ / 2
+        medsumm = 0
+        for x in sorted_x:
+            if medsumm > med:
+                break
+            medsumm += word_freq[x]
+        print 'median: ', word_array[x], word_freq[x]
         #print sorted_x
         print 'Dictionary length', len(word_dict)
     return  word_dict, word_array, word_freq
@@ -45,11 +54,14 @@ def lookupAnsID(answers, ansdict):
 
 def findMaxlen(questions):
     maxlen = 0
+    sumlen = 0
     for q in questions:
         words = q.split(' ')
+        sumlen += len(words)
         if len(words) > maxlen:
             maxlen = len(words)
-    print 'Maxlen: ', maxlen
+    print 'Maxlen:', maxlen
+    print 'Mean len:', sumlen / float(len(questions))
     return maxlen
 
 def lookupQID(questions, worddict, maxlen):

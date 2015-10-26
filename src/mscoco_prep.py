@@ -68,6 +68,22 @@ def removeQuestions(
                     answerfreq2[answerdict[ans]] += 1
     return survivor
 
+def overlapDetect(trainQuestions, trainAnswers, testQuestions, testAnswers):
+    trainQSet = {}
+    trainQASet = {}
+    for q, a in zip(trainQuestions, trainAnswers):
+        trainQSet[q] = 1
+        trainQASet[q + '+' + a] = 1
+    overlapQ = 0
+    overlapQA = 0
+    for q, a in zip(testQuestions, testAnswers):
+        if trainQSet.has_key(q):
+            overlapQ += 1
+        if trainQASet.has_key(q + '+' +  a):
+            overlapQA += 1
+    print 'Overlap questions:', overlapQ
+    print 'Overlap questions and answers:', overlapQA
+
 def synonymDetect(iansdict, output=None):
     """
     Look for synonyms using WUPS measure
@@ -518,12 +534,7 @@ if __name__ == '__main__':
         prep.buildDict(testAnswers, 0, pr=True)
 
     print 'GUESS After Rejection on Test'
-    baseline = prep.guessBaseline(
-                    testQuestions, 
-                    testAnswers, 
-                    testQuestionTypes,
-                    outputFolder=outputFolder,
-                    calcWups=True)
+    baseline = prep.guessBaseline(testQuestions, testAnswers, testQuestionTypes)
 
     # Find max length
     if maxlen == -1:
@@ -656,6 +667,11 @@ if __name__ == '__main__':
         for typ in testQuestionTypes:
             f.write(str(typ) + '\n')
 
+    trainQuestions.extend(validQuestions)
+    trainAnswers.extend(validAnswers)
+    overlapDetect(trainQuestions, trainAnswers, testQuestions, testAnswers)
+    prep.buildDict(trainAnswers, 0, pr=True)
+    
     # Plot answer distribution
     fig, ax = plt.subplots()
     ax.set_yscale('log')

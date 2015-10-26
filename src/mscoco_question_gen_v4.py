@@ -563,7 +563,9 @@ class QuestionGenerator:
                 # need to lemmatize the verb and separate does
                 frontWord = TreeNode('VBZ', 'does', [], 0)
                 vpchild.className = 'VB'
+                print 'Pre lemmatization:', vpchild.text
                 vpchild.text = lemmatizer.lemmatize(vpchild.text, 'v')
+                print 'Post lemmatization:', vpchild.text
             pass
         elif vpchild.className == 'VBP': # do, have, present
             if vpchild.text == 'are':
